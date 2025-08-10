@@ -10,7 +10,12 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@loader/*": ["./engine/loader/*"]
+      "@loader/*": ["./engine/loader/*"],
+      "@ioc/*": ["./engine/ioc/*"],
+      "@builders/*": ["./engine/builders/*"],
+      "@app/*": ["./engine/app/*"],
+      "@engine/*": ["./engine/engine/*"],
+      "@editor/*": ["./editor/*"]
     }
   }
 }

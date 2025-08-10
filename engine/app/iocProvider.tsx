@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, PropsWithChildren } from 'react'
-import { Container } from '../ioc/container'
-import type { Token } from '../ioc/token'
+import { Container } from '@ioc/container'
+import type { Token } from '@ioc/token'
 
 export const IocContext = createContext<Container | null>(null)
 

@@ -1,13 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { App } from './app/App'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { App } from '@app/App'
+import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
+import { IocProvider } from '@app/iocProvider'
 
-const rootElement = document.getElementById('root');
+const containerBuilder: IContainerBuilder = new ContainerBuilder()
+const container = containerBuilder.build()
+
+const rootElement = document.getElementById('root')
 
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <App />
+      <IocProvider container={container}>
+        <App />
+      </IocProvider>
     </React.StrictMode>,
   );
 }
