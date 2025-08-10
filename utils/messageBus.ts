@@ -9,6 +9,8 @@ type MessageListener = {
     handler: (message: Message) => void | Promise<void>
 }
 
+const LogName: string = 'MessageBus'
+
 export interface IMessageBus {
     postMessage(message: Message): void
     registerMessageListener(message: string, handler: (message: Message) => void | Promise<void>): CleanUp
@@ -30,7 +32,7 @@ export class MessageBus implements IMessageBus {
     }
 
     postMessage(message: Message): void {
-        logDebug('MessageBus', 'Push message: {0}', message)
+        logDebug(LogName, 'Push message: {0}', message)
         this.messageQueue.postMessage(message)
     }
 
@@ -69,8 +71,8 @@ export class MessageBus implements IMessageBus {
         const listeners = this.listeners.get(message.message)
         if (!listeners || listeners.length === 0) {
             const logger = this.silentMessages.has(message.message)
-                ? (msg: string, ...args: unknown[]) => logDebug('MessageBus', msg, ...args)
-                : (msg: string, ...args: unknown[]) => logWarning('MessageBus', msg, ...args)
+                ? (msg: string, ...args: unknown[]) => logDebug(LogName, msg, ...args)
+                : (msg: string, ...args: unknown[]) => logWarning(LogName, msg, ...args)
             logger('No message listener for message: {0}', message)
             return
         }
@@ -80,11 +82,11 @@ export class MessageBus implements IMessageBus {
                 const result = listener.handler(message)
                 if (result && typeof (result as Promise<void>).then === 'function') {
                     promises.push((result as Promise<void>).catch(err => {
-                        logWarning('MessageBus', 'Error processing listener for message {0}: {1}', message.message, err)
+                        logWarning(LogName, 'Error processing listener for message {0}: {1}', message.message, err)
                     }))
                 }
             } catch (err) {
-                logWarning('MessageBus', 'Error processing listener for message {0}: {1}', message.message, err)
+                logWarning(LogName, 'Error processing listener for message {0}: {1}', message.message, err)
             }
         })
         if (promises.length > 0) {
@@ -96,6 +98,6 @@ export class MessageBus implements IMessageBus {
         this.listeners.clear()
         this.silentMessages.clear()
         this.messageQueue.shutDown()
-        logDebug('MessageBus', 'MessageBus shut down')
+        logDebug(LogName, 'MessageBus shut down')
     }
 }
