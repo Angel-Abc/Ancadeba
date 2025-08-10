@@ -10,6 +10,7 @@
     "scripts": {
         "build": "tsc && vite build",
         "dev": "concurrently -n \"vite,tsc\" \"npm run dev:engine\" \"tsc --noEmit --watch\"",
+        "build:release": "cross-env WITH_EDITOR=false npm run build",
         "test": "vitest run",
         "lint": "eslint .",
         "preview": "vite preview",
@@ -17,22 +18,22 @@
         "dev:editor": "vite --open editor/editor.html --port 5174"
     },
     "devDependencies": {
+        "@types/node": "^24.2.1",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
         "@typescript-eslint/eslint-plugin": "^8.39.0",
         "@typescript-eslint/parser": "^8.39.0",
         "@vitejs/plugin-react": "^4.3.1",
         "concurrently": "^9.2.0",
+        "cross-env": "^10.0.0",
         "eslint": "9.33.0",
         "globals": "^16.3.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "typescript": "^5.9.2",
         "vite": "^7.1.1",
-        "vitest": "^3.2.4"
-    },
-    "dependencies": {
-        "@types/node": "^24.2.1",
+        "vite-plugin-static-copy": "^3.1.1",
+        "vitest": "^3.2.4",
         "zod": "^4.0.17"
     }
 }
