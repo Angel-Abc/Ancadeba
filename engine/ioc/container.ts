@@ -1,12 +1,14 @@
 import { describeToken, type Token } from './token'
-import type { Provider } from './types'
+import type { Provider, Scope } from './types'
 
-const isFunction = (v: unknown): v is Function => typeof v === 'function'
+function isFunction(v: unknown): v is (...args: unknown[]) => unknown {
+  return typeof v === 'function'
+}
 
 export class Container {
-  private providers = new Map<Token<any>, Provider<any>>()
-  private singletons = new Map<Token<any>, any>()
-  private resolving: Token<any>[] = []
+  private providers = new Map<Token<unknown>, Provider<unknown>>()
+  private singletons = new Map<Token<unknown>, unknown>()
+  private resolving: Token<unknown>[] = []
   readonly parent?: Container
 
   constructor(parent?: Container) { this.parent = parent }
@@ -16,7 +18,7 @@ export class Container {
     return this
   }
 
-  registerAll(providers: Provider<any>[]): this {
+  registerAll(providers: Provider<unknown>[]): this {
     providers.forEach(p => this.register(p))
     return this
   }
@@ -28,7 +30,7 @@ export class Container {
   createChild(): Container { return new Container(this) }
 
   resolve<T>(t: Token<T>): T {
-    if (this.singletons.has(t)) return this.singletons.get(t)
+    if (this.singletons.has(t)) return this.singletons.get(t) as T
 
     const p = this.providers.get(t) ?? this.parent?.getProvider(t)
     if (!p) throw new Error(`No provider for ${describeToken(t)}`)
@@ -41,17 +43,17 @@ export class Container {
     this.resolving.push(t)
     try {
       const instance = this.instantiate(p)
-      const scope = (p as any).scope ?? 'singleton'
-      const isValueFunction = 'useValue' in p && isFunction((p as any).useValue)
+      const scope = (p as {scope?: Scope}).scope ?? 'singleton'
+      const isValueFunction = 'useValue' in p && isFunction((p as {useValue: T}).useValue)
       if (scope === 'singleton' && !isValueFunction) this.singletons.set(t, instance)
-      return instance
+      return instance as T
     } finally {
       this.resolving.pop()
     }
   }
 
   private getProvider<T>(t: Token<T>): Provider<T> | undefined {
-    return this.providers.get(t) ?? this.parent?.getProvider(t)
+    return (this.providers.get(t) ?? this.parent?.getProvider(t)) as Provider<T> | undefined
   }
 
   private instantiate<T>(p: Provider<T>): T {
