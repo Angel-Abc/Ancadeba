@@ -9,7 +9,7 @@
     "type": "module",
     "scripts": {
         "build": "tsc && vite build",
-        "dev": "concurrently \"npm run dev:engine\" \"tsc --noEmit --watch\"",
+        "dev": "concurrently -n \"vite,tsc\" \"npm run dev:engine\" \"tsc --noEmit --watch\"",
         "test": "vitest",
         "preview": "vite preview",
         "dev:engine": "vite",
