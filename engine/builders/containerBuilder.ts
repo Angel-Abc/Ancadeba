@@ -1,11 +1,12 @@
 import { Container } from '@ioc/container'
 
 export interface IContainerBuilder {
-    build(): Container;
+    build(): Container
 }
 
 export class ContainerBuilder implements IContainerBuilder {
     public build(): Container {
-        return new Container();
+        const result =  new Container()
+        return result
     }
 }
