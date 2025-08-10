@@ -8,10 +8,13 @@
     "license": "MPL-2.0",
     "type": "module",
     "scripts": {
-
+        "build": "tsc && vite build",
+        "dev": "vite",
+        "test": "vitest"        
     },
     "devDependencies": {
         "typescript": "^5.9.2",
-        "vite": "^7.1.1"
+        "vite": "^7.1.1",
+        "vitest": "^3.2.4"
     }
 }
