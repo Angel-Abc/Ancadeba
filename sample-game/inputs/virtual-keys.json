@@ -1,0 +1,153 @@
+[
+    {
+        "virtualKey": "VK_Q",
+        "keyCode": "KeyQ"
+    },
+    {
+        "virtualKey": "VK_SHIFT_Q",
+        "keyCode": "KeyQ",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_W",
+        "keyCode": "KeyW"
+    },
+    {
+        "virtualKey": "VK_SHIFT_W",
+        "keyCode": "KeyW",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_E",
+        "keyCode": "KeyE"
+    },
+    {
+        "virtualKey": "VK_SHIFT_E",
+        "keyCode": "KeyE",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_S",
+        "keyCode": "KeyS"
+    },
+    {
+        "virtualKey": "VK_SHIFT_S",
+        "keyCode": "KeyS",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_A",
+        "keyCode": "KeyA"
+    },
+    {
+        "virtualKey": "VK_SHIFT_A",
+        "keyCode": "KeyA",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_D",
+        "keyCode": "KeyD"
+    },
+    {
+        "virtualKey": "VK_SHIFT_D",
+        "keyCode": "KeyD",
+        "shift": true
+    },
+    {
+        "virtualKey": "VK_UP",
+        "keyCode": "ArrowUp"
+    },
+    {
+        "virtualKey": "VK_DOWN",
+        "keyCode": "ArrowDown"
+    },
+    {
+        "virtualKey": "VK_LEFT",
+        "keyCode": "ArrowLeft"
+    },
+    {
+        "virtualKey": "VK_RIGHT",
+        "keyCode": "ArrowRight"
+    },
+    {
+        "virtualKey": "VK_1",
+        "keyCode": "Digit1"
+    },
+    {
+        "virtualKey": "VK_NUM_1",
+        "keyCode": "Numpad1"
+    },
+    {
+        "virtualKey": "VK_2",
+        "keyCode": "Digit2"
+    },
+    {
+        "virtualKey": "VK_NUM_2",
+        "keyCode": "Numpad2"
+    },
+    {
+        "virtualKey": "VK_3",
+        "keyCode": "Digit3"
+    },
+    {
+        "virtualKey": "VK_NUM_3",
+        "keyCode": "Numpad3"
+    },
+    {
+        "virtualKey": "VK_4",
+        "keyCode": "Digit4"
+    },
+    {
+        "virtualKey": "VK_NUM_4",
+        "keyCode": "Numpad4"
+    },
+    {
+        "virtualKey": "VK_5",
+        "keyCode": "Digit5"
+    },
+    {
+        "virtualKey": "VK_NUM_5",
+        "keyCode": "Numpad5"
+    },
+    {
+        "virtualKey": "VK_6",
+        "keyCode": "Digit6"
+    },
+    {
+        "virtualKey": "VK_NUM_6",
+        "keyCode": "Numpad6"
+    },
+    {
+        "virtualKey": "VK_7",
+        "keyCode": "Digit7"
+    },
+    {
+        "virtualKey": "VK_NUM_7",
+        "keyCode": "Numpad7"
+    },
+    {
+        "virtualKey": "VK_8",
+        "keyCode": "Digit8"
+    },
+    {
+        "virtualKey": "VK_NUM_8",
+        "keyCode": "Numpad8"
+    },
+    {
+        "virtualKey": "VK_9",
+        "keyCode": "Digit9"
+    },
+    {
+        "virtualKey": "VK_NUM_9",
+        "keyCode": "Numpad9"
+    },
+    {
+        "virtualKey": "VK_0",
+        "keyCode": "Digit0"
+    },
+    {
+        "virtualKey": "VK_NUM_0",
+        "keyCode": "Numpad0"
+    }
+
+]

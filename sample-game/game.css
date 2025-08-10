@@ -1,0 +1,11 @@
+/* overrule game engine default variables */
+:root {
+    --ge-background-color: oklch(32.208% 0.06034 78.284);
+    --sg-color-light-brown: oklch(0.66 0.0529 65.37);
+    --sg-color-light-brown-70: oklch(0.66 0.0529 65.37 / 70%);
+}
+
+.game-menu button {
+    color: white;
+    background-color: var(--sg-color-light-brown-70);
+}

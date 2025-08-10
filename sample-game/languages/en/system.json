@@ -1,0 +1,17 @@
+{
+    "id": "English",
+    "translations": {
+        "MENU.START-GAME": "Start Game",
+        "MENU.LOAD-GAME": "Load Game",
+        "MENU.SETTINGS": "Settings",
+        "MENU.EXIT-GAME": "Exit Game",
+        "NAVIGATE.LABEL_MOVE_NORTH": "Move North",
+        "NAVIGATE.DESCRIPTION_MOVE_NORTH": "Move one step north on the map.",
+        "NAVIGATE.LABEL_MOVE_SOUTH": "Move South",
+        "NAVIGATE.DESCRIPTION_MOVE_SOUTH": "Move one step south on the map.",
+        "NAVIGATE.LABEL_MOVE_WEST": "Move West",
+        "NAVIGATE.DESCRIPTION_MOVE_WEST": "Move one step west on the map.",
+        "NAVIGATE.LABEL_MOVE_EAST": "Move East",
+        "NAVIGATE.DESCRIPTION_MOVE_EAST": "Move one step east on the map."
+    }
+}

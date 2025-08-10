@@ -1,0 +1,164 @@
+{
+    "id": "main-game",
+    "screen": {
+        "type": "grid",
+        "width": 24,
+        "height": 24,
+        "components": [
+            {
+                "position": {
+                    "top": 0,
+                    "left": 0,
+                    "right": 5,
+                    "bottom": 11
+                },
+                "component": {
+                    "type": "context"
+                }
+            },
+            {
+                "position": {
+                    "top": 12,
+                    "left": 0,
+                    "right": 5,
+                    "bottom": 23
+                },
+                "component": {
+                    "type": "character"
+                }
+            },
+            {
+                "position": {
+                    "top": 0,
+                    "left": 18,
+                    "right": 23,
+                    "bottom": 11
+                },
+                "component": {
+                    "type": "squares-map",
+                    "mapSize": {
+                        "rows": 11,
+                        "columns": 11
+                    }
+                }
+            },
+            {
+                "position": {
+                    "top": 12,
+                    "left": 18,
+                    "right": 23,
+                    "bottom": 23
+                },
+                "component": {
+                    "type": "inventory"
+                }
+            },
+            {
+                "position": {
+                    "top": 18,
+                    "left": 6,
+                    "right": 17,
+                    "bottom": 23
+                },
+                "component": {
+                    "type": "input-matrix",
+                    "matrixSize": {
+                        "width": 5,
+                        "height": 4
+                    }
+                }
+            },
+            {
+                "position": {
+                    "top": 0,
+                    "left": 6,
+                    "right": 17,
+                    "bottom": 17
+                },
+                "component": {
+                    "type": "output-log",
+                    "logSize": 100
+                }
+
+            }
+        ]
+    },
+    "inputs": [
+        {
+            "virtualInput": "VI_UP",
+            "preferredRow": 1,
+            "preferredCol": 1,
+            "label": "NAVIGATE.LABEL_MOVE_NORTH",
+            "description": "NAVIGATE.DESCRIPTION_MOVE_NORTH",
+            "visible": {
+                "type": "script",
+                "script": "return !dialogs.isModalDialog"
+            },
+            "enabled": {
+                "type": "script",
+                "script": "return (data.location.position.y > 0)"
+            },
+            "action": {
+                "type": "script",
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x, y: data.location.position.y - 1}})"
+            }
+        },
+        {
+            "virtualInput": "VI_DOWN",
+            "preferredRow": 2,
+            "preferredCol": 1,
+            "label": "NAVIGATE.LABEL_MOVE_SOUTH",
+            "description": "NAVIGATE.DESCRIPTION_MOVE_SOUTH",
+            "visible": {
+                "type": "script",
+                "script": "return !dialogs.isModalDialog"
+            },
+            "enabled": {
+                "type": "script",
+                "script": "return (data.location.position.y < (data.location.mapSize.height - 1))"
+            },
+            "action": {
+                "type": "script",
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x, y: data.location.position.y + 1}})"
+            }
+        },
+        {
+            "virtualInput": "VI_LEFT",
+            "preferredRow": 2,
+            "preferredCol": 0,
+            "label": "NAVIGATE.LABEL_MOVE_WEST",
+            "description": "NAVIGATE.DESCRIPTION_MOVE_WEST",
+            "visible": {
+                "type": "script",
+                "script": "return !dialogs.isModalDialog"
+            },
+            "enabled": {
+                "type": "script",
+                "script": "return (data.location.position.x > 0)"
+            },
+            "action": {
+                "type": "script",
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x - 1, y: data.location.position.y}})"
+            }
+        },
+        {
+            "virtualInput": "VI_RIGHT",
+            "preferredRow": 2,
+            "preferredCol": 2,
+            "label": "NAVIGATE.LABEL_MOVE_EAST",
+            "description": "NAVIGATE.DESCRIPTION_MOVE_EAST",
+            "visible": {
+                "type": "script",
+                "script": "return !dialogs.isModalDialog"
+            },
+            "enabled": {
+                "type": "script",
+                "script": "return (data.location.position.x < (data.location.mapSize.width - 1))"
+            },
+            "action": {
+                "type": "script",
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x + 1, y: data.location.position.y}})"
+            }
+        }
+    ]
+}

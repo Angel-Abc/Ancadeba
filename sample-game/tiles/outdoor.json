@@ -1,0 +1,36 @@
+{
+    "id": "outdoor",
+    "tiles": [
+        {
+            "key": "outdoor.ocean",
+            "description": "OUTDOOR.TILE-OCEAN",
+            "color": "aqua",
+            "image": "outdoor/waves.svg"
+        },
+        {
+            "key": "outdoor.beach",
+            "description": "OUTDOOR.TILE-BEACH",
+            "color": "yellow"
+        },
+        {
+            "key": "outdoor.dune",
+            "description": "OUTDOOR.TILE-DUNE",
+            "color": "greenyellow"
+        },
+        {
+            "key": "outdoor.forest",
+            "description": "OUTDOOR.TILE-FOREST",
+            "color": "green"
+        },
+        {
+            "key": "outdoor.grass",
+            "description": "OUTDOOR.TILE-GRASS",
+            "color": "lightgreen"
+        },
+        {
+            "key": "outdoor.road",
+            "description": "OUTDOOR.TILE-ROAD",
+            "color": "chocolate"
+        }
+    ]
+}

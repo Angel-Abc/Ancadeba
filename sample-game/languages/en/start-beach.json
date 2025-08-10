@@ -1,0 +1,18 @@
+{
+    "id": "English",
+    "translations": {
+        "START-BEACH.START-DIALOG.INTRO.MESSAGE": "<p>You wake up with a start. Your head hurts and you have <bold>no</bold> idea where you are.</p>",
+        "START-BEACH.START-DIALOG.INTRO.CHOICE-1": "Look around",
+        "START-BEACH.START-DIALOG.INTRO.CHOICE-2": "Try to remember",
+        "START-BEACH.START-DIALOG.LOOK-AROUND.MESSAGE": [
+            "<p>You are on a beach. The sun is shining, and the sound of waves fills the air.</p>",
+            "<p>To the south, you see dunes stretching out, behind them, there is a dense forest.</p>"
+        ],
+        "START-BEACH.START-DIALOG.LOOK-AROUND.CHOICE-1": "Continue walking",
+        "START-BEACH.START-DIALOG.LOOK-AROUND.CHOICE-2": "Try to remember",
+        "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.MESSAGE": "<p>You try to remember how you got here, but your mind is blank.</p>",
+        "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.CHOICE-1": "Continue walking",
+        "START-BEACH.START-DIALOG.LOOK-AROUND.CHOICE-1.MESSAGE": "<p>You continue walking along the beach, feeling the sand between your toes.</p>",
+        "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.CHOICE-1.MESSAGE": "<p>As continue your walk, you feel a sense of calm wash over you, despite the confusion.</p>"
+    }
+}

@@ -1,0 +1,68 @@
+{
+    "id": "start-screen",
+    "inputs": [],
+    "screen": {
+        "type": "grid",
+        "width": 24,
+        "height": 24,
+        "components": [
+            {
+                "position": {
+                    "top": 0,
+                    "left": 0,
+                    "right": 23,
+                    "bottom": 23
+                },
+                "component": {
+                    "type": "image",
+                    "image": "images/temp-background.png"
+                }
+            },
+            {
+                "position": {
+                    "top": 6,
+                    "left": 4,
+                    "right": 7,
+                    "bottom": 17
+                },
+                "component": {
+                    "type": "game-menu",
+                    "buttons": [
+                        {
+                            "label": "MENU.START-GAME",
+                            "action": {
+                                "type": "post-message",
+                                "message": "SYSTEM.START-GAME",
+                                "payload": {}
+                            }
+                        },
+                        {
+                            "label": "MENU.SETTINGS",
+                            "action": {
+                                "type": "post-message",
+                                "message": "SYSTEM.SHOW-SETTINGS",
+                                "payload": {}
+                            }
+                        },
+                        {
+                            "label": "MENU.LOAD-GAME",
+                            "action": {
+                                "type": "post-message",
+                                "message": "SYSTEM.LOAD-GAME",
+                                "payload": {}
+                            }
+                        },
+                        {
+                            "label": "MENU.EXIT-GAME",
+                            "action": {
+                                "type": "post-message",
+                                "message": "SYSTEM.EXIT-GAME",
+                                "payload": {}
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "id": "English",
+    "translations": {
+        "OUTDOOR.TILE-OCEAN": "Ocean. Waves and water.",
+        "OUTDOOR.TILE-BEACH": "Beach. Yellow sand.",
+        "OUTDOOR.TILE-DUNE": "Sand dunes.",
+        "OUTDOOR.TILE-FOREST": "Forest. Large green trees.",
+        "OUTDOOR.TILE-ROAD": "Cobblestones all the way.",
+        "OUTDOOR.TILE-GRASS": "Fields of green grass."
+    }
+}

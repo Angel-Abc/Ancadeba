@@ -1,0 +1,34 @@
+[
+    {
+        "message": "SYSTEM.START-GAME",
+        "action": {
+            "type": "post-message",
+            "message": "SYSTEM.SWITCH-PAGE",
+            "payload": "main-game"
+        }
+    },
+    {
+        "message": "SYSTEM.START-GAME",
+        "action": {
+            "type": "post-message",
+            "message": "SYSTEM.SWITCH-MAP",
+            "payload": {
+                "mapName": "start-beach",
+                "position": {
+                    "x": 9,
+                    "y": 6
+                }
+            }
+        }
+    },
+    {
+        "message": "SYSTEM.POSITION-CHANGED",
+        "action": {
+            "type": "script",
+            "script": [
+                "dialogs.activeDialog = null",
+                "context.postMessage({message: 'SYSTEM.ADD-LINE-TO-OUTPUT-LOG', payload: `<p>${context.triggerPayload.tile}</p>`})"
+            ]
+        }
+    }
+]

@@ -1,0 +1,41 @@
+{
+  "title": "Sample Game",
+  "description": "A sample game for development of the game engine",
+  "version": "1.0.0",
+  "initial-data": {
+    "language": "en",
+    "start-page": "start-page"
+  },
+  "languages": {
+    "en": [
+      "languages/en/system.json",
+      "languages/en/tiles.json",
+      "languages/en/start-beach.json"
+    ]
+  },
+  "pages": {
+    "start-page": "pages/start-page.json",
+    "main-game": "pages/main-game.json"
+  },
+  "maps": {
+    "start-beach": "maps/start-beach.json"
+  },
+  "tiles": {
+    "outdoor": "tiles/outdoor.json"
+  },
+  "dialogs": {
+    "start-beach.start-dialog": "dialogs/start-beach/start-dialog.json"
+  },
+  "styling": [
+    "game.css"
+  ],
+  "handlers": [
+    "handlers/system.json"
+  ],
+  "virtual-keys": [
+    "inputs/virtual-keys.json"
+  ],
+  "virtual-inputs": [
+    "inputs/virtual-inputs.json"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+    "key": "start-beach",
+    "type": "squares-map",
+    "width": 20,
+    "height": 20,
+    "tileSets": ["outdoor"],
+    "tiles": [
+        {
+            "key": "o1",
+            "tile": "outdoor.ocean"
+        },
+        {
+            "key": "b1",
+            "tile": "outdoor.beach"
+        },
+        {
+            "key": "b2",
+            "tile": "outdoor.beach",
+            "onEnter": {
+                "type": "post-message",
+                "message": "SYSTEM.START-DIALOG",
+                "payload": "start-beach.start-dialog"
+            }
+        },
+        {
+            "key": "d1",
+            "tile": "outdoor.dune"
+        },
+        {
+            "key": "f1",
+            "tile": "outdoor.forest"
+        },
+        {
+            "key": "g1",
+            "tile": "outdoor.grass"
+        },
+        {
+            "key": "r1",
+            "tile": "outdoor.road"
+        }
+    ],
+    "map": [
+        "o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1",
+        "o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,b1",
+        "o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,o1,b1,o1,o1,b1,o1,b1,b1,b1",
+        "o1,o1,o1,o1,o1,o1,o1,o1,o1,b1,b1,b1,b1,o1,b1,b1,b1,b1,b1,b1",
+        "o1,o1,o1,o1,o1,o1,o1,o1,o1,b1,b1,b1,b1,b1,b1,d1,b1,b1,d1,d1",
+        "o1,o1,o1,o1,o1,o1,o1,o1,b1,b1,b1,d1,d1,b1,d1,d1,d1,d1,d1,f1",
+        "o1,o1,o1,o1,o1,o1,o1,b1,b1,b2,d1,d1,d1,d1,d1,f1,d1,d1,f1,f1",
+        "o1,o1,o1,o1,o1,o1,b1,b1,d1,d1,d1,d1,d1,d1,d1,f1,d1,d1,f1,f1",
+        "b1,o1,o1,o1,o1,o1,b1,b1,d1,d1,d1,f1,f1,d1,f1,f1,f1,f1,f1,f1",
+        "b1,b1,o1,o1,o1,b1,b1,d1,d1,f1,f1,f1,f1,d1,f1,f1,f1,f1,f1,f1",
+        "b1,b1,o1,o1,b1,b1,b1,d1,d1,f1,f1,f1,f1,f1,f1,r1,r1,r1,f1,f1",
+        "d1,b1,b1,o1,b1,b1,d1,d1,f1,f1,f1,f1,r1,r1,r1,r1,f1,r1,r1,r1",
+        "d1,d1,b1,b1,b1,b1,d1,f1,f1,f1,f1,r1,r1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,d1,d1,d1,b1,d1,d1,f1,f1,f1,f1,r1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,d1,d1,d1,d1,f1,f1,f1,f1,f1,r1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,g1,d1,d1,f1,f1,f1,r1,r1,r1,r1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,g1,g1,f1,f1,f1,f1,r1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,g1,r1,r1,r1,r1,r1,r1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,r1,r1,g1,g1,g1,g1,g1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1,f1",
+        "g1,g1,r1,g1,g1,g1,g1,g1,g1,g1,g1,f1,f1,f1,f1,f1,f1,f1,f1,f1"
+    ]
+}
