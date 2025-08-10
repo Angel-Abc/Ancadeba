@@ -9,8 +9,9 @@
     "type": "module",
     "scripts": {
         "build": "tsc && vite build",
-        "dev": "vite",
-        "test": "vitest"        
+        "dev": "vite --logLevel info",
+        "test": "vitest",
+        "preview": "vite preview"
     },
     "devDependencies": {
         "typescript": "^5.9.2",
