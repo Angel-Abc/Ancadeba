@@ -28,6 +28,7 @@ export default defineConfig({
       '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
       '@engine': fileURLToPath(new URL('./engine/engine', import.meta.url)),
       '@editor': fileURLToPath(new URL('./editor', import.meta.url)),
+      '@utils': fileURLToPath(new URL('./utils', import.meta.url)),
     }
   },
   build: {

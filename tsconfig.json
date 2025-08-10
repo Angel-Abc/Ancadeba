@@ -15,7 +15,8 @@
       "@builders/*": ["./engine/builders/*"],
       "@app/*": ["./engine/app/*"],
       "@engine/*": ["./engine/engine/*"],
-      "@editor/*": ["./editor/*"]
+      "@editor/*": ["./editor/*"],
+      "@utils/*": ["./utils/*"]
     }
   }
 }
