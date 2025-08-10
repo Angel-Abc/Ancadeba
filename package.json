@@ -10,7 +10,7 @@
     "scripts": {
         "build": "tsc && vite build",
         "dev": "concurrently -n \"vite,tsc\" \"npm run dev:engine\" \"tsc --noEmit --watch\"",
-        "test": "vitest",
+        "test": "vitest run",
         "preview": "vite preview",
         "dev:engine": "vite",
         "dev:editor": "vite --open editor/editor.html --port 5174"
