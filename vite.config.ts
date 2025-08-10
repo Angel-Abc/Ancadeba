@@ -9,6 +9,7 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 const withEditor = process.env.WITH_EDITOR !== 'false'
 
 export default defineConfig({
+  envPrefix: ['VITE_', 'LOG_', 'GAME_'],
   plugins: [
     react(),
     viteStaticCopy({

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { App } from '@app/App'
 import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
 import { IocProvider } from './providers/iocProvider'
+import { gameEngineToken, IGameEngine } from '@engine/gameEngine'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder()
 const container = containerBuilder.build()
@@ -17,3 +18,6 @@ if (rootElement) {
     </React.StrictMode>,
   )
 }
+
+const engine = container.resolve<IGameEngine>(gameEngineToken)
+await engine.start()
