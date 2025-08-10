@@ -16,12 +16,12 @@ export class ContainerBuilder implements IContainerBuilder {
         })
         result.register({
             token: messageBusToken,
-            useFactory: c => new MessageBus(c.resolve(messageQueueToken)),
+            useClass: MessageBus,
             deps: messageBusDependencies
         })
         result.register<IGameEngine>({
             token: gameEngineToken,
-            useFactory: c => new GameEngine(c.resolve(messageBusToken)),
+            useClass: GameEngine,
             deps: gameEngineDependencies
         })
         return result

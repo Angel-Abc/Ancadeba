@@ -1,6 +1,9 @@
 import type { Token } from './token'
 
-export type Class<T> = new (...args: unknown[]) => T
+// Allow classes with any constructor parameters to be used by the IoC container.
+// Using `any[]` here lets us register classes whose constructors expect
+// specific dependency types without TypeScript rejecting them.
+export type Class<T> = new (...args: any[]) => T // eslint-disable-line @typescript-eslint/no-explicit-any
 export type Factory<T> = (c: Container) => T
 
 export type Scope = 'singleton' | 'transient'
