@@ -11,9 +11,9 @@ import './styling/variables.css'
 import './styling/engine.css'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
-  container => {
+  container => () => {
     const scheduler = container.resolve(turnSchedulerToken)
-    return scheduler.onQueueEmpty.bind(scheduler)
+    scheduler.onQueueEmpty()
   },
 )
 const container: Container = containerBuilder.build()
