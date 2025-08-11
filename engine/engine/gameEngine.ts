@@ -3,8 +3,9 @@ import { gameLoaderToken, IGameLoader } from '@loader/gameLoader'
 import { logDebug } from '@utils/logMessage'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { domManagerToken, IDomManager } from '../managers/domManager'
+import { START_GAME_ENGINE_MESSAGE } from '../messages/system'
 
-const LogName: string = 'GameEngine'
+const logName: string = 'GameEngine'
 
 export interface IGameEngine {
     start(): Promise<void>
@@ -20,16 +21,16 @@ export class GameEngine implements IGameEngine {
     }
 
     async start(): Promise<void> {
-        logDebug(LogName, 'Starting game engine...')
+        logDebug(logName, 'Starting game engine...')
         const game = await this.gameLoader.loadGame()
-        logDebug(LogName, 'Game loaded with data {0}', game)
+        logDebug(logName, 'Game loaded with data {0}', game)
         game.cssFiles.forEach((cssFile: string) => {
             this.domManager.setCssFile(cssFile)
-            logDebug(LogName, 'CSS file {0} set', cssFile)
+            logDebug(logName, 'CSS file {0} set', cssFile)
         })
         this.messageBus.postMessage({
-            message: 'TEST',
-            payload: { game }
+            message: START_GAME_ENGINE_MESSAGE,
+            payload: null
         })
     }
 }

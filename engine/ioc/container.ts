@@ -2,7 +2,7 @@ import { describeToken, type Token } from './token'
 import type { Provider, Scope } from './types'
 import { logWarning } from '@utils/logMessage'
 
-const LogName: string = 'Container'
+const logName: string = 'Container'
 
 function isFunction(v: unknown): v is (...args: unknown[]) => unknown {
   return typeof v === 'function'
@@ -18,7 +18,7 @@ export class Container {
 
   register<T>(provider: Provider<T>): this {
     if (this.providers.has(provider.token)) {
-      logWarning(LogName, 'Provider for {0} already registered', describeToken(provider.token))
+      logWarning(logName, 'Provider for {0} already registered', describeToken(provider.token))
     }
     this.providers.set(provider.token, provider)
     return this
