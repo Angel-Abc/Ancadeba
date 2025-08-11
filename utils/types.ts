@@ -1,8 +1,8 @@
 export type CleanUp = () => void
 
-export type Message = {
+export interface Message<T = unknown> {
     message: string
-    payload: null | number | string | Record<string, unknown>
+    payload?: T
 }
 
 export const LogLevel = {
