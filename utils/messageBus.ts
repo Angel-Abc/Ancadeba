@@ -61,8 +61,11 @@ export class MessageBus implements IMessageBus {
 
         // return the unregister function
         return () => {
-            if (this.listeners.has(message)) {
-                this.listeners.set(message, this.listeners.get(message)!.filter(l => l.key !== listener.key))
+            const arr = this.listeners.get(message)
+            if (arr) {
+                const filtered = arr.filter(l => l.key !== listener.key)
+                if (filtered.length === 0) this.listeners.delete(message)
+                else this.listeners.set(message, filtered)
             }
         }
     }

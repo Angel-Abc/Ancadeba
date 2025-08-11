@@ -4,9 +4,16 @@ import { App } from '@app/App'
 import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
 import { gameEngineToken, IGameEngine } from '@engine/gameEngine'
 import { IocProvider } from '@app/providers/iocProvider'
+import { Container } from '@ioc/container'
+import { turnSchedulerToken } from '@engine/turnScheduler'
 
-const containerBuilder: IContainerBuilder = new ContainerBuilder()
-const container = containerBuilder.build()
+const containerBuilder: IContainerBuilder = new ContainerBuilder(
+  container => {
+    const scheduler = container.resolve(turnSchedulerToken)
+    return scheduler.onQueueEmpty.bind(scheduler)
+  },
+)
+const container: Container = containerBuilder.build()
 
 const rootElement = document.getElementById('root')
 if (rootElement) {
@@ -19,5 +26,11 @@ if (rootElement) {
   )
 }
 
-const engine = container.resolve<IGameEngine>(gameEngineToken)
-await engine.start()
+(async () => {
+  try {
+    const engine = container.resolve<IGameEngine>(gameEngineToken)
+    await engine.start()
+  } catch (err) {
+    console.error('Engine failed to start', err)
+  }
+})()
