@@ -15,6 +15,8 @@ export interface IMessageBus {
     postMessage(message: Message<unknown>): void
     registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp
     registerNotificationMessage(message: string): void
+    disableEmptyQueueAfterPost(): void
+    enableEmptyQueueAfterPost(): void
     shutDown(): void
 }
 
