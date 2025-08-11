@@ -7,6 +7,7 @@ import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 import { dataPathProviderToken, IDataPathProvider } from '../providers/configProviders'
 import { GameLoader, gameLoaderToken, IGameLoader } from '@loader/gameLoader'
 import { DomManager, domManagerDependencies, domManagerToken } from '../managers/domManager'
+import { TranslationService, translationServiceToken } from '../services/translationService'
 
 export interface IContainerBuilder {
     build(): Container
@@ -48,6 +49,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: domManagerToken,
             useClass: DomManager,
             deps: domManagerDependencies
+        })
+        result.register({
+            token: translationServiceToken,
+            useClass: TranslationService,
+            deps: []
         })
         // Register other dependencies as needed
         return result
