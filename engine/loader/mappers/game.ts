@@ -1,7 +1,7 @@
 import type { Game as GameData } from '@loader/data/game'
 import { type Game } from '@loader/schema/game'
 
-export function mapGame(game: Game): GameData {
+export function mapGame(game: Game, basePath: string): GameData {
     return {
         title: game.title,
         description: game.description,
@@ -17,6 +17,7 @@ export function mapGame(game: Game): GameData {
         tiles: game.tiles,
         handlers: game.handlers,
         virtualKeys: game['virtual-keys'],
-        virtualInputs: game['virtual-inputs']
+        virtualInputs: game['virtual-inputs'],
+        cssFiles: game.styling.map(cssFile => `${basePath}/${cssFile}`)
     }
 }

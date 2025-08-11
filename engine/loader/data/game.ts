@@ -15,5 +15,6 @@ export type Game = {
     dialogs: Record<string, string>
     handlers: string[],
     virtualKeys: string[],
-    virtualInputs: string[]
+    virtualInputs: string[],
+    cssFiles: string[]
 }

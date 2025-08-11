@@ -18,6 +18,6 @@ export class GameLoader implements IGameLoader {
 
     async loadGame(): Promise<GameData> {
         const game = await loadJsonResource<Game>(`${this.basePathProvider.dataPath}/index.json`, gameSchema)
-        return mapGame(game)
+        return mapGame(game, this.basePathProvider.dataPath)
     }
 }
