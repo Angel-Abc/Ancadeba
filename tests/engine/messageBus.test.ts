@@ -48,5 +48,23 @@ describe('MessageBus', () => {
 
     expect(handled.map(m => m.payload)).toEqual([1, 2])
   })
+
+  it('removes map entry once all listeners are unregistered', () => {
+    const queue = new MessageQueue(() => {})
+    const bus = new MessageBus(queue)
+    const handler1 = vi.fn()
+    const handler2 = vi.fn()
+    const cleanup1 = bus.registerMessageListener('event', handler1)
+    const cleanup2 = bus.registerMessageListener('event', handler2)
+
+    const listeners = (bus as unknown as { listeners: Map<string, unknown[]> }).listeners
+    expect(listeners.has('event')).toBe(true)
+
+    cleanup1()
+    expect(listeners.has('event')).toBe(true)
+
+    cleanup2()
+    expect(listeners.has('event')).toBe(false)
+  })
 })
 
