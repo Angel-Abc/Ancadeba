@@ -27,6 +27,7 @@ export default [
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
+      'eol-last': ['error', 'always'],
     },
   },
 ];
