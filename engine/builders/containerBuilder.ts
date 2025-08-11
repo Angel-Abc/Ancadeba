@@ -48,7 +48,8 @@ export class ContainerBuilder implements IContainerBuilder {
         result.register({
             token: domManagerToken,
             useClass: DomManager,
-            deps: domManagerDependencies
+            deps: domManagerDependencies,
+            scope: 'transient'
         })
         result.register({
             token: translationServiceToken,
