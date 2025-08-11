@@ -4,6 +4,7 @@ import { logDebug } from '@utils/logMessage'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { domManagerToken, IDomManager } from '../managers/domManager'
 import { START_GAME_ENGINE_MESSAGE } from '../messages/system'
+import { ILanguageManager, languageManagerToken } from '../managers/languageManager'
 
 const logName: string = 'GameEngine'
 
@@ -11,12 +12,13 @@ export interface IGameEngine {
     start(): Promise<void>
 }
 export const gameEngineToken = token<IGameEngine>('GameEngine')
-export const gameEngineDependencies: Token<unknown>[] = [messageBusToken, gameLoaderToken, domManagerToken]
+export const gameEngineDependencies: Token<unknown>[] = [messageBusToken, gameLoaderToken, domManagerToken, languageManagerToken]
 export class GameEngine implements IGameEngine {
     constructor(
         private messageBus: IMessageBus, 
         private gameLoader: IGameLoader,
-        private domManager: IDomManager
+        private domManager: IDomManager,
+        private languageManager: ILanguageManager
     ) {
     }
 
@@ -28,6 +30,7 @@ export class GameEngine implements IGameEngine {
             this.domManager.setCssFile(cssFile)
             logDebug(logName, 'CSS file {0} set', cssFile)
         })
+        this.languageManager.setLanguage(game.initialData.language)
         this.messageBus.postMessage({
             message: START_GAME_ENGINE_MESSAGE,
             payload: null

@@ -12,6 +12,7 @@
         "dev": "concurrently -n \"vite,tsc\" \"npm run dev:engine\" \"tsc --noEmit --watch\"",
         "build:release": "cross-env WITH_EDITOR=false npm run build",
         "test": "vitest run",
+        "test:dev": "vitest watch",
         "lint": "eslint .",
         "preview": "vite preview",
         "dev:engine": "vite",

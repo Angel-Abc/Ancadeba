@@ -8,6 +8,8 @@ import { dataPathProviderToken, IDataPathProvider } from '../providers/configPro
 import { GameLoader, gameLoaderToken, IGameLoader } from '@loader/gameLoader'
 import { DomManager, domManagerDependencies, domManagerToken } from '../managers/domManager'
 import { TranslationService, translationServiceToken } from '../services/translationService'
+import { LanguageManager, languageManagerDependencies, languageManagerToken } from '../managers/languageManager'
+import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
 
 export interface IContainerBuilder {
     build(): Container
@@ -59,6 +61,16 @@ export class ContainerBuilder implements IContainerBuilder {
             token: translationServiceToken,
             useClass: TranslationService,
             deps: []
+        })
+        result.register({
+            token: languageManagerToken,
+            useClass: LanguageManager,
+            deps: languageManagerDependencies
+        })
+        result.register({
+            token: languageLoaderToken,
+            useClass: LanguageLoader,
+            deps: languageLoaderDependencies
         })
         // Register other dependencies as needed
         return result
