@@ -24,7 +24,7 @@ describe('Loader mappers', () => {
       'virtual-inputs': ['vi1']
     }
 
-    const game = mapGame(input)
+    const game = mapGame(input, '')
     expect(game.title).toBe('My game')
     expect(game.initialData).toEqual({ language: 'en', startPage: 'start' })
   })

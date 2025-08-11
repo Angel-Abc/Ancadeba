@@ -32,4 +32,16 @@ describe('ContainerBuilder', () => {
     await queue.emptyQueue()
     expect(callback).toHaveBeenCalledTimes(1)
   })
+
+  it('resolves gameEngine without circular dependency', () => {
+    const builder = new ContainerBuilder(
+      container => () => {
+        const scheduler = container.resolve(turnSchedulerToken)
+        scheduler.onQueueEmpty()
+      },
+    )
+    const container = builder.build()
+    const engine = container.resolve(gameEngineToken)
+    expect(engine).toBeInstanceOf(GameEngine)
+  })
 })
