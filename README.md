@@ -44,3 +44,4 @@ npm run build    # production build
 
 ## License
 This project is licensed under the [MPL-2.0](LICENSE).
+Third-party licenses are listed in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
