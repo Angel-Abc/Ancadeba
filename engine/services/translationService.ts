@@ -5,7 +5,7 @@ import { fatalError } from '@utils/logMessage'
 const logName = 'TranslationService'
 
 export interface ITranslationService {
-    translate(ket: string): string
+    translate(key: string): string
     setLanguage(language: Language): void
 }
 
