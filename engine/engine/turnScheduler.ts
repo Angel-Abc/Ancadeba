@@ -1,4 +1,7 @@
 import { Token, token } from '@ioc/token'
+import { logDebug } from '@utils/logMessage'
+
+const logName: string = 'TurnScheduler'
 
 export interface ITurnScheduler {
     onQueueEmpty(): void
@@ -9,7 +12,7 @@ export const turnSchedulerDependencies: Token<unknown>[] = []
 
 export class TurnScheduler implements ITurnScheduler {
     public onQueueEmpty(): void {
-        // no-op for now
+        logDebug(logName, 'TurnScheduler: onQueueEmpty called')
     }
 }
 

@@ -12,11 +12,10 @@ export interface IGameLoader {
 export const gameLoaderToken = token<IGameLoader>('GameLoader')
 export const gameLoaderDependencies = [dataPathProviderToken]
 export class GameLoader implements IGameLoader {
-    private basePathProvider: IDataPathProvider
     
-    constructor(basePathProvider: IDataPathProvider) {
-        this.basePathProvider = basePathProvider
+    constructor(private basePathProvider: IDataPathProvider) {
     }
+
     async loadGame(): Promise<GameData> {
         const game = await loadJsonResource<Game>(`${this.basePathProvider.dataPath}/index.json`, gameSchema)
         return mapGame(game)

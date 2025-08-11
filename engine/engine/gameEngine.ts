@@ -11,12 +11,7 @@ export interface IGameEngine {
 export const gameEngineToken = token<IGameEngine>('GameEngine')
 export const gameEngineDependencies: Token<unknown>[] = [messageBusToken, gameLoaderToken]
 export class GameEngine implements IGameEngine {
-    private messageBus: IMessageBus
-    private gameLoader: IGameLoader
-
-    constructor(messageBus: IMessageBus, gameLoader: IGameLoader) {
-        this.messageBus = messageBus
-        this.gameLoader = gameLoader
+    constructor(private messageBus: IMessageBus, private gameLoader: IGameLoader) {
     }
 
     async start(): Promise<void> {

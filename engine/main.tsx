@@ -6,6 +6,9 @@ import { gameEngineToken, IGameEngine } from '@engine/gameEngine'
 import { IocProvider } from '@app/providers/iocProvider'
 import { Container } from '@ioc/container'
 import { turnSchedulerToken } from '@engine/turnScheduler'
+import './styling/reset.css'
+import './styling/variables.css'
+import './styling/engine.css'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
   container => {

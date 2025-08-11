@@ -1,0 +1,33 @@
+/* all CSS variables used */
+:root {
+    --ge-background-color: oklch(0 0 0);
+    --ge-color-contrast: oklch(0.66 0.241 354.308);
+    --ge-color-dark: oklch(0.2 0.1 0);
+
+    --ge-min-root-size: min(100vw, 100vh);
+    --ge-font-size: calc(0.02 * var(--ge-min-root-size));
+    --ge-font-family: 'Arial', sans-serif;
+    --ge-font-color: oklch(0.819 0.1135 65.12);
+
+    --ge-grid-width: 12;
+    --ge-grid-height: 12;
+    --ge-grid-item-top: 0;
+    --ge-grid-item-left: 0;
+    --ge-grid-item-right: 11;
+    --ge-grid-item-bottom: 11;
+    --ge-grid-border-width: calc(0.04 * 1vw);
+    --ge-grid-border-color: var(--ge-font-color);
+
+    --ge-map-viewport-width: 9;
+    --ge-map-viewport-height: 9;
+    --ge-map-area-width: 20;
+    --ge-map-area-height: 20;
+    --ge-map-position-top: 0;
+    --ge-map-position-left: 0;
+    --ge-map-tile-color: white;
+
+    --ge-input-matrix-width: 5;
+    --ge-input-matrix-height: 4;
+    
+    --ge-image-path: ''
+}
