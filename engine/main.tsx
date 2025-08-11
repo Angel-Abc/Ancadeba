@@ -10,11 +10,13 @@ import './styling/reset.css'
 import './styling/variables.css'
 import './styling/engine.css'
 
+const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
   container => () => {
     const scheduler = container.resolve(turnSchedulerToken)
     scheduler.onQueueEmpty()
   },
+  dataPath,
 )
 const container: Container = containerBuilder.build()
 

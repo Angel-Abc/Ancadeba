@@ -10,7 +10,7 @@ import { TurnScheduler, turnSchedulerToken } from '@engine/turnScheduler'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
-    const builder = new ContainerBuilder()
+    const builder = new ContainerBuilder(() => () => {}, '/data')
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)
     const bus = container.resolve(messageBusToken)
@@ -24,7 +24,7 @@ describe('ContainerBuilder', () => {
 
   it('uses supplied callback when queue empties', async () => {
     const callback = vi.fn()
-    const builder = new ContainerBuilder(() => callback)
+    const builder = new ContainerBuilder(() => callback, '/data')
     const container = builder.build()
     const queue = container.resolve(messageQueueToken)
     queue.setHandler(() => {})
@@ -39,6 +39,7 @@ describe('ContainerBuilder', () => {
         const scheduler = container.resolve(turnSchedulerToken)
         scheduler.onQueueEmpty()
       },
+      '/data',
     )
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)
