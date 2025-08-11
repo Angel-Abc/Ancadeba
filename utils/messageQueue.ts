@@ -50,7 +50,7 @@ export class MessageQueue implements IMessageQueue {
                 const message = this.queue.shift()
                 if (!message) continue
                 const result = this.handler(message)
-                if (result instanceof Promise) {
+                if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
                     await result
                 }
             }
