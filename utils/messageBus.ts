@@ -6,14 +6,14 @@ import { Token, token } from '@ioc/token'
 type MessageListener = {
     key: number
     message: string
-    handler: (message: Message) => void | Promise<void>
+    handler: (message: Message<unknown>) => void | Promise<void>
 }
 
 const LogName: string = 'MessageBus'
 
 export interface IMessageBus {
-    postMessage(message: Message): void
-    registerMessageListener(message: string, handler: (message: Message) => void | Promise<void>): CleanUp
+    postMessage(message: Message<unknown>): void
+    registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp
     registerNotificationMessage(message: string): void
     shutDown(): void
 }
@@ -28,10 +28,10 @@ export class MessageBus implements IMessageBus {
 
     constructor(messageQueue: IMessageQueue) {
         this.messageQueue = messageQueue
-        this.messageQueue.setHandler((message: Message) => this.handleMessage(message))
+        this.messageQueue.setHandler((message: Message<unknown>) => this.handleMessage(message))
     }
 
-    postMessage(message: Message): void {
+    postMessage(message: Message<unknown>): void {
         logDebug(LogName, 'Push message: {0}', message)
         this.messageQueue.postMessage(message)
     }
@@ -48,7 +48,7 @@ export class MessageBus implements IMessageBus {
         this.silentMessages.add(message)
     }
 
-    public registerMessageListener(message: string, handler: (message: Message) => void | Promise<void>): CleanUp {
+    public registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp {
         if (!this.listeners.has(message)) {
             this.listeners.set(message, [])
         }
@@ -70,7 +70,7 @@ export class MessageBus implements IMessageBus {
         }
     }
 
-    private handleMessage(message: Message): void | Promise<void> {
+    private handleMessage(message: Message<unknown>): void | Promise<void> {
         const listeners = this.listeners.get(message.message)
         if (!listeners || listeners.length === 0) {
             const logger = this.silentMessages.has(message.message)

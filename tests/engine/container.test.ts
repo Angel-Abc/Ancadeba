@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { Container } from '@ioc/container'
 import { token } from '@ioc/token'
+import * as logging from '@utils/logMessage'
 
 describe('IoC Container', () => {
   it('resolves registered dependencies', () => {
@@ -51,5 +52,15 @@ describe('IoC Container', () => {
     c.register({ token: B_TOKEN, useClass: B, deps: [A_TOKEN] })
 
     expect(() => c.resolve(A_TOKEN)).toThrowError(/IoC circular dependency/)
+  })
+
+  it('warns when registering the same token twice', () => {
+    const FOO = token<number>('foo')
+    const warn = vi.spyOn(logging, 'logWarning').mockImplementation(() => '')
+    const c = new Container()
+    c.register({ token: FOO, useValue: 1 })
+    c.register({ token: FOO, useValue: 2 })
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
   })
 })

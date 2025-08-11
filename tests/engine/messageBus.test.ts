@@ -66,5 +66,21 @@ describe('MessageBus', () => {
     cleanup2()
     expect(listeners.has('event')).toBe(false)
   })
+
+  it('handles messages with diverse payload types', async () => {
+    const queue = new MessageQueue(() => {})
+    const bus = new MessageBus(queue)
+    const boolHandler = vi.fn()
+    const arrayHandler = vi.fn()
+    bus.registerMessageListener('bool', boolHandler)
+    bus.registerMessageListener('arr', arrayHandler)
+
+    bus.postMessage({ message: 'bool', payload: true })
+    bus.postMessage({ message: 'arr', payload: [1, 2, 3] })
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(boolHandler).toHaveBeenCalledWith({ message: 'bool', payload: true })
+    expect(arrayHandler).toHaveBeenCalledWith({ message: 'arr', payload: [1, 2, 3] })
+  })
 })
 

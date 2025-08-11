@@ -56,5 +56,28 @@ describe('MessageQueue', () => {
     expect(order).toEqual(['a', 'b'])
     expect(onEmpty).toHaveBeenCalledTimes(1)
   })
+
+  it('awaits thenable results', async () => {
+    const onEmpty = vi.fn()
+    const queue = new MessageQueue(onEmpty)
+    const order: string[] = []
+    queue.setHandler(m => ({
+      then: (resolve: () => void) => {
+        setTimeout(() => {
+          order.push(m.message)
+          resolve()
+        }, 1)
+      },
+    }) as unknown as Promise<void>)
+
+    queue.disableEmptyQueueAfterPost()
+    queue.postMessage({ message: 'a', payload: null })
+    queue.postMessage({ message: 'b', payload: null })
+
+    await queue.emptyQueue()
+
+    expect(order).toEqual(['a', 'b'])
+    expect(onEmpty).toHaveBeenCalledTimes(1)
+  })
 })
 
