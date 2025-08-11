@@ -65,16 +65,16 @@ export function logMessage(
 
     switch (logLevel) {
         case LogLevel.debug:
-            console.debug('\x1B[37m' + finalMessage, ...extraArgs)
+            console.debug('\x1B[37m' + finalMessage + '\x1B[0m', ...extraArgs)
             break
         case LogLevel.info:
-            console.info('\x1B[30m' + finalMessage, ...extraArgs)
+            console.info('\x1B[30m' + finalMessage + '\x1B[0m', ...extraArgs)
             break
         case LogLevel.warning:
-            console.warn('\x1B[1m\x1B[33m' + finalMessage, ...extraArgs)
+            console.warn('\x1B[1m\x1B[33m' + finalMessage + '\x1B[0m', ...extraArgs)
             break
         case LogLevel.error:
-            console.error('\x1B[1m\x1B[31m' + finalMessage, ...extraArgs)
+            console.error('\x1B[1m\x1B[31m' + finalMessage + '\x1B[0m', ...extraArgs)
             break
         default:
             console.log(finalMessage, ...extraArgs)
