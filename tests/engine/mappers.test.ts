@@ -24,10 +24,9 @@ describe('Loader mappers', () => {
       'virtual-inputs': ['vi1']
     }
 
-    const { game, styling } = mapGame(input, '/assets')
+    const game = mapGame(input)
     expect(game.title).toBe('My game')
     expect(game.initialData).toEqual({ language: 'en', startPage: 'start' })
-    expect(styling).toEqual(['/assets/style.css'])
   })
 
   it('maps language translations', () => {
