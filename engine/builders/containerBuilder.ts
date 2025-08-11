@@ -1,5 +1,7 @@
 import { GameEngine, gameEngineDependencies, gameEngineToken, IGameEngine } from '@engine/gameEngine'
+import { TurnScheduler, turnSchedulerDependencies, turnSchedulerToken } from '@engine/turnScheduler'
 import { Container } from '@ioc/container'
+import type { Container as IContainer } from '@ioc/types'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
 import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 
@@ -8,11 +10,17 @@ export interface IContainerBuilder {
 }
 
 export class ContainerBuilder implements IContainerBuilder {
+    constructor(private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {}) {}
     public build(): Container {
         const result = new Container()
         result.register({
+            token: turnSchedulerToken,
+            useClass: TurnScheduler,
+            deps: turnSchedulerDependencies
+        })
+        result.register({
             token: messageQueueToken,
-            useFactory: () => new MessageQueue(() => {})
+            useFactory: (container) => new MessageQueue(this.onQueueEmptyProvider(container))
         })
         result.register({
             token: messageBusToken,
