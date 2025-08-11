@@ -14,7 +14,11 @@ export interface IContainerBuilder {
 }
 
 export class ContainerBuilder implements IContainerBuilder {
-    constructor(private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {}) {}
+    constructor(
+        private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {},
+        private dataPath: string = process.env.DATA_PATH ?? '/data',
+    ) {}
+
     public build(): Container {
         const result = new Container()
         result.register({
@@ -38,7 +42,7 @@ export class ContainerBuilder implements IContainerBuilder {
         })
         result.register<IDataPathProvider>({
             token: dataPathProviderToken,
-            useValue: { dataPath: '/data' }
+            useValue: { dataPath: this.dataPath }
         })
         result.register<IGameLoader>({
             token: gameLoaderToken,
