@@ -19,5 +19,11 @@ if (rootElement) {
   )
 }
 
-const engine = container.resolve<IGameEngine>(gameEngineToken)
-await engine.start()
+(async () => {
+  try {
+    const engine = container.resolve<IGameEngine>(gameEngineToken)
+    await engine.start()
+  } catch (err) {
+    console.error('Engine failed to start', err)
+  }
+})()
