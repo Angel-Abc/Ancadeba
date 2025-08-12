@@ -6,7 +6,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapLanguage } from './mappers/language'
 
 export interface ILanguageLoader {
-    loadLanguage: (language: string) => Promise<LanguageData>
+    loadLanguage: (paths: string[]) => Promise<LanguageData>
 }
 
 export const languageLoaderToken = token<ILanguageLoader>('LanguageLoader')
@@ -14,8 +14,15 @@ export const languageLoaderDependencies = [dataPathProviderToken]
 export class LanguageLoader implements ILanguageLoader {
     constructor(private basePathProvider: IDataPathProvider) {
     }
-    public async loadLanguage(language: string): Promise<LanguageData> {
-        const schema = await loadJsonResource<Language>(`${this.basePathProvider.dataPath}/languages/${language}.json`, languageSchema)
-        return mapLanguage(schema)
+    
+    public async loadLanguage(paths: string[]): Promise<LanguageData> {
+        const schemas = await Promise.all(paths.map(path => loadJsonResource<Language>(`${this.basePathProvider.dataPath}/${path}`, languageSchema)))
+        const languages = schemas.map(mapLanguage)
+        return {
+            id: languages[0].id,
+            translations: languages.reduce((acc, lang) => {
+                return { ...acc, ...lang.translations }
+            }, {})
+        }
     }
 }

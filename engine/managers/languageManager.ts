@@ -2,6 +2,7 @@ import { ILanguageLoader, languageLoaderToken } from '@loader/languageLoader'
 import { ITranslationService, translationServiceToken } from '../services/translationService'
 import { token } from '@ioc/token'
 import { fatalError } from '@utils/logMessage'
+import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
 
 const logName = 'LanguageManager'
 
@@ -11,24 +12,27 @@ export interface ILanguageManager {
 }
 
 export const languageManagerToken = token<ILanguageManager>('LanguageManager')
-export const languageManagerDependencies = [languageLoaderToken, translationServiceToken]
+export const languageManagerDependencies = [languageLoaderToken, translationServiceToken,gameDataProviderToken]
 export class LanguageManager implements ILanguageManager {
-    private currentLanguage: string | null = null
-
     constructor(
         private languageLoader: ILanguageLoader,
-        private translationService: ITranslationService
+        private translationService: ITranslationService,
+        private gameDataProvider: IGameDataProvider
     ) {}
 
     public getLanguage(): string {
-        if (!this.currentLanguage) fatalError(logName, 'No language set')
-        return this.currentLanguage
+        if (!this.gameDataProvider.Context.language) fatalError(logName, 'No language set')
+        return this.gameDataProvider.Context.language
     }
 
-    public async setLanguage(language: string): Promise<void> {
-        const loadedLanguage = await this.languageLoader.loadLanguage(language)
-        if (!loadedLanguage) fatalError(logName, `Language ${language} not found`)
-        this.translationService.setLanguage(loadedLanguage)
-        this.currentLanguage = language
+    public async setLanguage(languageKey: string): Promise<void> {
+        if (this.gameDataProvider.Game.languages[languageKey] === undefined) {
+            const paths = this.gameDataProvider.Game.game.languages[languageKey]
+            const language = await this.languageLoader.loadLanguage(paths)
+            this.gameDataProvider.Game.languages[languageKey] = language
+        }
+        const languageData = this.gameDataProvider.Game.languages[languageKey]
+        this.translationService.setLanguage(languageData)
+        this.gameDataProvider.Context.language = languageKey
     }
 }

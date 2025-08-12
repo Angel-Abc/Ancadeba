@@ -2,6 +2,7 @@ import { token } from '@ioc/token'
 
 export interface IDomManager {
     setCssFile: (path: string) => void
+    setTitle: (title: string) => void
 }
 
 export const domManagerToken = token<IDomManager>('DomManager')
@@ -27,5 +28,9 @@ export class DomManager implements IDomManager {
         linkElement.href = path
         document.head.appendChild(linkElement)
         this.writtenCssFiles.add(path)
+    }
+
+    public setTitle(title: string): void {
+        document.title = title
     }
 }

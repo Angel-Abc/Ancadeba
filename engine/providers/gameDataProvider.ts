@@ -1,0 +1,45 @@
+import { Token, token } from '@ioc/token'
+import { Game, InitialData } from '@loader/data/game'
+import { Language } from '@loader/data/language'
+import { fatalError } from '@utils/logMessage'
+
+const logName = 'GameDataProvider'
+
+export type GameData = {
+    game: Game,
+    languages: Record<string, Language>
+}
+
+export type GameContext = InitialData & {}
+
+export interface IGameDataProvider {
+    get Game(): GameData
+    get Context(): GameContext
+    initialize(gameData: Game): void
+}
+
+export const gameDataProviderToken = token<IGameDataProvider>('GameDataProvider')
+export const gameDataProviderDependencies: Token<unknown>[] = []
+export class GameDataProvider implements IGameDataProvider {
+    private game: GameData | null = null
+    private context: GameContext | null = null
+
+    public get Game(): GameData { 
+        if (!this.game) fatalError(logName, 'Game data not loaded')
+        return this.game 
+    }
+
+    public get Context(): GameContext { 
+        if (!this.context) fatalError(logName, 'Game context not loaded')
+        return this.context 
+    }
+
+    public initialize(gameData: Game): void {
+        if (this.game) fatalError(logName, 'Game data already initialized')
+        this.game = {
+            game: gameData,
+            languages: {}
+        }
+        this.context = gameData.initialData as GameContext
+    }
+}

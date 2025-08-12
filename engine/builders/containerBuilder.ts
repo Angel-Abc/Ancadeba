@@ -10,6 +10,7 @@ import { DomManager, domManagerDependencies, domManagerToken } from '../managers
 import { TranslationService, translationServiceToken } from '../services/translationService'
 import { LanguageManager, languageManagerDependencies, languageManagerToken } from '../managers/languageManager'
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
+import { GameDataProvider, gameDataProviderDependencies, gameDataProviderToken } from '../providers/gameDataProvider'
 
 export interface IContainerBuilder {
     build(): Container
@@ -71,6 +72,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: languageLoaderToken,
             useClass: LanguageLoader,
             deps: languageLoaderDependencies
+        })
+        result.register({
+            token: gameDataProviderToken,
+            useClass: GameDataProvider,
+            deps: gameDataProviderDependencies
         })
         // Register other dependencies as needed
         return result
