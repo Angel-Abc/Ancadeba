@@ -1,4 +1,4 @@
-import { token } from '@ioc/token'
+import { Token, token } from '@ioc/token'
 import { dataPathProviderToken, IDataPathProvider } from '../providers/configProviders'
 import { type Language as LanguageData } from './data/language'
 import { Language, languageSchema } from './schema/language'
@@ -10,7 +10,7 @@ export interface ILanguageLoader {
 }
 
 export const languageLoaderToken = token<ILanguageLoader>('LanguageLoader')
-export const languageLoaderDependencies = [dataPathProviderToken]
+export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
 export class LanguageLoader implements ILanguageLoader {
     constructor(private basePathProvider: IDataPathProvider) {
     }

@@ -1,16 +1,20 @@
 import { Token, token } from '@ioc/token'
 import { Game, InitialData } from '@loader/data/game'
 import { Language } from '@loader/data/language'
+import { Page } from '@loader/data/page'
 import { fatalError } from '@utils/logMessage'
 
 const logName = 'GameDataProvider'
 
 export type GameData = {
     game: Game,
-    languages: Record<string, Language>
+    loadedLanguages: Record<string, Language>,
+    loadedPages: Record<string, Page>
 }
 
-export type GameContext = InitialData & {}
+export type GameContext = InitialData & {
+    currentPageId: string | null
+}
 
 export interface IGameDataProvider {
     get Game(): GameData
@@ -38,8 +42,12 @@ export class GameDataProvider implements IGameDataProvider {
         if (this.game) fatalError(logName, 'Game data already initialized')
         this.game = {
             game: gameData,
-            languages: {}
+            loadedLanguages: {},
+            loadedPages: {}
         }
-        this.context = gameData.initialData as GameContext
+        this.context = { 
+            ...gameData.initialData,
+            currentPageId: null 
+        }
     }
 }

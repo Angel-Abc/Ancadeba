@@ -7,36 +7,31 @@ import { type Button } from '@loader/schema/button'
 import { mapAction } from './action'
 import { mapInputs } from './input'
 
-
-interface Context {
-    basePath: string
-}
-
-export function mapPage(context: Context,page: Page): PageData {
+export function mapPage(basePath: string,page: Page): PageData {
     return {
         id: page.id,
-        screen: mapScreen(context, page.screen),
+        screen: mapScreen(basePath, page.screen),
         inputs: mapInputs(page.inputs)
     }
 }
 
-export function mapScreen(context: Context, screen: Screen): ScreenData {
+export function mapScreen(basePath: string, screen: Screen): ScreenData {
     switch (screen.type) {
         case 'grid':
             return {
                 type: 'grid',
                 width: screen.width,
                 height: screen.height,
-                components: mapGridScreenComponents(context, screen.components)
+                components: mapGridScreenComponents(basePath, screen.components)
             }
     }
 }
 
-export function mapGridScreenComponents(context: Context, components: GridScreenItem[]): GridScreenItemData[] {
-    return components.map(c => mapGridScreenComponent(context, c))
+export function mapGridScreenComponents(basePath: string, components: GridScreenItem[]): GridScreenItemData[] {
+    return components.map(c => mapGridScreenComponent(basePath, c))
 }
 
-export function mapGridScreenComponent(context: Context, item: GridScreenItem): GridScreenItemData {
+export function mapGridScreenComponent(basePath: string, item: GridScreenItem): GridScreenItemData {
     return {
         position: {
             top: item.position.top,
@@ -44,12 +39,12 @@ export function mapGridScreenComponent(context: Context, item: GridScreenItem): 
             right: item.position.right,
             bottom: item.position.bottom
         },
-        component: mapComponent(context, item.component),
+        component: mapComponent(basePath, item.component),
         condition: item.condition
     }
 }
 
-export function mapComponent(context: Context, component: Component): ComponentData {
+export function mapComponent(basePath: string, component: Component): ComponentData {
     switch (component.type) {
         case 'game-menu':
             return {
@@ -59,7 +54,7 @@ export function mapComponent(context: Context, component: Component): ComponentD
         case 'image':
             return {
                 type: 'image',
-                image: `${context.basePath}/${component.image}`
+                image: `${basePath}/${component.image}`
             }
         case 'squares-map':
             return {

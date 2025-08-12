@@ -29,12 +29,12 @@ export class LanguageManager implements ILanguageManager {
         const paths = this.gameDataProvider.Game.game.languages[languageKey]
         if (!paths) fatalError(logName, `Unknown language key: ${languageKey}`)
 
-        if (this.gameDataProvider.Game.languages[languageKey] === undefined) {
+        if (this.gameDataProvider.Game.loadedLanguages[languageKey] === undefined) {
             const language = await this.languageLoader.loadLanguage(paths)
-            this.gameDataProvider.Game.languages[languageKey] = language
+            this.gameDataProvider.Game.loadedLanguages[languageKey] = language
         }
 
-        const languageData = this.gameDataProvider.Game.languages[languageKey]
+        const languageData = this.gameDataProvider.Game.loadedLanguages[languageKey]
         this.translationService.setLanguage(languageData)
         this.gameDataProvider.Context.language = languageKey
     }
