@@ -7,7 +7,7 @@ export function mapLanguage(language: Language): LanguageData {
         translations: Object.fromEntries(
             Object.entries(language.translations).map(([key, value]) => [
                 key,
-                Array.isArray(value) ? value.join("\n ") : value
+                Array.isArray(value) ? value.join("\n") : value
             ])
         )
     }

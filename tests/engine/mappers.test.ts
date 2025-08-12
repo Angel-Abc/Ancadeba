@@ -43,9 +43,10 @@ describe('Loader mappers', () => {
       id: 'en',
       translations: {
         greeting: 'Hello',
-        multiline: 'line1\n line2'
+        multiline: 'line1\nline2'
       }
     })
+    expect(result.translations.multiline).not.toContain('\n ')
   })
 
   it('maps condition data', () => {
