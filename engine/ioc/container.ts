@@ -1,6 +1,6 @@
 import { describeToken, type Token } from './token'
 import type { Provider, Scope } from './types'
-import { fatalError, logWarning } from '@utils/logMessage'
+import { fatalError } from '@utils/logMessage'
 
 const logName: string = 'Container'
 
@@ -18,7 +18,7 @@ export class Container {
 
   register<T>(provider: Provider<T>): this {
     if (this.providers.has(provider.token)) {
-      logWarning(logName, 'Provider for {0} already registered', describeToken(provider.token))
+      fatalError(logName, 'Provider for {0} already registered', describeToken(provider.token))
     }
     this.providers.set(provider.token, provider)
     return this

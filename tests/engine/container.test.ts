@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { Container } from '@ioc/container'
 import { token } from '@ioc/token'
-import * as logging from '@utils/logMessage'
 
 describe('IoC Container', () => {
   it('resolves registered dependencies', () => {
@@ -54,13 +53,11 @@ describe('IoC Container', () => {
     expect(() => c.resolve(A_TOKEN)).toThrowError('[Container] Circular dependency detected: A -> B -> A')
   })
 
-  it('warns when registering the same token twice', () => {
+  it('throws and does not override when registering the same token twice', () => {
     const FOO = token<number>('foo')
-    const warn = vi.spyOn(logging, 'logWarning').mockImplementation(() => '')
     const c = new Container()
     c.register({ token: FOO, useValue: 1 })
-    c.register({ token: FOO, useValue: 2 })
-    expect(warn).toHaveBeenCalled()
-    warn.mockRestore()
+    expect(() => c.register({ token: FOO, useValue: 2 })).toThrowError(/already registered/)
+    expect(c.resolve(FOO)).toBe(1)
   })
 })
