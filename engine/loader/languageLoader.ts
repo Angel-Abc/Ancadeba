@@ -14,12 +14,18 @@ export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderTok
 export class LanguageLoader implements ILanguageLoader {
     constructor(private basePathProvider: IDataPathProvider) {
     }
-    
+
     public async loadLanguage(paths: string[]): Promise<LanguageData> {
-        const schemas = await Promise.all(paths.map(path => loadJsonResource<Language>(`${this.basePathProvider.dataPath}/${path}`, languageSchema)))
+        if (paths.length === 0) {
+            throw new Error('[LanguageLoader] No language paths provided')
+        }
+
+        const schemas = await Promise.all(
+            paths.map(path => loadJsonResource<Language>(`${this.basePathProvider.dataPath}/${path}`, languageSchema))
+        )
         const languages = schemas.map(mapLanguage)
         return {
-            id: languages[0].id,
+            id: languages[0]?.id ?? '',
             translations: languages.reduce((acc, lang) => {
                 return { ...acc, ...lang.translations }
             }, {})
