@@ -9,7 +9,7 @@ export interface ITranslationService {
     setLanguage(language: Language): void
 }
 
-export const translationServiceToken = token<ITranslationService>('translationServiceToken')
+export const translationServiceToken = token<ITranslationService>('TranslationService')
 export class TranslationService implements ITranslationService {
     private language: Language | null = null
 
