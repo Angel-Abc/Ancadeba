@@ -21,4 +21,12 @@ describe('DomManager', () => {
     second.setCssFile(path)
     expect(document.head.querySelectorAll(`link[href="${path}"]`).length).toBe(1)
   })
+
+  it('does nothing when document is unavailable', () => {
+    const path = '/style.css'
+    const manager = new DomManager(null)
+    expect(() => manager.setCssFile(path)).not.toThrow()
+    expect(() => manager.setTitle('test')).not.toThrow()
+    expect(document.head.querySelectorAll(`link[href="${path}"]`).length).toBe(0)
+  })
 })
