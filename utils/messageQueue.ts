@@ -57,6 +57,9 @@ export class MessageQueue implements IMessageQueue {
         } finally {
             this.emptyingQueue = false
         }
+        if (this.queue.length > 0) {
+            return this.emptyQueue()
+        }
         this.onQueueEmpty()
     }
 

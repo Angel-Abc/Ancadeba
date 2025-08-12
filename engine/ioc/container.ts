@@ -39,11 +39,11 @@ export class Container {
     if (this.singletons.has(t)) return this.singletons.get(t) as T
 
     const p = this.providers.get(t) ?? this.parent?.getProvider(t)
-    if (!p) throw new Error(`No provider for ${describeToken(t)}`)
+    if (!p) fatalError(logName, 'No provider for {0}', describeToken(t))
 
     if (this.resolving.includes(t)) {
       const path = [...this.resolving, t].map(describeToken).join(' -> ')
-      throw new Error(`IoC circular dependency: ${path}`)
+      fatalError(logName, 'Circular dependency detected: {0}', path)
     }
 
     this.resolving.push(t)
@@ -69,6 +69,7 @@ export class Container {
       return new p.useClass(...deps)
     }
     if ('useFactory' in p) return p.useFactory(this)
-    throw new Error('Invalid provider')
+    
+    fatalError(logName, 'Invalid provider for {0}', describeToken((p as Provider<T>).token))
   }
 }

@@ -50,7 +50,7 @@ describe('IoC Container', () => {
     c.register({ token: A_TOKEN, useClass: A, deps: [B_TOKEN] })
     c.register({ token: B_TOKEN, useClass: B, deps: [A_TOKEN] })
 
-    expect(() => c.resolve(A_TOKEN)).toThrowError(/IoC circular dependency/)
+    expect(() => c.resolve(A_TOKEN)).toThrowError('[Container] Circular dependency detected: A -> B -> A')
   })
 
   it('throws and does not override when registering the same token twice', () => {
