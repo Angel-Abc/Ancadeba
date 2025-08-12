@@ -41,6 +41,7 @@ npm run build    # production build
 1. Fork the repository and create feature branches for your work.
 2. Ensure code adheres to the project's linting rules and passes all tests.
 3. Submit a pull request with a clear description of your changes.
+4. Avoid registering the same token twice in the IoC container; doing so throws an error and the original provider remains in place.
 
 ## License
 This project is licensed under the [MPL-2.0](LICENSE).
