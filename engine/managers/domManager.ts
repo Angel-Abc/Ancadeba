@@ -10,27 +10,35 @@ export const domManagerDependencies = []
 
 export class DomManager implements IDomManager {
     private writtenCssFiles: Set<string>
+    private document?: Document
 
-    constructor() {
+    constructor(doc?: Document | null) {
+        if (doc !== undefined) {
+            this.document = doc || undefined
+        } else if (typeof document !== 'undefined') {
+            this.document = document
+        }
         this.writtenCssFiles = new Set()
     }
 
     public setCssFile(path: string): void {
+        if (!this.document) return
         if (this.writtenCssFiles.has(path)) return
 
-        if (document.head.querySelector(`link[href="${path}"]`)) {
+        if (this.document.head.querySelector(`link[href="${path}"]`)) {
             this.writtenCssFiles.add(path)
             return
         }
 
-        const linkElement: HTMLLinkElement = document.createElement('link')
+        const linkElement: HTMLLinkElement = this.document.createElement('link')
         linkElement.rel = 'stylesheet'
         linkElement.href = path
-        document.head.appendChild(linkElement)
+        this.document.head.appendChild(linkElement)
         this.writtenCssFiles.add(path)
     }
 
     public setTitle(title: string): void {
-        document.title = title
+        if (!this.document) return
+        this.document.title = title
     }
 }
