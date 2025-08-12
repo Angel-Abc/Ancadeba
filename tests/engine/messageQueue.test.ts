@@ -79,5 +79,23 @@ describe('MessageQueue', () => {
     expect(order).toEqual(['a', 'b'])
     expect(onEmpty).toHaveBeenCalledTimes(1)
   })
+
+  it('reprocesses messages posted during draining before calling onQueueEmpty', async () => {
+    const onEmpty = vi.fn()
+    const queue = new MessageQueue(onEmpty)
+    const handled: string[] = []
+    queue.setHandler(m => {
+      handled.push(m.message)
+      if (m.message === 'a') {
+        queue.postMessage({ message: 'b', payload: null })
+      }
+    })
+
+    queue.postMessage({ message: 'a', payload: null })
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(handled).toEqual(['a', 'b'])
+    expect(onEmpty).toHaveBeenCalledTimes(1)
+  })
 })
 
