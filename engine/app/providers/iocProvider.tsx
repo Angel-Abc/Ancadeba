@@ -1,6 +1,9 @@
 import { createContext, useContext, useMemo, PropsWithChildren } from 'react'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
+import { fatalError } from '@utils/logMessage'
+
+const logName = 'IocProvider'
 
 export const IocContext = createContext<Container | null>(null)
 
@@ -10,6 +13,6 @@ export const IocProvider = ({ container, children }: PropsWithChildren<{ contain
 
 export const useService = <T,>(t: Token<T>): T => {
   const c = useContext(IocContext)
-  if (!c) throw new Error('IocProvider is missing in the tree')
+  if (!c) fatalError(logName, 'IocProvider is missing in the tree')
   return useMemo(() => c.resolve(t), [c, t])
 }
