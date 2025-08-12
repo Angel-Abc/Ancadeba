@@ -10,7 +10,7 @@ export interface IPageLoader {
 }
 
 export const pageLoaderToken = token<IPageLoader>('PageLoader')
-export const pageLoaderDependecies: Token<unknown>[] = [dataPathProviderToken]
+export const pageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
 export class PageLoader implements IPageLoader {
     constructor(private basePathProvider: IDataPathProvider) {}
 
