@@ -1,6 +1,6 @@
 import { ILanguageLoader, languageLoaderToken } from '@loader/languageLoader'
 import { ITranslationService, translationServiceToken } from '../services/translationService'
-import { token } from '@ioc/token'
+import { Token, token } from '@ioc/token'
 import { fatalError } from '@utils/logMessage'
 import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
 
@@ -12,7 +12,7 @@ export interface ILanguageManager {
 }
 
 export const languageManagerToken = token<ILanguageManager>('LanguageManager')
-export const languageManagerDependencies = [languageLoaderToken, translationServiceToken,gameDataProviderToken]
+export const languageManagerDependencies: Token<unknown>[] = [languageLoaderToken, translationServiceToken, gameDataProviderToken]
 export class LanguageManager implements ILanguageManager {
     constructor(
         private languageLoader: ILanguageLoader,
