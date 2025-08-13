@@ -14,7 +14,7 @@ const logName = 'PageManager'
 export const pageManagerToken = token<IPageManager>(logName)
 export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken,messageBusToken]
 export class PageManager implements IPageManager {
-    private cleanupFn: () => void | null
+    private cleanupFn: (() => void) | null
 
     constructor(
         private gameDataProvider: IGameDataProvider, 
@@ -31,6 +31,7 @@ export class PageManager implements IPageManager {
 
     public cleanup(): void {
         this.cleanupFn?.()
+        this.cleanupFn = null
     }
 
     public async setActivePage(pageId: string): Promise<void> {
