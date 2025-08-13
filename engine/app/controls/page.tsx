@@ -1,13 +1,18 @@
+import { useService } from '@app/providers/iocProvider'
 import React from 'react'
+import { gameDataProviderToken, IGameDataProvider } from '../../providers/gameDataProvider'
+import { Screen } from './screen'
 
 interface PageProps {
     pageId: string
 }
 
 export const Page: React.FC<PageProps> = ({ pageId }): React.JSX.Element => {
+    const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
+    if (gameDataProvider.Context.currentPageId !== pageId || !gameDataProvider.Game.loadedPages[pageId]) return (<></>)
+    const pageData = gameDataProvider.Game.loadedPages[pageId]
+
     return (
-        <>
-        {pageId}
-        </>
+        <Screen screen={pageData.screen} />
     )
 }
