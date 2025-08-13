@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from '@app/App'
 import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
 import { gameEngineToken, IGameEngine } from '@engine/gameEngine'
 import { IocProvider } from '@app/providers/iocProvider'
@@ -9,6 +8,7 @@ import { turnSchedulerToken } from '@engine/turnScheduler'
 import './styling/reset.css'
 import './styling/variables.css'
 import './styling/engine.css'
+import { App } from '@app/app'
 
 const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
