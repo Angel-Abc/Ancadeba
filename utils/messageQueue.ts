@@ -66,7 +66,11 @@ export class MessageQueue implements IMessageQueue {
         if (this.queue.length > 0) {
             return this.emptyQueue()
         }
-        this.onQueueEmpty()
+        try {
+            this.onQueueEmpty()
+        } catch (err) {
+            logWarning(logName, 'Error handling empty queue: {0}', err)
+        }
     }
 
     public shutDown(): void {
