@@ -12,6 +12,8 @@ import { LanguageManager, languageManagerDependencies, languageManagerToken } fr
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
 import { GameDataProvider, gameDataProviderDependencies, gameDataProviderToken } from '../providers/gameDataProvider'
 import { EngineInitializer, engineInitializerDependencies, engineInitializerToken } from '@engine/engineInitializer'
+import { PageManager, pageManagerDependencies, pageManagerToken } from '../managers/pageManager'
+import { PageLoader, pageLoaderDependencies, pageLoaderToken } from '@loader/pageLoader'
 
 export interface IContainerBuilder {
     build(): Container
@@ -83,6 +85,16 @@ export class ContainerBuilder implements IContainerBuilder {
             token: gameDataProviderToken,
             useClass: GameDataProvider,
             deps: gameDataProviderDependencies
+        })
+        result.register({
+            token: pageManagerToken,
+            useClass: PageManager,
+            deps: pageManagerDependencies
+        })
+        result.register({
+            token: pageLoaderToken,
+            useClass: PageLoader,
+            deps: pageLoaderDependencies
         })
         // Register other dependencies as needed
         return result

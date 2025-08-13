@@ -2,16 +2,36 @@ import { Token, token } from '@ioc/token'
 import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
 import { fatalError } from '@utils/logMessage'
 import { IPageLoader, pageLoaderToken } from '@loader/pageLoader'
+import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { PAGE_SWITCHED, SWITCH_PAGE } from '../messages/system'
 
-interface IPageManager {
+export interface IPageManager {
     setActivePage(pageId: string): Promise<void>
+    cleanup(): void
 }
 
 const logName = 'PageManager'
 export const pageManagerToken = token<IPageManager>(logName)
-export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken]
+export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken,messageBusToken]
 export class PageManager implements IPageManager {
-    constructor(private gameDataProvider: IGameDataProvider, private pageLoader: IPageLoader) {}
+    private cleanupFn: () => void | null
+
+    constructor(
+        private gameDataProvider: IGameDataProvider, 
+        private pageLoader: IPageLoader, 
+        private messageBus: IMessageBus
+    ) {
+        this.cleanupFn = this.messageBus.registerMessageListener(
+            SWITCH_PAGE,
+            async message => {
+                await this.setActivePage(message.payload as string)
+            }
+        )
+    }
+
+    public cleanup(): void {
+        this.cleanupFn?.()
+    }
 
     public async setActivePage(pageId: string): Promise<void> {
         const path = this.gameDataProvider.Game.game.pages[pageId]
@@ -23,5 +43,10 @@ export class PageManager implements IPageManager {
         }
 
         this.gameDataProvider.Context.currentPageId = pageId
+
+        this.messageBus.postMessage({
+            message: PAGE_SWITCHED,
+            payload: pageId
+        })
     }
 }
