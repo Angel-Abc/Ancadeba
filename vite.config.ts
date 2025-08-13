@@ -11,7 +11,9 @@ const withEditor = process.env.WITH_EDITOR !== 'false'
 export default defineConfig({
   envPrefix: ['VITE_', 'LOG_', 'GAME_'],
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic'
+    }),
     viteStaticCopy({
       targets: [
         { src: `${gameFolder}/**/*`, dest: 'data' },

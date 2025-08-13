@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useService } from './providers/iocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { PAGE_SWITCHED } from '../messages/system'
