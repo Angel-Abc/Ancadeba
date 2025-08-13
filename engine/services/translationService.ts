@@ -1,6 +1,6 @@
 import { token } from '@ioc/token'
 import { Language } from '@loader/data/language'
-import { fatalError } from '@utils/logMessage'
+import { fatalError, logWarning } from '@utils/logMessage'
 
 export interface ITranslationService {
     translate(key: string): string
@@ -14,7 +14,12 @@ export class TranslationService implements ITranslationService {
 
     public translate(key: string): string {
         if (this.language === null) fatalError(logName, 'Language not set for translation')
-        return this.language.translations[key] ?? key
+        const translation = this.language.translations[key]
+        if (translation === undefined) {
+            logWarning(logName, 'Missing translation for key {0}', key)
+            return key
+        }
+        return translation
     }
 
     public setLanguage(language: Language): void {
