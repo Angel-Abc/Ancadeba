@@ -9,8 +9,6 @@ type MessageListener = {
     handler: (message: Message<unknown>) => void | Promise<void>
 }
 
-const logName: string = 'MessageBus'
-
 export interface IMessageBus {
     postMessage(message: Message<unknown>): void
     registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp
@@ -20,7 +18,8 @@ export interface IMessageBus {
     shutDown(): void
 }
 
-export const messageBusToken = token<IMessageBus>('MessageBus')
+const logName: string = 'MessageBus'
+export const messageBusToken = token<IMessageBus>(logName)
 export const messageBusDependencies: Token<unknown>[] = [messageQueueToken]
 export class MessageBus implements IMessageBus {
     private key: number = 0

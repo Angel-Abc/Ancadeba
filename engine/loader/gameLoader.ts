@@ -3,14 +3,14 @@ import { dataPathProviderToken, IDataPathProvider } from '../providers/configPro
 import { Game as GameData } from './data/game'
 import { Game, gameSchema } from './schema/game'
 import { mapGame } from './mappers/game'
-import { token } from '@ioc/token'
+import { Token, token } from '@ioc/token'
 
 export interface IGameLoader {
-    loadGame: () => Promise<GameData>
+    loadGame(): Promise<GameData>
 }
 
 export const gameLoaderToken = token<IGameLoader>('GameLoader')
-export const gameLoaderDependencies = [dataPathProviderToken]
+export const gameLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
 export class GameLoader implements IGameLoader {
     
     constructor(private basePathProvider: IDataPathProvider) {

@@ -1,12 +1,12 @@
-import { token } from '@ioc/token'
+import { Token, token } from '@ioc/token'
 
 export interface IDomManager {
-    setCssFile: (path: string) => void
-    setTitle: (title: string) => void
+    setCssFile(path: string): void
+    setTitle(title: string): void
 }
 
 export const domManagerToken = token<IDomManager>('DomManager')
-export const domManagerDependencies = []
+export const domManagerDependencies: Token<unknown>[] = []
 
 export class DomManager implements IDomManager {
     private writtenCssFiles: Set<string>

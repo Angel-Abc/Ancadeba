@@ -6,7 +6,7 @@ import { Page, pageSchema } from './schema/page'
 import { mapPage } from './mappers/page'
 
 export interface IPageLoader {
-    loadPage: (path: string) => Promise<PageData>
+    loadPage(path: string): Promise<PageData>
 }
 
 export const pageLoaderToken = token<IPageLoader>('PageLoader')

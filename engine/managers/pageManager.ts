@@ -3,13 +3,12 @@ import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataP
 import { fatalError } from '@utils/logMessage'
 import { IPageLoader, pageLoaderToken } from '@loader/pageLoader'
 
-const logName = 'PageManager'
-
 interface IPageManager {
     setActivePage(pageId: string): Promise<void>
 }
 
-export const pageManagerToken = token<IPageManager>('PageManager')
+const logName = 'PageManager'
+export const pageManagerToken = token<IPageManager>(logName)
 export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken]
 export class PageManager implements IPageManager {
     constructor(private gameDataProvider: IGameDataProvider, private pageLoader: IPageLoader) {}

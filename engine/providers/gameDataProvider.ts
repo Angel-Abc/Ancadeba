@@ -4,8 +4,6 @@ import { Language } from '@loader/data/language'
 import { Page } from '@loader/data/page'
 import { fatalError } from '@utils/logMessage'
 
-const logName = 'GameDataProvider'
-
 export type GameData = {
     game: Game,
     loadedLanguages: Record<string, Language>,
@@ -22,7 +20,8 @@ export interface IGameDataProvider {
     initialize(gameData: Game): void
 }
 
-export const gameDataProviderToken = token<IGameDataProvider>('GameDataProvider')
+const logName = 'GameDataProvider'
+export const gameDataProviderToken = token<IGameDataProvider>(logName)
 export const gameDataProviderDependencies: Token<unknown>[] = []
 export class GameDataProvider implements IGameDataProvider {
     private game: GameData | null = null

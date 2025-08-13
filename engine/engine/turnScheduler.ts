@@ -3,7 +3,6 @@ import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { FINALIZE_END_TURN_MESSAGE, START_END_TURN_MESSAGE } from '../messages/system'
 import { logDebug } from '@utils/logMessage'
 
-const logName: string = 'TurnScheduler'
 
 export interface ITurnScheduler {
     onQueueEmpty(): void
@@ -17,9 +16,9 @@ export const EndingTurnState = {
 // eslint-disable-next-line no-redeclare
 export type EndingTurnState = typeof EndingTurnState[keyof typeof EndingTurnState]
 
-export const turnSchedulerToken = token<ITurnScheduler>('TurnScheduler')
+const logName: string = 'TurnScheduler'
+export const turnSchedulerToken = token<ITurnScheduler>(logName)
 export const turnSchedulerDependencies: Token<unknown>[] = [messageBusToken]
-
 export class TurnScheduler implements ITurnScheduler {
     private endingTurn: EndingTurnState
 

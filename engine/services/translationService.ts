@@ -2,14 +2,13 @@ import { token } from '@ioc/token'
 import { Language } from '@loader/data/language'
 import { fatalError } from '@utils/logMessage'
 
-const logName = 'TranslationService'
-
 export interface ITranslationService {
     translate(key: string): string
     setLanguage(language: Language): void
 }
 
-export const translationServiceToken = token<ITranslationService>('TranslationService')
+const logName = 'TranslationService'
+export const translationServiceToken = token<ITranslationService>(logName)
 export class TranslationService implements ITranslationService {
     private language: Language | null = null
 

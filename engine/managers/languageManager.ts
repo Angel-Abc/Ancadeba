@@ -4,14 +4,13 @@ import { Token, token } from '@ioc/token'
 import { fatalError } from '@utils/logMessage'
 import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
 
-const logName = 'LanguageManager'
-
 export interface ILanguageManager {
     getLanguage(): string
     setLanguage(language: string): Promise<void>
 }
 
-export const languageManagerToken = token<ILanguageManager>('LanguageManager')
+const logName = 'LanguageManager'
+export const languageManagerToken = token<ILanguageManager>(logName)
 export const languageManagerDependencies: Token<unknown>[] = [languageLoaderToken, translationServiceToken, gameDataProviderToken]
 export class LanguageManager implements ILanguageManager {
     constructor(

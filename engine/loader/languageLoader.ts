@@ -6,7 +6,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapLanguage } from './mappers/language'
 
 export interface ILanguageLoader {
-    loadLanguage: (paths: string[]) => Promise<LanguageData>
+    loadLanguage(paths: string[]): Promise<LanguageData>
 }
 
 export const languageLoaderToken = token<ILanguageLoader>('LanguageLoader')
