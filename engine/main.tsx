@@ -8,7 +8,7 @@ import { turnSchedulerToken } from '@engine/turnScheduler'
 import './styling/reset.css'
 import './styling/variables.css'
 import './styling/engine.css'
-import { App } from '@app/app'
+import { App } from '@app/App'
 
 const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
