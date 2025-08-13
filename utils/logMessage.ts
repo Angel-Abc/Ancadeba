@@ -21,13 +21,13 @@ export function isLevelEnabled(level: LogLevel): boolean {
 }
 
 export function isCategoryEnabled(category?: string): boolean {
-    return enabledCategories.size === 0 || category === undefined || enabledCategories.has(category)
+    return categoriesEnv === '*' || enabledCategories.size === 0 || category === undefined || enabledCategories.has(category)
 }
 
 function formatMessageForConsole(
     message: string,
     ...args: unknown[]
-): { formattedMessage: string; extraArgs: unknown[] } {
+): { formattedMessage: string, extraArgs: unknown[] } {
     // This array will hold any arguments that should be passed separately to the console.
     const extraArgs: unknown[] = []
 

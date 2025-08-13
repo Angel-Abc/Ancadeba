@@ -28,11 +28,12 @@ export function mapScreen(basePath: string, screen: Screen): ScreenData {
 }
 
 export function mapGridScreenComponents(basePath: string, components: GridScreenItem[]): GridScreenItemData[] {
-    return components.map(c => mapGridScreenComponent(basePath, c))
+    return components.map((c, i) => mapGridScreenComponent(basePath, c, i))
 }
 
-export function mapGridScreenComponent(basePath: string, item: GridScreenItem): GridScreenItemData {
+export function mapGridScreenComponent(basePath: string, item: GridScreenItem, index: number): GridScreenItemData {
     return {
+        id: Symbol(`grid-screen-${index}`),
         position: {
             top: item.position.top,
             left: item.position.left,

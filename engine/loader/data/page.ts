@@ -10,6 +10,7 @@ export interface GridScreenPosition {
 }
 
 export interface GridScreenItem {
+    id: symbol
     position: GridScreenPosition
     component: Component
     condition?: Condition
