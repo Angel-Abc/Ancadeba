@@ -1,5 +1,6 @@
 import { token } from '@ioc/token'
 import type { Message } from './types'
+import { logWarning } from './logMessage'
 
 export interface IMessageQueue {
     postMessage(message: Message): void
@@ -10,7 +11,8 @@ export interface IMessageQueue {
     shutDown(): void
 }
 
-export const messageQueueToken = token<IMessageQueue>('MessageQueue')
+const logName = 'MessageQueue'
+export const messageQueueToken = token<IMessageQueue>(logName)
 export class MessageQueue implements IMessageQueue {
     private queue: Message[] = []
     private emptyingQueue = false
@@ -51,7 +53,11 @@ export class MessageQueue implements IMessageQueue {
                 if (!message) continue
                 const result = this.handler(message)
                 if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-                    await result
+                    try {
+                        await result
+                    } catch (err) {
+                        logWarning(logName, 'Error processing message {0}: {1}', message.message, err)
+                    }
                 }
             }
         } finally {
