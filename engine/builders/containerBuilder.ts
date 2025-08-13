@@ -11,6 +11,7 @@ import { TranslationService, translationServiceToken } from '../services/transla
 import { LanguageManager, languageManagerDependencies, languageManagerToken } from '../managers/languageManager'
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
 import { GameDataProvider, gameDataProviderDependencies, gameDataProviderToken } from '../providers/gameDataProvider'
+import { EngineInitializer, engineInitializerDependencies, engineInitializerToken } from '@engine/engineInitializer'
 
 export interface IContainerBuilder {
     build(): Container
@@ -37,6 +38,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: messageBusToken,
             useClass: MessageBus,
             deps: messageBusDependencies
+        })
+        result.register({
+            token: engineInitializerToken,
+            useClass: EngineInitializer,
+            deps: engineInitializerDependencies
         })
         result.register<IGameEngine>({
             token: gameEngineToken,
