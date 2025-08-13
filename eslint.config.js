@@ -9,7 +9,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -27,6 +27,8 @@ export default [
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
+      // Rely on TypeScript for undefined variable checks
+      'no-undef': 'off',
       'eol-last': ['error', 'always'],
     },
   },
