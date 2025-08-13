@@ -24,8 +24,15 @@ export class LanguageLoader implements ILanguageLoader {
             paths.map(path => loadJsonResource<Language>(`${this.basePathProvider.dataPath}/${path}`, languageSchema))
         )
         const languages = schemas.map(mapLanguage)
+
+        const sharedId = languages[0].id
+        const mismatched = languages.find(lang => lang.id !== sharedId)
+        if (mismatched) {
+            throw new Error(`[LanguageLoader] Language ID mismatch: expected ${sharedId} but got ${mismatched.id}`)
+        }
+
         return {
-            id: languages[0]?.id ?? '',
+            id: sharedId,
             translations: languages.reduce((acc, lang) => {
                 return { ...acc, ...lang.translations }
             }, {})
