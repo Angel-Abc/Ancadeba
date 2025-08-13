@@ -27,76 +27,96 @@ export class ContainerBuilder implements IContainerBuilder {
 
     public build(): Container {
         const result = new Container()
-        result.register({
+        this.registerCore(result)
+        this.registerProviders(result)
+        this.registerLoaders(result)
+        this.registerServices(result)
+        this.registerManagers(result)
+        // Register other dependencies as needed
+        return result
+    }
+
+    private registerCore(container: Container): void {
+        container.register({
             token: turnSchedulerToken,
             useClass: TurnScheduler,
             deps: turnSchedulerDependencies
         })
-        result.register({
+        container.register({
             token: messageQueueToken,
-            useFactory: (container) => new MessageQueue(this.onQueueEmptyProvider(container))
+            useFactory: (c) => new MessageQueue(this.onQueueEmptyProvider(c))
         })
-        result.register({
+        container.register({
             token: messageBusToken,
             useClass: MessageBus,
             deps: messageBusDependencies
         })
-        result.register({
+        container.register({
             token: engineInitializerToken,
             useClass: EngineInitializer,
             deps: engineInitializerDependencies
         })
-        result.register<IGameEngine>({
+        container.register<IGameEngine>({
             token: gameEngineToken,
             useClass: GameEngine,
             deps: gameEngineDependencies
         })
-        result.register<IDataPathProvider>({
+    }
+
+    private registerProviders(container: Container): void {
+        container.register<IDataPathProvider>({
             token: dataPathProviderToken,
             useValue: { dataPath: this.dataPath }
         })
-        result.register<IGameLoader>({
+        container.register({
+            token: gameDataProviderToken,
+            useClass: GameDataProvider,
+            deps: gameDataProviderDependencies
+        })
+    }
+
+    private registerLoaders(container: Container): void {
+        container.register<IGameLoader>({
             token: gameLoaderToken,
             useClass: GameLoader,
             deps: [dataPathProviderToken]
         })
-        result.register({
+        container.register({
+            token: languageLoaderToken,
+            useClass: LanguageLoader,
+            deps: languageLoaderDependencies
+        })
+        container.register({
+            token: pageLoaderToken,
+            useClass: PageLoader,
+            deps: pageLoaderDependencies
+        })
+    }
+
+    private registerServices(container: Container): void {
+        container.register({
+            token: translationServiceToken,
+            useClass: TranslationService,
+            deps: []
+        })
+    }
+
+    private registerManagers(container: Container): void {
+        container.register({
             token: domManagerToken,
             useClass: DomManager,
             deps: domManagerDependencies,
             scope: 'transient'
         })
-        result.register({
-            token: translationServiceToken,
-            useClass: TranslationService,
-            deps: []
-        })
-        result.register({
+        container.register({
             token: languageManagerToken,
             useClass: LanguageManager,
             deps: languageManagerDependencies
         })
-        result.register({
-            token: languageLoaderToken,
-            useClass: LanguageLoader,
-            deps: languageLoaderDependencies
-        })
-        result.register({
-            token: gameDataProviderToken,
-            useClass: GameDataProvider,
-            deps: gameDataProviderDependencies
-        })
-        result.register({
+        container.register({
             token: pageManagerToken,
             useClass: PageManager,
             deps: pageManagerDependencies
         })
-        result.register({
-            token: pageLoaderToken,
-            useClass: PageLoader,
-            deps: pageLoaderDependencies
-        })
-        // Register other dependencies as needed
-        return result
     }
 }
