@@ -12,7 +12,14 @@ type MessageListener = {
 export interface IMessageBus {
     postMessage(message: Message<unknown>): void
     registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp
+    /**
+     * Register a message that should not trigger a warning when no listener is attached.
+     */
     registerNotificationMessage(message: string): void
+    /**
+     * Remove a previously registered notification message so warnings are emitted again.
+     */
+    unregisterNotificationMessage(message: string): void
     disableEmptyQueueAfterPost(): void
     enableEmptyQueueAfterPost(): void
     shutDown(): void
@@ -47,6 +54,10 @@ export class MessageBus implements IMessageBus {
 
     public registerNotificationMessage(message: string): void {
         this.silentMessages.add(message)
+    }
+
+    public unregisterNotificationMessage(message: string): void {
+        this.silentMessages.delete(message)
     }
 
     public registerMessageListener(message: string, handler: (message: Message<unknown>) => void | Promise<void>): CleanUp {
