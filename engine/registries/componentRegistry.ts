@@ -1,6 +1,6 @@
+import { GameMenuComponent } from '@app/controls/component/gameMenuComponent'
+import { ImageComponent } from '@app/controls/component/imageComponent'
 import { ComponentType } from 'react'
-import { ImageComponent } from './imageComponent'
-import { GameMenuComponent } from './gameMenuComponent'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const componentRegistry: Record<string, ComponentType<any>> = {

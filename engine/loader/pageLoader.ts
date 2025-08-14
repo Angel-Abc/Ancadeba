@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { type Page as PageData } from '@loader/data/page'
-import { dataPathProviderToken, IDataPathProvider } from '../providers/configProviders'
+import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { Page, pageSchema } from './schema/page'
 import { mapPage } from './mappers/page'

@@ -1,10 +1,10 @@
 import { Token, token } from '@ioc/token'
-import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
+import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { fatalError } from '@utils/logMessage'
 import { IPageLoader, pageLoaderToken } from '@loader/pageLoader'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
-import { PAGE_SWITCHED, SWITCH_PAGE } from '../messages/system'
+import { PAGE_SWITCHED, SWITCH_PAGE } from '@messages/system'
 
 export interface IPageManager {
     setActivePage(pageId: string): Promise<void>

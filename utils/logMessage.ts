@@ -21,7 +21,7 @@ export function isLevelEnabled(level: LogLevel): boolean {
 }
 
 export function isCategoryEnabled(category?: string): boolean {
-    return categoriesEnv === '*' || enabledCategories.size === 0 || category === undefined || enabledCategories.has(category)
+    return enabledCategories.size === 0 || category === undefined || enabledCategories.has(category)
 }
 
 function formatMessageForConsole(

@@ -10,12 +10,17 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@loader/*": ["./engine/loader/*"],
-      "@ioc/*": ["./engine/ioc/*"],
-      "@builders/*": ["./engine/builders/*"],
-      "@app/*": ["./engine/app/*"],
-      "@engine/*": ["./engine/engine/*"],
       "@editor/*": ["./editor/*"],
+      "@app/*": ["./engine/app/*"],
+      "@builders/*": ["./engine/builders/*"],
+      "@engine/*": ["./engine/engine/*"],
+      "@ioc/*": ["./engine/ioc/*"],
+      "@loader/*": ["./engine/loader/*"],
+      "@managers/*": ["./engine/managers/*"],
+      "@messages/*": ["./engine/messages/*"],
+      "@providers/*": ["./engine/providers/*"],
+      "@registries/*": ["./engine/registries/*"],
+      "@services/*": ["./engine/services/*"],
       "@utils/*": ["./utils/*"]
     }
   }
