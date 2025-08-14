@@ -55,6 +55,7 @@ describe('PageManager', () => {
     const provider = {} as IGameDataProvider
     const loader = {} as IPageLoader
     const manager = new PageManager(provider, loader, bus)
+    manager.initialize()
     const spy = vi.spyOn(manager, 'setActivePage').mockResolvedValue(undefined)
 
     manager.initialize()
