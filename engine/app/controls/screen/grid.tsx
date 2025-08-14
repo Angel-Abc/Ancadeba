@@ -8,6 +8,11 @@ interface GridProps {
     screen: GridScreen
 }
 
+/**
+ * Renders a grid layout of components.
+ * Evaluates conditions using the condition resolver registry.
+ * @param screen - Grid screen data to render.
+ */
 export const Grid: React.FC<GridProps> = ({ screen }): React.JSX.Element => {
     const style: CSSCustomProperties = {
         '--ge-grid-width': screen.width.toString(),

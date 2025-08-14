@@ -8,6 +8,11 @@ interface GameMenuComponentProps {
     component: GameMenuComponentData
 }
 
+/**
+ * Renders a game menu with buttons.
+ * Executes each button's action when clicked.
+ * @param component - Game menu definition.
+ */
 export const GameMenuComponent: React.FC<GameMenuComponentProps> = ({ component }): React.JSX.Element => {
     const translationService = useService<ITranslationService>(translationServiceToken)
     const actionExecuter = useService<IActionExecuter>(actionExecuterToken)

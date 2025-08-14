@@ -7,6 +7,11 @@ interface ComponentProps {
     component: ComponentData
 }
 
+/**
+ * Fallback renderer for unsupported component types.
+ * Logs a warning when an unknown component is encountered.
+ * @param component - Definition of the unknown component.
+ */
 const DefaultComponent: React.FC<ComponentProps> = ({ component }): React.JSX.Element => {
     logWarning('Component', 'Unknown component type: {0}', component.type)
     return (
@@ -14,6 +19,10 @@ const DefaultComponent: React.FC<ComponentProps> = ({ component }): React.JSX.El
     )
 }
 
+/**
+ * Resolves and renders a component using the registry.
+ * @param component - Component definition to render.
+ */
 export const Component: React.FC<ComponentProps> = ({ component }): React.JSX.Element => {
     const registry = useService<IComponentRegistry>(componentRegistryToken)
     const ComponentImpl = registry.getComponent(component.type) ?? DefaultComponent
