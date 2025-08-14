@@ -97,8 +97,9 @@ export function mapButtons(buttons: Button[]): ButtonData[] {
     return buttons.map(mapButton)
 }
 
-export function mapButton(button: Button): ButtonData {
+export function mapButton(button: Button, index: number): ButtonData {
     return {
+        id: Symbol(`${button.label}_${index}`),
         label: button.label,
         action: mapAction(button.action)
     }
