@@ -1,4 +1,5 @@
 import { Component as ComponentData } from '@loader/data/component'
+import { logWarning } from '@utils/logMessage'
 import { componentRegistry } from '@registries/componentRegistry'
 
 interface ComponentProps {
@@ -6,8 +7,9 @@ interface ComponentProps {
 }
 
 const DefaultComponent: React.FC<ComponentProps> = ({ component }): React.JSX.Element => {
+    logWarning('Component', 'Unknown component type: {0}', component.type)
     return (
-        <div>TODO: {component.type}</div>
+        <div>Unsupported component type: {component.type}</div>
     )
 }
 
