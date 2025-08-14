@@ -55,6 +55,8 @@ export class PageManager implements IPageManager {
     }
 
     initialize(): void {
+        // Ensure we don't register multiple listeners if initialize is called more than once
+        this.cleanupFn?.()
         this.cleanupFn = this.messageBus.registerMessageListener(
             SWITCH_PAGE,
             async message => {
