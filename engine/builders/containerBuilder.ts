@@ -17,6 +17,7 @@ import { PageManager, pageManagerDependencies, pageManagerToken } from '@manager
 import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
 import { ActionHandlerRegistry, actionHandlerRegistryDependencies, actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { ConditionResolverRegistry, conditionResolverRegistryDependencies, conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
+import { ComponentRegistry, componentRegistryDependencies, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -171,6 +172,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: conditionResolverRegistryToken,
             useClass: ConditionResolverRegistry,
             deps: conditionResolverRegistryDependencies
+        })
+        container.register<IComponentRegistry>({
+            token: componentRegistryToken,
+            useClass: ComponentRegistry,
+            deps: componentRegistryDependencies
         })
     }
 
