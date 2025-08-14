@@ -7,6 +7,11 @@ import { fatalError } from '@utils/logMessage'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 
+/**
+ * Coordinates loading and activation of maps within the game engine.
+ * Implementations are responsible for handling map switching and
+ * ensuring required tile sets are available.
+ */
 export interface IMapManager {
     setActiveMap(mapId: string): Promise<void>
     initialize(): void
@@ -21,6 +26,11 @@ export const mapManagerDependencies: Token<unknown>[] = [
     gameDataProviderToken,
     tileSetLoaderToken
 ]
+
+/**
+ * Default implementation of {@link IMapManager} that interacts with loaders,
+ * the message bus and the game data provider to manage maps.
+ */
 export class MapManager implements IMapManager {
     private cleanupFns: CleanUp[] | null = null
 
@@ -31,12 +41,24 @@ export class MapManager implements IMapManager {
         private tileSetLoader: ITileSetLoader
     ){}
 
+    /**
+     * Removes any registered message listeners and cleans up resources.
+     *
+     * @remarks This method clears internal cleanup handlers and should be
+     * called when the manager is no longer needed to avoid memory leaks.
+     */
     public cleanup(): void {
         const fns = this.cleanupFns
         this.cleanupFns = null
-        fns?.forEach(fn => fn())        
+        fns?.forEach(fn => fn())
     }
 
+    /**
+     * Registers listeners required for map management.
+     *
+     * @remarks Adds a listener for {@link SWITCH_MAP} messages and stores a
+     * cleanup function for later removal.
+     */
     public initialize(): void {
         this.cleanupFns = [
             this.messageBus.registerMessageListener(
@@ -45,9 +67,16 @@ export class MapManager implements IMapManager {
                     await this.setActiveMap(message.payload as string)
                 }
             )
-        ]   
+        ]
     }
 
+    /**
+     * Loads and activates a map by its identifier.
+     *
+     * @param mapId - Unique identifier of the map to activate.
+     * @remarks Updates the current map context, posts a {@link MAP_SWITCHED}
+     * message and ensures tile sets for the map are loaded.
+     */
     public async setActiveMap(mapId: string): Promise<void> {
         const path = this.gameDataProvider.Game.game.maps[mapId]
         if (!path) fatalError(logName, 'Map not found for id {0}', mapId)
@@ -65,6 +94,13 @@ export class MapManager implements IMapManager {
         })
     }
 
+    /**
+     * Ensures that the provided tile sets are loaded into memory.
+     *
+     * @param tileSetIds - Identifiers of tile sets required by the map.
+     * @remarks Loads tile sets that have not been previously loaded and stores
+     * them in the game data provider.
+     */
     public async ensureTileSets(tileSetIds: string[]): Promise<void> {
         await Promise.all(
             tileSetIds.map(async tileSetId => {
