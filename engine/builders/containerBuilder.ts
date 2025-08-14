@@ -14,6 +14,7 @@ import { TranslationService, translationServiceToken } from '@services/translati
 import { DomManager, domManagerDependencies, domManagerToken } from '@managers/domManager'
 import { LanguageManager, languageManagerDependencies, languageManagerToken } from '@managers/languageManager'
 import { PageManager, pageManagerDependencies, pageManagerToken } from '@managers/pageManager'
+import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
 
 export interface IContainerBuilder {
     build(): Container
@@ -64,6 +65,10 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     private registerProviders(container: Container): void {
+        container.register<IServiceProvider>({
+            token: serviceProviderToken,
+            useFactory: c => new ServiceProvider(c)
+        })
         container.register<IDataPathProvider>({
             token: dataPathProviderToken,
             useValue: { dataPath: this.dataPath }
