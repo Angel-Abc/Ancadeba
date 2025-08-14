@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useService } from './providers/iocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
-import { PAGE_SWITCHED } from '../messages/system'
 import { Page } from './controls/page'
+import { useService } from './iocProvider'
+import { PAGE_SWITCHED } from '@messages/system'
 
 export const App: React.FC = (): React.JSX.Element => {
   const messageBus = useService<IMessageBus>(messageBusToken)

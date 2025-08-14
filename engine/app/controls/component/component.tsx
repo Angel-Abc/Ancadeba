@@ -1,5 +1,5 @@
 import { Component as ComponentData } from '@loader/data/component'
-import { componentRegistry } from './componentRegistry'
+import { componentRegistry } from '@registries/componentRegistry'
 
 interface ComponentProps {
     component: ComponentData

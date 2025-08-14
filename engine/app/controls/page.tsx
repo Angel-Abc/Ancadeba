@@ -1,6 +1,6 @@
-import { useService } from '@app/providers/iocProvider'
-import { gameDataProviderToken, IGameDataProvider } from '../../providers/gameDataProvider'
+import { useService } from '@app/iocProvider'
 import { Screen } from './screen/screen'
+import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 
 interface PageProps {
     pageId: string

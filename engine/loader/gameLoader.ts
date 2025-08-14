@@ -1,5 +1,5 @@
 import { loadJsonResource } from '@utils/loadJsonResource'
-import { dataPathProviderToken, IDataPathProvider } from '../providers/configProviders'
+import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { Game as GameData } from './data/game'
 import { Game, gameSchema } from './schema/game'
 import { mapGame } from './mappers/game'

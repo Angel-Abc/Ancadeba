@@ -1,8 +1,8 @@
 import { ILanguageLoader, languageLoaderToken } from '@loader/languageLoader'
-import { ITranslationService, translationServiceToken } from '../services/translationService'
+import { ITranslationService, translationServiceToken } from '@services/translationService'
 import { Token, token } from '@ioc/token'
 import { fatalError } from '@utils/logMessage'
-import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
+import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 
 export interface ILanguageManager {
     getLanguage(): string
