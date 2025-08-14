@@ -56,6 +56,7 @@ describe('PageManager', () => {
     const loader = {} as IPageLoader
     const manager = new PageManager(provider, loader, bus)
     const spy = vi.spyOn(manager, 'setActivePage').mockResolvedValue(undefined)
+
     manager.initialize()
     bus.postMessage({ message: SWITCH_PAGE, payload: 'home' })
     await Promise.resolve()
