@@ -62,7 +62,6 @@ export class ActionHandlerRegistry implements IActionHandlerRegistry {
      * Resolves an action handler instance for the specified action type.
      *
      * @param type - The action type to resolve a handler for
-     * @param serviceProvider - Service provider used to resolve the handler
      * @returns The handler instance or `undefined` if no handler is registered
      */
     public getActionHandler<T extends BaseAction>(
