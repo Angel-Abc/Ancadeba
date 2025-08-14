@@ -63,7 +63,9 @@ export class MessageQueue implements IMessageQueue {
     }
 
     /**
-     * Set the handler responsible for processing messages.
+     * Set the handler responsible for processing messages. This immediately
+     * triggers {@link emptyQueue} after assignment so any queued messages are
+     * processed right away.
      * @param handler - Function invoked for each message.
      */
     public setHandler(handler: (message: Message) => void | Promise<void>): void {
