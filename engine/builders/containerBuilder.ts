@@ -61,7 +61,8 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     /**
-     * Register core engine dependencies such as scheduler and message systems.
+     * Register core engine dependencies including the turn scheduler, message
+     * queue, message bus, engine initializer, and the game engine itself.
      *
      * @param container Container to receive registrations.
      * @remarks Mutates the provided container.
