@@ -6,6 +6,10 @@ import { type Component } from '@loader/schema/component'
 import { type Button } from '@loader/schema/button'
 import { mapAction } from './action'
 import { mapInputs } from './input'
+import { fatalError } from '@utils/logMessage'
+
+const logScreen = 'mapScreen'
+const logComponent = 'mapComponent'
 
 export function mapPage(basePath: string,page: Page): PageData {
     return {
@@ -24,6 +28,9 @@ export function mapScreen(basePath: string, screen: Screen): ScreenData {
                 height: screen.height,
                 components: mapGridScreenComponents(basePath, screen.components)
             }
+        default:
+            // Guard against unrecognized screen schema types
+            fatalError(logScreen, 'Unsupported screen type: {0}', (screen as { type: string }).type)
     }
 }
 
@@ -90,6 +97,9 @@ export function mapComponent(basePath: string, component: Component): ComponentD
                 type: 'output-log',
                 logSize: component.logSize
             }
+        default:
+            // Guard against unrecognized component schema types
+            fatalError(logComponent, 'Unsupported component type: {0}', (component as { type: string }).type)
     }
 }
 
