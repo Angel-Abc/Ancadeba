@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler, IActionHandlerRegistry, actionHandlerRegistryDependencies } from '@registries/actionHandlerRegistry'
 import { token } from '@ioc/token'
 import { Container } from '@ioc/container'
 import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
 import type { PostMessageAction } from '@loader/data/action'
+import * as log from '../../utils/logMessage'
 
 class TestHandler implements IActionHandler<PostMessageAction> {
     public readonly type = 'post-message'
@@ -11,6 +12,12 @@ class TestHandler implements IActionHandler<PostMessageAction> {
     handle(action: PostMessageAction): void {
         this.handled = action
     }
+}
+
+class OtherHandler implements IActionHandler<PostMessageAction> {
+    public readonly type = 'post-message'
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    handle(_action: PostMessageAction): void {}
 }
 
 describe('ActionHandlerRegistry', () => {
@@ -37,5 +44,22 @@ describe('ActionHandlerRegistry', () => {
     it('returns undefined when no handler registered for type', () => {
         const handler = registry.getActionHandler('missing')
         expect(handler).toBeUndefined()
+    })
+
+    it('logs a warning when registering a duplicate handler and does not override it', () => {
+        const HANDLER = token<IActionHandler<PostMessageAction>>('handler')
+        const DUPLICATE = token<IActionHandler<PostMessageAction>>('duplicate')
+        container.register({ token: HANDLER, useClass: TestHandler })
+        container.register({ token: DUPLICATE, useClass: OtherHandler })
+        const warningSpy = vi.spyOn(log, 'logWarning')
+
+        registry.registerActionHandler('post-message', HANDLER)
+        registry.registerActionHandler('post-message', DUPLICATE)
+
+        const handler = registry.getActionHandler('post-message')
+        expect(warningSpy).toHaveBeenCalledTimes(1)
+        expect(handler).toBeInstanceOf(TestHandler)
+
+        warningSpy.mockRestore()
     })
 })

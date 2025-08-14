@@ -2,6 +2,7 @@ import { Action, BaseAction } from '@loader/data/action'
 import { Message } from '@utils/types'
 import { token, type Token } from '@ioc/token'
 import { serviceProviderToken, type IServiceProvider } from '@providers/serviceProvider'
+import { logWarning } from '@utils/logMessage'
 
 /**
  * Represents a handler for a specific {@link Action} type.
@@ -55,6 +56,10 @@ export class ActionHandlerRegistry implements IActionHandlerRegistry {
         type: T['type'],
         handlerToken: Token<IActionHandler<T>>
     ): void {
+        if (this.registry.has(type)) {
+            logWarning(logName, 'Handler already registered for action type {0}', type)
+            return
+        }
         this.registry.set(type, handlerToken as Token<IActionHandler>)
     }
 
