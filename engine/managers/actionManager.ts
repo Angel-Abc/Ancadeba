@@ -77,7 +77,7 @@ export class ActionManager implements IActionManager {
         this.cleanupFns = handlers.map(handler => {
             return this.messageBus.registerMessageListener(
                 handler.message,
-                message => {
+                async message => {
                     this.actionExecutor.execute(handler.action, message)
                 }
             )

@@ -22,6 +22,8 @@ import { ActionExecuter, actionExecuterDependencies, actionExecuterToken, IActio
 import { IPostMessageAction, PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
 import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
 import { ActionManager, actionManagerDependencies, actionManagerToken } from '@managers/actionManager'
+import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
+import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@loader/tileSetLoader'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -163,6 +165,16 @@ export class ContainerBuilder implements IContainerBuilder {
             token: actionHandlersLoaderToken,
             useClass: ActionHandlersLoader,
             deps: actionHandlersLoaderDependencies
+        })
+        container.register({
+            token: gameMapLoaderToken,
+            useClass: GameMapLoader,
+            deps: gameMapLoaderDependencies
+        })
+        container.register({
+            token: tileSetLoaderToken,
+            useClass: TileSetLoader,
+            deps: tileSetLoaderDependencies
         })
     }
 
