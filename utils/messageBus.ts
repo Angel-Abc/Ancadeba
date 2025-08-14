@@ -82,7 +82,7 @@ export class MessageBus implements IMessageBus {
         }
     }
 
-    private handleMessage(message: Message<unknown>): void | Promise<void> {
+    private async handleMessage(message: Message<unknown>): Promise<void> {
         const listeners = this.listeners.get(message.message)
         if (!listeners || listeners.length === 0) {
             const logger = this.silentMessages.has(message.message)
@@ -105,7 +105,7 @@ export class MessageBus implements IMessageBus {
             }
         })
         if (promises.length > 0) {
-            return Promise.all(promises).then(() => {})
+            await Promise.all(promises)
         }
     }
 
