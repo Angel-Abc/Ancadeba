@@ -51,8 +51,8 @@ export class DomManager implements IDomManager {
     }
 
     /**
-     * Appends a CSS file to the document head if it has not already been
-     * inserted.
+     * Appends a CSS file to the document head, avoiding re-insertion if the
+     * file has already been added to the document.
      *
      * @param path - Path of the style sheet to include.
      */
