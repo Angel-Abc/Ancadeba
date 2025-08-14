@@ -3,6 +3,7 @@ import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataPro
 import { fatalError } from '@utils/logMessage'
 import { IPageLoader, pageLoaderToken } from '@loader/pageLoader'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { CleanUp } from '@utils/types'
 import { PAGE_SWITCHED, SWITCH_PAGE } from '@messages/system'
 
 export interface IPageManager {
@@ -12,9 +13,9 @@ export interface IPageManager {
 
 const logName = 'PageManager'
 export const pageManagerToken = token<IPageManager>(logName)
-export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken,messageBusToken]
+export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken, messageBusToken]
 export class PageManager implements IPageManager {
-    private cleanupFn: (() => void) | null
+    private cleanupFn: CleanUp | null
 
     constructor(
         private gameDataProvider: IGameDataProvider, 
