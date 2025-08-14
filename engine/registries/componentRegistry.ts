@@ -9,6 +9,7 @@ import { ImageComponent } from '@app/controls/component/imageComponent'
 import { ComponentType } from 'react'
 import { logWarning } from '@utils/logMessage'
 import { token, Token } from '@ioc/token'
+import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
 
 export interface IComponentRegistry {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,6 +31,7 @@ export class ComponentRegistry implements IComponentRegistry {
     constructor() {
         this.registerComponent('image', ImageComponent)
         this.registerComponent('game-menu', GameMenuComponent)
+        this.registerComponent('squares-map', SquaresMapComponent)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
