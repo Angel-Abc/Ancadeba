@@ -136,7 +136,6 @@ export class MessageBus implements IMessageBus {
         }
         this.listeners.get(message)!.push(listener)
 
-        // return the unregister function
         return () => {
             const arr = this.listeners.get(message)
             if (arr) {
