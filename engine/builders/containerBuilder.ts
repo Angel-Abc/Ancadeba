@@ -20,6 +20,8 @@ import { ConditionResolverRegistry, conditionResolverRegistryDependencies, condi
 import { ComponentRegistry, componentRegistryDependencies, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
 import { ActionExecuter, actionExecuterDependencies, actionExecuterToken, IActionExecuter } from '@actions/actionExecuter'
 import { IPostMessageAction, PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
+import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
+import { ActionManager, actionManagerDependencies, actionManagerToken } from '@managers/actionManager'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -157,6 +159,11 @@ export class ContainerBuilder implements IContainerBuilder {
             useClass: PageLoader,
             deps: pageLoaderDependencies
         })
+        container.register({
+            token: actionHandlersLoaderToken,
+            useClass: ActionHandlersLoader,
+            deps: actionHandlersLoaderDependencies
+        })
     }
 
     /**
@@ -219,6 +226,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: pageManagerToken,
             useClass: PageManager,
             deps: pageManagerDependencies
+        })
+        container.register({
+            token: actionManagerToken,
+            useClass: ActionManager,
+            deps: actionManagerDependencies
         })
     }
 }

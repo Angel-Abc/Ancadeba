@@ -8,6 +8,7 @@ import { type Language as LanguageData } from './data/language'
 import { Language, languageSchema } from './schema/language'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapLanguage } from './mappers/language'
+import { fatalError } from '@utils/logMessage'
 
 /**
  * Defines the contract for loading and merging language files.
@@ -22,7 +23,8 @@ export interface ILanguageLoader {
     loadLanguage(paths: string[]): Promise<LanguageData>
 }
 
-export const languageLoaderToken = token<ILanguageLoader>('LanguageLoader')
+const logName = 'LanguageLoader'
+export const languageLoaderToken = token<ILanguageLoader>(logName)
 export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
 
 /**
@@ -44,7 +46,7 @@ export class LanguageLoader implements ILanguageLoader {
      */
     public async loadLanguage(paths: string[]): Promise<LanguageData> {
         if (paths.length === 0) {
-            throw new Error('[LanguageLoader] No language paths provided')
+            fatalError(logName, 'No language paths provided')
         }
 
         const schemas = await Promise.all(
@@ -55,7 +57,7 @@ export class LanguageLoader implements ILanguageLoader {
         const sharedId = languages[0].id
         const mismatched = languages.find(lang => lang.id !== sharedId)
         if (mismatched) {
-            throw new Error(`[LanguageLoader] Language ID mismatch: expected ${sharedId} but got ${mismatched.id}`)
+            fatalError(logName, 'Language ID mismatch: expected {0} but got {1}', sharedId, mismatched.id)
         }
 
         return {

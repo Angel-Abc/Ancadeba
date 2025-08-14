@@ -10,6 +10,7 @@ import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
 import { actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { postMessageActionToken } from '@actions/postMessageAction'
 import { pageManagerToken, IPageManager } from '@managers/pageManager'
+import { actionManagerToken, IActionManager } from '@managers/actionManager'
 
 export interface IEngineInitializer {
     initialize(): Promise<void>
@@ -24,7 +25,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     languageManagerToken,
     gameDataProviderToken,
     actionHandlerRegistryToken,
-    pageManagerToken
+    pageManagerToken,
+    actionManagerToken
 ]
 export class EngineInitializer implements IEngineInitializer {
     constructor(
@@ -34,13 +36,15 @@ export class EngineInitializer implements IEngineInitializer {
         private languageManager: ILanguageManager,
         private gameDataProvider: IGameDataProvider,
         private actionHandlerRegistry: IActionHandlerRegistry,
-        private pageManager: IPageManager
+        private pageManager: IPageManager,
+        private actionManager: IActionManager
     ){}
 
     public async initialize(): Promise<void> {
         const game = await this.loadGameDataRoot()
         this.gameDataProvider.initialize(game)
         this.pageManager.initialize()
+        this.actionManager.initialize()
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
         this.registerActions()
