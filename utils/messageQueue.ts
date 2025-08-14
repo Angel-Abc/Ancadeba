@@ -68,6 +68,7 @@ export class MessageQueue implements IMessageQueue {
      */
     public setHandler(handler: (message: Message) => void | Promise<void>): void {
         this.handler = handler
+        void this.emptyQueue()
     }
 
     /**

@@ -9,6 +9,7 @@
 import { GameMenuComponent } from '@app/controls/component/gameMenuComponent'
 import { ImageComponent } from '@app/controls/component/imageComponent'
 import { ComponentType } from 'react'
+import { logWarning } from '@utils/logMessage'
 
 /**
  * Holds the mapping between component type strings and their React
@@ -21,6 +22,8 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
     'game-menu': GameMenuComponent
 }
 
+const logName = 'ComponentRegistry'
+
 /**
  * Registers a new component under the specified type key.
  *
@@ -29,6 +32,10 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const registerComponent = (type: string, component: ComponentType<any>): void => {
+    if (Object.prototype.hasOwnProperty.call(componentRegistry, type)) {
+        logWarning(logName, 'Component already registered under key {0}', type)
+        return
+    }
     componentRegistry[type] = component
 }
 

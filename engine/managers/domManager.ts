@@ -4,6 +4,7 @@
  * should be routed through this manager to keep concerns centralized.
  */
 import { Token, token } from '@ioc/token'
+import { logWarning } from '@utils/logMessage'
 
 /**
  * Contract for components capable of manipulating the DOM.
@@ -24,7 +25,8 @@ export interface IDomManager {
     setTitle(title: string): void
 }
 
-export const domManagerToken = token<IDomManager>('DomManager')
+const logName = 'DomManager'
+export const domManagerToken = token<IDomManager>(logName)
 export const domManagerDependencies: Token<unknown>[] = []
 
 /**
@@ -60,7 +62,13 @@ export class DomManager implements IDomManager {
         if (!this.document) return
         if (this.writtenCssFiles.has(path)) return
 
-        if (this.document.head.querySelector(`link[href="${path}"]`)) {
+        const head = this.document.head
+        if (!head) {
+            logWarning(logName, 'Cannot append style {0}: head element is missing', path)
+            return
+        }
+
+        if (head.querySelector(`link[href="${path}"]`)) {
             this.writtenCssFiles.add(path)
             return
         }
@@ -68,7 +76,7 @@ export class DomManager implements IDomManager {
         const linkElement: HTMLLinkElement = this.document.createElement('link')
         linkElement.rel = 'stylesheet'
         linkElement.href = path
-        this.document.head.appendChild(linkElement)
+        head.appendChild(linkElement)
         this.writtenCssFiles.add(path)
     }
 
