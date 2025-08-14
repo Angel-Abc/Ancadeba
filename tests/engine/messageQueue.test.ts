@@ -19,6 +19,24 @@ describe('MessageQueue', () => {
     expect(onEmpty).toHaveBeenCalledTimes(2)
   })
 
+  it('processes queued messages after handler is set', async () => {
+    const onEmpty = vi.fn()
+    const queue = new MessageQueue(onEmpty)
+    const handled: Message[] = []
+
+    queue.postMessage({ message: 'a', payload: null })
+    queue.postMessage({ message: 'b', payload: 1 })
+
+    queue.setHandler(m => {
+      handled.push(m)
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(handled.map(m => m.message)).toEqual(['a', 'b'])
+    expect(onEmpty).toHaveBeenCalledTimes(1)
+  })
+
   it('queues messages when auto-drain disabled and drains when enabled', async () => {
     const onEmpty = vi.fn()
     const queue = new MessageQueue(onEmpty)
