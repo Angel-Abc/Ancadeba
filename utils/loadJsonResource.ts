@@ -1,8 +1,22 @@
+/**
+ * Fetches JSON resources and validates them against a provided Zod schema.
+ * Emits debug logs and halts execution via {@link fatalError} on failure.
+ */
 import { ZodType } from 'zod'
 import { fatalError, logDebug } from './logMessage'
 
 const logName = 'loadJsonResource'
 
+/**
+ * Retrieve a JSON document from a URL and validate it using the supplied schema.
+ *
+ * @param url The location of the JSON resource.
+ * @param schema A Zod schema describing the expected shape of the JSON.
+ * @returns The parsed and validated object.
+ * @throws {Error} If the network request fails, the response is not OK, the
+ * JSON is invalid, or the data fails schema validation. Errors are reported via
+ * {@link fatalError} which throws.
+ */
 export async function loadJsonResource<T>(url: string, schema: ZodType<T>): Promise<T> {
     logDebug(logName, 'Fetching JSON resource from {0}', url)
     let response: Response
