@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
+import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler, IActionHandlerRegistry, actionHandlerRegistryDependencies } from '@registries/actionHandlerRegistry'
 import { token } from '@ioc/token'
 import { Container } from '@ioc/container'
 import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
@@ -20,7 +20,7 @@ describe('ActionHandlerRegistry', () => {
     beforeEach(() => {
         container = new Container()
         container.register<IServiceProvider>({ token: serviceProviderToken, useFactory: c => new ServiceProvider(c) })
-        container.register<IActionHandlerRegistry>({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry })
+        container.register<IActionHandlerRegistry>({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry, deps: actionHandlerRegistryDependencies })
         registry = container.resolve(actionHandlerRegistryToken)
         registry.clear()
     })

@@ -1,22 +1,36 @@
-import { describe, it, expect, vi } from 'vitest'
-import { registerComponent, componentRegistry } from '../../engine/registries/componentRegistry'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { ComponentRegistry, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
 import * as log from '../../utils/logMessage'
+import { Container } from '@ioc/container'
 
-describe('componentRegistry', () => {
+describe('ComponentRegistry', () => {
+    let registry: IComponentRegistry
+    let container: Container
+
+    beforeEach(() => {
+        container = new Container()
+        container.register<IComponentRegistry>({ token: componentRegistryToken, useClass: ComponentRegistry })
+        registry = container.resolve(componentRegistryToken)
+        registry.clear()
+    })
+
     it('logs a warning when registering a duplicate component and does not override it', () => {
         const key = 'test-component'
         const original = () => null
         const duplicate = () => null
         const warningSpy = vi.spyOn(log, 'logWarning')
 
-        registerComponent(key, original)
-        registerComponent(key, duplicate)
+        registry.registerComponent(key, original)
+        registry.registerComponent(key, duplicate)
 
         expect(warningSpy).toHaveBeenCalledTimes(1)
-        expect(componentRegistry[key]).toBe(original)
+        expect(registry.getComponent(key)).toBe(original)
 
         warningSpy.mockRestore()
-        delete componentRegistry[key]
+    })
+
+    it('returns undefined when no component registered for type', () => {
+        expect(registry.getComponent('missing')).toBeUndefined()
     })
 })
 

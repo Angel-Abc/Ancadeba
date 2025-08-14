@@ -1,6 +1,7 @@
 import { Component as ComponentData } from '@loader/data/component'
 import { logWarning } from '@utils/logMessage'
-import { componentRegistry } from '@registries/componentRegistry'
+import { IComponentRegistry, componentRegistryToken } from '@registries/componentRegistry'
+import { useService } from '@app/iocProvider'
 
 interface ComponentProps {
     component: ComponentData
@@ -13,8 +14,9 @@ const DefaultComponent: React.FC<ComponentProps> = ({ component }): React.JSX.El
     )
 }
 
-export const Component: React.FC<ComponentProps> = ({ component}): React.JSX.Element => {
-    const ComponentImpl = componentRegistry[component.type] ?? DefaultComponent
+export const Component: React.FC<ComponentProps> = ({ component }): React.JSX.Element => {
+    const registry = useService<IComponentRegistry>(componentRegistryToken)
+    const ComponentImpl = registry.getComponent(component.type) ?? DefaultComponent
     return (
         <ComponentImpl component={component} />
     )
