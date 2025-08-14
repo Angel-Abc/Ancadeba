@@ -21,6 +21,8 @@ export interface IPageManager {
      */
     setActivePage(pageId: string): Promise<void>
 
+    initialize(): void
+
     /**
      * Removes listeners and releases resources held by the manager.
      */
@@ -35,7 +37,7 @@ export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken,
  * game's data provider and message bus to control page transitions.
  */
 export class PageManager implements IPageManager {
-    private cleanupFn: CleanUp | null
+    private cleanupFn: CleanUp | null = null
 
     /**
      * Creates a new {@link PageManager}.
@@ -50,6 +52,9 @@ export class PageManager implements IPageManager {
         private pageLoader: IPageLoader,
         private messageBus: IMessageBus
     ) {
+    }
+
+    initialize(): void {
         this.cleanupFn = this.messageBus.registerMessageListener(
             SWITCH_PAGE,
             async message => {

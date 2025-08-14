@@ -15,7 +15,7 @@ export function mapGame(game: Game, basePath: string): GameData {
         maps: game.maps,
         dialogs: game.dialogs,
         tiles: game.tiles,
-        handlers: game.handlers,
+        actions: game.actions,
         virtualKeys: game['virtual-keys'],
         virtualInputs: game['virtual-inputs'],
         cssFiles: game.styling.map(cssFile => `${basePath}/${cssFile}`)

@@ -11,6 +11,7 @@
     "noEmit": true,
     "paths": {
       "@editor/*": ["./editor/*"],
+      "@actions/*": ["./engine/actions/*"],
       "@app/*": ["./engine/app/*"],
       "@builders/*": ["./engine/builders/*"],
       "@engine/*": ["./engine/engine/*"],

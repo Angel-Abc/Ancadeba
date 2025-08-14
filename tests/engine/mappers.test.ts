@@ -19,7 +19,7 @@ describe('Loader mappers', () => {
       tiles: { tile1: 'tiledata' },
       dialogs: { dlg1: 'dialogdata' },
       styling: ['style.css'],
-      handlers: ['handler1'],
+      actions: ['action1'],
       'virtual-keys': ['vk1'],
       'virtual-inputs': ['vi1']
     }

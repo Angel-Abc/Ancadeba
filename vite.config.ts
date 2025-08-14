@@ -26,6 +26,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@editor': fileURLToPath(new URL('./editor', import.meta.url)),
+      '@actions': fileURLToPath(new URL('./engine/actions', import.meta.url)),
       '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
       '@builders': fileURLToPath(new URL('./engine/builders', import.meta.url)),
       '@engine': fileURLToPath(new URL('./engine/engine', import.meta.url)),

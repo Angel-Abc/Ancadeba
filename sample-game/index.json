@@ -29,8 +29,8 @@
   "styling": [
     "game.css"
   ],
-  "handlers": [
-    "handlers/system.json"
+  "actions": [
+    "actions/general-actions.json"
   ],
   "virtual-keys": [
     "inputs/virtual-keys.json"

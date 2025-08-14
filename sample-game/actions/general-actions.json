@@ -1,0 +1,10 @@
+[
+    {
+        "message": "MENU/START-GAME",
+        "action": {
+            "type": "post-message",
+            "message": "SYSTEM/SWITCH-PAGE",
+            "payload": "main-game"
+        }
+    }
+]

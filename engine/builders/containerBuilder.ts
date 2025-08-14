@@ -18,6 +18,8 @@ import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@provid
 import { ActionHandlerRegistry, actionHandlerRegistryDependencies, actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { ConditionResolverRegistry, conditionResolverRegistryDependencies, conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
 import { ComponentRegistry, componentRegistryDependencies, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
+import { ActionExecuter, actionExecuterDependencies, actionExecuterToken, IActionExecuter } from '@actions/actionExecuter'
+import { IPostMessageAction, PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -58,6 +60,7 @@ export class ContainerBuilder implements IContainerBuilder {
         this.registerServices(result)
         this.registerRegistries(result)
         this.registerManagers(result)
+        this.registerActions(result)
         // Register other dependencies as needed
         return result
     }
@@ -93,6 +96,20 @@ export class ContainerBuilder implements IContainerBuilder {
             token: gameEngineToken,
             useClass: GameEngine,
             deps: gameEngineDependencies
+        })
+    }
+
+    private registerActions(container: Container): void {
+        container.register<IActionExecuter>({
+            token: actionExecuterToken,
+            useClass: ActionExecuter,
+            deps: actionExecuterDependencies
+        })
+        container.register<IPostMessageAction>({
+            token: postMessageActionToken,
+            useClass: PostMessageAction,
+            deps: PostMessageActionDependencies,
+            scope: 'transient'
         })
     }
 

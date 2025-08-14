@@ -1,8 +1,8 @@
 import { GameMenuComponent as GameMenuComponentData } from '@loader/data/component'
 import { Button } from '@loader/data/button'
-import { logDebug } from '@utils/logMessage'
 import { ITranslationService, translationServiceToken } from '@services/translationService'
 import { useService } from '@app/iocProvider'
+import { actionExecuterToken, IActionExecuter } from '@actions/actionExecuter'
 
 interface GameMenuComponentProps {
     component: GameMenuComponentData
@@ -10,9 +10,10 @@ interface GameMenuComponentProps {
 
 export const GameMenuComponent: React.FC<GameMenuComponentProps> = ({ component }): React.JSX.Element => {
     const translationService = useService<ITranslationService>(translationServiceToken)
+    const actionExecuter = useService<IActionExecuter>(actionExecuterToken)
 
     const onButtonClick = (button: Button) => {
-        logDebug('GameMenuComponent', 'button click: {0}', button.action)
+        actionExecuter.execute(button.action)
     }
 
     return (

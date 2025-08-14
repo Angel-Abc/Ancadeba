@@ -16,7 +16,7 @@ export const gameSchema = z.object({
     tiles: z.record(z.string(), z.string()),
     dialogs: z.record(z.string(), z.string()),
     styling: z.array(z.string()),
-    handlers: z.array(z.string()),
+    actions: z.array(z.string()),
     'virtual-keys': z.array(z.string()),
     'virtual-inputs': z.array(z.string()),
 
