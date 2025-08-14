@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { dataPathProviderToken, IDataPathProvider } from '../providers/configProviders'
+import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { type Language as LanguageData } from './data/language'
 import { Language, languageSchema } from './schema/language'
 import { loadJsonResource } from '@utils/loadJsonResource'

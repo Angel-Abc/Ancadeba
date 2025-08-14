@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
-import { FINALIZE_END_TURN_MESSAGE, START_END_TURN_MESSAGE } from '../messages/system'
+import { FINALIZE_END_TURN_MESSAGE, START_END_TURN_MESSAGE } from '@messages/system'
 import { logDebug } from '@utils/logMessage'
 
 

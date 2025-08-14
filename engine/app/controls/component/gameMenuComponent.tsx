@@ -1,8 +1,8 @@
-import { useService } from '@app/providers/iocProvider'
 import { GameMenuComponent as GameMenuComponentData } from '@loader/data/component'
-import { ITranslationService, translationServiceToken } from '../../../services/translationService'
 import { Button } from '@loader/data/button'
 import { logDebug } from '@utils/logMessage'
+import { ITranslationService, translationServiceToken } from '@services/translationService'
+import { useService } from '@app/iocProvider'
 
 interface GameMenuComponentProps {
     component: GameMenuComponentData

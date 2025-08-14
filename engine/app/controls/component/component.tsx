@@ -1,6 +1,6 @@
 import { Component as ComponentData } from '@loader/data/component'
-import { componentRegistry } from './componentRegistry'
 import { logWarning } from '@utils/logMessage'
+import { componentRegistry } from '@registries/componentRegistry'
 
 interface ComponentProps {
     component: ComponentData

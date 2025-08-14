@@ -1,13 +1,13 @@
 import { Token, token } from '@ioc/token'
 import { gameLoaderToken, IGameLoader } from '@loader/gameLoader'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
-import { domManagerToken, IDomManager } from '../managers/domManager'
-import { ILanguageManager, languageManagerToken } from '../managers/languageManager'
-import { gameDataProviderToken, IGameDataProvider } from '../providers/gameDataProvider'
+import { domManagerToken, IDomManager } from '@managers/domManager'
+import { ILanguageManager, languageManagerToken } from '@managers/languageManager'
+import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { Game } from '@loader/data/game'
 import { fatalError, logDebug } from '@utils/logMessage'
-import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../messages/system'
-import { pageManagerToken, IPageManager } from '../managers/pageManager'
+import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
+import { pageManagerToken, IPageManager } from '@managers/pageManager'
 
 export interface IEngineInitializer {
     initialize(): Promise<void>

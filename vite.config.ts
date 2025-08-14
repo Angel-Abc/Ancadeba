@@ -25,12 +25,17 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@loader': fileURLToPath(new URL('./engine/loader', import.meta.url)),
-      '@ioc': fileURLToPath(new URL('./engine/ioc', import.meta.url)),
-      '@builders': fileURLToPath(new URL('./engine/builders', import.meta.url)),
-      '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
-      '@engine': fileURLToPath(new URL('./engine/engine', import.meta.url)),
       '@editor': fileURLToPath(new URL('./editor', import.meta.url)),
+      '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
+      '@builders': fileURLToPath(new URL('./engine/builders', import.meta.url)),
+      '@engine': fileURLToPath(new URL('./engine/engine', import.meta.url)),
+      '@ioc': fileURLToPath(new URL('./engine/ioc', import.meta.url)),
+      '@loader': fileURLToPath(new URL('./engine/loader', import.meta.url)),
+      '@managers': fileURLToPath(new URL('./engine/managers', import.meta.url)),
+      '@messages': fileURLToPath(new URL('./engine/messages', import.meta.url)),
+      '@providers': fileURLToPath(new URL('./engine/providers', import.meta.url)),
+      '@registries': fileURLToPath(new URL('./engine/registries', import.meta.url)),
+      '@services': fileURLToPath(new URL('./engine/services', import.meta.url)),
       '@utils': fileURLToPath(new URL('./utils', import.meta.url)),
     }
   },
