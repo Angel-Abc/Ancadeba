@@ -1,17 +1,46 @@
+/**
+ * Manages interactions with the browser DOM such as injecting style sheets
+ * and updating the document title. All DOM mutations for the application
+ * should be routed through this manager to keep concerns centralized.
+ */
 import { Token, token } from '@ioc/token'
 
+/**
+ * Contract for components capable of manipulating the DOM.
+ */
 export interface IDomManager {
+    /**
+     * Ensures the provided style sheet is added to the document.
+     *
+     * @param path - Path to the CSS file to append.
+     */
     setCssFile(path: string): void
+
+    /**
+     * Updates the document's title.
+     *
+     * @param title - New title to set on the document.
+     */
     setTitle(title: string): void
 }
 
 export const domManagerToken = token<IDomManager>('DomManager')
 export const domManagerDependencies: Token<unknown>[] = []
 
+/**
+ * Default implementation of {@link IDomManager} that targets the global
+ * `document` object when available.
+ */
 export class DomManager implements IDomManager {
     private writtenCssFiles: Set<string>
     private document?: Document
 
+    /**
+     * Creates a new {@link DomManager}.
+     *
+     * @param doc - Optional `Document` to manipulate. If omitted, the global
+     * `document` is used when running in a browser context.
+     */
     constructor(doc?: Document | null) {
         if (doc !== undefined) {
             this.document = doc || undefined
@@ -21,6 +50,12 @@ export class DomManager implements IDomManager {
         this.writtenCssFiles = new Set()
     }
 
+    /**
+     * Appends a CSS file to the document head if it has not already been
+     * inserted.
+     *
+     * @param path - Path of the style sheet to include.
+     */
     public setCssFile(path: string): void {
         if (!this.document) return
         if (this.writtenCssFiles.has(path)) return
@@ -37,6 +72,11 @@ export class DomManager implements IDomManager {
         this.writtenCssFiles.add(path)
     }
 
+    /**
+     * Sets the document's title.
+     *
+     * @param title - Text to use as the document title.
+     */
     public setTitle(title: string): void {
         if (!this.document) return
         this.document.title = title
