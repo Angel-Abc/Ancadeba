@@ -6,17 +6,43 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { fatalError } from '@utils/logMessage'
 import { mapHandlers } from './mappers/handler'
 
+/**
+ * Defines the contract for loading and mapping action handlers.
+ */
 export interface IActionHandlersLoader {
+    /**
+     * Loads and maps action handlers from the specified JSON files.
+     *
+     * @param paths Relative paths to action handler JSON files. Must contain
+     * at least one path.
+     * @returns Combined array of action handler definitions.
+     * @throws If no paths are provided or any file fails to load or validate.
+     */
     loadActions(paths: string[]): Promise<HandlersData>
 }
 
 const logName = 'ActionHandlersLoader'
 export const actionHandlersLoaderToken = token<IActionHandlersLoader>(logName)
 export const actionHandlersLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+
+/**
+ * Loads action handler definitions using a base path provider.
+ */
 export class ActionHandlersLoader implements IActionHandlersLoader {
+    /**
+     * @param basePathProvider Provides the base directory for handler data files.
+     */
     constructor(private basePathProvider: IDataPathProvider) {
     }
 
+    /**
+     * Fetches, validates, and maps action handler schemas from the given paths.
+     *
+     * @param paths Relative paths to action handler JSON files.
+     * @returns Flattened list of mapped handler definitions.
+     * @throws If no paths are provided or any handler file fails to load or
+     * validate.
+     */
     public async loadActions(paths: string[]): Promise<HandlersData> {
         if (paths.length === 0) {
             fatalError(logName, 'No action handlers paths provided')
