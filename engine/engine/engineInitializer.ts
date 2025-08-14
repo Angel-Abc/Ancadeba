@@ -15,7 +15,14 @@ export interface IEngineInitializer {
 
 const logName = 'EngineInitializer'
 export const engineInitializerToken = token<IEngineInitializer>(logName)
-export const engineInitializerDependencies: Token<unknown>[] = [messageBusToken, gameLoaderToken, domManagerToken, languageManagerToken, gameDataProviderToken,pageManagerToken]
+export const engineInitializerDependencies: Token<unknown>[] = [
+    messageBusToken,
+    gameLoaderToken,
+    domManagerToken,
+    languageManagerToken,
+    gameDataProviderToken,
+    pageManagerToken
+]
 export class EngineInitializer implements IEngineInitializer {
     constructor(
         private messageBus: IMessageBus, 
