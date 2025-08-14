@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler } from '@registries/actionHandlerRegistry'
+import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { token } from '@ioc/token'
 import { Container } from '@ioc/container'
 import { ServiceProvider } from '@providers/serviceProvider'
@@ -14,13 +14,13 @@ class TestHandler implements IActionHandler<PostMessageAction> {
 }
 
 describe('ActionHandlerRegistry', () => {
-    let registry: ActionHandlerRegistry
+    let registry: IActionHandlerRegistry
     let serviceProvider: ServiceProvider
     let container: Container
 
     beforeEach(() => {
         container = new Container()
-        container.register({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry })
+        container.register<IActionHandlerRegistry>({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry })
         registry = container.resolve(actionHandlerRegistryToken)
         registry.clear()
         serviceProvider = new ServiceProvider(container)
