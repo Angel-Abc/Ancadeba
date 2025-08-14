@@ -1,3 +1,7 @@
+/**
+ * Logging utilities with configurable levels and categories.
+ * Provides formatted console output helpers and fatal error handling.
+ */
 import { LogLevel } from './types'
 
 const env = (
@@ -51,6 +55,17 @@ function formatMessageForConsole(
     return { formattedMessage, extraArgs }
 }
 
+/**
+ * Logs a formatted message to the console if the provided level and category are
+ * enabled. Placeholders like `{0}` are replaced using subsequent arguments and
+ * objects are logged separately for easier inspection.
+ *
+ * @param logLevel The severity level to log with.
+ * @param category Optional category used to filter debug messages.
+ * @param message The message template containing optional placeholders.
+ * @param args Values that replace placeholders in the message template.
+ * @returns The formatted message regardless of whether it was output.
+ */
 export function logMessage(
     logLevel: LogLevel,
     category: string | undefined,
@@ -97,6 +112,18 @@ function createLogger(level: LogLevel) {
 export const logDebug = createLogger(LogLevel.debug)
 export const logInfo = createLogger(LogLevel.info)
 export const logWarning = createLogger(LogLevel.warning)
+/**
+ * Logs an error level message and immediately throws an {@link Error}.
+ *
+ * Accepts either `(category, message, ...args)` or `(message, ...args)` and
+ * formats the message in the same way as {@link logMessage}.
+ *
+ * @param categoryOrMessage Category name when a separate message is supplied,
+ * or the message itself when used without a category.
+ * @param messageOrArg Optional message template or first interpolation argument.
+ * @param args Additional arguments for message formatting.
+ * @throws {Error} Always throws after logging the formatted message.
+ */
 export function fatalError(categoryOrMessage: string, messageOrArg?: unknown, ...args: unknown[]): never {
     if (typeof messageOrArg === 'string') {
         throw new Error(logMessage(LogLevel.error, categoryOrMessage, messageOrArg, ...args))
