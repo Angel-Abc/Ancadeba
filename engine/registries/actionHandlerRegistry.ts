@@ -31,9 +31,15 @@ export interface IActionHandler<T extends BaseAction = Action> {
  * Registry responsible for mapping action types to handler tokens and
  * resolving handler instances via an {@link IServiceProvider}.
  */
-export const actionHandlerRegistryToken = token<ActionHandlerRegistry>('ActionHandlerRegistry')
+export interface IActionHandlerRegistry {
+    registerActionHandler<T extends BaseAction>(type: T['type'], handlerToken: Token<IActionHandler<T>>): void
+    getActionHandler<T extends BaseAction>(type: T['type'], serviceProvider: IServiceProvider): IActionHandler<T> | undefined
+    clear(): void
+}
 
-export class ActionHandlerRegistry {
+export const actionHandlerRegistryToken = token<IActionHandlerRegistry>('ActionHandlerRegistry')
+
+export class ActionHandlerRegistry implements IActionHandlerRegistry {
     private readonly registry = new Map<string, Token<IActionHandler>>()
 
     /**

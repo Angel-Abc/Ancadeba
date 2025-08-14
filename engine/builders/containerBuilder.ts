@@ -15,7 +15,7 @@ import { DomManager, domManagerDependencies, domManagerToken } from '@managers/d
 import { LanguageManager, languageManagerDependencies, languageManagerToken } from '@managers/languageManager'
 import { PageManager, pageManagerDependencies, pageManagerToken } from '@managers/pageManager'
 import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
-import { ActionHandlerRegistry, actionHandlerRegistryToken } from '@registries/actionHandlerRegistry'
+import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 
 export interface IContainerBuilder {
     build(): Container
@@ -109,7 +109,7 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     private registerRegistries(container: Container): void {
-        container.register({
+        container.register<IActionHandlerRegistry>({
             token: actionHandlerRegistryToken,
             useClass: ActionHandlerRegistry
         })
