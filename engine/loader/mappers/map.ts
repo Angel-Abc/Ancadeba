@@ -1,6 +1,9 @@
 import type { GameMap as GameMapData, MapTile as MapTileData } from '@loader/data/map'
 import { type GameMap, type MapTile } from '@loader/schema/map'
+import { fatalError } from '@utils/logMessage'
 import { mapAction } from './action'
+
+const logName = 'mapGameMap'
 
 
 export function mapGameMap(gameMap: GameMap): GameMapData {
@@ -15,6 +18,9 @@ export function mapGameMap(gameMap: GameMap): GameMapData {
                 tiles: mapMapTiles(gameMap.tiles),
                 map: mapMap(gameMap.map)
             }
+        default:
+            // Guard against unrecognized map schema types
+            fatalError(logName, 'Unsupported map type: {0}', (gameMap as { type: string }).type)
     }
 }
 
