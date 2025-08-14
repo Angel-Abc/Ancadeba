@@ -12,7 +12,15 @@ import { postMessageActionToken } from '@actions/postMessageAction'
 import { pageManagerToken, IPageManager } from '@managers/pageManager'
 import { actionManagerToken, IActionManager } from '@managers/actionManager'
 
+/**
+ * Contract for components that prepare and start the game engine.
+ */
 export interface IEngineInitializer {
+    /**
+     * Loads game data and boots up all required subsystems.
+     *
+     * @returns Resolves when initialization is complete.
+     */
     initialize(): Promise<void>
 }
 
@@ -28,9 +36,25 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     pageManagerToken,
     actionManagerToken
 ]
+/**
+ * Default {@link IEngineInitializer} implementation that orchestrates loading
+ * game data and configuring core managers.
+ */
 export class EngineInitializer implements IEngineInitializer {
+    /**
+     * Creates a new {@link EngineInitializer}.
+     *
+     * @param messageBus - Bus used to dispatch initialization messages.
+     * @param gameLoader - Service responsible for retrieving game data.
+     * @param domManager - Manager controlling DOM related operations.
+     * @param languageManager - Handles localization and language setup.
+     * @param gameDataProvider - Stores and provides loaded game data.
+     * @param actionHandlerRegistry - Registry used to register action handlers.
+     * @param pageManager - Manages page initialization and navigation.
+     * @param actionManager - Initializes and manages actions.
+     */
     constructor(
-        private messageBus: IMessageBus, 
+        private messageBus: IMessageBus,
         private gameLoader: IGameLoader,
         private domManager: IDomManager,
         private languageManager: ILanguageManager,
@@ -40,6 +64,11 @@ export class EngineInitializer implements IEngineInitializer {
         private actionManager: IActionManager
     ){}
 
+    /**
+     * Initializes the engine by loading game data and setting up managers.
+     *
+     * @returns Resolves when initialization tasks finish.
+     */
     public async initialize(): Promise<void> {
         const game = await this.loadGameDataRoot()
         this.gameDataProvider.initialize(game)
@@ -58,10 +87,18 @@ export class EngineInitializer implements IEngineInitializer {
         })
     }
 
+    /**
+     * Registers built-in action handlers with the registry.
+     */
     private registerActions(): void {
         this.actionHandlerRegistry.registerActionHandler('post-message', postMessageActionToken)
     }
 
+    /**
+     * Prepares browser elements such as title and stylesheets.
+     *
+     * @param game - Loaded game data used for configuration.
+     */
     private setupBrowser(game: Game) {
         this.domManager.setTitle(game.title)
         game.cssFiles.forEach((cssFile: string) => {
@@ -69,7 +106,13 @@ export class EngineInitializer implements IEngineInitializer {
             logDebug(logName, 'CSS file {0} set', cssFile)
         })
     }
-    
+
+    /**
+     * Loads the root {@link Game} data structure.
+     *
+     * @returns The fully loaded game information.
+     * @throws {@link fatalError} if no game data is returned.
+     */
     private async loadGameDataRoot(): Promise<Game> {
         const game = await this.gameLoader.loadGame()
         if (!game) fatalError(logName, 'Game data is null or undefined')
