@@ -65,15 +65,17 @@ export class MapManager implements IMapManager {
         })
     }
 
-    public async ensureTileSets(tileSetIds: string[]){
-        tileSetIds.forEach(tileSetId => {
-            const path = this.gameDataProvider.Game.game.tiles[tileSetId]
-            if (!path) fatalError(logName, 'Tile set not found for id {0}', tileSetId)
-    
-            if (this.gameDataProvider.Game.loadedTileSets[tileSetId] === undefined) {
-                const tileSet = await this.tileSetLoader.loadTileSet(path)
-                this.gameDataProvider.Game.loadedTileSets[tileSetId] = tileSet
-            }
-        })
+    public async ensureTileSets(tileSetIds: string[]): Promise<void> {
+        await Promise.all(
+            tileSetIds.map(async tileSetId => {
+                const path = this.gameDataProvider.Game.game.tiles[tileSetId]
+                if (!path) fatalError(logName, 'Tile set not found for id {0}', tileSetId)
+
+                if (this.gameDataProvider.Game.loadedTileSets[tileSetId] === undefined) {
+                    const tileSet = await this.tileSetLoader.loadTileSet(path)
+                    this.gameDataProvider.Game.loadedTileSets[tileSetId] = tileSet
+                }
+            })
+        )
     }
 }
