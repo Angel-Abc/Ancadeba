@@ -5,6 +5,10 @@ interface ImageComponentProps {
     component: ImageComponentData
 }
 
+/**
+ * Displays an image using CSS custom properties.
+ * @param component - Image component definition.
+ */
 export const ImageComponent: React.FC<ImageComponentProps> = ({ component }): React.JSX.Element => {
     const style: CSSCustomProperties = {
         '--ge-image-path': `url("${component.image}")`,

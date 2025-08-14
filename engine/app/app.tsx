@@ -4,6 +4,10 @@ import { Page } from './controls/page'
 import { useService } from './iocProvider'
 import { PAGE_SWITCHED } from '@messages/system'
 
+/**
+ * Top-level application component.
+ * Subscribes to PAGE_SWITCHED messages and renders the current page.
+ */
 export const App: React.FC = (): React.JSX.Element => {
   const messageBus = useService<IMessageBus>(messageBusToken)
   const [pageId, setPageId] = useState<string | null>(null)

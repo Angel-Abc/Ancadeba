@@ -6,6 +6,10 @@ interface PageProps {
     pageId: string
 }
 
+/**
+ * Displays the screen for a given page.
+ * @param pageId - Identifier of the page to render.
+ */
 export const Page: React.FC<PageProps> = ({ pageId }): React.JSX.Element => {
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
     if (gameDataProvider.Context.currentPageId !== pageId || !gameDataProvider.Game.loadedPages[pageId]) return (<></>)

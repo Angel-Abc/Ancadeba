@@ -8,6 +8,11 @@ interface ScreenProps {
 
 const logName = 'Screen'
 
+/**
+ * Selects a renderer for the provided screen data.
+ * Logs a warning for unsupported screen types.
+ * @param screen - Screen data to render.
+ */
 export const Screen: React.FC<ScreenProps> = ({ screen }): React.JSX.Element | null => {
     switch (screen.type) {
         case 'grid':
