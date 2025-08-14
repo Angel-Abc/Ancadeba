@@ -1,7 +1,7 @@
 import { Action, BaseAction } from '@loader/data/action'
 import { Message } from '@utils/types'
 import { token, type Token } from '@ioc/token'
-import type { IServiceProvider } from '@providers/serviceProvider'
+import { serviceProviderToken, type IServiceProvider } from '@providers/serviceProvider'
 
 /**
  * Represents a handler for a specific {@link Action} type.
@@ -33,14 +33,17 @@ export interface IActionHandler<T extends BaseAction = Action> {
  */
 export interface IActionHandlerRegistry {
     registerActionHandler<T extends BaseAction>(type: T['type'], handlerToken: Token<IActionHandler<T>>): void
-    getActionHandler<T extends BaseAction>(type: T['type'], serviceProvider: IServiceProvider): IActionHandler<T> | undefined
+    getActionHandler<T extends BaseAction>(type: T['type']): IActionHandler<T> | undefined
     clear(): void
 }
 
-export const actionHandlerRegistryToken = token<IActionHandlerRegistry>('ActionHandlerRegistry')
-
+const logName = 'ActionHandlerRegistry'
+export const actionHandlerRegistryToken = token<IActionHandlerRegistry>(logName)
+export const actionHandlerRegistryDependencies: Token<unknown>[] = [serviceProviderToken]
 export class ActionHandlerRegistry implements IActionHandlerRegistry {
     private readonly registry = new Map<string, Token<IActionHandler>>()
+
+    constructor(private serviceProvider: IServiceProvider) {}
 
     /**
      * Registers an action handler token for a given action type.
@@ -63,11 +66,10 @@ export class ActionHandlerRegistry implements IActionHandlerRegistry {
      * @returns The handler instance or `undefined` if no handler is registered
      */
     public getActionHandler<T extends BaseAction>(
-        type: T['type'],
-        serviceProvider: IServiceProvider
+        type: T['type']
     ): IActionHandler<T> | undefined {
         const token = this.registry.get(type)
-        return token ? (serviceProvider.getService(token) as unknown as IActionHandler<T>) : undefined
+        return token ? (this.serviceProvider.getService(token) as unknown as IActionHandler<T>) : undefined
     }
 
     /** Clears all registered handlers. */

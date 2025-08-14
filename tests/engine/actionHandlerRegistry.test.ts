@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { ActionHandlerRegistry, actionHandlerRegistryToken, IActionHandler, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { token } from '@ioc/token'
 import { Container } from '@ioc/container'
-import { ServiceProvider } from '@providers/serviceProvider'
+import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
 import type { PostMessageAction } from '@loader/data/action'
 
 class TestHandler implements IActionHandler<PostMessageAction> {
@@ -15,15 +15,14 @@ class TestHandler implements IActionHandler<PostMessageAction> {
 
 describe('ActionHandlerRegistry', () => {
     let registry: IActionHandlerRegistry
-    let serviceProvider: ServiceProvider
     let container: Container
 
     beforeEach(() => {
         container = new Container()
+        container.register<IServiceProvider>({ token: serviceProviderToken, useFactory: c => new ServiceProvider(c) })
         container.register<IActionHandlerRegistry>({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry })
         registry = container.resolve(actionHandlerRegistryToken)
         registry.clear()
-        serviceProvider = new ServiceProvider(container)
     })
 
     it('provides handler instance via service provider', () => {
@@ -31,12 +30,12 @@ describe('ActionHandlerRegistry', () => {
         container.register({ token: HANDLER, useClass: TestHandler })
 
         registry.registerActionHandler('post-message', HANDLER)
-        const handler = registry.getActionHandler('post-message', serviceProvider)
+        const handler = registry.getActionHandler('post-message')
         expect(handler).toBeInstanceOf(TestHandler)
     })
 
     it('returns undefined when no handler registered for type', () => {
-        const handler = registry.getActionHandler('missing', serviceProvider)
+        const handler = registry.getActionHandler('missing')
         expect(handler).toBeUndefined()
     })
 })
