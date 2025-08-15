@@ -21,28 +21,32 @@ describe('MapManager.ensureTileSets', () => {
     it('loads tile sets that are not yet loaded', async () => {
         const gameData = {
             game: { tiles: { ts1: 'ts1.json' } },
-            loadedTileSets: {}
+            loadedTileSets: new Set<string>(),
+            loadedTiles: new Map()
         } as unknown as GameData
-        const loadTileSet = vi.fn().mockResolvedValue({ id: 'ts1' })
+        const loadTileSet = vi.fn().mockResolvedValue({ id: 'ts1', tiles: [{ key: 'tile1' }] })
         const manager = createManager(gameData, loadTileSet)
 
         await manager.ensureTileSets(['ts1'])
 
         expect(loadTileSet).toHaveBeenCalledWith('ts1.json')
-        expect(gameData.loadedTileSets['ts1']).toEqual({ id: 'ts1' })
+        expect(gameData.loadedTileSets.has('ts1')).toBe(true)
+        expect(gameData.loadedTiles.get('tile1')).toEqual({ key: 'tile1' })
     })
 
     it('does not reload tile sets that are already loaded', async () => {
         const gameData = {
             game: { tiles: { ts1: 'ts1.json' } },
-            loadedTileSets: { ts1: { id: 'ts1' } }
+            loadedTileSets: new Set<string>(['ts1']),
+            loadedTiles: new Map([['tile1', { key: 'tile1' }]])
         } as unknown as GameData
-        const loadTileSet = vi.fn().mockResolvedValue({ id: 'ts1-new' })
+        const loadTileSet = vi.fn().mockResolvedValue({ id: 'ts1-new', tiles: [{ key: 'tile2' }] })
         const manager = createManager(gameData, loadTileSet)
 
         await manager.ensureTileSets(['ts1'])
 
         expect(loadTileSet).not.toHaveBeenCalled()
-        expect(gameData.loadedTileSets['ts1']).toEqual({ id: 'ts1' })
+        expect(gameData.loadedTileSets.has('ts1')).toBe(true)
+        expect(gameData.loadedTiles.get('tile1')).toEqual({ key: 'tile1' })
     })
 })
