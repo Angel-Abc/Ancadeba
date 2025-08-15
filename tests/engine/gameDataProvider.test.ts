@@ -23,18 +23,18 @@ describe('GameDataProvider', () => {
     const provider = new GameDataProvider()
     provider.initialize(gameData)
 
-    expect(provider.Game).toEqual({
-      game: gameData,
-      loadedLanguages: {},
-      loadedPages: {},
-      loadedMaps: {},
-      loadedTileSets: {}
-    })
+    expect(provider.Game.game).toBe(gameData)
+    expect(provider.Game.loadedLanguages).toEqual({})
+    expect(provider.Game.loadedPages).toEqual({})
+    expect(provider.Game.loadedMaps).toEqual({})
+    expect(provider.Game.loadedTileSets).toEqual(new Set())
+    expect(provider.Game.loadedTiles).toEqual(new Map())
     expect(provider.Context).toEqual({
       language: 'en',
       startPage: 'start',
       currentPageId: null,
-      currentMapId: null
+      currentMapId: null,
+      player: { position: { x: 0, y: 0 } }
     })
   })
 

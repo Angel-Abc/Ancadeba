@@ -10,6 +10,7 @@ import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 import type { IActionHandlerRegistry } from '../../engine/registries/actionHandlerRegistry'
 import type { IPageManager } from '../../engine/managers/pageManager'
 import type { IActionManager } from '../../engine/managers/actionManager'
+import type { IMapManager } from '../../engine/managers/mapManager'
 import type { Game } from '../../engine/loader/data/game'
 
 describe('EngineInitializer', () => {
@@ -38,6 +39,7 @@ describe('EngineInitializer', () => {
     const actionHandlerRegistry = { registerActionHandler: vi.fn() } as unknown as IActionHandlerRegistry
     const pageManager = { initialize: vi.fn() } as unknown as IPageManager
     const actionManager = { initialize: vi.fn() } as unknown as IActionManager
+    const mapManager = { initialize: vi.fn() } as unknown as IMapManager
 
     const initializer = new EngineInitializer(
       messageBus,
@@ -47,7 +49,8 @@ describe('EngineInitializer', () => {
       gameDataProvider,
       actionHandlerRegistry,
       pageManager,
-      actionManager
+      actionManager,
+      mapManager
     )
 
     await initializer.initialize()
@@ -56,6 +59,7 @@ describe('EngineInitializer', () => {
     expect(gameDataProvider.initialize).toHaveBeenCalledWith(game)
     expect(pageManager.initialize).toHaveBeenCalledTimes(1)
     expect(actionManager.initialize).toHaveBeenCalledTimes(1)
+    expect(mapManager.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
     expect(domManager.setTitle).toHaveBeenCalledWith('Test Game')
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
