@@ -6,8 +6,21 @@ import { CleanUp } from '@utils/types'
 import { gameDataProviderToken, IGameDataProvider } from './gameDataProvider'
 import { VIRTUAL_KEY } from '@messages/system'
 
+/**
+ * Translates physical keyboard input into virtual input messages.
+ *
+ * Methods:
+ * - `initialize`: Load virtual key mappings and register keyboard listeners.
+ * - `cleanup`: Remove registered listeners and release resources.
+ */
 export interface IVirtualKeyProvider {
+    /**
+     * Load virtual key mappings and register keyboard listeners.
+     */
     initialize(): Promise<void>
+    /**
+     * Remove registered listeners and release resources.
+     */
     cleanup(): void
 }
 
