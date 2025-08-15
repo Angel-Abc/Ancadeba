@@ -33,6 +33,7 @@ describe('MessageBus notification messages', () => {
         bus.registerNotificationMessage('silent')
         bus.postMessage({ message: 'silent' })
 
+        expect(debugSpy).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
         expect(warningSpy).not.toHaveBeenCalled()
 
         debugSpy.mockClear()
@@ -41,6 +42,6 @@ describe('MessageBus notification messages', () => {
         bus.unregisterNotificationMessage('silent')
         bus.postMessage({ message: 'silent' })
 
-        expect(warningSpy).toHaveBeenCalledTimes(1)
+        expect(warningSpy).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
     })
 })
