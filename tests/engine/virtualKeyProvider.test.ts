@@ -7,7 +7,7 @@ import type { IVirtualKeysLoader } from '../../engine/loader/virtualKeysLoader'
 import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 
 describe('VirtualKeyProvider', () => {
-  it('initialize loads keys, registers listener, and posts VIRTUAL_KEY messages', async () => {
+  it('loads keys when loadedVirtualKeys is empty and emits VIRTUAL_KEY messages', async () => {
     const cleanup = vi.fn()
     const addListener = vi.fn().mockReturnValue(cleanup)
     const keyboardEventListener = { addListener } as unknown as IKeyboardEventListener
@@ -43,6 +43,53 @@ describe('VirtualKeyProvider', () => {
     await provider.initialize()
 
     expect(loadVirtualKeys).toHaveBeenCalledWith(['path'])
+    expect(loadVirtualKeys).toHaveBeenCalledTimes(1)
+    expect(addListener).toHaveBeenCalledTimes(1)
+
+    const handler = addListener.mock.calls[0][0]
+    handler({ code: 'Space', alt: false, ctrl: false, shift: false })
+    expect(postMessage).toHaveBeenCalledWith({ message: VIRTUAL_KEY, payload: 'jump' })
+  })
+
+  it('uses preloaded keys without loading and emits VIRTUAL_KEY messages', async () => {
+    const cleanup = vi.fn()
+    const addListener = vi.fn().mockReturnValue(cleanup)
+    const keyboardEventListener = { addListener } as unknown as IKeyboardEventListener
+
+    const postMessage = vi.fn()
+    const messageBus = { postMessage } as unknown as IMessageBus
+
+    const keys = [
+      { virtualKey: 'jump', keyCode: 'Space', alt: false, ctrl: false, shift: false }
+    ]
+    const lookupKey = 'Space-false-false-false'
+    const loadedVirtualKeys = new Map([[lookupKey, keys[0]]])
+
+    const loadVirtualKeys = vi.fn()
+    const virtualKeysLoader = { loadVirtualKeys } as unknown as IVirtualKeysLoader
+
+    const gameDataProvider = {
+      Game: {
+        game: { virtualKeys: ['path'] } as unknown,
+        loadedLanguages: {},
+        loadedPages: {},
+        loadedMaps: {},
+        loadedTiles: new Map(),
+        loadedTileSets: new Set(),
+        loadedVirtualKeys
+      }
+    } as unknown as IGameDataProvider
+
+    const provider = new VirtualKeyProvider(
+      keyboardEventListener,
+      messageBus,
+      virtualKeysLoader,
+      gameDataProvider
+    )
+
+    await provider.initialize()
+
+    expect(loadVirtualKeys).not.toHaveBeenCalled()
     expect(addListener).toHaveBeenCalledTimes(1)
 
     const handler = addListener.mock.calls[0][0]
