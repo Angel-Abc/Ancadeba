@@ -66,7 +66,7 @@ export class ContainerBuilder implements IContainerBuilder {
         this.registerRegistries(result)
         this.registerManagers(result)
         this.registerActions(result)
-        // Additional service registrations go here
+        // Hook for custom service registrations
         return result
     }
 
