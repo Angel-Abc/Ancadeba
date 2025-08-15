@@ -25,6 +25,7 @@ import { ActionManager, actionManagerDependencies, actionManagerToken } from '@m
 import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
 import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@loader/tileSetLoader'
 import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/mapManager'
+import { VirtualKeysLoader, virtualKeysLoaderDependencies, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -176,6 +177,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: tileSetLoaderToken,
             useClass: TileSetLoader,
             deps: tileSetLoaderDependencies
+        })
+        container.register({
+            token: virtualKeysLoaderToken,
+            useClass: VirtualKeysLoader,
+            deps: virtualKeysLoaderDependencies
         })
     }
 
