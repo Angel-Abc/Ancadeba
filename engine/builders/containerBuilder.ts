@@ -24,6 +24,7 @@ import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersL
 import { ActionManager, actionManagerDependencies, actionManagerToken } from '@managers/actionManager'
 import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
 import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@loader/tileSetLoader'
+import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/mapManager'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -243,6 +244,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: actionManagerToken,
             useClass: ActionManager,
             deps: actionManagerDependencies
+        })
+        container.register({
+            token: mapManagerToken,
+            useClass: MapManager,
+            deps: mapManagerDependencies
         })
     }
 }
