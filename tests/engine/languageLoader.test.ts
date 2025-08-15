@@ -1,9 +1,15 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
 
+vi.mock('@utils/logMessage', () => ({
+  fatalError: vi.fn((categoryOrMessage: string, message?: string) => {
+    throw new Error(message ?? categoryOrMessage)
+  })
+}))
 vi.mock('@utils/loadJsonResource', () => ({ loadJsonResource: vi.fn() }))
 vi.mock('@loader/mappers/language', () => ({ mapLanguage: vi.fn() }))
 
 import { loadJsonResource } from '@utils/loadJsonResource'
+import { fatalError } from '@utils/logMessage'
 import { mapLanguage } from '@loader/mappers/language'
 import { LanguageLoader } from '@loader/languageLoader'
 
@@ -52,5 +58,31 @@ describe('LanguageLoader', () => {
 
     const loader = new LanguageLoader(dataPathProvider)
     await expect(loader.loadLanguage(['a.json', 'b.json'])).rejects.toThrow(/Language ID mismatch/)
+  })
+
+  it('throws when loadJsonResource rejects', async () => {
+    ;(fatalError as unknown as Mock).mockImplementation(() => {
+      throw new Error('fatal')
+    })
+    ;(loadJsonResource as unknown as Mock).mockImplementation(() => fatalError('fail'))
+
+    const loader = new LanguageLoader(dataPathProvider)
+    await expect(loader.loadLanguage(['a.json'])).rejects.toThrow('fatal')
+
+    expect(fatalError).toHaveBeenCalled()
+    expect(mapLanguage).not.toHaveBeenCalled()
+  })
+
+  it('throws when loadJsonResource returns invalid data', async () => {
+    ;(loadJsonResource as unknown as Mock).mockResolvedValue({})
+    ;(fatalError as unknown as Mock).mockImplementation(() => {
+      throw new Error('fatal')
+    })
+    ;(mapLanguage as unknown as Mock).mockImplementation(() => fatalError('invalid'))
+
+    const loader = new LanguageLoader(dataPathProvider)
+    await expect(loader.loadLanguage(['a.json'])).rejects.toThrow('fatal')
+
+    expect(fatalError).toHaveBeenCalled()
   })
 })

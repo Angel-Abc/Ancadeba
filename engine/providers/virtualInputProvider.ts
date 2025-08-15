@@ -5,6 +5,16 @@ import { gameDataProviderToken, IGameDataProvider } from './gameDataProvider'
 import { CleanUp } from '@utils/types'
 import { VIRTUAL_INPUT, VIRTUAL_KEY } from '@messages/system'
 
+/**
+ * Provides access to the game's virtual inputs and manages the lifecycle of
+ * the underlying message listeners.
+ *
+ * - `initialize` loads the virtual input configuration and registers a
+ *   listener so that virtual key messages are translated into virtual input
+ *   events.
+ * - `cleanup` unregisters the listener and releases any resources created
+ *   during initialization.
+ */
 export interface IVirtualInputProvider {
     initialize(): Promise<void>
     cleanup(): void
@@ -68,6 +78,11 @@ export class VirtualInputProvider implements IVirtualInputProvider {
         this.CleanUpFn = null
     }
 
+    /**
+     * Loads virtual input definitions and populates the
+     * `loadedVirtualInputs` map with the corresponding mappings. Mutates the
+     * game data provider's state.
+     */
     private async loadVirtualInputs(): Promise<void> {
         var inputs = await this.virtualInputsLoader.loadVirtualInputs(this.gameDataProvider.Game.game.virtualInputs)
         inputs.forEach(input => {
