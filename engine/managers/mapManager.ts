@@ -46,8 +46,9 @@ export class MapManager implements IMapManager {
     /**
      * Removes any registered message listeners and cleans up resources.
      *
-     * @remarks This method clears internal cleanup handlers and should be
-     * called when the manager is no longer needed to avoid memory leaks.
+     * @remarks Invokes stored cleanup handlers, unregistering any listeners
+     * and resetting the internal cleanup list. Should be called when the
+     * manager is no longer needed to avoid memory leaks.
      */
     public cleanup(): void {
         const fns = this.cleanupFns
@@ -58,8 +59,9 @@ export class MapManager implements IMapManager {
     /**
      * Registers listeners required for map management.
      *
-     * @remarks Adds a listener for {@link SWITCH_MAP} messages and stores a
-     * cleanup function for later removal.
+     * @remarks Attaches listeners for {@link SWITCH_MAP} and
+     * {@link CHANGE_POSITION} messages to the message bus and records the
+     * corresponding cleanup functions for later removal.
      */
     public initialize(): void {
         this.cleanupFns = [
@@ -78,6 +80,13 @@ export class MapManager implements IMapManager {
         ]
     }
 
+    /**
+     * Updates the player's position within the current map.
+     *
+     * @param position - New coordinates for the player.
+     * @remarks Side effects: mutates the player's position in the game data
+     * provider's context.
+     */
     public changePosition(position: Position): void {
         this.gameDataProvider.Context.player.position = position
     }
@@ -86,8 +95,10 @@ export class MapManager implements IMapManager {
      * Loads and activates a map by its identifier.
      *
      * @param mapId - Unique identifier of the map to activate.
-     * @remarks Updates the current map context, posts a {@link MAP_SWITCHED}
-     * message and ensures tile sets for the map are loaded.
+     * @returns A promise that resolves once the map is loaded and activated.
+     * @remarks Side effects: loads missing maps and tile sets into the game
+     * data provider, updates the current map context and posts a
+     * {@link MAP_SWITCHED} message on the bus.
      */
     public async setActiveMap(mapId: string): Promise<void> {
         const path = this.gameDataProvider.Game.game.maps[mapId]
