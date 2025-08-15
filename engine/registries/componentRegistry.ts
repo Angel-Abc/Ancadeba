@@ -12,10 +12,8 @@ import { token, Token } from '@ioc/token'
 import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
 
 export interface IComponentRegistry {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    registerComponent(type: string, component: ComponentType<any>): void
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getComponent(type: string): ComponentType<any> | undefined
+    registerComponent<T = unknown>(type: string, component: ComponentType<T>): void
+    getComponent<T = unknown>(type: string): ComponentType<T> | undefined
     clear(): void
 }
 
@@ -25,8 +23,7 @@ export const componentRegistryToken = token<IComponentRegistry>(logName)
 export const componentRegistryDependencies: Token<unknown>[] = []
 
 export class ComponentRegistry implements IComponentRegistry {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private readonly registry = new Map<string, ComponentType<any>>()
+    private readonly registry = new Map<string, ComponentType<unknown>>()
 
     constructor() {
         this.registerComponent('image', ImageComponent)
@@ -34,18 +31,16 @@ export class ComponentRegistry implements IComponentRegistry {
         this.registerComponent('squares-map', SquaresMapComponent)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public registerComponent(type: string, component: ComponentType<any>): void {
+    public registerComponent<T = unknown>(type: string, component: ComponentType<T>): void {
         if (this.registry.has(type)) {
             logWarning(logName, 'Component already registered under key {0}', type)
             return
         }
-        this.registry.set(type, component)
+        this.registry.set(type, component as ComponentType<unknown>)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public getComponent(type: string): ComponentType<any> | undefined {
-        return this.registry.get(type)
+    public getComponent<T = unknown>(type: string): ComponentType<T> | undefined {
+        return this.registry.get(type) as ComponentType<T> | undefined
     }
 
     public clear(): void {
