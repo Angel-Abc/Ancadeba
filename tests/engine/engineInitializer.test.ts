@@ -11,6 +11,7 @@ import type { IActionHandlerRegistry } from '../../engine/registries/actionHandl
 import type { IPageManager } from '../../engine/managers/pageManager'
 import type { IActionManager } from '../../engine/managers/actionManager'
 import type { IMapManager } from '../../engine/managers/mapManager'
+import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
 import type { Game } from '../../engine/loader/data/game'
 
 describe('EngineInitializer', () => {
@@ -40,6 +41,7 @@ describe('EngineInitializer', () => {
     const pageManager = { initialize: vi.fn() } as unknown as IPageManager
     const actionManager = { initialize: vi.fn() } as unknown as IActionManager
     const mapManager = { initialize: vi.fn() } as unknown as IMapManager
+    const virtualKeyProvider = { initialize: vi.fn() } as unknown as IVirtualKeyProvider
 
     const initializer = new EngineInitializer(
       messageBus,
@@ -50,7 +52,8 @@ describe('EngineInitializer', () => {
       actionHandlerRegistry,
       pageManager,
       actionManager,
-      mapManager
+      mapManager,
+      virtualKeyProvider
     )
 
     await initializer.initialize()
