@@ -1,10 +1,10 @@
-import { GameEngine, gameEngineDependencies, gameEngineToken, IGameEngine } from '@engine/gameEngine'
+import { GameEngine, gameEngineDependencies, gameEngineToken } from '@engine/gameEngine'
 import { TurnScheduler, turnSchedulerDependencies, turnSchedulerToken } from '@engine/turnScheduler'
 import { Container } from '@ioc/container'
 import type { Container as IContainer } from '@ioc/types'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
 import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
-import { GameLoader, gameLoaderToken, IGameLoader } from '@loader/gameLoader'
+import { GameLoader, gameLoaderToken } from '@loader/gameLoader'
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
 import { EngineInitializer, engineInitializerDependencies, engineInitializerToken } from '@engine/engineInitializer'
 import { PageLoader, pageLoaderDependencies, pageLoaderToken } from '@loader/pageLoader'
@@ -14,18 +14,20 @@ import { TranslationService, translationServiceToken } from '@services/translati
 import { DomManager, domManagerDependencies, domManagerToken } from '@managers/domManager'
 import { LanguageManager, languageManagerDependencies, languageManagerToken } from '@managers/languageManager'
 import { PageManager, pageManagerDependencies, pageManagerToken } from '@managers/pageManager'
-import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
-import { ActionHandlerRegistry, actionHandlerRegistryDependencies, actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
-import { ConditionResolverRegistry, conditionResolverRegistryDependencies, conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
-import { ComponentRegistry, componentRegistryDependencies, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
-import { ActionExecuter, actionExecuterDependencies, actionExecuterToken, IActionExecuter } from '@actions/actionExecuter'
-import { IPostMessageAction, PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
+import { ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
+import { ActionHandlerRegistry, actionHandlerRegistryDependencies, actionHandlerRegistryToken } from '@registries/actionHandlerRegistry'
+import { ConditionResolverRegistry, conditionResolverRegistryDependencies, conditionResolverRegistryToken } from '@registries/conditionResolverRegistry'
+import { ComponentRegistry, componentRegistryDependencies, componentRegistryToken } from '@registries/componentRegistry'
+import { ActionExecuter, actionExecuterDependencies, actionExecuterToken } from '@actions/actionExecuter'
+import { PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
 import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
 import { ActionManager, actionManagerDependencies, actionManagerToken } from '@managers/actionManager'
 import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
 import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@loader/tileSetLoader'
 import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/mapManager'
 import { VirtualKeysLoader, virtualKeysLoaderDependencies, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
+import { KeyboardEventListener, keyboardeventListenerDependencies, keyboardeventListenerToken } from '@utils/keyboardEventListener'
+import { VirtualKeyProvider, virtualKeyProviderDependencies, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -98,20 +100,25 @@ export class ContainerBuilder implements IContainerBuilder {
             useClass: EngineInitializer,
             deps: engineInitializerDependencies
         })
-        container.register<IGameEngine>({
+        container.register({
             token: gameEngineToken,
             useClass: GameEngine,
             deps: gameEngineDependencies
         })
+        container.register({
+            token: keyboardeventListenerToken,
+            useClass: KeyboardEventListener,
+            deps: keyboardeventListenerDependencies
+        })
     }
 
     private registerActions(container: Container): void {
-        container.register<IActionExecuter>({
+        container.register({
             token: actionExecuterToken,
             useClass: ActionExecuter,
             deps: actionExecuterDependencies
         })
-        container.register<IPostMessageAction>({
+        container.register({
             token: postMessageActionToken,
             useClass: PostMessageAction,
             deps: PostMessageActionDependencies,
@@ -126,7 +133,7 @@ export class ContainerBuilder implements IContainerBuilder {
      * @remarks Mutates the provided container.
      */
     private registerProviders(container: Container): void {
-        container.register<IServiceProvider>({
+        container.register({
             token: serviceProviderToken,
             useFactory: c => new ServiceProvider(c)
         })
@@ -139,6 +146,11 @@ export class ContainerBuilder implements IContainerBuilder {
             useClass: GameDataProvider,
             deps: gameDataProviderDependencies
         })
+        container.register({
+            token: virtualKeyProviderToken,
+            useClass: VirtualKeyProvider,
+            deps: virtualKeyProviderDependencies
+        })
     }
 
     /**
@@ -148,7 +160,7 @@ export class ContainerBuilder implements IContainerBuilder {
      * @remarks Mutates the provided container.
      */
     private registerLoaders(container: Container): void {
-        container.register<IGameLoader>({
+        container.register({
             token: gameLoaderToken,
             useClass: GameLoader,
             deps: [dataPathProviderToken]
@@ -206,17 +218,17 @@ export class ContainerBuilder implements IContainerBuilder {
      * @remarks Mutates the provided container.
      */
     private registerRegistries(container: Container): void {
-        container.register<IActionHandlerRegistry>({
+        container.register({
             token: actionHandlerRegistryToken,
             useClass: ActionHandlerRegistry,
             deps: actionHandlerRegistryDependencies
         })
-        container.register<IConditionResolverRegistry>({
+        container.register({
             token: conditionResolverRegistryToken,
             useClass: ConditionResolverRegistry,
             deps: conditionResolverRegistryDependencies
         })
-        container.register<IComponentRegistry>({
+        container.register({
             token: componentRegistryToken,
             useClass: ComponentRegistry,
             deps: componentRegistryDependencies

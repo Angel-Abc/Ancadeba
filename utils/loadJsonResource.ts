@@ -36,7 +36,7 @@ export async function loadJsonResource<T>(url: string, schema: ZodType<T>): Prom
         json = await response.json()
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
-        fatalError(logName, 'Invalid JSON response: {0}', message)
+        fatalError(logName, 'Invalid JSON response: {0} for resource {1}', message, url)
     }
 
     const parseResult = schema.safeParse(json)

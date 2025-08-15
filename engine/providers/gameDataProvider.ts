@@ -1,5 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { Game, InitialData } from '@loader/data/game'
+import { VirtualKey } from '@loader/data/inputs'
 import { Language } from '@loader/data/language'
 import { GameMap, Position } from '@loader/data/map'
 import { Page } from '@loader/data/page'
@@ -19,7 +20,8 @@ export type GameData = {
     loadedPages: Record<string, Page>,
     loadedMaps: Record<string, GameMap>,
     loadedTiles: Map<string, Tile>,
-    loadedTileSets: Set<string>
+    loadedTileSets: Set<string>,
+    loadedVirtualKeys: Map<string, VirtualKey>
 }
 
 /**
@@ -82,7 +84,8 @@ export class GameDataProvider implements IGameDataProvider {
             loadedPages: {},
             loadedMaps: {},
             loadedTiles: new Map<string, Tile>(),
-            loadedTileSets: new Set<string>()
+            loadedTileSets: new Set<string>(),
+            loadedVirtualKeys: new Map<string, VirtualKey>()
         }
         this.context = { 
             ...gameData.initialData,

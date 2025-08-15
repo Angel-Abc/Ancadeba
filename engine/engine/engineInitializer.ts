@@ -12,6 +12,7 @@ import { postMessageActionToken } from '@actions/postMessageAction'
 import { pageManagerToken, IPageManager } from '@managers/pageManager'
 import { actionManagerToken, IActionManager } from '@managers/actionManager'
 import { IMapManager, mapManagerToken } from '@managers/mapManager'
+import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -36,7 +37,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     actionHandlerRegistryToken,
     pageManagerToken,
     actionManagerToken,
-    mapManagerToken
+    mapManagerToken,
+    virtualKeyProviderToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -64,7 +66,8 @@ export class EngineInitializer implements IEngineInitializer {
         private actionHandlerRegistry: IActionHandlerRegistry,
         private pageManager: IPageManager,
         private actionManager: IActionManager,
-        private mapManager: IMapManager
+        private mapManager: IMapManager,
+        private virtualKeyProvider: IVirtualKeyProvider
     ){}
 
     /**
@@ -75,6 +78,7 @@ export class EngineInitializer implements IEngineInitializer {
     public async initialize(): Promise<void> {
         const game = await this.loadGameDataRoot()
         this.gameDataProvider.initialize(game)
+        this.virtualKeyProvider.initialize()
         this.initializeManagers()
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
