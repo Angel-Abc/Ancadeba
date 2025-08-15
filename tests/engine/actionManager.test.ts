@@ -70,5 +70,56 @@ describe('ActionManager', () => {
     messageBus.postMessage(msg)
     expect(execute).toHaveBeenCalledTimes(1)
   })
+
+  it('does not duplicate listeners on repeated initialize', async () => {
+    const handlers = [
+      { message: 'first', action: { type: 'A1' } },
+      { message: 'second', action: { type: 'A2' } }
+    ]
+
+    const loadActions = vi.fn().mockResolvedValue(handlers)
+    const actionHandlersLoader: IActionHandlersLoader = { loadActions }
+
+    const listeners: Record<string, (m: Message) => void> = {}
+    const cleanupSpies: (() => void)[] = []
+    const registerMessageListener = vi.fn((message: string, handler: (m: Message) => void) => {
+      listeners[message] = handler
+      const cleanup = vi.fn(() => { delete listeners[message] })
+      cleanupSpies.push(cleanup)
+      return cleanup
+    })
+    const messageBus: IMessageBus = {
+      postMessage: vi.fn(),
+      registerMessageListener,
+      registerNotificationMessage: vi.fn(),
+      unregisterNotificationMessage: vi.fn(),
+      disableEmptyQueueAfterPost: vi.fn(),
+      enableEmptyQueueAfterPost: vi.fn(),
+      shutDown: vi.fn()
+    }
+
+    const gameDataProvider: IGameDataProvider = {
+      get Game(): GameData {
+        return { game: { actions: ['path1'] } } as unknown as GameData
+      },
+      get Context(): GameContext {
+        return {} as unknown as GameContext
+      },
+      initialize: vi.fn()
+    }
+
+    const actionExecuter: IActionExecuter = { execute: vi.fn() }
+
+    const manager = new ActionManager(actionHandlersLoader, messageBus, gameDataProvider, actionExecuter)
+
+    await manager.initialize()
+    const firstCleanupSpies = [...cleanupSpies]
+    expect(Object.keys(listeners)).toHaveLength(handlers.length)
+
+    await manager.initialize()
+    firstCleanupSpies.forEach(fn => expect(fn).toHaveBeenCalled())
+    expect(Object.keys(listeners)).toHaveLength(handlers.length)
+    expect(registerMessageListener).toHaveBeenCalledTimes(handlers.length * 2)
+  })
 })
 
