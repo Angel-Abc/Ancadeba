@@ -7,6 +7,13 @@ import { GameEngine } from '@engine/gameEngine'
 import { MessageBus } from '@utils/messageBus'
 import { MessageQueue } from '@utils/messageQueue'
 import { TurnScheduler, turnSchedulerToken } from '@engine/turnScheduler'
+import { ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
+import { dataPathProviderToken } from '@providers/configProviders'
+import { GameDataProvider, gameDataProviderToken } from '@providers/gameDataProvider'
+import { VirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
+import { VirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
+import { Container } from '@ioc/container'
+import type { Token } from '@ioc/token'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
@@ -20,6 +27,24 @@ describe('ContainerBuilder', () => {
     expect(bus).toBeInstanceOf(MessageBus)
     expect(queue).toBeInstanceOf(MessageQueue)
     expect(scheduler).toBeInstanceOf(TurnScheduler)
+
+    const providers: { token: Token<unknown>, assert: (resolved: unknown) => void }[] = [
+      { token: serviceProviderToken, assert: r => expect(r).toBeInstanceOf(ServiceProvider) },
+      { token: dataPathProviderToken, assert: r => expect(r).toEqual({ dataPath: '/data' }) },
+      { token: gameDataProviderToken, assert: r => expect(r).toBeInstanceOf(GameDataProvider) },
+      { token: virtualKeyProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualKeyProvider) },
+      { token: virtualInputProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualInputProvider) }
+    ]
+
+    providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))
+
+    const providerContainer = new Container()
+    builder['registerProviders'](providerContainer)
+    const registeredTokens = Array.from(
+      (providerContainer as unknown as { providers: Map<Token<unknown>, unknown> }).providers.keys()
+    )
+    expect(registeredTokens).toHaveLength(providers.length)
+    expect(new Set(registeredTokens)).toEqual(new Set(providers.map(p => p.token)))
   })
 
   it('uses supplied callback when queue empties', async () => {
