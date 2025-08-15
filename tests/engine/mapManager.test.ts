@@ -50,3 +50,31 @@ describe('MapManager.ensureTileSets', () => {
         expect(gameData.loadedTiles.get('tile1')).toEqual({ key: 'tile1' })
     })
 })
+
+describe('MapManager.initialize', () => {
+    it('clears previous listeners on repeated initialization', () => {
+        const cleanup1 = vi.fn()
+        const cleanup2 = vi.fn()
+        const register = vi.fn()
+            .mockReturnValueOnce(cleanup1)
+            .mockReturnValueOnce(cleanup2)
+            .mockReturnValue(() => {})
+        const messageBus = {
+            registerMessageListener: register
+        } as unknown as IMessageBus
+
+        const manager = new MapManager(
+            {} as IGameMapLoader,
+            messageBus,
+            {} as IGameDataProvider,
+            {} as ITileSetLoader
+        )
+
+        manager.initialize()
+        manager.initialize()
+
+        expect(cleanup1).toHaveBeenCalledTimes(1)
+        expect(cleanup2).toHaveBeenCalledTimes(1)
+        expect(register).toHaveBeenCalledTimes(4)
+    })
+})
