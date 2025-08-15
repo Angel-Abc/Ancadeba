@@ -114,6 +114,12 @@ export class ContainerBuilder implements IContainerBuilder {
         })
     }
 
+    /**
+     * Register action-related services like executers and predefined actions.
+     *
+     * @param container Container to receive action registrations.
+     * @remarks Mutates the provided container.
+     */
     private registerActions(container: Container): void {
         container.register({
             token: actionExecuterToken,
@@ -129,9 +135,9 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     /**
-     * Register provider-related services like configuration and data providers.
+     * Registers provider components like configuration and data providers.
      *
-     * @param container Container to receive registrations.
+     * @param container Container to receive provider registrations.
      * @remarks Mutates the provided container.
      */
     private registerProviders(container: Container): void {
