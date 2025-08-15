@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { VIRTUAL_INPUT } from '../../engine/messages/system'
+import { VIRTUAL_KEY } from '../../engine/messages/system'
 import { VirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
 import type { IKeyboardEventListener } from '../../utils/keyboardEventListener'
 import type { IMessageBus } from '../../utils/messageBus'
@@ -7,7 +7,7 @@ import type { IVirtualKeysLoader } from '../../engine/loader/virtualKeysLoader'
 import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 
 describe('VirtualKeyProvider', () => {
-  it('initialize loads keys, registers listener, and posts VIRTUAL_INPUT messages', async () => {
+  it('initialize loads keys, registers listener, and posts VIRTUAL_KEY messages', async () => {
     const cleanup = vi.fn()
     const addListener = vi.fn().mockReturnValue(cleanup)
     const keyboardEventListener = { addListener } as unknown as IKeyboardEventListener
@@ -47,7 +47,7 @@ describe('VirtualKeyProvider', () => {
 
     const handler = addListener.mock.calls[0][0]
     handler({ code: 'Space', alt: false, ctrl: false, shift: false })
-    expect(postMessage).toHaveBeenCalledWith({ message: VIRTUAL_INPUT, payload: 'jump' })
+    expect(postMessage).toHaveBeenCalledWith({ message: VIRTUAL_KEY, payload: 'jump' })
   })
 
   it('cleanup unregisters the listener', async () => {
