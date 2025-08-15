@@ -32,9 +32,9 @@ export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderTok
  */
 export class LanguageLoader implements ILanguageLoader {
     /**
-     * @param basePathProvider Provides the base directory for language data files.
+     * @param dataPathProvider Provides the base directory for language data files.
      */
-    constructor(private basePathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider) {
     }
 
     /**
@@ -50,7 +50,7 @@ export class LanguageLoader implements ILanguageLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<Language>(`${this.basePathProvider.dataPath}/${path}`, languageSchema))
+            paths.map(path => loadJsonResource<Language>(`${this.dataPathProvider.dataPath}/${path}`, languageSchema))
         )
         const languages = schemas.map(mapLanguage)
 

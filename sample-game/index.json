@@ -33,7 +33,7 @@
     "actions/general-actions.json"
   ],
   "virtual-keys": [
-    "inputs/virtual-keys.json"
+    "virtual-keys/common.json"
   ],
   "virtual-inputs": [
     "inputs/virtual-inputs.json"

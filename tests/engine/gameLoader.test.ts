@@ -7,7 +7,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapGame } from '@loader/mappers/game'
 import { GameLoader } from '@loader/gameLoader'
 
-const basePathProvider = { dataPath: '/base' }
+const dataPathProvider = { dataPath: '/base' }
 
 describe('GameLoader', () => {
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('GameLoader', () => {
     const mapped = { mapped: true }
     ;(mapGame as unknown as Mock).mockReturnValue(mapped)
 
-    const loader = new GameLoader(basePathProvider)
+    const loader = new GameLoader(dataPathProvider)
     const result = await loader.loadGame()
 
     expect(loadJsonResource).toHaveBeenCalledWith('/base/index.json', expect.anything())

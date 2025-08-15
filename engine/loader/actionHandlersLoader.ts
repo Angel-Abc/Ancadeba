@@ -30,9 +30,9 @@ export const actionHandlersLoaderDependencies: Token<unknown>[] = [dataPathProvi
  */
 export class ActionHandlersLoader implements IActionHandlersLoader {
     /**
-     * @param basePathProvider Provides the base directory for handler data files.
+     * @param dataPathProvider Provides the base directory for handler data files.
      */
-    constructor(private basePathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider) {
     }
 
     /**
@@ -49,7 +49,7 @@ export class ActionHandlersLoader implements IActionHandlersLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<Handlers>(`${this.basePathProvider.dataPath}/${path}`, handlersSchema))
+            paths.map(path => loadJsonResource<Handlers>(`${this.dataPathProvider.dataPath}/${path}`, handlersSchema))
         )
 
         const handlers = schemas.reduce<HandlersData>((acc, schema) => [...acc, ...mapHandlers(schema)], [])

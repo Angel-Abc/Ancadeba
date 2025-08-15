@@ -31,9 +31,9 @@ export const tileSetLoaderDependencies: Token<unknown>[] = [dataPathProviderToke
  */
 export class TileSetLoader implements ITileSetLoader {
     /**
-     * @param basePathProvider Provides the directory containing tileset files.
+     * @param dataPathProvider Provides the directory containing tileset files.
      */
-    constructor(private basePathProvider: IDataPathProvider) { }
+    constructor(private dataPathProvider: IDataPathProvider) { }
 
     /**
      * Loads a tileset file, validates its contents and maps it into engine
@@ -43,7 +43,7 @@ export class TileSetLoader implements ITileSetLoader {
      * @returns The mapped {@link TileSetData} object.
      */
     public async loadTileSet(path: string): Promise<TileSetData> {
-        const schema = await loadJsonResource<TileSet>(`${this.basePathProvider.dataPath}/${path}`, tileSetSchema)
-        return mapTileSet(this.basePathProvider.dataPath, schema)
+        const schema = await loadJsonResource<TileSet>(`${this.dataPathProvider.dataPath}/${path}`, tileSetSchema)
+        return mapTileSet(this.dataPathProvider.dataPath, schema)
     }
 }

@@ -32,9 +32,9 @@ export const gameMapLoaderDependencies: Token<unknown>[] = [dataPathProviderToke
  */
 export class GameMapLoader implements IGameMapLoader {
     /**
-     * @param basePathProvider Supplies the directory containing map resources.
+     * @param dataPathProvider Supplies the directory containing map resources.
      */
-    constructor(private basePathProvider: IDataPathProvider) { }
+    constructor(private dataPathProvider: IDataPathProvider) { }
 
     /**
      * Reads a map file, validates its structure and maps it into engine
@@ -44,7 +44,7 @@ export class GameMapLoader implements IGameMapLoader {
      * @returns The mapped {@link GameMapData} object.
      */
     public async loadMap(path: string): Promise<GameMapData> {
-        const schema = await loadJsonResource<GameMap>(`${this.basePathProvider.dataPath}/${path}`, gameMapSchema)
+        const schema = await loadJsonResource<GameMap>(`${this.dataPathProvider.dataPath}/${path}`, gameMapSchema)
         return mapGameMap(schema)
     }
 }

@@ -31,9 +31,9 @@ export const gameLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
 export class GameLoader implements IGameLoader {
 
     /**
-     * @param basePathProvider Provides the base directory for game data files.
+     * @param dataPathProvider Provides the base directory for game data files.
      */
-    constructor(private basePathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider) {
     }
 
     /**
@@ -42,7 +42,7 @@ export class GameLoader implements IGameLoader {
      * @returns The fully mapped {@link GameData} object.
      */
     async loadGame(): Promise<GameData> {
-        const game = await loadJsonResource<Game>(`${this.basePathProvider.dataPath}/index.json`, gameSchema)
-        return mapGame(game, this.basePathProvider.dataPath)
+        const game = await loadJsonResource<Game>(`${this.dataPathProvider.dataPath}/index.json`, gameSchema)
+        return mapGame(game, this.dataPathProvider.dataPath)
     }
 }

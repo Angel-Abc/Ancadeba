@@ -7,7 +7,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapHandlers } from '@loader/mappers/handler'
 import { ActionHandlersLoader } from '@loader/actionHandlersLoader'
 
-const basePathProvider = { dataPath: '/base' }
+const dataPathProvider = { dataPath: '/base' }
 
 describe('ActionHandlersLoader', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('ActionHandlersLoader', () => {
       .mockReturnValueOnce([{ id: 1 }])
       .mockReturnValueOnce([{ id: 2 }])
 
-    const loader = new ActionHandlersLoader(basePathProvider)
+    const loader = new ActionHandlersLoader(dataPathProvider)
     const result = await loader.loadActions(['a.json', 'b.json'])
 
     expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/a.json', expect.anything())
@@ -35,7 +35,7 @@ describe('ActionHandlersLoader', () => {
   })
 
   it('throws when no handler paths provided', async () => {
-    const loader = new ActionHandlersLoader(basePathProvider)
+    const loader = new ActionHandlersLoader(dataPathProvider)
     await expect(loader.loadActions([])).rejects.toThrow('No action handlers paths provided')
   })
 })

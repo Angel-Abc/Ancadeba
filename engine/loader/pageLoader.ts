@@ -30,9 +30,9 @@ export const pageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
  */
 export class PageLoader implements IPageLoader {
     /**
-     * @param basePathProvider Provides the base directory for page data files.
+     * @param dataPathProvider Provides the base directory for page data files.
      */
-    constructor(private basePathProvider: IDataPathProvider) {}
+    constructor(private dataPathProvider: IDataPathProvider) {}
 
     /**
      * Reads a page file, validates it and maps it into runtime data.
@@ -41,7 +41,7 @@ export class PageLoader implements IPageLoader {
      * @returns The fully mapped {@link PageData} object.
      */
     public async loadPage(path: string): Promise<PageData> {
-        const schema = await loadJsonResource<Page>(`${this.basePathProvider.dataPath}/${path}`, pageSchema)
-        return mapPage(this.basePathProvider.dataPath, schema)
+        const schema = await loadJsonResource<Page>(`${this.dataPathProvider.dataPath}/${path}`, pageSchema)
+        return mapPage(this.dataPathProvider.dataPath, schema)
     }
 }

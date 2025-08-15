@@ -7,7 +7,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapPage } from '@loader/mappers/page'
 import { PageLoader } from '@loader/pageLoader'
 
-const basePathProvider = { dataPath: '/base' }
+const dataPathProvider = { dataPath: '/base' }
 
 describe('PageLoader', () => {
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('PageLoader', () => {
     const mapped = { id: 'page', content: [] }
     ;(mapPage as unknown as Mock).mockReturnValue(mapped)
 
-    const loader = new PageLoader(basePathProvider)
+    const loader = new PageLoader(dataPathProvider)
     const result = await loader.loadPage('pages/start.json')
 
     expect(loadJsonResource).toHaveBeenCalledWith('/base/pages/start.json', expect.anything())

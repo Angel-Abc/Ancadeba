@@ -7,7 +7,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapLanguage } from '@loader/mappers/language'
 import { LanguageLoader } from '@loader/languageLoader'
 
-const basePathProvider = { dataPath: '/base' }
+const dataPathProvider = { dataPath: '/base' }
 
 describe('LanguageLoader', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('LanguageLoader', () => {
       .mockReturnValueOnce({ id: 'en', translations: { a: '1' } })
       .mockReturnValueOnce({ id: 'en', translations: { b: '2' } })
 
-    const loader = new LanguageLoader(basePathProvider)
+    const loader = new LanguageLoader(dataPathProvider)
     const result = await loader.loadLanguage(['lang/en.json', 'lang/en-extra.json'])
 
     expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/lang/en.json', expect.anything())
@@ -36,7 +36,7 @@ describe('LanguageLoader', () => {
   })
 
   it('throws when no language paths provided', async () => {
-    const loader = new LanguageLoader(basePathProvider)
+    const loader = new LanguageLoader(dataPathProvider)
     await expect(loader.loadLanguage([])).rejects.toThrow('No language paths provided')
   })
 
@@ -50,7 +50,7 @@ describe('LanguageLoader', () => {
       .mockReturnValueOnce({ id: 'en', translations: {} })
       .mockReturnValueOnce({ id: 'fr', translations: {} })
 
-    const loader = new LanguageLoader(basePathProvider)
+    const loader = new LanguageLoader(dataPathProvider)
     await expect(loader.loadLanguage(['a.json', 'b.json'])).rejects.toThrow(/Language ID mismatch/)
   })
 })
