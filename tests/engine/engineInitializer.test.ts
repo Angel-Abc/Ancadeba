@@ -12,6 +12,7 @@ import type { IPageManager } from '../../engine/managers/pageManager'
 import type { IActionManager } from '../../engine/managers/actionManager'
 import type { IMapManager } from '../../engine/managers/mapManager'
 import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
+import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
 import type { Game } from '../../engine/loader/data/game'
 
 describe('EngineInitializer', () => {
@@ -42,6 +43,7 @@ describe('EngineInitializer', () => {
     const actionManager = { initialize: vi.fn() } as unknown as IActionManager
     const mapManager = { initialize: vi.fn() } as unknown as IMapManager
     const virtualKeyProvider = { initialize: vi.fn() } as unknown as IVirtualKeyProvider
+    const virtualInputProvider = { initialize: vi.fn() } as unknown as IVirtualInputProvider
 
     const initializer = new EngineInitializer(
       messageBus,
@@ -53,7 +55,8 @@ describe('EngineInitializer', () => {
       pageManager,
       actionManager,
       mapManager,
-      virtualKeyProvider
+      virtualKeyProvider,
+      virtualInputProvider
     )
 
     await initializer.initialize()
@@ -63,6 +66,8 @@ describe('EngineInitializer', () => {
     expect(pageManager.initialize).toHaveBeenCalledTimes(1)
     expect(actionManager.initialize).toHaveBeenCalledTimes(1)
     expect(mapManager.initialize).toHaveBeenCalledTimes(1)
+    expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
+    expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
     expect(domManager.setTitle).toHaveBeenCalledWith('Test Game')
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
