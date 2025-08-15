@@ -4,7 +4,7 @@ import { IKeyboardEventListener, keyboardeventListenerToken } from '@utils/keybo
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { gameDataProviderToken, IGameDataProvider } from './gameDataProvider'
-import { VIRTUAL_INPUT } from '@messages/system'
+import { VIRTUAL_KEY } from '@messages/system'
 
 export interface IVirtualKeyProvider {
     initialize(): Promise<void>
@@ -49,7 +49,7 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
             if (this.gameDataProvider.Game.loadedVirtualKeys.has(lookupKey)){
                 const virtualkey = this.gameDataProvider.Game.loadedVirtualKeys.get(lookupKey)
                 this.messageBus.postMessage({
-                    message: VIRTUAL_INPUT,
+                    message: VIRTUAL_KEY,
                     payload: virtualkey?.virtualKey
                 })
             }

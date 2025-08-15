@@ -16,13 +16,13 @@ export const virtualKeysLoaderDependencies: Token<unknown>[] = [dataPathProvider
 export class VirtualKeysLoader implements IVirtualKeysLoader {
     constructor(
         private dataPathProvider: IDataPathProvider
-    ){}
+    ) { }
 
     public async loadVirtualKeys(paths: string[]): Promise<VirtualKeysData> {
         if (paths.length === 0) {
             fatalError(logName, 'No virtual keys paths provided')
         }
-        
+
         const schemas = await Promise.all(
             paths.map(path => loadJsonResource<VirtualKeys>(`${this.dataPathProvider.dataPath}/${path}`, virtualKeysSchema))
         )

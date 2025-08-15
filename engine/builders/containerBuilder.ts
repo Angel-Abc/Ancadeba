@@ -28,6 +28,8 @@ import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/m
 import { VirtualKeysLoader, virtualKeysLoaderDependencies, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
 import { KeyboardEventListener, keyboardeventListenerDependencies, keyboardeventListenerToken } from '@utils/keyboardEventListener'
 import { VirtualKeyProvider, virtualKeyProviderDependencies, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
+import { VirtualInputsLoader, virtualInputsLoaderDependencies, virtualInputsLoaderToken } from '@loader/virtualInputsLoader'
+import { VirtualInputProvider, virtualInputProviderDependencies, virtualInputProviderToken } from '@providers/virtualInputProvider'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -151,6 +153,11 @@ export class ContainerBuilder implements IContainerBuilder {
             useClass: VirtualKeyProvider,
             deps: virtualKeyProviderDependencies
         })
+        container.register({
+            token: virtualInputProviderToken,
+            useClass: VirtualInputProvider,
+            deps: virtualInputProviderDependencies
+        })
     }
 
     /**
@@ -194,6 +201,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: virtualKeysLoaderToken,
             useClass: VirtualKeysLoader,
             deps: virtualKeysLoaderDependencies
+        })
+        container.register({
+            token: virtualInputsLoaderToken,
+            useClass: VirtualInputsLoader,
+            deps: virtualInputsLoaderDependencies
         })
     }
 
