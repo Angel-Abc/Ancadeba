@@ -45,7 +45,13 @@ export function mapMap(map: string[]): string[][] {
     return map.map(row => row.split(','))
 }
 
-export function mapPostion(position: Position): PositionData {
+/**
+ * Converts a schema `Position` into its loader data representation.
+ *
+ * @param position - Position defined in the schema.
+ * @returns The mapped position for the data layer.
+ */
+export function mapPosition(position: Position): PositionData {
     return {
         x: position.x,
         y: position.y
