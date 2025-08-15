@@ -49,10 +49,18 @@ export class ActionHandlersLoader implements IActionHandlersLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<Handlers>(`${this.dataPathProvider.dataPath}/${path}`, handlersSchema))
+            paths.map(path =>
+                loadJsonResource<Handlers>(
+                    `${this.dataPathProvider.dataPath}/${path}`,
+                    handlersSchema
+                )
+            )
         )
 
-        const handlers = schemas.reduce<HandlersData>((acc, schema) => [...acc, ...mapHandlers(schema)], [])
+        const handlers: HandlersData = []
+        for (const schema of schemas) {
+            handlers.push(...mapHandlers(schema))
+        }
         return handlers
     }
 }

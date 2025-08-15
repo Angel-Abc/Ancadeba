@@ -64,6 +64,7 @@ export class MapManager implements IMapManager {
      * corresponding cleanup functions for later removal.
      */
     public initialize(): void {
+        this.cleanup()
         this.cleanupFns = [
             this.messageBus.registerMessageListener(
                 SWITCH_MAP,

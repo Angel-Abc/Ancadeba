@@ -152,7 +152,7 @@ export class MessageBus implements IMessageBus {
             const logger = this.silentMessages.has(message.message)
                 ? (msg: string, ...args: unknown[]) => logDebug(logName, msg, ...args)
                 : (msg: string, ...args: unknown[]) => logWarning(logName, msg, ...args)
-            logger('No message listener for message: {0}', message)
+            logger('No message listener for message: {0}', message.message)
             return
         }
         const promises: Promise<void>[] = []
