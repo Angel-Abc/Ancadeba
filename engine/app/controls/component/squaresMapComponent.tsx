@@ -14,6 +14,12 @@ interface SquaresMapComponentProps {
 }
 
 const logName = 'SquaresMapComponent'
+/**
+ * Displays the current game map as a grid of tiles and highlights the player's position.
+ * Reacts to map and position change messages to keep the view synchronized.
+ *
+ * @param component - Configuration describing the viewport size.
+ */
 export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ component }): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
@@ -60,7 +66,7 @@ export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ compon
                     {gameMap.map.map((row, rowIndex) => {
                         return row.map((tileKey, columnIndex) => {
                             const mapTile = gameMap.tiles[tileKey]
-                            const tile = gameDataProvider.Game.loadedTiles.get(mapTile.tile) ?? fatalError(logName, '')
+                            const tile = gameDataProvider.Game.loadedTiles.get(mapTile.tile) ?? fatalError(logName, 'Tile with key {0} was not loaded!', mapTile.tile)
                             const key = `${tileKey}-${rowIndex}-${columnIndex}`
                             return (
                                 <Tile
