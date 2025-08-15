@@ -81,7 +81,7 @@ export class GameDataProvider implements IGameDataProvider {
             loadedLanguages: {},
             loadedPages: {},
             loadedMaps: {},
-            loadedTiles: new Map<string, Tile>,
+            loadedTiles: new Map<string, Tile>(),
             loadedTileSets: new Set<string>()
         }
         this.context = { 
