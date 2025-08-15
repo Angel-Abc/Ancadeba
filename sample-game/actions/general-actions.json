@@ -14,6 +14,17 @@
             "message": "SYSTEM/SWITCH-MAP",
             "payload": "start-beach"
         }
+    },
+    {
+        "message": "MENU/START-GAME",
+        "action": {
+            "type": "post-message",
+            "message": "SYSTEM/CHANGE-POSITION",
+            "payload": {
+                "x": 10,
+                "y": 6
+            }
+        }
     }
 
 ]

@@ -16,4 +16,9 @@ export interface SquaresMap {
     map: string[][]
 }
 
+export interface Position {
+    x: number
+    y: number
+}
+
 export type GameMap = SquaresMap

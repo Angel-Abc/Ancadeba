@@ -49,3 +49,66 @@ body {
         font-size: 125%;
     }
 }
+
+.squares-map {
+    --column-count: calc(var(--ge-grid-item-right) - var(--ge-grid-item-left) + 1);
+    --row-count: calc(var(--ge-grid-item-bottom) - var(--ge-grid-item-top) + 1);
+    --column-base-width: calc(var(--column-count) * 100vw);
+    --row-base-height: calc(var(--row-count) * 100vh);
+    --column-outer-width: calc(var(--column-base-width) / var(--ge-grid-width));
+    --row-outer-height: calc(var(--row-base-height) / var(--ge-grid-height));
+    --available-width: calc(var(--column-outer-width) - 8px);
+    --available-height: calc(var(--row-outer-height) - 8px);
+    --max-tile-width: calc(var(--available-width) / var(--ge-map-viewport-width));
+    --max-tile-height: calc(var(--available-height) / var(--ge-map-viewport-height));
+    --tile-outer-size: min(var(--max-tile-width), var(--max-tile-height));
+    --tile-spacing: calc(var(--tile-outer-size) * 0.04);
+    --tile-inner-size: calc(var(--tile-outer-size) - var(--tile-spacing) - var(--tile-spacing));
+    --viewport-width: calc(var(--tile-outer-size) * var(--ge-map-viewport-width));
+    --viewport-height: calc(var(--tile-outer-size) * var(--ge-map-viewport-height));
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    background-color: #333;
+    margin: auto auto auto auto;
+
+    & .viewport {
+        position: relative;
+        overflow: hidden;
+        border-radius: calc(var(--tile-outer-size) * 0.2);
+        width: var(--viewport-width);
+        height: var(--viewport-height);
+
+        & .area {
+            position: absolute;
+            background-color: #333;
+            display: grid;
+            grid-template-columns: repeat(var(--ge-map-area-width), 1fr);
+            grid-template-rows: repeat(var(--ge-map-area-height), 1fr);
+            width: calc(var(--ge-map-area-width) * var(--tile-outer-size));
+            height: calc(var(--ge-map-area-height) * var(--tile-outer-size));
+            left: calc(var(--ge-map-position-left) * var(--tile-outer-size) * -1);
+            top: calc(var(--ge-map-position-top) * var(--tile-outer-size) * -1);
+
+            &>div {
+                width: var(--tile-inner-size);
+                height: var(--tile-inner-size);
+                margin: var(--tile-spacing);
+                position: relative;
+                border-radius: calc(var(--tile-inner-size) * 0.2);
+                background-color: var(--ge-map-tile-color);
+
+                & img {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            .player {
+                outline: solid 2px var(--ge-color-contrast);
+                border: solid 1px var(--ge-color-dark);
+            }
+        }
+    }
+}
+

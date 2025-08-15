@@ -1,5 +1,5 @@
-import type { GameMap as GameMapData, MapTile as MapTileData } from '@loader/data/map'
-import { type GameMap, type MapTile } from '@loader/schema/map'
+import type { GameMap as GameMapData, MapTile as MapTileData, Position as PositionData } from '@loader/data/map'
+import { type GameMap, type MapTile, type Position } from '@loader/schema/map'
 import { fatalError } from '@utils/logMessage'
 import { mapAction } from './action'
 
@@ -43,4 +43,11 @@ export function mapMapTiles(mapTiles: MapTile[]): Record<string, MapTileData> {
 
 export function mapMap(map: string[]): string[][] {
     return map.map(row => row.split(','))
+}
+
+export function mapPostion(position: Position): PositionData {
+    return {
+        x: position.x,
+        y: position.y
+    }
 }

@@ -1,7 +1,8 @@
 import { Token, token } from '@ioc/token'
+import { Position } from '@loader/data/map'
 import { gameMapLoaderToken, IGameMapLoader } from '@loader/gameMapLoader'
 import { ITileSetLoader, tileSetLoaderToken } from '@loader/tileSetLoader'
-import { MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
+import { CHANGE_POSITION, MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { fatalError } from '@utils/logMessage'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
@@ -14,6 +15,7 @@ import { CleanUp } from '@utils/types'
  */
 export interface IMapManager {
     setActiveMap(mapId: string): Promise<void>
+    changePosition(position: Position): void
     initialize(): void
     cleanup(): void
 }
@@ -66,8 +68,18 @@ export class MapManager implements IMapManager {
                 async message => {
                     await this.setActiveMap(message.payload as string)
                 }
+            ),
+            this.messageBus.registerMessageListener(
+                CHANGE_POSITION,
+                message => {
+                    this.changePosition(message.payload as Position)
+                }
             )
         ]
+    }
+
+    public changePosition(position: Position): void {
+        this.gameDataProvider.Context.player.position = position
     }
 
     /**
@@ -107,9 +119,10 @@ export class MapManager implements IMapManager {
                 const path = this.gameDataProvider.Game.game.tiles[tileSetId]
                 if (!path) fatalError(logName, 'Tile set not found for id {0}', tileSetId)
 
-                if (this.gameDataProvider.Game.loadedTileSets[tileSetId] === undefined) {
+                if (!this.gameDataProvider.Game.loadedTileSets.has(tileSetId)) {
                     const tileSet = await this.tileSetLoader.loadTileSet(path)
-                    this.gameDataProvider.Game.loadedTileSets[tileSetId] = tileSet
+                    this.gameDataProvider.Game.loadedTileSets.add(tileSetId)
+                    tileSet.tiles.forEach(tile => this.gameDataProvider.Game.loadedTiles.set(tile.key, tile))
                 }
             })
         )

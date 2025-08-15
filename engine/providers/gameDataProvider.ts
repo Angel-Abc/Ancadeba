@@ -1,9 +1,9 @@
 import { Token, token } from '@ioc/token'
 import { Game, InitialData } from '@loader/data/game'
 import { Language } from '@loader/data/language'
-import { GameMap } from '@loader/data/map'
+import { GameMap, Position } from '@loader/data/map'
 import { Page } from '@loader/data/page'
-import { TileSet } from '@loader/data/tile'
+import { Tile } from '@loader/data/tile'
 import { fatalError } from '@utils/logMessage'
 
 /**
@@ -18,7 +18,8 @@ export type GameData = {
     loadedLanguages: Record<string, Language>,
     loadedPages: Record<string, Page>,
     loadedMaps: Record<string, GameMap>,
-    loadedTileSets: Record<string, TileSet>
+    loadedTiles: Map<string, Tile>,
+    loadedTileSets: Set<string>
 }
 
 /**
@@ -30,6 +31,9 @@ export type GameData = {
 export type GameContext = InitialData & {
     currentPageId: string | null
     currentMapId: string | null
+    player: {
+        position: Position
+    }
 }
 
 /**
@@ -77,12 +81,19 @@ export class GameDataProvider implements IGameDataProvider {
             loadedLanguages: {},
             loadedPages: {},
             loadedMaps: {},
-            loadedTileSets: {}
+            loadedTiles: new Map<string, Tile>,
+            loadedTileSets: new Set<string>()
         }
         this.context = { 
             ...gameData.initialData,
             currentPageId: null,
-            currentMapId: null
+            currentMapId: null,
+            player: {
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            }
         }
     }
 }

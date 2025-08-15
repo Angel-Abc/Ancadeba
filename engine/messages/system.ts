@@ -39,3 +39,6 @@ export const SWITCH_MAP = 'SYSTEM/SWITCH-MAP'
  * Payload: string map identifier
  */
 export const MAP_SWITCHED = 'SYSTEM/MAP-SWITCHED'
+
+export const CHANGE_POSITION = 'SYSTEM/CHANGE-POSITION'
+export const POSITION_CHANGED = 'SYSTEM/POSITION-CHANGED'

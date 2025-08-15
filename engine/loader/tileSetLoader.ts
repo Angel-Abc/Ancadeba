@@ -44,6 +44,6 @@ export class TileSetLoader implements ITileSetLoader {
      */
     public async loadTileSet(path: string): Promise<TileSetData> {
         const schema = await loadJsonResource<TileSet>(`${this.basePathProvider.dataPath}/${path}`, tileSetSchema)
-        return mapTileSet(schema.id, schema)
+        return mapTileSet(this.basePathProvider.dataPath, schema)
     }
 }
