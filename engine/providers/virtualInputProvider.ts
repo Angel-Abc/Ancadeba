@@ -26,6 +26,19 @@ export class VirtualInputProvider implements IVirtualInputProvider {
         private gameDataProvider: IGameDataProvider
     ) {}
 
+    /**
+     * Initializes the provider by ensuring virtual input mappings are loaded and
+     * wiring virtual key messages to virtual input dispatches.
+     *
+     * Side effects:
+     * - Mutates {@link IGameDataProvider.Game.loadedVirtualInputs} when empty by
+     *   loading mappings via {@link loadVirtualInputs}.
+     * - Registers a {@link VIRTUAL_KEY} listener and stores its cleanup
+     *   function.
+     * - Posts {@link VIRTUAL_INPUT} messages for recognized virtual keys.
+     *
+     * @returns {Promise<void>} Resolves once initialization completes.
+     */
     public async initialize(): Promise<void> {
         if (this.gameDataProvider.Game.loadedVirtualInputs.size === 0) await this.loadVirtualInputs()
         this.CleanUpFn = this.messagebus.registerMessageListener(
@@ -41,6 +54,15 @@ export class VirtualInputProvider implements IVirtualInputProvider {
         )
     }
 
+    /**
+     * Cleans up resources by removing the registered {@link VIRTUAL_KEY}
+     * listener.
+     *
+     * Side effects:
+     * - Invokes the stored cleanup function from the message bus listener.
+     * - Clears the internal reference to the cleanup function to prevent
+     *   duplicate registrations.
+     */
     public cleanup(): void {
         this.CleanUpFn?.()
         this.CleanUpFn = null
