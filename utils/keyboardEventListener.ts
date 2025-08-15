@@ -46,14 +46,16 @@ export const keyboardeventListenerDependencies: Token<unknown>[] = []
 export class KeyboardEventListener implements IKeyboardEventListener {
     private key: number = 0
     private listeners: EventListener[] = []
+    private boundOnKeyDown: (event: globalThis.KeyboardEvent) => void
 
     /**
      * Creates a new `KeyboardEventListener` and starts listening for
      * `keydown` events on the `document`.
      */
     constructor() {
+        this.boundOnKeyDown = this.onKeyDown.bind(this)
         if (typeof document !== 'undefined') {
-            document.addEventListener('keydown', this.onKeyDown.bind(this))
+            document.addEventListener('keydown', this.boundOnKeyDown)
         }
     }
 
@@ -62,7 +64,7 @@ export class KeyboardEventListener implements IKeyboardEventListener {
      */
     public cleanup() {
         if (typeof document !== 'undefined') {
-            document.removeEventListener('keydown', this.onKeyDown)
+            document.removeEventListener('keydown', this.boundOnKeyDown)
         }
         this.listeners = []
     }
