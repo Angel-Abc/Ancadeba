@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { TileSetManager } from '../../engine/managers/tileSetManager'
 import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
 import type { ITileSetLoader } from '../../engine/loader/tileSetLoader'
+import type { ILogger } from '../../utils/logger'
 
 function createManager(gameData: GameData, loadTileSet: ReturnType<typeof vi.fn>) {
   const provider = {
@@ -10,7 +11,13 @@ function createManager(gameData: GameData, loadTileSet: ReturnType<typeof vi.fn>
     initialize: vi.fn(),
   } as unknown as IGameDataProvider
   const tileSetLoader = { loadTileSet } as unknown as ITileSetLoader
-  return new TileSetManager(provider, tileSetLoader)
+  const logger = {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  } as unknown as ILogger
+  return new TileSetManager(provider, tileSetLoader, logger)
 }
 
 describe('TileSetManager.ensureTileSets', () => {
