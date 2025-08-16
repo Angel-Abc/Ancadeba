@@ -3,7 +3,7 @@ import { ActionManager } from '@managers/actionManager'
 import type { IActionHandlersLoader } from '@loader/actionHandlersLoader'
 import type { IMessageBus } from '@utils/messageBus'
 import type { IGameDataProvider, GameData, GameContext } from '@providers/gameDataProvider'
-import type { IActionExecuter } from '@actions/actionExecuter'
+import type { IActionExecutor } from '@actions/actionExecutor'
 import type { Message } from '@utils/types'
 
 
@@ -48,9 +48,9 @@ describe('ActionManager', () => {
     }
 
     const execute = vi.fn()
-    const actionExecuter: IActionExecuter = { execute }
+    const actionExecutor: IActionExecutor = { execute }
 
-    const manager = new ActionManager(actionHandlersLoader, messageBus, gameDataProvider, actionExecuter)
+    const manager = new ActionManager(actionHandlersLoader, messageBus, gameDataProvider, actionExecutor)
     await manager.initialize()
 
     expect(loadActions).toHaveBeenCalledWith(['path1'])
@@ -108,9 +108,9 @@ describe('ActionManager', () => {
       initialize: vi.fn()
     }
 
-    const actionExecuter: IActionExecuter = { execute: vi.fn() }
+    const actionExecutor: IActionExecutor = { execute: vi.fn() }
 
-    const manager = new ActionManager(actionHandlersLoader, messageBus, gameDataProvider, actionExecuter)
+    const manager = new ActionManager(actionHandlersLoader, messageBus, gameDataProvider, actionExecutor)
 
     await manager.initialize()
     const firstCleanupSpies = [...cleanupSpies]

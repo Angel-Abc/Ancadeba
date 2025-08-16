@@ -8,7 +8,7 @@ import { Message } from '@utils/types'
 /**
  * Executes actions using registered action handlers.
  */
-export interface IActionExecuter {
+export interface IActionExecutor {
     /**
      * Executes the provided action by resolving and invoking its handler.
      *
@@ -20,17 +20,17 @@ export interface IActionExecuter {
     execute<T extends BaseAction = Action>(action: T, message?: Message, data?: unknown): void
 }
 
-const logName = 'ActionExecuter'
-export const actionExecuterToken = token<IActionExecuter>(logName)
-export const actionExecuterDependencies: Token<unknown>[] = [actionHandlerRegistryToken, loggerToken]
+const logName = 'ActionExecutor'
+export const actionExecutorToken = token<IActionExecutor>(logName)
+export const actionExecutorDependencies: Token<unknown>[] = [actionHandlerRegistryToken, loggerToken]
 
 /**
- * Default implementation of {@link IActionExecuter} that delegates work to
+ * Default implementation of {@link IActionExecutor} that delegates work to
  * action handlers resolved from a registry.
  */
-export class ActionExecuter implements IActionExecuter {
+export class ActionExecutor implements IActionExecutor {
     /**
-     * Creates a new {@link ActionExecuter}.
+     * Creates a new {@link ActionExecutor}.
      *
      * @param actionHandlerRegistry - Registry used to look up action handlers.
      * @param logger - Logger used to report errors.
