@@ -1,5 +1,5 @@
 import { Container } from '@ioc/container'
-import { ActionExecuter, actionExecuterDependencies, actionExecuterToken } from '@actions/actionExecuter'
+import { ActionExecutor, actionExecutorDependencies, actionExecutorToken } from '@actions/actionExecutor'
 import { PostMessageAction, PostMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
 
 /**
@@ -11,9 +11,9 @@ export class ActionsBuilder {
    */
   register(container: Container): void {
     container.register({
-      token: actionExecuterToken,
-      useClass: ActionExecuter,
-      deps: actionExecuterDependencies
+      token: actionExecutorToken,
+      useClass: ActionExecutor,
+      deps: actionExecutorDependencies
     })
     container.register({
       token: postMessageActionToken,

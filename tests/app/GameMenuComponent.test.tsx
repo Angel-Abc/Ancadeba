@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { services } from './testUtils'
 import { GameMenuComponent } from '@app/controls/component/gameMenuComponent'
 import { translationServiceToken, type ITranslationService } from '@services/translationService'
-import { actionExecuterToken, type IActionExecuter } from '@actions/actionExecuter'
+import { actionExecutorToken, type IActionExecutor } from '@actions/actionExecutor'
 import { GameMenuComponent as GameMenuComponentData } from '@loader/data/component'
 
 describe('GameMenuComponent', () => {
@@ -12,9 +12,9 @@ describe('GameMenuComponent', () => {
 
   it('renders translated buttons and executes action on click', () => {
     const translationService = { translate: vi.fn((label: string) => `tr-${label}`) } as unknown as ITranslationService
-    const actionExecuter = { execute: vi.fn() } as unknown as IActionExecuter
+    const actionExecutor = { execute: vi.fn() } as unknown as IActionExecutor
     services.set(translationServiceToken, translationService)
-    services.set(actionExecuterToken, actionExecuter)
+    services.set(actionExecutorToken, actionExecutor)
 
     const component: GameMenuComponentData = {
       type: 'game-menu',
@@ -29,14 +29,14 @@ describe('GameMenuComponent', () => {
     fireEvent.click(button)
 
     expect(translationService.translate).toHaveBeenCalledWith('start')
-    expect(actionExecuter.execute).toHaveBeenCalledWith(component.buttons[0].action)
+    expect(actionExecutor.execute).toHaveBeenCalledWith(component.buttons[0].action)
   })
 
   it('renders empty menu when no buttons provided', () => {
     const translationService = { translate: vi.fn() } as unknown as ITranslationService
-    const actionExecuter = { execute: vi.fn() } as unknown as IActionExecuter
+    const actionExecutor = { execute: vi.fn() } as unknown as IActionExecutor
     services.set(translationServiceToken, translationService)
-    services.set(actionExecuterToken, actionExecuter)
+    services.set(actionExecutorToken, actionExecutor)
 
     const component: GameMenuComponentData = { type: 'game-menu', buttons: [] }
 
