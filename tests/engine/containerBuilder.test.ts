@@ -15,6 +15,9 @@ import { VirtualInputProvider, virtualInputProviderToken } from '@providers/virt
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import { ProvidersBuilder } from '@builders/providersBuilder'
+import { MapManager, mapManagerToken } from '@managers/mapManager'
+import { TileSetManager, tileSetManagerToken } from '@managers/tileSetManager'
+import { PlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
@@ -24,10 +27,16 @@ describe('ContainerBuilder', () => {
     const bus = container.resolve(messageBusToken)
     const queue = container.resolve(messageQueueToken)
     const scheduler = container.resolve(turnSchedulerToken)
+    const mapManager = container.resolve(mapManagerToken)
+    const tileSetManager = container.resolve(tileSetManagerToken)
+    const playerPositionManager = container.resolve(playerPositionManagerToken)
     expect(engine).toBeInstanceOf(GameEngine)
     expect(bus).toBeInstanceOf(MessageBus)
     expect(queue).toBeInstanceOf(MessageQueue)
     expect(scheduler).toBeInstanceOf(TurnScheduler)
+    expect(mapManager).toBeInstanceOf(MapManager)
+    expect(tileSetManager).toBeInstanceOf(TileSetManager)
+    expect(playerPositionManager).toBeInstanceOf(PlayerPositionManager)
 
     const providers: { token: Token<unknown>, assert: (resolved: unknown) => void }[] = [
       { token: serviceProviderToken, assert: r => expect(r).toBeInstanceOf(ServiceProvider) },

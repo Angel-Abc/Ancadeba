@@ -47,6 +47,7 @@ export class ContainerBuilder implements IContainerBuilder {
     new LoadersBuilder().register(result)
     new ServicesBuilder().register(result)
     new RegistriesBuilder().register(result)
+    // Registers managers including map, tile set and player position managers
     new ManagersBuilder().register(result)
     new ActionsBuilder().register(result)
     // Hook for custom service registrations
