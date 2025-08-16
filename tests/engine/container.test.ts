@@ -1,6 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { Container } from '@ioc/container'
 import { token } from '@ioc/token'
+import type { ILogger } from '@utils/logger'
+
+function makeContainer(): Container {
+  const logger: ILogger = {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+      `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+  }
+  return new Container(logger)
+}
 
 describe('IoC Container', () => {
   it('resolves registered dependencies', () => {
@@ -14,7 +26,7 @@ describe('IoC Container', () => {
       }
     }
 
-    const c = new Container()
+    const c = makeContainer()
     c.register({ token: NUM, useValue: 42 })
     c.register({ token: DEP, useClass: Dep, deps: [NUM] })
 
@@ -27,13 +39,13 @@ describe('IoC Container', () => {
     class Foo {}
     const FOO = token<Foo>('foo')
 
-    const singletonContainer = new Container()
+    const singletonContainer = makeContainer()
     singletonContainer.register({ token: FOO, useClass: Foo })
     const s1 = singletonContainer.resolve(FOO)
     const s2 = singletonContainer.resolve(FOO)
     expect(s1).toBe(s2)
 
-    const transientContainer = new Container()
+    const transientContainer = makeContainer()
     transientContainer.register({ token: FOO, useClass: Foo, scope: 'transient' })
     const t1 = transientContainer.resolve(FOO)
     const t2 = transientContainer.resolve(FOO)
@@ -46,7 +58,7 @@ describe('IoC Container', () => {
     const A_TOKEN = token<A>('A')
     const B_TOKEN = token<B>('B')
 
-    const c = new Container()
+    const c = makeContainer()
     c.register({ token: A_TOKEN, useClass: A, deps: [B_TOKEN] })
     c.register({ token: B_TOKEN, useClass: B, deps: [A_TOKEN] })
 
@@ -55,7 +67,7 @@ describe('IoC Container', () => {
 
   it('throws and does not override when registering the same token twice', () => {
     const FOO = token<number>('foo')
-    const c = new Container()
+    const c = makeContainer()
     c.register({ token: FOO, useValue: 1 })
     expect(() => c.register({ token: FOO, useValue: 2 })).toThrowError(/already registered/)
     expect(c.resolve(FOO)).toBe(1)

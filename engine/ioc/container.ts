@@ -1,6 +1,6 @@
 import { describeToken, type Token } from './token'
 import type { Provider, Scope } from './types'
-import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
 
 const logName: string = 'Container'
 
@@ -13,8 +13,12 @@ export class Container {
   private singletons = new Map<Token<unknown>, unknown>()
   private resolving: Token<unknown>[] = []
   readonly parent?: Container
+  private logger: ILogger
 
-  constructor(parent?: Container) { this.parent = parent }
+  constructor(logger: ILogger, parent?: Container) {
+    this.parent = parent
+    this.logger = logger
+  }
 
   /**
    * Registers a provider for the given token in the current container.
@@ -26,7 +30,7 @@ export class Container {
    */
   register<T>(provider: Provider<T>): this {
     if (this.providers.has(provider.token)) {
-      fatalError(logName, 'Provider for {0} already registered', describeToken(provider.token))
+      throw new Error(this.logger.error(logName, 'Provider for {0} already registered', describeToken(provider.token)))
     }
     this.providers.set(provider.token, provider)
     return this
@@ -36,7 +40,7 @@ export class Container {
    * Registers an array of providers.
    *
    * Each provider is passed to {@link register}. Registration halts on the
-   * first duplicate provider because {@link register} throws via `fatalError`.
+   * first duplicate provider because {@link register} throws an error.
    *
    * @param providers - Providers to be added to the container.
    * @returns The container instance for chaining.
@@ -63,7 +67,7 @@ export class Container {
    *
    * @returns A newly constructed child container.
    */
-  createChild(): Container { return new Container(this) }
+  createChild(): Container { return new Container(this.logger, this) }
 
   /**
    * Resolves an instance for the given token.
@@ -84,11 +88,13 @@ export class Container {
     if (this.singletons.has(t)) return this.singletons.get(t) as T
 
     const p = this.providers.get(t) ?? this.parent?.getProvider(t)
-    if (!p) fatalError(logName, 'No provider for {0}', describeToken(t))
+    if (!p) {
+      throw new Error(this.logger.error(logName, 'No provider for {0}', describeToken(t)))
+    }
 
     if (this.resolving.includes(t)) {
       const path = [...this.resolving, t].map(describeToken).join(' -> ')
-      fatalError(logName, 'Circular dependency detected: {0}', path)
+      throw new Error(this.logger.error(logName, 'Circular dependency detected: {0}', path))
     }
 
     this.resolving.push(t)
@@ -130,6 +136,6 @@ export class Container {
     }
     if ('useFactory' in p) return p.useFactory(this)
 
-    fatalError(logName, 'Invalid provider for {0}', describeToken((p as Provider<T>).token))
+    throw new Error(this.logger.error(logName, 'Invalid provider for {0}', describeToken((p as Provider<T>).token)))
   }
 }

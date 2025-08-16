@@ -9,8 +9,14 @@ describe('ComponentRegistry', () => {
     let container: Container
 
     beforeEach(() => {
-        container = new Container()
-        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        const logger: ILogger = {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+                `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+        }
+        container = new Container(logger)
         container.register({ token: loggerToken, useValue: logger })
         container.register<IComponentRegistry>({ token: componentRegistryToken, useClass: ComponentRegistry, deps: [loggerToken] })
         registry = container.resolve(componentRegistryToken)

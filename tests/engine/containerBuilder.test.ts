@@ -18,6 +18,7 @@ import { ProvidersBuilder } from '@builders/providersBuilder'
 import { MapManager, mapManagerToken } from '@managers/mapManager'
 import { TileSetManager, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
+import type { ILogger } from '@utils/logger'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
@@ -48,7 +49,14 @@ describe('ContainerBuilder', () => {
 
     providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))
 
-    const providerContainer = new Container()
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+    }
+    const providerContainer = new Container(logger)
     new ProvidersBuilder('/data').register(providerContainer)
     const registeredTokens = Array.from(
       (providerContainer as unknown as { providers: Map<Token<unknown>, unknown> }).providers.keys()

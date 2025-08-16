@@ -42,8 +42,9 @@ export class ContainerBuilder implements IContainerBuilder {
    * @remarks Mutates the new container by registering all engine services.
    */
   public build(): Container {
-    const result = new Container()
-    result.register({ token: loggerToken, useClass: ConsoleLogger })
+    const logger = new ConsoleLogger()
+    const result = new Container(logger)
+    result.register({ token: loggerToken, useValue: logger })
     new CoreBuilder(this.onQueueEmptyProvider).register(result)
     new ProvidersBuilder(this.dataPath).register(result)
     new LoadersBuilder().register(result)

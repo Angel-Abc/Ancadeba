@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { LoadersBuilder } from '@builders/loadersBuilder'
 import { actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
 import { gameLoaderToken } from '@loader/gameLoader'
@@ -10,11 +10,19 @@ import { virtualInputsLoaderToken } from '@loader/virtualInputsLoader'
 import { virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
+import type { ILogger } from '@utils/logger'
 
 describe('loadersBuilder', () => {
   it('registers loaders', () => {
     const builder = new LoadersBuilder()
-    const container = new Container()
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+    }
+    const container = new Container(logger)
     builder.register(container)
 
     const registeredTokens = Array.from(

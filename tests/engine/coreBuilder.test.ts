@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { CoreBuilder } from '@builders/coreBuilder'
 import { engineInitializerToken } from '@engine/engineInitializer'
 import { gameEngineToken } from '@engine/gameEngine'
@@ -8,11 +8,19 @@ import { messageBusToken } from '@utils/messageBus'
 import { messageQueueToken } from '@utils/messageQueue'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
+import type { ILogger } from '@utils/logger'
 
 describe('coreBuilder', () => {
   it('registers core services', () => {
     const builder = new CoreBuilder(() => () => {})
-    const container = new Container()
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+    }
+    const container = new Container(logger)
     builder.register(container)
 
     const registeredTokens = Array.from(
