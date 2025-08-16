@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { GameDataProvider } from '../../engine/providers/gameDataProvider'
 import type { Game } from '../../engine/loader/data/game'
-import * as logMessage from '../../utils/logMessage'
+import type { ILogger } from '../../utils/logger'
 
 describe('GameDataProvider', () => {
   it('initializes game and context', () => {
@@ -20,7 +20,8 @@ describe('GameDataProvider', () => {
       virtualInputs: [],
       cssFiles: []
     }
-    const provider = new GameDataProvider()
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn((c, m) => `[${c}] ${m}`) }
+    const provider = new GameDataProvider(logger)
     provider.initialize(gameData)
 
     expect(provider.Game.game).toBe(gameData)
@@ -39,14 +40,14 @@ describe('GameDataProvider', () => {
   })
 
   it('throws when accessing Game or Context before initialization', () => {
-    const provider = new GameDataProvider()
-    const spy = vi.spyOn(logMessage, 'fatalError')
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn((c, m) => `[${c}] ${m}`) }
+    const provider = new GameDataProvider(logger)
 
     expect(() => provider.Game).toThrow('[GameDataProvider] Game data not loaded')
     expect(() => provider.Context).toThrow('[GameDataProvider] Game context not loaded')
-    expect(spy).toHaveBeenCalledTimes(2)
-    expect(spy).toHaveBeenNthCalledWith(1, 'GameDataProvider', 'Game data not loaded')
-    expect(spy).toHaveBeenNthCalledWith(2, 'GameDataProvider', 'Game context not loaded')
+    expect(logger.error).toHaveBeenCalledTimes(2)
+    expect(logger.error).toHaveBeenNthCalledWith(1, 'GameDataProvider', 'Game data not loaded')
+    expect(logger.error).toHaveBeenNthCalledWith(2, 'GameDataProvider', 'Game context not loaded')
   })
 
   it('throws when initialized twice', () => {
@@ -65,11 +66,11 @@ describe('GameDataProvider', () => {
       virtualInputs: [],
       cssFiles: []
     }
-    const provider = new GameDataProvider()
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn((c, m) => `[${c}] ${m}`) }
+    const provider = new GameDataProvider(logger)
     provider.initialize(gameData)
 
-    const spy = vi.spyOn(logMessage, 'fatalError')
     expect(() => provider.initialize(gameData)).toThrow('[GameDataProvider] Game data already initialized')
-    expect(spy).toHaveBeenCalledWith('GameDataProvider', 'Game data already initialized')
+    expect(logger.error).toHaveBeenCalledWith('GameDataProvider', 'Game data already initialized')
   })
 })
