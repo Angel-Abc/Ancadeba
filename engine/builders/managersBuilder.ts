@@ -6,7 +6,7 @@ import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/m
 import { PageManager, pageManagerDependencies, pageManagerToken } from '@managers/pageManager'
 import { TileSetManager, tileSetManagerDependencies, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerDependencies, playerPositionManagerToken } from '@managers/playerPositionManager'
-import { TurnManager, turnManagerDependencies, turnmanagerToken } from '@managers/turnManager'
+import { TurnManager, turnManagerDependencies, turnManagerToken } from '@managers/turnManager'
 
 /**
  * Registers manager classes that orchestrate major engine systems.
@@ -53,7 +53,7 @@ export class ManagersBuilder {
       deps: mapManagerDependencies
     })
     container.register({
-      token: turnmanagerToken,
+      token: turnManagerToken,
       useClass: TurnManager,
       deps: turnManagerDependencies
     })

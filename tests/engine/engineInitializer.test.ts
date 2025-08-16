@@ -16,6 +16,7 @@ import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvi
 import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
 import type { ITurnManager } from '../../engine/managers/turnManager'
 import type { Game } from '../../engine/loader/data/game'
+import type { ITurnManager } from '../../engine/managers/turnManager'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -72,6 +73,7 @@ describe('EngineInitializer', () => {
     expect(pageManager.initialize).toHaveBeenCalledTimes(1)
     expect(actionManager.initialize).toHaveBeenCalledTimes(1)
     expect(mapManager.initialize).toHaveBeenCalledTimes(1)
+    expect(turnManager.initialize).toHaveBeenCalledTimes(1)
     expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
     expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
