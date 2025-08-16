@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { IVirtualKeysLoader, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
-import { IKeyboardEventListener, keyboardeventListenerToken } from '@utils/keyboardEventListener'
+import { IKeyboardEventListener, keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { gameDataProviderToken, IGameDataProvider } from './gameDataProvider'
@@ -27,7 +27,7 @@ export interface IVirtualKeyProvider {
 const logName = 'VirtualKeyProvider'
 export const virtualKeyProviderToken = token<IVirtualKeyProvider>(logName)
 export const virtualKeyProviderDependencies: Token<unknown>[] = [
-    keyboardeventListenerToken,
+    keyboardEventListenerToken,
     messageBusToken,
     virtualKeysLoaderToken,
     gameDataProviderToken

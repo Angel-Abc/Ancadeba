@@ -5,7 +5,7 @@ import { Container } from '@ioc/container'
 import type { Container as IContainer } from '@ioc/types'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
 import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
-import { KeyboardEventListener, keyboardeventListenerDependencies, keyboardeventListenerToken } from '@utils/keyboardEventListener'
+import { KeyboardEventListener, keyboardEventListenerDependencies, keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { loggerToken } from '@utils/logger'
 
 /**
@@ -43,9 +43,9 @@ export class CoreBuilder {
       deps: gameEngineDependencies
     })
     container.register({
-      token: keyboardeventListenerToken,
+      token: keyboardEventListenerToken,
       useClass: KeyboardEventListener,
-      deps: keyboardeventListenerDependencies
+      deps: keyboardEventListenerDependencies
     })
   }
 }
