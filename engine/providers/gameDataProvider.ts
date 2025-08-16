@@ -1,12 +1,18 @@
 import { Token, token } from '@ioc/token'
 import { Game, InitialData } from '@loader/data/game'
-import { VirtualInput, VirtualKey } from '@loader/data/inputs'
+import { Input, VirtualInput, VirtualKey } from '@loader/data/inputs'
 import { Language } from '@loader/data/language'
 import { GameMap, Position } from '@loader/data/map'
 import { Page } from '@loader/data/page'
 import { Tile } from '@loader/data/tile'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
+
+export type ActiveInput = {
+    input: Input,
+    enabled: boolean,
+    visible: boolean
+}
 
 /**
  * Runtime representation of the game state.
@@ -23,7 +29,8 @@ export type GameData = {
     loadedTiles: Map<string, Tile>,
     loadedTileSets: Set<string>,
     loadedVirtualKeys: Map<string, VirtualKey>,
-    loadedVirtualInputs: Map<string, VirtualInput>
+    loadedVirtualInputs: Map<string, VirtualInput>,
+    activeInputs: ActiveInput[]
 }
 
 /**
@@ -99,7 +106,8 @@ export class GameDataProvider implements IGameDataProvider {
             loadedTiles: new Map<string, Tile>(),
             loadedTileSets: new Set<string>(),
             loadedVirtualKeys: new Map<string, VirtualKey>(),
-            loadedVirtualInputs: new Map<string, VirtualInput>()
+            loadedVirtualInputs: new Map<string, VirtualInput>(),
+            activeInputs: []
         }
         this.context = { 
             ...gameData.initialData,

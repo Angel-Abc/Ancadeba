@@ -9,6 +9,7 @@ import { ProvidersBuilder } from './providersBuilder'
 import { RegistriesBuilder } from './registriesBuilder'
 import { ServicesBuilder } from './servicesBuilder'
 import { ConsoleLogger, loggerToken } from '@utils/logger'
+import { ConditionsBuilder } from './conditionsBuilder'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -53,6 +54,7 @@ export class ContainerBuilder implements IContainerBuilder {
     // Registers managers including map, tile set and player position managers
     new ManagersBuilder().register(result)
     new ActionsBuilder().register(result)
+    new ConditionsBuilder().register(result)
     // Hook for custom service registrations
     return result
   }

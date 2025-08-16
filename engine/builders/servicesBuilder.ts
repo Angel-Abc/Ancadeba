@@ -1,4 +1,5 @@
 import { Container } from '@ioc/container'
+import { InputSourcesService, inputSourcesServiceDependencies, inputSourcesServiceToken } from '@services/inputSourcesService'
 import { TranslationService, translationServiceDependencies, translationServiceToken } from '@services/translationService'
 
 /**
@@ -13,6 +14,11 @@ export class ServicesBuilder {
       token: translationServiceToken,
       useClass: TranslationService,
       deps: translationServiceDependencies
+    })
+    container.register({
+      token: inputSourcesServiceToken,
+      useClass: InputSourcesService,
+      deps: inputSourcesServiceDependencies
     })
   }
 }

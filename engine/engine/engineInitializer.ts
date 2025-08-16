@@ -16,6 +16,7 @@ import { actionManagerToken, IActionManager } from '@managers/actionManager'
 import { IMapManager, mapManagerToken } from '@managers/mapManager'
 import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
 import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
+import { ITurnManager, turnmanagerToken } from '@managers/turnManager'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -43,7 +44,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     mapManagerToken,
     virtualKeyProviderToken,
     virtualInputProviderToken,
-    loggerToken
+    loggerToken,
+    turnmanagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -74,7 +76,8 @@ export class EngineInitializer implements IEngineInitializer {
         private mapManager: IMapManager,
         private virtualKeyProvider: IVirtualKeyProvider,
         private virtualInputProvider: IVirtualInputProvider,
-        private logger: ILogger
+        private logger: ILogger,
+        private turnManager: ITurnManager
     ){}
 
     /**
@@ -105,6 +108,7 @@ export class EngineInitializer implements IEngineInitializer {
         this.pageManager.initialize()
         this.actionManager.initialize()
         this.mapManager.initialize()
+        this.turnManager.initialize()
     }
 
     /**

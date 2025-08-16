@@ -2,7 +2,7 @@ import { CSSCustomProperties } from '@app/types'
 import { GridScreen } from '@loader/data/page'
 import { Component } from '../component/component'
 import { useService } from '@app/iocProvider'
-import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
+import { conditionResolverToken, IConditionResolver } from '@conditions/conditionResolver'
 
 interface GridProps {
     screen: GridScreen
@@ -18,11 +18,11 @@ export const Grid: React.FC<GridProps> = ({ screen }): React.JSX.Element => {
         '--ge-grid-width': screen.width.toString(),
         '--ge-grid-height': screen.height.toString(),
     }
-    const conditionResolverRegistry = useService<IConditionResolverRegistry>(conditionResolverRegistryToken)
+    const conditionResolver = useService<IConditionResolver>(conditionResolverToken)
     return (
         <div style={style} className='screen-grid'>
             {screen.components.map(item => {
-                if (item.condition === undefined || conditionResolverRegistry.getConditionResolver(item.condition.type)?.resolve(item.condition)) {
+                if (conditionResolver.resolve(item.condition)) {
                     const componentStyle: CSSCustomProperties = {
                         '--ge-grid-item-top': (item.position.top + 1).toString(),
                         '--ge-grid-item-left': (item.position.left + 1).toString(),
