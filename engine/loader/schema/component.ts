@@ -14,16 +14,16 @@ const imageComponentSchema = z.object({
 const squaresMapComponentSchema = z.object({
     type: z.literal('squares-map'),
     mapSize: z.object({
-        rows: z.int().positive(),
-        columns: z.int().positive()
+        rows: z.number().int().positive(),
+        columns: z.number().int().positive()
     })
 })
 
 const inputMatrxComponentSchema = z.object({
     type: z.literal('input-matrix'),
     matrixSize: z.object({
-        width: z.int().positive(),
-        height: z.int().positive()
+        width: z.number().int().positive(),
+        height: z.number().int().positive()
     })
 })
 
@@ -41,7 +41,7 @@ const characterComponentSchema = z.object({
 
 const outputComponentSchema = z.object({
     type: z.literal('output-log'),
-    logSize: z.int().positive()
+    logSize: z.number().int().positive()
 })
 
 export const componentSchema = z.discriminatedUnion('type', [

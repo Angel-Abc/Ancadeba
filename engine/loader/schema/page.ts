@@ -4,10 +4,10 @@ import { inputSchema } from './inputs'
 import { conditionSchema } from './condition'
 
 const gridScreenPositionSchema = z.object({
-    top: z.int().nonnegative(),
-    left: z.int().nonnegative(),
-    right: z.int().nonnegative(),
-    bottom: z.int().nonnegative()
+    top: z.number().int().nonnegative(),
+    left: z.number().int().nonnegative(),
+    right: z.number().int().nonnegative(),
+    bottom: z.number().int().nonnegative()
 })
 
 const gridScreenItemSchema = z.object({
@@ -18,8 +18,8 @@ const gridScreenItemSchema = z.object({
 
 const gridScreenSchema = z.object({
     type: z.literal('grid'),
-    width: z.int().positive(),
-    height: z.int().positive(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
     components: z.array(gridScreenItemSchema),
 })
 const screenSchema = z.discriminatedUnion('type', [gridScreenSchema])
