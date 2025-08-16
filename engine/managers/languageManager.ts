@@ -6,7 +6,8 @@
 import { ILanguageLoader, languageLoaderToken } from '@loader/languageLoader'
 import { ITranslationService, translationServiceToken } from '@services/translationService'
 import { Token, token } from '@ioc/token'
-import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 
 /**
@@ -28,7 +29,12 @@ export interface ILanguageManager {
 
 const logName = 'LanguageManager'
 export const languageManagerToken = token<ILanguageManager>(logName)
-export const languageManagerDependencies: Token<unknown>[] = [languageLoaderToken, translationServiceToken, gameDataProviderToken]
+export const languageManagerDependencies: Token<unknown>[] = [
+    languageLoaderToken,
+    translationServiceToken,
+    gameDataProviderToken,
+    loggerToken
+]
 /**
  * Default implementation of {@link ILanguageManager} that loads translation
  * data and updates the active language in the game's context.
@@ -46,7 +52,8 @@ export class LanguageManager implements ILanguageManager {
     constructor(
         private languageLoader: ILanguageLoader,
         private translationService: ITranslationService,
-        private gameDataProvider: IGameDataProvider
+        private gameDataProvider: IGameDataProvider,
+        private logger: ILogger
     ) {}
 
     /**
@@ -55,7 +62,10 @@ export class LanguageManager implements ILanguageManager {
      * @throws If no language has been set yet.
      */
     public getLanguage(): string {
-        if (!this.gameDataProvider.Context.language) fatalError(logName, 'No language set')
+        if (!this.gameDataProvider.Context.language) {
+            const message = this.logger.error(logName, 'No language set')
+            throw new Error(message)
+        }
         return this.gameDataProvider.Context.language
     }
 
@@ -68,7 +78,10 @@ export class LanguageManager implements ILanguageManager {
      */
     public async setLanguage(languageKey: string): Promise<void> {
         const paths = this.gameDataProvider.Game.game.languages[languageKey]
-        if (!paths) fatalError(logName, `Unknown language key: ${languageKey}`)
+        if (!paths) {
+            const message = this.logger.error(logName, 'Unknown language key: {0}', languageKey)
+            throw new Error(message)
+        }
 
         if (this.gameDataProvider.Game.loadedLanguages[languageKey] === undefined) {
             const language = await this.languageLoader.loadLanguage(paths)

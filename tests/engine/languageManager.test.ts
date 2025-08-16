@@ -14,6 +14,15 @@ describe('LanguageManager', () => {
       translate: vi.fn(),
       setLanguage: vi.fn()
     }
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category, message, ...args) => {
+        const formatted = message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))
+        return `[${category}] ${formatted}`
+      })
+    }
     const gameData = {
       game: { languages: {} } as unknown as Game,
       loadedLanguages: {} as Record<string, Language>
@@ -29,12 +38,20 @@ describe('LanguageManager', () => {
       initialize: vi.fn()
     }
 
-    const manager = new LanguageManager(loader, translationService, gameDataProvider)
+    const manager = new LanguageManager(loader, translationService, gameDataProvider, logger)
     await expect(manager.setLanguage('unknown')).rejects.toThrow('[LanguageManager] Unknown language key: unknown')
   })
 
   it('throws when language paths are empty', async () => {
-    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category, message, ...args) => {
+        const formatted = message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))
+        return `[${category}] ${formatted}`
+      })
+    }
     const loader = new LanguageLoader({ dataPath: '' }, logger)
     const translationService: ITranslationService = {
       translate: vi.fn(),
@@ -55,7 +72,7 @@ describe('LanguageManager', () => {
       initialize: vi.fn()
     }
 
-    const manager = new LanguageManager(loader, translationService, gameDataProvider)
+    const manager = new LanguageManager(loader, translationService, gameDataProvider, logger)
     await expect(manager.setLanguage('empty')).rejects.toThrow('[LanguageLoader] No language paths provided')
   })
 })
