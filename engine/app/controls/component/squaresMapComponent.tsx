@@ -3,7 +3,7 @@ import { type SquaresMapComponent as SquaresMapComponentData } from '@loader/dat
 import { GameMap, Position } from '@loader/data/map'
 import { MAP_SWITCHED, POSITION_CHANGED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
-import { fatalError } from '@utils/logMessage'
+import { loggerToken, type ILogger } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
 import { Tile } from './controls/tile'
@@ -23,6 +23,7 @@ const logName = 'SquaresMapComponent'
 export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ component }): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
+    const logger = useService<ILogger>(loggerToken)
     const [mapId, setMapId] = useState<string | null>(gameDataProvider.Context.currentMapId)
     const [position, setPosition] = useState<Position>(gameDataProvider.Context.player.position)
 
@@ -45,7 +46,11 @@ export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ compon
     ])
 
     if (!mapId) return (<></>)
-    const gameMap: GameMap = gameDataProvider.Game.loadedMaps[mapId] ?? fatalError(logName, 'Map with id {0} was not loaded!', mapId)
+    const gameMap: GameMap = gameDataProvider.Game.loadedMaps[mapId]
+    if (!gameMap) {
+        const message = logger.error(logName, 'Map with id {0} was not loaded!', mapId)
+        throw new Error(message)
+    }
 
     const deltaX = Math.floor(component.mapSize.columns / 2)
     const deltaY = Math.floor(component.mapSize.rows / 2)
@@ -66,7 +71,11 @@ export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ compon
                     {gameMap.map.map((row, rowIndex) => {
                         return row.map((tileKey, columnIndex) => {
                             const mapTile = gameMap.tiles[tileKey]
-                            const tile = gameDataProvider.Game.loadedTiles.get(mapTile.tile) ?? fatalError(logName, 'Tile with key {0} was not loaded!', mapTile.tile)
+                            const tile = gameDataProvider.Game.loadedTiles.get(mapTile.tile)
+                            if (!tile) {
+                                const message = logger.error(logName, 'Tile with key {0} was not loaded!', mapTile.tile)
+                                throw new Error(message)
+                            }
                             const key = `${tileKey}-${rowIndex}-${columnIndex}`
                             return (
                                 <Tile
