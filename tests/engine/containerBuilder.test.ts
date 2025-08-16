@@ -14,6 +14,7 @@ import { VirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualK
 import { VirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
+import { ProvidersBuilder } from '@builders/providersBuilder'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
@@ -39,7 +40,7 @@ describe('ContainerBuilder', () => {
     providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))
 
     const providerContainer = new Container()
-    builder['registerProviders'](providerContainer)
+    new ProvidersBuilder('/data').register(providerContainer)
     const registeredTokens = Array.from(
       (providerContainer as unknown as { providers: Map<Token<unknown>, unknown> }).providers.keys()
     )
