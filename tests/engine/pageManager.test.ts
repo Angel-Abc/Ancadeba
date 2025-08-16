@@ -4,6 +4,7 @@ import { SWITCH_PAGE, PAGE_SWITCHED } from '../../engine/messages/system'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
 import type { IPageLoader } from '../../engine/loader/pageLoader'
+import type { ILogger } from '../../utils/logger'
 
 type Msg = { message: string, payload: unknown }
 
@@ -40,7 +41,8 @@ describe('PageManager', () => {
     } as unknown as IGameDataProvider
     const loadPage = vi.fn().mockResolvedValue({ id: 'home' })
     const loader = { loadPage } as unknown as IPageLoader
-    const manager = new PageManager(provider, loader, bus)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const manager = new PageManager(provider, loader, bus, logger)
 
     await manager.setActivePage('home')
 
@@ -54,7 +56,8 @@ describe('PageManager', () => {
     const bus = createBus()
     const provider = {} as IGameDataProvider
     const loader = {} as IPageLoader
-    const manager = new PageManager(provider, loader, bus)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const manager = new PageManager(provider, loader, bus, logger)
     manager.initialize()
     const spy = vi.spyOn(manager, 'setActivePage').mockResolvedValue(undefined)
 
