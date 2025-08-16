@@ -1,4 +1,4 @@
-import { actionExecuterToken, IActionExecuter } from '@actions/actionExecuter'
+import { actionExecutorToken, IActionExecutor } from '@actions/actionExecutor'
 import { Token, token } from '@ioc/token'
 import { actionHandlersLoaderToken, IActionHandlersLoader } from '@loader/actionHandlersLoader'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
@@ -28,7 +28,7 @@ export const actionManagerDependencies: Token<unknown>[] = [
     actionHandlersLoaderToken, 
     messageBusToken, 
     gameDataProviderToken,
-    actionExecuterToken
+    actionExecutorToken
 ]
 /**
  * Default implementation of {@link IActionManager} that loads action
@@ -53,7 +53,7 @@ export class ActionManager implements IActionManager {
         private actionHandlersLoader: IActionHandlersLoader,
         private messageBus: IMessageBus,
         private gameDataProvider: IGameDataProvider,
-        private actionExecutor: IActionExecuter
+        private actionExecutor: IActionExecutor
     ) {}
 
     /**
