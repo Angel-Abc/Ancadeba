@@ -6,6 +6,7 @@ import type { IGameDataProvider, GameData, GameContext } from '../../engine/prov
 import type { ITileSetManager } from '../../engine/managers/tileSetManager'
 import type { IPlayerPositionManager } from '../../engine/managers/playerPositionManager'
 import { MAP_SWITCHED } from '../../engine/messages/system'
+import type { ILogger } from '../../utils/logger'
 
 function createProvider(gameData: GameData, context: GameContext): IGameDataProvider {
   return {
@@ -33,7 +34,15 @@ describe('MapManager.setActiveMap', () => {
     const postMessage = vi.fn()
     const messageBus = { registerMessageListener: vi.fn(), postMessage } as unknown as IMessageBus
 
-    const manager = new MapManager(mapLoader, messageBus, provider, tileSetManager, playerPositionManager)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const manager = new MapManager(
+      mapLoader,
+      messageBus,
+      provider,
+      tileSetManager,
+      playerPositionManager,
+      logger,
+    )
     await manager.setActiveMap('m1')
 
     expect(mapLoader.loadMap).toHaveBeenCalledWith('m1.json')
@@ -56,12 +65,14 @@ describe('MapManager.initialize', () => {
       registerMessageListener: register
     } as unknown as IMessageBus
 
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const manager = new MapManager(
       {} as IGameMapLoader,
       messageBus,
       {} as IGameDataProvider,
       {} as ITileSetManager,
-      {} as IPlayerPositionManager
+      {} as IPlayerPositionManager,
+      logger,
     )
 
     manager.initialize()

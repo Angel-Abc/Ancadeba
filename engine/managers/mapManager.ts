@@ -3,7 +3,8 @@ import { Position } from '@loader/data/map'
 import { gameMapLoaderToken, IGameMapLoader } from '@loader/gameMapLoader'
 import { CHANGE_POSITION, MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
-import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { ITileSetManager, tileSetManagerToken } from './tileSetManager'
@@ -27,7 +28,8 @@ export const mapManagerDependencies: Token<unknown>[] = [
     messageBusToken,
     gameDataProviderToken,
     tileSetManagerToken,
-    playerPositionManagerToken
+    playerPositionManagerToken,
+    loggerToken
 ]
 
 /**
@@ -42,7 +44,8 @@ export class MapManager implements IMapManager {
         private messageBus: IMessageBus,
         private gameDataProvider: IGameDataProvider,
         private tileSetManager: ITileSetManager,
-        private playerPositionManager: IPlayerPositionManager
+        private playerPositionManager: IPlayerPositionManager,
+        private logger: ILogger
     ){}
 
     /**
@@ -94,7 +97,9 @@ export class MapManager implements IMapManager {
      */
     public async setActiveMap(mapId: string): Promise<void> {
         const path = this.gameDataProvider.Game.game.maps[mapId]
-        if (!path) fatalError(logName, 'Map not found for id {0}', mapId)
+        if (!path) {
+            throw new Error(this.logger.error(logName, 'Map not found for id {0}', mapId))
+        }
 
         if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined){
             const map = await this.gameMapLoader.loadMap(path)
