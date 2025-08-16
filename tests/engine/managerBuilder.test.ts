@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { ManagersBuilder } from '@builders/managersBuilder'
 import { actionManagerToken } from '@managers/actionManager'
 import { domManagerToken } from '@managers/domManager'
@@ -9,11 +9,19 @@ import { tileSetManagerToken } from '@managers/tileSetManager'
 import { playerPositionManagerToken } from '@managers/playerPositionManager'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
+import type { ILogger } from '@utils/logger'
 
 describe('managersBuilder', () => {
   it('registers managers', () => {
     const builder = new ManagersBuilder()
-    const container = new Container()
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+    }
+    const container = new Container(logger)
     builder.register(container)
 
     const registeredTokens = Array.from(
