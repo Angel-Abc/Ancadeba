@@ -1,7 +1,8 @@
 import { Token, token } from '@ioc/token'
 import { Action, BaseAction } from '@loader/data/action'
 import { ActionHandlerRegistry, actionHandlerRegistryToken } from '@registries/actionHandlerRegistry'
-import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { Message } from '@utils/types'
 
 /**
@@ -14,14 +15,14 @@ export interface IActionExecuter {
      * @param action - The action to execute.
      * @param message - Optional message that triggered the action.
      * @param data - Additional data forwarded to the handler.
-     * @throws {@link fatalError} if no handler is registered for the action type.
+     * @throws Error if no handler is registered for the action type.
      */
     execute<T extends BaseAction = Action>(action: T, message?: Message, data?: unknown): void
 }
 
 const logName = 'ActionExecuter'
 export const actionExecuterToken = token<IActionExecuter>(logName)
-export const actionExecuterDependencies: Token<unknown>[] = [actionHandlerRegistryToken]
+export const actionExecuterDependencies: Token<unknown>[] = [actionHandlerRegistryToken, loggerToken]
 
 /**
  * Default implementation of {@link IActionExecuter} that delegates work to
@@ -32,8 +33,9 @@ export class ActionExecuter implements IActionExecuter {
      * Creates a new {@link ActionExecuter}.
      *
      * @param actionHandlerRegistry - Registry used to look up action handlers.
+     * @param logger - Logger used to report errors.
      */
-    constructor(private actionHandlerRegistry: ActionHandlerRegistry){}
+    constructor(private actionHandlerRegistry: ActionHandlerRegistry, private logger: ILogger){}
 
     /**
      * Executes the given action by invoking its associated handler.
@@ -41,11 +43,14 @@ export class ActionExecuter implements IActionExecuter {
      * @param action - Action instance to execute.
      * @param message - Optional message that led to the action.
      * @param data - Supplementary data passed to the handler.
-     * @throws {@link fatalError} if no handler exists for the action type.
+     * @throws Error if no handler exists for the action type.
      */
     public execute<T extends BaseAction = Action>(action: T, message?: Message, data?: unknown): void {
         const actionHandler = this.actionHandlerRegistry.getActionHandler(action.type)
-        if (!actionHandler) fatalError(logName, 'No action handler found for type {0}', action.type)
+        if (!actionHandler) {
+            this.logger.error(logName, 'No action handler found for type {0}', action.type)
+            throw new Error(`No action handler found for type ${action.type}`)
+        }
         actionHandler.handle(action, message, data)
     }
 }
