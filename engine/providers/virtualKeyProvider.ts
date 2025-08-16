@@ -33,7 +33,7 @@ export const virtualKeyProviderDependencies: Token<unknown>[] = [
     gameDataProviderToken
 ]
 export class VirtualKeyProvider implements IVirtualKeyProvider {
-    private CleanUpFn: CleanUp | null = null
+    private cleanupFn: CleanUp | null = null
 
     constructor(
         private keyboardEventListener: IKeyboardEventListener,
@@ -56,8 +56,8 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
      */
     public async initialize(): Promise<void> {
         if (this.gameDataProvider.Game.loadedVirtualKeys.size === 0) await this.loadVirtualKeys()
-        this.CleanUpFn?.()
-        this.CleanUpFn = this.keyboardEventListener.addListener(event => {
+        this.cleanupFn?.()
+        this.cleanupFn = this.keyboardEventListener.addListener(event => {
             const lookupKey = this.createKey(event.code, event.alt, event.ctrl, event.shift)
             if (this.gameDataProvider.Game.loadedVirtualKeys.has(lookupKey)){
                 const virtualkey = this.gameDataProvider.Game.loadedVirtualKeys.get(lookupKey)
@@ -77,8 +77,8 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
      * - Clears the internal reference to the cleanup function.
      */
     public cleanup(): void {
-        this.CleanUpFn?.()
-        this.CleanUpFn = null
+        this.cleanupFn?.()
+        this.cleanupFn = null
     }
 
     /**
@@ -90,7 +90,7 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
      * @returns {Promise<void>} Resolves once all virtual key data has been loaded.
      */
     private async loadVirtualKeys(): Promise<void> {
-        var keys = await this.virtualKeysLoader.loadVirtualKeys(this.gameDataProvider.Game.game.virtualKeys)
+        const keys = await this.virtualKeysLoader.loadVirtualKeys(this.gameDataProvider.Game.game.virtualKeys)
         keys.forEach(key => {
             const lookupKey = this.createKey(key.keyCode, key.alt, key.ctrl, key.shift)
             this.gameDataProvider.Game.loadedVirtualKeys.set(lookupKey, key)
