@@ -6,6 +6,7 @@ vi.mock('@loader/mappers/input', () => ({ mapVirtualInputs: vi.fn() }))
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapVirtualInputs } from '@loader/mappers/input'
 import { VirtualInputsLoader } from '@loader/virtualInputsLoader'
+import type { ILogger } from '@utils/logger'
 
 const dataPathProvider = { dataPath: '/base' }
 
@@ -24,11 +25,12 @@ describe('VirtualInputsLoader', () => {
       .mockReturnValueOnce([{ virtualInput: 'jump', virtualKeys: ['VK_JUMP'], label: 'Jump' }])
       .mockReturnValueOnce([{ virtualInput: 'run', virtualKeys: ['VK_RUN'], label: 'Run' }])
 
-    const loader = new VirtualInputsLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new VirtualInputsLoader(dataPathProvider, logger)
     const result = await loader.loadVirtualInputs(['v1.json', 'v2.json'])
 
-    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/v1.json', expect.anything())
-    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/v2.json', expect.anything())
+    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/v1.json', expect.anything(), logger)
+    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/v2.json', expect.anything(), logger)
     expect(mapVirtualInputs).toHaveBeenNthCalledWith(1, schema1)
     expect(mapVirtualInputs).toHaveBeenNthCalledWith(2, schema2)
     expect(result).toEqual([
@@ -38,7 +40,8 @@ describe('VirtualInputsLoader', () => {
   })
 
   it('throws when no virtual inputs paths provided', async () => {
-    const loader = new VirtualInputsLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new VirtualInputsLoader(dataPathProvider, logger)
     await expect(loader.loadVirtualInputs([])).rejects.toThrow('No virtual inputs paths provided')
   })
 })

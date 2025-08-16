@@ -4,7 +4,8 @@
  * should be routed through this manager to keep concerns centralized.
  */
 import { Token, token } from '@ioc/token'
-import { logWarning } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Contract for components capable of manipulating the DOM.
@@ -27,7 +28,7 @@ export interface IDomManager {
 
 const logName = 'DomManager'
 export const domManagerToken = token<IDomManager>(logName)
-export const domManagerDependencies: Token<unknown>[] = []
+export const domManagerDependencies: Token<unknown>[] = [loggerToken]
 
 /**
  * Default implementation of {@link IDomManager} that targets the global
@@ -36,6 +37,7 @@ export const domManagerDependencies: Token<unknown>[] = []
 export class DomManager implements IDomManager {
     private writtenCssFiles: Set<string>
     private document?: Document
+    private logger: ILogger
 
     /**
      * Creates a new {@link DomManager}.
@@ -43,7 +45,8 @@ export class DomManager implements IDomManager {
      * @param doc - Optional `Document` to manipulate. If omitted, the global
      * `document` is used when running in a browser context.
      */
-    constructor(doc?: Document | null) {
+    constructor(logger: ILogger, doc?: Document | null) {
+        this.logger = logger
         if (doc !== undefined) {
             this.document = doc || undefined
         } else if (typeof document !== 'undefined') {
@@ -64,7 +67,7 @@ export class DomManager implements IDomManager {
 
         const head = this.document.head
         if (!head) {
-            logWarning(logName, 'Cannot append style {0}: head element is missing', path)
+            this.logger.warn(logName, 'Cannot append style {0}: head element is missing', path)
             return
         }
 

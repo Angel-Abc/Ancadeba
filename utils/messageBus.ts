@@ -5,7 +5,8 @@
  * listeners in FIFO order.  The bus exposes a simple API to post messages,
  * subscribe to them and control queue processing.
  */
-import { logDebug, logWarning } from './logMessage'
+import type { ILogger } from './logger'
+import { loggerToken } from './logger'
 import type { CleanUp, Message } from './types'
 import { IMessageQueue, messageQueueToken } from './messageQueue'
 import { Token, token } from '@ioc/token'
@@ -60,7 +61,7 @@ export interface IMessageBus {
 
 const logName: string = 'MessageBus'
 export const messageBusToken = token<IMessageBus>(logName)
-export const messageBusDependencies: Token<unknown>[] = [messageQueueToken]
+export const messageBusDependencies: Token<unknown>[] = [messageQueueToken, loggerToken]
 /**
  * Default implementation of {@link IMessageBus} coordinating message dispatch
  * through an injected {@link IMessageQueue}.
@@ -70,13 +71,15 @@ export class MessageBus implements IMessageBus {
     private listeners: Map<string, MessageListener[]> = new Map<string, MessageListener[]>()
     private silentMessages: Set<string> = new Set<string>()
     private messageQueue: IMessageQueue
+    private logger: ILogger
 
     /**
      * Create a new message bus.
      * @param messageQueue - Queue used to schedule message processing.
      */
-    constructor(messageQueue: IMessageQueue) {
+    constructor(messageQueue: IMessageQueue, logger: ILogger) {
         this.messageQueue = messageQueue
+        this.logger = logger
         this.messageQueue.setHandler((message: Message<unknown>) => this.handleMessage(message))
     }
 
@@ -85,7 +88,7 @@ export class MessageBus implements IMessageBus {
      * @param message - Message to enqueue.
      */
     postMessage(message: Message<unknown>): void {
-        logDebug(logName, 'Push message: {0}', message)
+        this.logger.debug(logName, 'Push message: {0}', message)
         this.messageQueue.postMessage(message)
     }
 
@@ -150,8 +153,8 @@ export class MessageBus implements IMessageBus {
         const listeners = this.listeners.get(message.message)
         if (!listeners || listeners.length === 0) {
             const logger = this.silentMessages.has(message.message)
-                ? (msg: string, ...args: unknown[]) => logDebug(logName, msg, ...args)
-                : (msg: string, ...args: unknown[]) => logWarning(logName, msg, ...args)
+                ? (msg: string, ...args: unknown[]) => this.logger.debug(logName, msg, ...args)
+                : (msg: string, ...args: unknown[]) => this.logger.warn(logName, msg, ...args)
             logger('No message listener for message: {0}', message.message)
             return
         }
@@ -161,11 +164,11 @@ export class MessageBus implements IMessageBus {
                 const result = listener.handler(message)
                 if (result && typeof (result as Promise<void>).then === 'function') {
                     promises.push((result as Promise<void>).catch(err => {
-                        logWarning(logName, 'Error processing listener for message {0}: {1}', message.message, err)
+                        this.logger.warn(logName, 'Error processing listener for message {0}: {1}', message.message, err)
                     }))
                 }
             } catch (err) {
-                logWarning(logName, 'Error processing listener for message {0}: {1}', message.message, err)
+                this.logger.warn(logName, 'Error processing listener for message {0}: {1}', message.message, err)
             }
         })
         if (promises.length > 0) {
@@ -180,6 +183,6 @@ export class MessageBus implements IMessageBus {
         this.listeners.clear()
         this.silentMessages.clear()
         this.messageQueue.shutDown()
-        logDebug(logName, 'MessageBus shut down')
+        this.logger.debug(logName, 'MessageBus shut down')
     }
 }

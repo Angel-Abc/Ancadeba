@@ -11,8 +11,8 @@ describe('logMessage color reset', () => {
         vi.resetModules()
         process.env.LOG_LEVEL = 'debug'
         const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
-        const { logDebug } = await import('@utils/logMessage')
-        logDebug('test')
+        const { logMessage } = await import('@utils/logMessage')
+        logMessage(LogLevel.debug, undefined, 'test')
         expect(debugSpy).toHaveBeenCalledWith('\x1B[37mtest\x1B[0m')
     })
 
@@ -20,8 +20,8 @@ describe('logMessage color reset', () => {
         vi.resetModules()
         process.env.LOG_LEVEL = 'debug'
         const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
-        const { logInfo } = await import('@utils/logMessage')
-        logInfo('test')
+        const { logMessage } = await import('@utils/logMessage')
+        logMessage(LogLevel.info, undefined, 'test')
         expect(infoSpy).toHaveBeenCalledWith('\x1B[30mtest\x1B[0m')
     })
 
@@ -29,8 +29,8 @@ describe('logMessage color reset', () => {
         vi.resetModules()
         process.env.LOG_LEVEL = 'debug'
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-        const { logWarning } = await import('@utils/logMessage')
-        logWarning('test')
+        const { logMessage } = await import('@utils/logMessage')
+        logMessage(LogLevel.warning, undefined, 'test')
         expect(warnSpy).toHaveBeenCalledWith('\x1B[1m\x1B[33mtest\x1B[0m')
     })
 

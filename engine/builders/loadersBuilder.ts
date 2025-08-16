@@ -1,13 +1,12 @@
 import { Container } from '@ioc/container'
 import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
-import { GameLoader, gameLoaderToken } from '@loader/gameLoader'
+import { GameLoader, gameLoaderDependencies, gameLoaderToken } from '@loader/gameLoader'
 import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
 import { PageLoader, pageLoaderDependencies, pageLoaderToken } from '@loader/pageLoader'
 import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@loader/tileSetLoader'
 import { VirtualInputsLoader, virtualInputsLoaderDependencies, virtualInputsLoaderToken } from '@loader/virtualInputsLoader'
 import { VirtualKeysLoader, virtualKeysLoaderDependencies, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
-import { dataPathProviderToken } from '@providers/configProviders'
 
 /**
  * Registers loader components responsible for fetching game resources.
@@ -20,7 +19,7 @@ export class LoadersBuilder {
     container.register({
       token: gameLoaderToken,
       useClass: GameLoader,
-      deps: [dataPathProviderToken]
+      deps: gameLoaderDependencies
     })
     container.register({
       token: languageLoaderToken,

@@ -3,6 +3,8 @@ import { type Handlers as HandlersData } from './data/handler'
 import { Handlers, handlersSchema } from './schema/handler'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { fatalError } from '@utils/logMessage'
 import { mapHandlers } from './mappers/handler'
 
@@ -23,7 +25,7 @@ export interface IActionHandlersLoader {
 
 const logName = 'ActionHandlersLoader'
 export const actionHandlersLoaderToken = token<IActionHandlersLoader>(logName)
-export const actionHandlersLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const actionHandlersLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads action handler definitions using a base path provider.
@@ -32,7 +34,7 @@ export class ActionHandlersLoader implements IActionHandlersLoader {
     /**
      * @param dataPathProvider Provides the base directory for handler data files.
      */
-    constructor(private dataPathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) {
     }
 
     /**
@@ -52,7 +54,8 @@ export class ActionHandlersLoader implements IActionHandlersLoader {
             paths.map(path =>
                 loadJsonResource<Handlers>(
                     `${this.dataPathProvider.dataPath}/${path}`,
-                    handlersSchema
+                    handlersSchema,
+                    this.logger
                 )
             )
         )

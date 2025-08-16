@@ -6,6 +6,7 @@ vi.mock('@loader/mappers/input', () => ({ mapVirtualKeys: vi.fn() }))
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { mapVirtualKeys } from '@loader/mappers/input'
 import { VirtualKeysLoader } from '@loader/virtualKeysLoader'
+import type { ILogger } from '@utils/logger'
 
 const dataPathProvider = { dataPath: '/base' }
 
@@ -24,11 +25,12 @@ describe('VirtualKeysLoader', () => {
       .mockReturnValueOnce([{ virtualKey: 'jump', keyCode: 'Space', alt: false, ctrl: false, shift: false }])
       .mockReturnValueOnce([{ virtualKey: 'run', keyCode: 'KeyR', alt: false, ctrl: false, shift: false }])
 
-    const loader = new VirtualKeysLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new VirtualKeysLoader(dataPathProvider, logger)
     const result = await loader.loadVirtualKeys(['k1.json', 'k2.json'])
 
-    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/k1.json', expect.anything())
-    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/k2.json', expect.anything())
+    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/k1.json', expect.anything(), logger)
+    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/k2.json', expect.anything(), logger)
     expect(mapVirtualKeys).toHaveBeenNthCalledWith(1, schema1)
     expect(mapVirtualKeys).toHaveBeenNthCalledWith(2, schema2)
     expect(result).toEqual([
@@ -38,7 +40,8 @@ describe('VirtualKeysLoader', () => {
   })
 
   it('throws when no virtual keys paths provided', async () => {
-    const loader = new VirtualKeysLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new VirtualKeysLoader(dataPathProvider, logger)
     await expect(loader.loadVirtualKeys([])).rejects.toThrow('No virtual keys paths provided')
   })
 })

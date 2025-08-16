@@ -1,6 +1,7 @@
 import { Screen as ScreenData } from '@loader/data/page'
 import { Grid } from './grid'
-import { logWarning } from '@utils/logMessage'
+import { loggerToken, type ILogger } from '@utils/logger'
+import { useService } from '@app/iocProvider'
 
 interface ScreenProps {
     screen: ScreenData
@@ -14,13 +15,14 @@ const logName = 'Screen'
  * @param screen - Screen data to render.
  */
 export const Screen: React.FC<ScreenProps> = ({ screen }): React.JSX.Element | null => {
+    const logger = useService<ILogger>(loggerToken)
     switch (screen.type) {
         case 'grid':
             return (
                 <Grid screen={screen} />
             )
         default:
-            logWarning(logName, 'Unsupported screen type: {0}', screen.type)
+            logger.warn(logName, 'Unsupported screen type: {0}', screen.type)
             return null
     }
 }

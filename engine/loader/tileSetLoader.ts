@@ -7,6 +7,8 @@ import { type TileSet as TileSetData } from './data/tile'
 import { TileSet, tileSetSchema } from './schema/tile'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { mapTileSet } from './mappers/tile'
 
 /**
@@ -24,7 +26,7 @@ export interface ITileSetLoader {
 
 const logName = 'TileSetLoader'
 export const tileSetLoaderToken = token<ITileSetLoader>(logName)
-export const tileSetLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const tileSetLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 /**
  * Concrete implementation of {@link ITileSetLoader} that resolves files using
  * {@link IDataPathProvider}.
@@ -33,7 +35,7 @@ export class TileSetLoader implements ITileSetLoader {
     /**
      * @param dataPathProvider Provides the directory containing tileset files.
      */
-    constructor(private dataPathProvider: IDataPathProvider) { }
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) { }
 
     /**
      * Loads a tileset file, validates its contents and maps it into engine
@@ -43,7 +45,7 @@ export class TileSetLoader implements ITileSetLoader {
      * @returns The mapped {@link TileSetData} object.
      */
     public async loadTileSet(path: string): Promise<TileSetData> {
-        const schema = await loadJsonResource<TileSet>(`${this.dataPathProvider.dataPath}/${path}`, tileSetSchema)
+        const schema = await loadJsonResource<TileSet>(`${this.dataPathProvider.dataPath}/${path}`, tileSetSchema, this.logger)
         return mapTileSet(this.dataPathProvider.dataPath, schema)
     }
 }

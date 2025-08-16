@@ -4,6 +4,8 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { fatalError } from '@utils/logMessage'
 import { VirtualKeys, virtualKeysSchema } from './schema/inputs'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { mapVirtualKeys } from './mappers/input'
 
 /**
@@ -23,7 +25,7 @@ export interface IVirtualKeysLoader {
 
 const logName = 'VirtualKeysLoader'
 export const virtualKeysLoaderToken = token<IVirtualKeysLoader>(logName)
-export const virtualKeysLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const virtualKeysLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads virtual key definitions using a base path provider.
@@ -34,7 +36,8 @@ export class VirtualKeysLoader implements IVirtualKeysLoader {
      * files.
      */
     constructor(
-        private dataPathProvider: IDataPathProvider
+        private dataPathProvider: IDataPathProvider,
+        private logger: ILogger
     ) { }
 
     /**
@@ -51,7 +54,7 @@ export class VirtualKeysLoader implements IVirtualKeysLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<VirtualKeys>(`${this.dataPathProvider.dataPath}/${path}`, virtualKeysSchema))
+            paths.map(path => loadJsonResource<VirtualKeys>(`${this.dataPathProvider.dataPath}/${path}`, virtualKeysSchema, this.logger))
         )
 
         const result = schemas.reduce<VirtualKeysData>((acc, schema) => [...acc, ...mapVirtualKeys(schema)], [])

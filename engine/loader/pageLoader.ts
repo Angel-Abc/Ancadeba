@@ -6,6 +6,8 @@ import { Token, token } from '@ioc/token'
 import { type Page as PageData } from '@loader/data/page'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { Page, pageSchema } from './schema/page'
 import { mapPage } from './mappers/page'
 
@@ -23,7 +25,7 @@ export interface IPageLoader {
 }
 
 export const pageLoaderToken = token<IPageLoader>('PageLoader')
-export const pageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const pageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads page data using a base path provided by {@link IDataPathProvider}.
@@ -32,7 +34,7 @@ export class PageLoader implements IPageLoader {
     /**
      * @param dataPathProvider Provides the base directory for page data files.
      */
-    constructor(private dataPathProvider: IDataPathProvider) {}
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) {}
 
     /**
      * Reads a page file, validates it and maps it into runtime data.
@@ -41,7 +43,7 @@ export class PageLoader implements IPageLoader {
      * @returns The fully mapped {@link PageData} object.
      */
     public async loadPage(path: string): Promise<PageData> {
-        const schema = await loadJsonResource<Page>(`${this.dataPathProvider.dataPath}/${path}`, pageSchema)
+        const schema = await loadJsonResource<Page>(`${this.dataPathProvider.dataPath}/${path}`, pageSchema, this.logger)
         return mapPage(this.dataPathProvider.dataPath, schema)
     }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { z } from 'zod'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import * as log from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
 
 const originalFetch = globalThis.fetch
 
@@ -18,14 +19,16 @@ describe('loadJsonResource', () => {
             json: vi.fn().mockResolvedValue(data)
         } as unknown as Response))
         const schema = z.object({ id: z.string() })
-        await expect(loadJsonResource('/url', schema)).resolves.toEqual(data)
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        await expect(loadJsonResource('/url', schema, logger)).resolves.toEqual(data)
     })
 
     it('calls fatalError on network error', async () => {
         vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')))
         const schema = z.object({ id: z.string() })
         const fatalSpy = vi.spyOn(log, 'fatalError').mockImplementation(() => { throw new Error('fatal') })
-        await expect(loadJsonResource('/url', schema)).rejects.toThrow('fatal')
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        await expect(loadJsonResource('/url', schema, logger)).rejects.toThrow('fatal')
         expect(fatalSpy).toHaveBeenCalled()
     })
 
@@ -33,7 +36,8 @@ describe('loadJsonResource', () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false } as unknown as Response))
         const schema = z.object({ id: z.string() })
         const fatalSpy = vi.spyOn(log, 'fatalError').mockImplementation(() => { throw new Error('fatal') })
-        await expect(loadJsonResource('/url', schema)).rejects.toThrow('fatal')
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        await expect(loadJsonResource('/url', schema, logger)).rejects.toThrow('fatal')
         expect(fatalSpy).toHaveBeenCalled()
     })
 
@@ -44,7 +48,8 @@ describe('loadJsonResource', () => {
         } as unknown as Response))
         const schema = z.object({ id: z.string() })
         const fatalSpy = vi.spyOn(log, 'fatalError').mockImplementation(() => { throw new Error('fatal') })
-        await expect(loadJsonResource('/url', schema)).rejects.toThrow('fatal')
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        await expect(loadJsonResource('/url', schema, logger)).rejects.toThrow('fatal')
         expect(fatalSpy).toHaveBeenCalled()
     })
 
@@ -55,7 +60,8 @@ describe('loadJsonResource', () => {
         } as unknown as Response))
         const schema = z.object({ id: z.string() })
         const fatalSpy = vi.spyOn(log, 'fatalError').mockImplementation(() => { throw new Error('fatal') })
-        await expect(loadJsonResource('/url', schema)).rejects.toThrow('fatal')
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        await expect(loadJsonResource('/url', schema, logger)).rejects.toThrow('fatal')
         expect(fatalSpy).toHaveBeenCalled()
     })
 })

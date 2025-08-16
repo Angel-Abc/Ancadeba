@@ -1,5 +1,5 @@
 import { Container } from '@ioc/container'
-import { TranslationService, translationServiceToken } from '@services/translationService'
+import { TranslationService, translationServiceDependencies, translationServiceToken } from '@services/translationService'
 
 /**
  * Registers application level services.
@@ -12,7 +12,7 @@ export class ServicesBuilder {
     container.register({
       token: translationServiceToken,
       useClass: TranslationService,
-      deps: []
+      deps: translationServiceDependencies
     })
   }
 }

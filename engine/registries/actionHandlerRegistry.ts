@@ -2,7 +2,8 @@ import { Action, BaseAction } from '@loader/data/action'
 import { Message } from '@utils/types'
 import { token, type Token } from '@ioc/token'
 import { serviceProviderToken, type IServiceProvider } from '@providers/serviceProvider'
-import { logWarning } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Represents a handler for a specific {@link Action} type.
@@ -40,11 +41,11 @@ export interface IActionHandlerRegistry {
 
 const logName = 'ActionHandlerRegistry'
 export const actionHandlerRegistryToken = token<IActionHandlerRegistry>(logName)
-export const actionHandlerRegistryDependencies: Token<unknown>[] = [serviceProviderToken]
+export const actionHandlerRegistryDependencies: Token<unknown>[] = [serviceProviderToken, loggerToken]
 export class ActionHandlerRegistry implements IActionHandlerRegistry {
     private readonly registry = new Map<string, Token<IActionHandler>>()
 
-    constructor(private serviceProvider: IServiceProvider) {}
+    constructor(private serviceProvider: IServiceProvider, private logger: ILogger) {}
 
     /**
      * Registers an action handler token for a given action type.
@@ -57,7 +58,7 @@ export class ActionHandlerRegistry implements IActionHandlerRegistry {
         handlerToken: Token<IActionHandler<T>>
     ): void {
         if (this.registry.has(type)) {
-            logWarning(logName, 'Handler already registered for action type {0}', type)
+            this.logger.warn(logName, 'Handler already registered for action type {0}', type)
             return
         }
         this.registry.set(type, handlerToken as Token<IActionHandler>)

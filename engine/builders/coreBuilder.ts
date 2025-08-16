@@ -6,6 +6,7 @@ import type { Container as IContainer } from '@ioc/types'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
 import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 import { KeyboardEventListener, keyboardeventListenerDependencies, keyboardeventListenerToken } from '@utils/keyboardEventListener'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Registers core engine services like the game engine and messaging infrastructure.
@@ -24,7 +25,7 @@ export class CoreBuilder {
     })
     container.register({
       token: messageQueueToken,
-      useFactory: c => new MessageQueue(this.onQueueEmptyProvider(c))
+      useFactory: c => new MessageQueue(this.onQueueEmptyProvider(c), c.resolve(loggerToken))
     })
     container.register({
       token: messageBusToken,

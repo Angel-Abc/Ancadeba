@@ -1,6 +1,7 @@
 import { Token, token } from '@ioc/token'
 import { engineInitializerToken, IEngineInitializer } from './engineInitializer'
-import { logDebug } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 
 /**
@@ -17,7 +18,7 @@ export interface IGameEngine {
 
 const logName: string = 'GameEngine'
 export const gameEngineToken = token<IGameEngine>(logName)
-export const gameEngineDependencies: Token<unknown>[] = [engineInitializerToken]
+export const gameEngineDependencies: Token<unknown>[] = [engineInitializerToken, loggerToken]
 
 /**
  * Concrete implementation of {@link IGameEngine} responsible for bootstrapping
@@ -30,7 +31,8 @@ export class GameEngine implements IGameEngine {
      * @param engineInitializer - Performs game initialization routines.
      */
     constructor(
-        private engineInitializer: IEngineInitializer
+        private engineInitializer: IEngineInitializer,
+        private logger: ILogger
     ) {
     }
 
@@ -40,7 +42,7 @@ export class GameEngine implements IGameEngine {
      * @returns A promise that resolves when the engine has fully started.
      */
     async start(): Promise<void> {
-        logDebug(logName, 'Starting game engine...')
+        this.logger.debug(logName, 'Starting game engine...')
         await this.engineInitializer.initialize()
     }
 }

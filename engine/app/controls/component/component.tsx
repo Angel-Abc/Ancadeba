@@ -1,5 +1,5 @@
 import { Component as ComponentData } from '@loader/data/component'
-import { logWarning } from '@utils/logMessage'
+import { loggerToken, type ILogger } from '@utils/logger'
 import { IComponentRegistry, componentRegistryToken } from '@registries/componentRegistry'
 import { useService } from '@app/iocProvider'
 
@@ -13,7 +13,8 @@ interface ComponentProps {
  * @param component - Definition of the unknown component.
  */
 const DefaultComponent: React.FC<ComponentProps> = ({ component }): React.JSX.Element => {
-    logWarning('Component', 'Unknown component type: {0}', component.type)
+    const logger = useService<ILogger>(loggerToken)
+    logger.warn('Component', 'Unknown component type: {0}', component.type)
     return (
         <div>Unsupported component type: {component.type}</div>
     )

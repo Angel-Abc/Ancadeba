@@ -1,6 +1,8 @@
-import { token } from '@ioc/token'
+import { token, type Token } from '@ioc/token'
 import { Language } from '@loader/data/language'
-import { fatalError, logWarning } from '@utils/logMessage'
+import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Exposes translation utilities for converting keys to localized strings.
@@ -26,14 +28,16 @@ export interface ITranslationService {
 
 const logName = 'TranslationService'
 export const translationServiceToken = token<ITranslationService>(logName)
+export const translationServiceDependencies: Token<unknown>[] = [loggerToken]
 
 /**
  * Service that resolves translation keys using provided {@link Language} data.
  * Must have a language configured before translation; otherwise `fatalError` is invoked.
- * If a key cannot be translated, `logWarning` is emitted and the key is returned.
+ * If a key cannot be translated, a warning is emitted and the key is returned.
  */
 export class TranslationService implements ITranslationService {
     private language: Language | null = null
+    constructor(private logger: ILogger) {}
 
     /**
      * Translates a key using the current language.
@@ -47,7 +51,7 @@ export class TranslationService implements ITranslationService {
         if (this.language === null) fatalError(logName, 'Language not set for translation')
         const translation = this.language.translations[key]
         if (translation === undefined) {
-            logWarning(logName, 'Missing translation for key {0}', key)
+            this.logger.warn(logName, 'Missing translation for key {0}', key)
             return key
         }
         return translation

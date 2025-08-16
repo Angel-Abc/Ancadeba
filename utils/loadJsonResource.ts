@@ -3,7 +3,8 @@
  * Emits debug logs and halts execution via {@link fatalError} on failure.
  */
 import { ZodType } from 'zod'
-import { fatalError, logDebug } from './logMessage'
+import { fatalError } from './logMessage'
+import type { ILogger } from './logger'
 
 const logName = 'loadJsonResource'
 
@@ -17,8 +18,8 @@ const logName = 'loadJsonResource'
  * JSON is invalid, or the data fails schema validation. Errors are reported via
  * {@link fatalError} which throws.
  */
-export async function loadJsonResource<T>(url: string, schema: ZodType<T>): Promise<T> {
-    logDebug(logName, 'Fetching JSON resource from {0}', url)
+export async function loadJsonResource<T>(url: string, schema: ZodType<T>, logger: ILogger): Promise<T> {
+    logger.debug(logName, 'Fetching JSON resource from {0}', url)
     let response: Response
     try {
         response = await fetch(url)
@@ -44,7 +45,7 @@ export async function loadJsonResource<T>(url: string, schema: ZodType<T>): Prom
         fatalError(logName, 'Schema validation failed for resource {0} with error {1}', url, parseResult.error.message)
     }
 
-    logDebug(logName, 'Resulting object: {0}', parseResult.data)
+    logger.debug(logName, 'Resulting object: {0}', parseResult.data)
 
     return parseResult.data
 }

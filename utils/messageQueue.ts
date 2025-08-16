@@ -7,7 +7,7 @@
  */
 import { token } from '@ioc/token'
 import type { Message } from './types'
-import { logWarning } from './logMessage'
+import type { ILogger } from './logger'
 
 /**
  * Contract for message queues used by the {@link MessageBus}.
@@ -53,13 +53,15 @@ export class MessageQueue implements IMessageQueue {
     private emptyQueueAfterPost = 0
     private handler: ((message: Message) => void | Promise<void>) | null = null
     private readonly onQueueEmpty: () => void
+    private readonly logger: ILogger
 
     /**
      * Create a new message queue.
      * @param onQueueEmpty - Callback invoked after the queue has been fully drained.
      */
-    constructor(onQueueEmpty: () => void) {
+    constructor(onQueueEmpty: () => void, logger: ILogger) {
         this.onQueueEmpty = onQueueEmpty
+        this.logger = logger
     }
 
     /**
@@ -114,7 +116,7 @@ export class MessageQueue implements IMessageQueue {
                     try {
                         await result
                     } catch (err) {
-                        logWarning(logName, 'Error processing message {0}: {1}', message.message, err)
+                        this.logger.warn(logName, 'Error processing message {0}: {1}', message.message, err)
                     }
                 }
             }
@@ -127,7 +129,7 @@ export class MessageQueue implements IMessageQueue {
         try {
             this.onQueueEmpty()
         } catch (err) {
-            logWarning(logName, 'Error handling empty queue: {0}', err)
+            this.logger.warn(logName, 'Error handling empty queue: {0}', err)
         }
     }
 

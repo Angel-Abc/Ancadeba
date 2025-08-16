@@ -2,11 +2,14 @@ import { describe, it, expect, vi } from 'vitest'
 import { MessageBus } from '@utils/messageBus'
 import { MessageQueue } from '@utils/messageQueue'
 import type { Message } from '@utils/types'
+import type { ILogger } from '@utils/logger'
 
 describe('MessageBus', () => {
   it('delivers posted messages to registered listeners', async () => {
-    const queue = new MessageQueue(() => {})
-    const bus = new MessageBus(queue)
+    const queueLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const busLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(() => {}, queueLogger)
+    const bus = new MessageBus(queue, busLogger)
     const handler = vi.fn()
     bus.registerMessageListener('test', handler)
 
@@ -18,8 +21,10 @@ describe('MessageBus', () => {
   })
 
   it('unregistering listener prevents it from receiving messages', async () => {
-    const queue = new MessageQueue(() => {})
-    const bus = new MessageBus(queue)
+    const queueLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const busLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(() => {}, queueLogger)
+    const bus = new MessageBus(queue, busLogger)
     const handler = vi.fn()
     const cleanup = bus.registerMessageListener('remove', handler)
     cleanup()
@@ -31,8 +36,10 @@ describe('MessageBus', () => {
   })
 
   it('queues messages when auto-drain is disabled and processes them when enabled', async () => {
-    const queue = new MessageQueue(() => {})
-    const bus = new MessageBus(queue)
+    const queueLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const busLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(() => {}, queueLogger)
+    const bus = new MessageBus(queue, busLogger)
     const handled: Message[] = []
     bus.registerMessageListener('queued', m => {
       handled.push(m)
@@ -50,8 +57,10 @@ describe('MessageBus', () => {
   })
 
   it('removes map entry once all listeners are unregistered', () => {
-    const queue = new MessageQueue(() => {})
-    const bus = new MessageBus(queue)
+    const queueLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const busLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(() => {}, queueLogger)
+    const bus = new MessageBus(queue, busLogger)
     const handler1 = vi.fn()
     const handler2 = vi.fn()
     const cleanup1 = bus.registerMessageListener('event', handler1)
@@ -68,8 +77,10 @@ describe('MessageBus', () => {
   })
 
   it('handles messages with diverse payload types', async () => {
-    const queue = new MessageQueue(() => {})
-    const bus = new MessageBus(queue)
+    const queueLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const busLogger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(() => {}, queueLogger)
+    const bus = new MessageBus(queue, busLogger)
     const boolHandler = vi.fn()
     const arrayHandler = vi.fn()
     bus.registerMessageListener('bool', boolHandler)

@@ -8,6 +8,7 @@ import { ManagersBuilder } from './managersBuilder'
 import { ProvidersBuilder } from './providersBuilder'
 import { RegistriesBuilder } from './registriesBuilder'
 import { ServicesBuilder } from './servicesBuilder'
+import { ConsoleLogger, loggerToken } from '@utils/logger'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -42,6 +43,7 @@ export class ContainerBuilder implements IContainerBuilder {
    */
   public build(): Container {
     const result = new Container()
+    result.register({ token: loggerToken, useClass: ConsoleLogger })
     new CoreBuilder(this.onQueueEmptyProvider).register(result)
     new ProvidersBuilder(this.dataPath).register(result)
     new LoadersBuilder().register(result)

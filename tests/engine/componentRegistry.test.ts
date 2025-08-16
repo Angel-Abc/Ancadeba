@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ComponentRegistry, componentRegistryToken, IComponentRegistry } from '@registries/componentRegistry'
-import * as log from '../../utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { Container } from '@ioc/container'
 
 describe('ComponentRegistry', () => {
@@ -9,7 +10,9 @@ describe('ComponentRegistry', () => {
 
     beforeEach(() => {
         container = new Container()
-        container.register<IComponentRegistry>({ token: componentRegistryToken, useClass: ComponentRegistry })
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        container.register({ token: loggerToken, useValue: logger })
+        container.register<IComponentRegistry>({ token: componentRegistryToken, useClass: ComponentRegistry, deps: [loggerToken] })
         registry = container.resolve(componentRegistryToken)
         registry.clear()
     })
@@ -18,15 +21,13 @@ describe('ComponentRegistry', () => {
         const key = 'test-component'
         const original = () => null
         const duplicate = () => null
-        const warningSpy = vi.spyOn(log, 'logWarning')
+        const logger = container.resolve(loggerToken)
 
         registry.registerComponent(key, original)
         registry.registerComponent(key, duplicate)
 
-        expect(warningSpy).toHaveBeenCalledTimes(1)
+        expect(logger.warn).toHaveBeenCalledTimes(1)
         expect(registry.getComponent(key)).toBe(original)
-
-        warningSpy.mockRestore()
     })
 
     it('returns undefined when no component registered for type', () => {

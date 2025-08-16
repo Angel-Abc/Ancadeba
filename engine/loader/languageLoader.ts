@@ -7,6 +7,8 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { type Language as LanguageData } from './data/language'
 import { Language, languageSchema } from './schema/language'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { mapLanguage } from './mappers/language'
 import { fatalError } from '@utils/logMessage'
 
@@ -25,7 +27,7 @@ export interface ILanguageLoader {
 
 const logName = 'LanguageLoader'
 export const languageLoaderToken = token<ILanguageLoader>(logName)
-export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const languageLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads language data using a base path provided by {@link IDataPathProvider}.
@@ -34,7 +36,7 @@ export class LanguageLoader implements ILanguageLoader {
     /**
      * @param dataPathProvider Provides the base directory for language data files.
      */
-    constructor(private dataPathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) {
     }
 
     /**
@@ -50,7 +52,7 @@ export class LanguageLoader implements ILanguageLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<Language>(`${this.dataPathProvider.dataPath}/${path}`, languageSchema))
+            paths.map(path => loadJsonResource<Language>(`${this.dataPathProvider.dataPath}/${path}`, languageSchema, this.logger))
         )
         const languages = schemas.map(mapLanguage)
 

@@ -12,6 +12,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { fatalError } from '@utils/logMessage'
 import { mapLanguage } from '@loader/mappers/language'
 import { LanguageLoader } from '@loader/languageLoader'
+import type { ILogger } from '@utils/logger'
 
 const dataPathProvider = { dataPath: '/base' }
 
@@ -30,11 +31,12 @@ describe('LanguageLoader', () => {
       .mockReturnValueOnce({ id: 'en', translations: { a: '1' } })
       .mockReturnValueOnce({ id: 'en', translations: { b: '2' } })
 
-    const loader = new LanguageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader(dataPathProvider, logger)
     const result = await loader.loadLanguage(['lang/en.json', 'lang/en-extra.json'])
 
-    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/lang/en.json', expect.anything())
-    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/lang/en-extra.json', expect.anything())
+    expect(loadJsonResource).toHaveBeenNthCalledWith(1, '/base/lang/en.json', expect.anything(), logger)
+    expect(loadJsonResource).toHaveBeenNthCalledWith(2, '/base/lang/en-extra.json', expect.anything(), logger)
     const mock = mapLanguage as unknown as Mock
     expect(mock.mock.calls[0][0]).toBe(schema1)
     expect(mock.mock.calls[1][0]).toBe(schema2)
@@ -42,7 +44,8 @@ describe('LanguageLoader', () => {
   })
 
   it('throws when no language paths provided', async () => {
-    const loader = new LanguageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader(dataPathProvider, logger)
     await expect(loader.loadLanguage([])).rejects.toThrow('No language paths provided')
   })
 
@@ -56,7 +59,8 @@ describe('LanguageLoader', () => {
       .mockReturnValueOnce({ id: 'en', translations: {} })
       .mockReturnValueOnce({ id: 'fr', translations: {} })
 
-    const loader = new LanguageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader(dataPathProvider, logger)
     await expect(loader.loadLanguage(['a.json', 'b.json'])).rejects.toThrow(/Language ID mismatch/)
   })
 
@@ -66,7 +70,8 @@ describe('LanguageLoader', () => {
     })
     ;(loadJsonResource as unknown as Mock).mockImplementation(() => fatalError('fail'))
 
-    const loader = new LanguageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader(dataPathProvider, logger)
     await expect(loader.loadLanguage(['a.json'])).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()
@@ -80,7 +85,8 @@ describe('LanguageLoader', () => {
     })
     ;(mapLanguage as unknown as Mock).mockImplementation(() => fatalError('invalid'))
 
-    const loader = new LanguageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader(dataPathProvider, logger)
     await expect(loader.loadLanguage(['a.json'])).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()
