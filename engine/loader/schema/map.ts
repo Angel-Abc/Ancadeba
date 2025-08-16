@@ -10,16 +10,16 @@ export const mapTileSchema = z.object({
 export const squaresMapSchema = z.object({
     key: z.string(),
     type: z.literal('squares-map'),
-    width: z.int().positive(),
-    height: z.int().positive(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
     tileSets: z.array(z.string()),
     tiles: z.array(mapTileSchema),
     map: z.array(z.string()),
 })
 
 export const positionSchema = z.object({
-    x: z.int().nonnegative(),
-    y: z.int().nonnegative()
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative()
 })
 
 export const gameMapSchema = z.discriminatedUnion('type', [squaresMapSchema])
