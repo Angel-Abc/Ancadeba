@@ -1,7 +1,8 @@
 import { Token, token } from '@ioc/token'
 import { ITileSetLoader, tileSetLoaderToken } from '@loader/tileSetLoader'
-import { fatalError } from '@utils/logMessage'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Handles loading of tile sets required by maps.
@@ -14,7 +15,8 @@ const logName = 'TileSetManager'
 export const tileSetManagerToken = token<ITileSetManager>(logName)
 export const tileSetManagerDependencies: Token<unknown>[] = [
     gameDataProviderToken,
-    tileSetLoaderToken
+    tileSetLoaderToken,
+    loggerToken
 ]
 
 /**
@@ -23,7 +25,8 @@ export const tileSetManagerDependencies: Token<unknown>[] = [
 export class TileSetManager implements ITileSetManager {
     constructor(
         private gameDataProvider: IGameDataProvider,
-        private tileSetLoader: ITileSetLoader
+        private tileSetLoader: ITileSetLoader,
+        private logger: ILogger
     ) {}
 
     /**
@@ -37,7 +40,10 @@ export class TileSetManager implements ITileSetManager {
         await Promise.all(
             tileSetIds.map(async tileSetId => {
                 const path = this.gameDataProvider.Game.game.tiles[tileSetId]
-                if (!path) fatalError(logName, 'Tile set not found for id {0}', tileSetId)
+                if (!path) {
+                    this.logger.error(logName, 'Tile set not found for id {0}', tileSetId)
+                    throw new Error(`Tile set not found for id ${tileSetId}`)
+                }
 
                 if (!this.gameDataProvider.Game.loadedTileSets.has(tileSetId)) {
                     const tileSet = await this.tileSetLoader.loadTileSet(path)
