@@ -3,7 +3,7 @@ import { CoreBuilder } from '@builders/coreBuilder'
 import { engineInitializerToken } from '@engine/engineInitializer'
 import { gameEngineToken } from '@engine/gameEngine'
 import { turnSchedulerToken } from '@engine/turnScheduler'
-import { keyboardeventListenerToken } from '@utils/keyboardEventListener'
+import { keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { messageBusToken } from '@utils/messageBus'
 import { messageQueueToken } from '@utils/messageQueue'
 import { Container } from '@ioc/container'
@@ -33,7 +33,7 @@ describe('coreBuilder', () => {
         messageQueueToken,
         turnSchedulerToken,
         engineInitializerToken,
-        keyboardeventListenerToken,
+        keyboardEventListenerToken,
       ])
     )
   })

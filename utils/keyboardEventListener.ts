@@ -41,8 +41,8 @@ export interface IKeyboardEventListener {
 }
 
 const logName = 'KeyboardEventListener'
-export const keyboardeventListenerToken = token<IKeyboardEventListener>(logName)
-export const keyboardeventListenerDependencies: Token<unknown>[] = []
+export const keyboardEventListenerToken = token<IKeyboardEventListener>(logName)
+export const keyboardEventListenerDependencies: Token<unknown>[] = []
 export class KeyboardEventListener implements IKeyboardEventListener {
     private key: number = 0
     private listeners: EventListener[] = []
