@@ -5,7 +5,8 @@ import { Language } from '@loader/data/language'
 import { GameMap, Position } from '@loader/data/map'
 import { Page } from '@loader/data/page'
 import { Tile } from '@loader/data/tile'
-import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 /**
  * Runtime representation of the game state.
@@ -50,18 +51,26 @@ export interface IGameDataProvider {
 
 const logName = 'GameDataProvider'
 export const gameDataProviderToken = token<IGameDataProvider>(logName)
-export const gameDataProviderDependencies: Token<unknown>[] = []
+export const gameDataProviderDependencies: Token<unknown>[] = [loggerToken]
 export class GameDataProvider implements IGameDataProvider {
     private game: GameData | null = null
     private context: GameContext | null = null
 
-    public get Game(): GameData { 
-        if (!this.game) fatalError(logName, 'Game data not loaded')
-        return this.game 
+    constructor(private logger: ILogger) {}
+
+    public get Game(): GameData {
+        if (!this.game) {
+            const message = this.logger.error(logName, 'Game data not loaded')
+            throw new Error(message)
+        }
+        return this.game
     }
 
     public get Context(): GameContext {
-        if (!this.context) fatalError(logName, 'Game context not loaded')
+        if (!this.context) {
+            const message = this.logger.error(logName, 'Game context not loaded')
+            throw new Error(message)
+        }
         return this.context
     }
 
@@ -78,7 +87,10 @@ export class GameDataProvider implements IGameDataProvider {
      * - Sets `context` to the game's initial data with `currentPageId` reset to `null`.
      */
     public initialize(gameData: Game): void {
-        if (this.game) fatalError(logName, 'Game data already initialized')
+        if (this.game) {
+            const message = this.logger.error(logName, 'Game data already initialized')
+            throw new Error(message)
+        }
         this.game = {
             game: gameData,
             loadedLanguages: {},
