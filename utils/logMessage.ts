@@ -99,19 +99,6 @@ export function logMessage(
     return finalMessage
 }
 
-function createLogger(level: LogLevel) {
-    return (categoryOrMessage: string, messageOrArg?: unknown, ...args: unknown[]): string => {
-        if (typeof messageOrArg === 'string') {
-            return logMessage(level, categoryOrMessage, messageOrArg, ...args)
-        }
-        const params = messageOrArg === undefined ? args : [messageOrArg, ...args]
-        return logMessage(level, undefined, categoryOrMessage, ...params)
-    }
-}
-
-export const logDebug = createLogger(LogLevel.debug)
-export const logInfo = createLogger(LogLevel.info)
-export const logWarning = createLogger(LogLevel.warning)
 /**
  * Logs an error level message and immediately throws an {@link Error}.
  *

@@ -12,6 +12,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { fatalError } from '@utils/logMessage'
 import { mapGame } from '@loader/mappers/game'
 import { GameLoader } from '@loader/gameLoader'
+import type { ILogger } from '@utils/logger'
 
 const dataPathProvider = { dataPath: '/base' }
 
@@ -26,10 +27,11 @@ describe('GameLoader', () => {
     const mapped = { mapped: true }
     ;(mapGame as unknown as Mock).mockReturnValue(mapped)
 
-    const loader = new GameLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new GameLoader(dataPathProvider, logger)
     const result = await loader.loadGame()
 
-    expect(loadJsonResource).toHaveBeenCalledWith('/base/index.json', expect.anything())
+    expect(loadJsonResource).toHaveBeenCalledWith('/base/index.json', expect.anything(), logger)
     expect(mapGame).toHaveBeenCalledWith(schema, '/base')
     expect(result).toBe(mapped)
   })
@@ -40,7 +42,8 @@ describe('GameLoader', () => {
     })
     ;(loadJsonResource as unknown as Mock).mockImplementation(() => fatalError('fail'))
 
-    const loader = new GameLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new GameLoader(dataPathProvider, logger)
     await expect(loader.loadGame()).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()
@@ -54,7 +57,8 @@ describe('GameLoader', () => {
     })
     ;(mapGame as unknown as Mock).mockImplementation(() => fatalError('invalid'))
 
-    const loader = new GameLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new GameLoader(dataPathProvider, logger)
     await expect(loader.loadGame()).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()

@@ -1,8 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { DomManager } from '../../engine/managers/domManager'
+import type { ILogger } from '@utils/logger'
 
 describe('DomManager', () => {
   beforeEach(() => {
@@ -11,20 +12,22 @@ describe('DomManager', () => {
 
   it('avoids writing duplicate css links', () => {
     const path = '/style.css'
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 
-    const first = new DomManager()
+    const first = new DomManager(logger)
     first.setCssFile(path)
     first.setCssFile(path)
     expect(document.head.querySelectorAll(`link[href="${path}"]`).length).toBe(1)
 
-    const second = new DomManager()
+    const second = new DomManager(logger)
     second.setCssFile(path)
     expect(document.head.querySelectorAll(`link[href="${path}"]`).length).toBe(1)
   })
 
   it('does nothing when document is unavailable', () => {
     const path = '/style.css'
-    const manager = new DomManager(null)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const manager = new DomManager(logger, null)
     expect(() => manager.setCssFile(path)).not.toThrow()
     expect(() => manager.setTitle('test')).not.toThrow()
     expect(document.head.querySelectorAll(`link[href="${path}"]`).length).toBe(0)

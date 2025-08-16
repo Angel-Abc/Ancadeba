@@ -1,11 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { MessageQueue } from '@utils/messageQueue'
+import type { ILogger } from '@utils/logger'
 import type { Message } from '@utils/types'
 
 describe('MessageQueue', () => {
   it('processes messages and calls handler', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const handled: Message[] = []
     queue.setHandler(m => {
       handled.push(m)
@@ -21,7 +23,8 @@ describe('MessageQueue', () => {
 
   it('processes queued messages after handler is set', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const handled: Message[] = []
 
     queue.postMessage({ message: 'a', payload: null })
@@ -39,7 +42,8 @@ describe('MessageQueue', () => {
 
   it('queues messages when auto-drain disabled and drains when enabled', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const handled: string[] = []
     queue.setHandler(m => {
       handled.push(m.message)
@@ -59,7 +63,8 @@ describe('MessageQueue', () => {
 
   it('drains queue manually and waits for async handlers', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const order: string[] = []
     queue.setHandler(async m => {
       order.push(m.message)
@@ -77,7 +82,8 @@ describe('MessageQueue', () => {
 
   it('awaits thenable results', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const order: string[] = []
     queue.setHandler(m => ({
       then: (resolve: () => void) => {
@@ -100,7 +106,8 @@ describe('MessageQueue', () => {
 
   it('reprocesses messages posted during draining before calling onQueueEmpty', async () => {
     const onEmpty = vi.fn()
-    const queue = new MessageQueue(onEmpty)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
     const handled: string[] = []
     queue.setHandler(m => {
       handled.push(m.message)

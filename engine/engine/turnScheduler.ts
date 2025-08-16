@@ -7,7 +7,8 @@
 import { Token, token } from '@ioc/token'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { FINALIZE_END_TURN_MESSAGE, START_END_TURN_MESSAGE } from '@messages/system'
-import { logDebug } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 
 export interface ITurnScheduler {
@@ -34,7 +35,7 @@ export type EndingTurnState = typeof EndingTurnState[keyof typeof EndingTurnStat
 
 const logName: string = 'TurnScheduler'
 export const turnSchedulerToken = token<ITurnScheduler>(logName)
-export const turnSchedulerDependencies: Token<unknown>[] = [messageBusToken]
+export const turnSchedulerDependencies: Token<unknown>[] = [messageBusToken, loggerToken]
 
 /**
  * Listens for empty message queues and progresses the game through the end of
@@ -49,7 +50,7 @@ export class TurnScheduler implements ITurnScheduler {
      * Creates a new scheduler wired to the provided message bus.
      * @param messageBus Bus used to post turn progression messages.
      */
-    constructor(private messageBus: IMessageBus) {
+    constructor(private messageBus: IMessageBus, private logger: ILogger) {
         this.endingTurn = EndingTurnState.NOT_STARTED
     }
 
@@ -76,7 +77,7 @@ export class TurnScheduler implements ITurnScheduler {
                 break
             case EndingTurnState.FINALIZING:
                 this.endingTurn = EndingTurnState.NOT_STARTED
-                logDebug(logName, 'Turn finalized')
+                this.logger.debug(logName, 'Turn finalized')
                 break
         }
     }

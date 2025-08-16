@@ -2,12 +2,14 @@ import { describe, it, expect, vi } from 'vitest'
 import { TurnScheduler } from '../../engine/engine/turnScheduler'
 import { START_END_TURN_MESSAGE, FINALIZE_END_TURN_MESSAGE } from '../../engine/messages/system'
 import type { IMessageBus } from '../../utils/messageBus'
+import type { ILogger } from '@utils/logger'
 
 describe('TurnScheduler', () => {
   it('transitions state on successive empty queue events', () => {
     const postMessage = vi.fn()
     const bus = { postMessage } as unknown as IMessageBus
-    const scheduler = new TurnScheduler(bus)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const scheduler = new TurnScheduler(bus, logger)
 
     // first event: start ending turn
     scheduler.onQueueEmpty()

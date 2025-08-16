@@ -5,7 +5,9 @@ import { domManagerToken, IDomManager } from '@managers/domManager'
 import { ILanguageManager, languageManagerToken } from '@managers/languageManager'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { Game } from '@loader/data/game'
-import { fatalError, logDebug } from '@utils/logMessage'
+import { fatalError } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
 import { actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
 import { postMessageActionToken } from '@actions/postMessageAction'
@@ -40,7 +42,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     actionManagerToken,
     mapManagerToken,
     virtualKeyProviderToken,
-    virtualInputProviderToken
+    virtualInputProviderToken,
+    loggerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -70,7 +73,8 @@ export class EngineInitializer implements IEngineInitializer {
         private actionManager: IActionManager,
         private mapManager: IMapManager,
         private virtualKeyProvider: IVirtualKeyProvider,
-        private virtualInputProvider: IVirtualInputProvider
+        private virtualInputProvider: IVirtualInputProvider,
+        private logger: ILogger
     ){}
 
     /**
@@ -119,7 +123,7 @@ export class EngineInitializer implements IEngineInitializer {
         this.domManager.setTitle(game.title)
         game.cssFiles.forEach((cssFile: string) => {
             this.domManager.setCssFile(cssFile)
-            logDebug(logName, 'CSS file {0} set', cssFile)
+            this.logger.debug(logName, 'CSS file {0} set', cssFile)
         })
     }
 
@@ -132,7 +136,7 @@ export class EngineInitializer implements IEngineInitializer {
     private async loadGameDataRoot(): Promise<Game> {
         const game = await this.gameLoader.loadGame()
         if (!game) fatalError(logName, 'Game data is null or undefined')
-        logDebug(logName, 'Game loaded with data {0}', game)
+        this.logger.debug(logName, 'Game loaded with data {0}', game)
         return game
     }
 }

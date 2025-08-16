@@ -7,6 +7,8 @@ import { Token, token } from '@ioc/token'
 import { type GameMap as GameMapData } from './data/map'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { GameMap, gameMapSchema } from './schema/map'
 import { mapGameMap } from './mappers/map'
 
@@ -25,7 +27,7 @@ export interface IGameMapLoader {
 
 const logName = 'GameMapLoader'
 export const gameMapLoaderToken = token<IGameMapLoader>(logName)
-export const gameMapLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const gameMapLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 /**
  * Retrieves map data using a base path provided by
  * {@link IDataPathProvider}.
@@ -34,7 +36,7 @@ export class GameMapLoader implements IGameMapLoader {
     /**
      * @param dataPathProvider Supplies the directory containing map resources.
      */
-    constructor(private dataPathProvider: IDataPathProvider) { }
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) { }
 
     /**
      * Reads a map file, validates its structure and maps it into engine
@@ -44,7 +46,7 @@ export class GameMapLoader implements IGameMapLoader {
      * @returns The mapped {@link GameMapData} object.
      */
     public async loadMap(path: string): Promise<GameMapData> {
-        const schema = await loadJsonResource<GameMap>(`${this.dataPathProvider.dataPath}/${path}`, gameMapSchema)
+        const schema = await loadJsonResource<GameMap>(`${this.dataPathProvider.dataPath}/${path}`, gameMapSchema, this.logger)
         return mapGameMap(schema)
     }
 }

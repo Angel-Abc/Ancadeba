@@ -3,6 +3,8 @@ import { type VirtualInputs as VirtualInputsData } from './data/inputs'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { fatalError } from '@utils/logMessage'
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { VirtualInputs, virtualInputsSchema } from './schema/inputs'
 import { mapVirtualInputs } from './mappers/input'
 
@@ -23,7 +25,7 @@ export interface IVirtualInputsLoader {
 
 const logName = 'VirtualInputsLoader'
 export const virtualInputsLoaderToken = token<IVirtualInputsLoader>(logName)
-export const virtualInputsLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const virtualInputsLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads virtual input definitions using a base path provider.
@@ -34,7 +36,8 @@ export class VirtualInputsLoader implements IVirtualInputsLoader {
      * files.
      */
     constructor(
-        private dataPathProvider: IDataPathProvider
+        private dataPathProvider: IDataPathProvider,
+        private logger: ILogger
     ){}
 
     /**
@@ -51,7 +54,7 @@ export class VirtualInputsLoader implements IVirtualInputsLoader {
         }
 
         const schemas = await Promise.all(
-            paths.map(path => loadJsonResource<VirtualInputs>(`${this.dataPathProvider.dataPath}/${path}`, virtualInputsSchema))
+            paths.map(path => loadJsonResource<VirtualInputs>(`${this.dataPathProvider.dataPath}/${path}`, virtualInputsSchema, this.logger))
         )
 
         const result = schemas.reduce<VirtualInputsData>((acc, schema) => [...acc, ...mapVirtualInputs(schema)], [])

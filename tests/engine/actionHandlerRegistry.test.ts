@@ -4,7 +4,8 @@ import { token } from '@ioc/token'
 import { Container } from '@ioc/container'
 import { IServiceProvider, ServiceProvider, serviceProviderToken } from '@providers/serviceProvider'
 import type { PostMessageAction } from '@loader/data/action'
-import * as log from '../../utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 class TestHandler implements IActionHandler<PostMessageAction> {
     public readonly type = 'post-message'
@@ -26,6 +27,8 @@ describe('ActionHandlerRegistry', () => {
 
     beforeEach(() => {
         container = new Container()
+        const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        container.register({ token: loggerToken, useValue: logger })
         container.register<IServiceProvider>({ token: serviceProviderToken, useFactory: c => new ServiceProvider(c) })
         container.register<IActionHandlerRegistry>({ token: actionHandlerRegistryToken, useClass: ActionHandlerRegistry, deps: actionHandlerRegistryDependencies })
         registry = container.resolve(actionHandlerRegistryToken)
@@ -51,15 +54,13 @@ describe('ActionHandlerRegistry', () => {
         const DUPLICATE = token<IActionHandler<PostMessageAction>>('duplicate')
         container.register({ token: HANDLER, useClass: TestHandler })
         container.register({ token: DUPLICATE, useClass: OtherHandler })
-        const warningSpy = vi.spyOn(log, 'logWarning')
+        const logger = container.resolve(loggerToken)
 
         registry.registerActionHandler('post-message', HANDLER)
         registry.registerActionHandler('post-message', DUPLICATE)
 
         const handler = registry.getActionHandler('post-message')
-        expect(warningSpy).toHaveBeenCalledTimes(1)
+        expect(logger.warn).toHaveBeenCalledTimes(1)
         expect(handler).toBeInstanceOf(TestHandler)
-
-        warningSpy.mockRestore()
     })
 })

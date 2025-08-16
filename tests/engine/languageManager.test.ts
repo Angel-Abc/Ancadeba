@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { LanguageManager } from '../../engine/managers/languageManager'
 import { LanguageLoader, type ILanguageLoader } from '../../engine/loader/languageLoader'
+import type { ILogger } from '@utils/logger'
 import type { ITranslationService } from '../../engine/services/translationService'
 import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
 import type { Language } from '@loader/data/language'
@@ -33,7 +34,8 @@ describe('LanguageManager', () => {
   })
 
   it('throws when language paths are empty', async () => {
-    const loader = new LanguageLoader({ dataPath: '' })
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new LanguageLoader({ dataPath: '' }, logger)
     const translationService: ITranslationService = {
       translate: vi.fn(),
       setLanguage: vi.fn()

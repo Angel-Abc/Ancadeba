@@ -4,6 +4,8 @@
  * representation for the engine to consume.
  */
 import { loadJsonResource } from '@utils/loadJsonResource'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { Game as GameData } from './data/game'
 import { Game, gameSchema } from './schema/game'
@@ -23,7 +25,7 @@ export interface IGameLoader {
 }
 
 export const gameLoaderToken = token<IGameLoader>('GameLoader')
-export const gameLoaderDependencies: Token<unknown>[] = [dataPathProviderToken]
+export const gameLoaderDependencies: Token<unknown>[] = [dataPathProviderToken, loggerToken]
 
 /**
  * Loads game data using a base path provided by {@link IDataPathProvider}.
@@ -33,7 +35,7 @@ export class GameLoader implements IGameLoader {
     /**
      * @param dataPathProvider Provides the base directory for game data files.
      */
-    constructor(private dataPathProvider: IDataPathProvider) {
+    constructor(private dataPathProvider: IDataPathProvider, private logger: ILogger) {
     }
 
     /**
@@ -42,7 +44,7 @@ export class GameLoader implements IGameLoader {
      * @returns The fully mapped {@link GameData} object.
      */
     async loadGame(): Promise<GameData> {
-        const game = await loadJsonResource<Game>(`${this.dataPathProvider.dataPath}/index.json`, gameSchema)
+        const game = await loadJsonResource<Game>(`${this.dataPathProvider.dataPath}/index.json`, gameSchema, this.logger)
         return mapGame(game, this.dataPathProvider.dataPath)
     }
 }

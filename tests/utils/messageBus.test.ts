@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { MessageBus } from '../../utils/messageBus'
 import type { IMessageQueue } from '../../utils/messageQueue'
 import type { Message } from '../../utils/types'
-import * as log from '../../utils/logMessage'
+import type { ILogger } from '../../utils/logger'
 
 class TestQueue implements IMessageQueue {
     private handler: ((message: Message) => void | Promise<void>) | null = null
@@ -20,28 +20,25 @@ class TestQueue implements IMessageQueue {
 
 describe('MessageBus notification messages', () => {
     let bus: MessageBus
+    let logger: ILogger
     beforeEach(() => {
         const queue = new TestQueue()
-        bus = new MessageBus(queue)
+        logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        bus = new MessageBus(queue, logger)
         vi.restoreAllMocks()
     })
 
     it('unregisterNotificationMessage re-enables warnings', () => {
-        const debugSpy = vi.spyOn(log, 'logDebug')
-        const warningSpy = vi.spyOn(log, 'logWarning')
-
         bus.registerNotificationMessage('silent')
         bus.postMessage({ message: 'silent' })
+        expect(logger.debug).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
+        expect(logger.warn).not.toHaveBeenCalled()
 
-        expect(debugSpy).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
-        expect(warningSpy).not.toHaveBeenCalled()
-
-        debugSpy.mockClear()
-        warningSpy.mockClear()
+        ;(logger.debug as Mock).mockClear()
+        ;(logger.warn as Mock).mockClear()
 
         bus.unregisterNotificationMessage('silent')
         bus.postMessage({ message: 'silent' })
-
-        expect(warningSpy).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
+        expect(logger.warn).toHaveBeenCalledWith('MessageBus', 'No message listener for message: {0}', 'silent')
     })
 })

@@ -7,7 +7,8 @@
 import { GameMenuComponent } from '@app/controls/component/gameMenuComponent'
 import { ImageComponent } from '@app/controls/component/imageComponent'
 import { ComponentType } from 'react'
-import { logWarning } from '@utils/logMessage'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { token, Token } from '@ioc/token'
 import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
 
@@ -20,12 +21,11 @@ export interface IComponentRegistry {
 const logName = 'ComponentRegistry'
 
 export const componentRegistryToken = token<IComponentRegistry>(logName)
-export const componentRegistryDependencies: Token<unknown>[] = []
+export const componentRegistryDependencies: Token<unknown>[] = [loggerToken]
 
 export class ComponentRegistry implements IComponentRegistry {
     private readonly registry = new Map<string, ComponentType<unknown>>()
-
-    constructor() {
+    constructor(private logger: ILogger) {
         this.registerComponent('image', ImageComponent)
         this.registerComponent('game-menu', GameMenuComponent)
         this.registerComponent('squares-map', SquaresMapComponent)
@@ -33,7 +33,7 @@ export class ComponentRegistry implements IComponentRegistry {
 
     public registerComponent<T = unknown>(type: string, component: ComponentType<T>): void {
         if (this.registry.has(type)) {
-            logWarning(logName, 'Component already registered under key {0}', type)
+            this.logger.warn(logName, 'Component already registered under key {0}', type)
             return
         }
         this.registry.set(type, component as ComponentType<unknown>)

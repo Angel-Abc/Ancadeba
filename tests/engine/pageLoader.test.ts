@@ -12,6 +12,7 @@ import { loadJsonResource } from '@utils/loadJsonResource'
 import { fatalError } from '@utils/logMessage'
 import { mapPage } from '@loader/mappers/page'
 import { PageLoader } from '@loader/pageLoader'
+import type { ILogger } from '@utils/logger'
 
 const dataPathProvider = { dataPath: '/base' }
 
@@ -26,10 +27,11 @@ describe('PageLoader', () => {
     const mapped = { id: 'page', content: [] }
     ;(mapPage as unknown as Mock).mockReturnValue(mapped)
 
-    const loader = new PageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new PageLoader(dataPathProvider, logger)
     const result = await loader.loadPage('pages/start.json')
 
-    expect(loadJsonResource).toHaveBeenCalledWith('/base/pages/start.json', expect.anything())
+    expect(loadJsonResource).toHaveBeenCalledWith('/base/pages/start.json', expect.anything(), logger)
     expect(mapPage).toHaveBeenCalledWith('/base', schema)
     expect(result).toBe(mapped)
   })
@@ -40,7 +42,8 @@ describe('PageLoader', () => {
     })
     ;(loadJsonResource as unknown as Mock).mockImplementation(() => fatalError('fail'))
 
-    const loader = new PageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new PageLoader(dataPathProvider, logger)
     await expect(loader.loadPage('pages/start.json')).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()
@@ -54,7 +57,8 @@ describe('PageLoader', () => {
     })
     ;(mapPage as unknown as Mock).mockImplementation(() => fatalError('invalid'))
 
-    const loader = new PageLoader(dataPathProvider)
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const loader = new PageLoader(dataPathProvider, logger)
     await expect(loader.loadPage('pages/start.json')).rejects.toThrow('fatal')
 
     expect(fatalError).toHaveBeenCalled()
