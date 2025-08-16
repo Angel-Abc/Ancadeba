@@ -4,9 +4,10 @@
  */
 import { Token, token } from '@ioc/token'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
-import { fatalError } from '@utils/logMessage'
 import { IPageLoader, pageLoaderToken } from '@loader/pageLoader'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 import { CleanUp } from '@utils/types'
 import { PAGE_SWITCHED, SWITCH_PAGE } from '@messages/system'
 
@@ -31,7 +32,7 @@ export interface IPageManager {
 
 const logName = 'PageManager'
 export const pageManagerToken = token<IPageManager>(logName)
-export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken, messageBusToken]
+export const pageManagerDependencies: Token<unknown>[] = [gameDataProviderToken, pageLoaderToken, messageBusToken, loggerToken]
 /**
  * Default implementation of {@link IPageManager} that integrates with the
  * game's data provider and message bus to control page transitions.
@@ -50,7 +51,8 @@ export class PageManager implements IPageManager {
     constructor(
         private gameDataProvider: IGameDataProvider,
         private pageLoader: IPageLoader,
-        private messageBus: IMessageBus
+        private messageBus: IMessageBus,
+        private logger: ILogger
     ) {
     }
 
@@ -83,7 +85,9 @@ export class PageManager implements IPageManager {
      */
     public async setActivePage(pageId: string): Promise<void> {
         const path = this.gameDataProvider.Game.game.pages[pageId]
-        if (!path) fatalError(logName, 'Page not found for id {0}', pageId)
+        if (!path) {
+            throw new Error(this.logger.error(logName, 'Page not found for id {0}', pageId))
+        }
 
         if (this.gameDataProvider.Game.loadedPages[pageId] === undefined) {
             const page = await this.pageLoader.loadPage(path)
