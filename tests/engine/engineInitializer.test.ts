@@ -15,6 +15,7 @@ import type { IMapManager } from '../../engine/managers/mapManager'
 import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
 import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
 import type { Game } from '../../engine/loader/data/game'
+import type { ITurnManager } from '../../engine/managers/turnManager'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -45,6 +46,7 @@ describe('EngineInitializer', () => {
     const mapManager = { initialize: vi.fn() } as unknown as IMapManager
     const virtualKeyProvider = { initialize: vi.fn() } as unknown as IVirtualKeyProvider
     const virtualInputProvider = { initialize: vi.fn() } as unknown as IVirtualInputProvider
+    const turnManager = { initialize: vi.fn() } as unknown as ITurnManager
 
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
@@ -59,7 +61,8 @@ describe('EngineInitializer', () => {
       mapManager,
       virtualKeyProvider,
       virtualInputProvider,
-      logger
+      logger,
+      turnManager
     )
 
     await initializer.initialize()
@@ -69,6 +72,7 @@ describe('EngineInitializer', () => {
     expect(pageManager.initialize).toHaveBeenCalledTimes(1)
     expect(actionManager.initialize).toHaveBeenCalledTimes(1)
     expect(mapManager.initialize).toHaveBeenCalledTimes(1)
+    expect(turnManager.initialize).toHaveBeenCalledTimes(1)
     expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
     expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')

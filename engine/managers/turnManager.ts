@@ -10,7 +10,7 @@ export interface ITurnManager {
 }
 
 const logName = 'TurnManager'
-export const turnmanagerToken = token<ITurnManager>(logName)
+export const turnManagerToken = token<ITurnManager>(logName)
 export const turnManagerDependencies: Token<unknown>[] = [inputSourcesServiceToken, messageBusToken]
 export class TurnManager implements ITurnManager {
     private cleanupFns: CleanUp[] | null = null

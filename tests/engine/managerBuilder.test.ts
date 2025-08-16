@@ -7,6 +7,7 @@ import { mapManagerToken } from '@managers/mapManager'
 import { pageManagerToken } from '@managers/pageManager'
 import { tileSetManagerToken } from '@managers/tileSetManager'
 import { playerPositionManagerToken } from '@managers/playerPositionManager'
+import { turnManagerToken } from '@managers/turnManager'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import type { ILogger } from '@utils/logger'
@@ -36,6 +37,7 @@ describe('managersBuilder', () => {
         tileSetManagerToken,
         playerPositionManagerToken,
         mapManagerToken,
+        turnManagerToken,
       ])
     )
   })

@@ -16,7 +16,7 @@ import { actionManagerToken, IActionManager } from '@managers/actionManager'
 import { IMapManager, mapManagerToken } from '@managers/mapManager'
 import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
 import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
-import { ITurnManager, turnmanagerToken } from '@managers/turnManager'
+import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -45,7 +45,7 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     virtualKeyProviderToken,
     virtualInputProviderToken,
     loggerToken,
-    turnmanagerToken
+    turnManagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
