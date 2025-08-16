@@ -1,12 +1,13 @@
 import { Token, token } from '@ioc/token'
 import { Position } from '@loader/data/map'
 import { gameMapLoaderToken, IGameMapLoader } from '@loader/gameMapLoader'
-import { ITileSetLoader, tileSetLoaderToken } from '@loader/tileSetLoader'
 import { CHANGE_POSITION, MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { fatalError } from '@utils/logMessage'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
+import { ITileSetManager, tileSetManagerToken } from './tileSetManager'
+import { IPlayerPositionManager, playerPositionManagerToken } from './playerPositionManager'
 
 /**
  * Coordinates loading and activation of maps within the game engine.
@@ -15,7 +16,6 @@ import { CleanUp } from '@utils/types'
  */
 export interface IMapManager {
     setActiveMap(mapId: string): Promise<void>
-    changePosition(position: Position): void
     initialize(): void
     cleanup(): void
 }
@@ -23,10 +23,11 @@ export interface IMapManager {
 const logName = 'MapManager'
 export const mapManagerToken = token<IMapManager>(logName)
 export const mapManagerDependencies: Token<unknown>[] = [
-    gameMapLoaderToken, 
+    gameMapLoaderToken,
     messageBusToken,
     gameDataProviderToken,
-    tileSetLoaderToken
+    tileSetManagerToken,
+    playerPositionManagerToken
 ]
 
 /**
@@ -40,7 +41,8 @@ export class MapManager implements IMapManager {
         private gameMapLoader: IGameMapLoader,
         private messageBus: IMessageBus,
         private gameDataProvider: IGameDataProvider,
-        private tileSetLoader: ITileSetLoader
+        private tileSetManager: ITileSetManager,
+        private playerPositionManager: IPlayerPositionManager
     ){}
 
     /**
@@ -75,21 +77,10 @@ export class MapManager implements IMapManager {
             this.messageBus.registerMessageListener(
                 CHANGE_POSITION,
                 message => {
-                    this.changePosition(message.payload as Position)
+                    this.playerPositionManager.changePosition(message.payload as Position)
                 }
             )
         ]
-    }
-
-    /**
-     * Updates the player's position within the current map.
-     *
-     * @param position - New coordinates for the player.
-     * @remarks Side effects: mutates the player's position in the game data
-     * provider's context.
-     */
-    public changePosition(position: Position): void {
-        this.gameDataProvider.Context.player.position = position
     }
 
     /**
@@ -108,7 +99,7 @@ export class MapManager implements IMapManager {
         if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined){
             const map = await this.gameMapLoader.loadMap(path)
             this.gameDataProvider.Game.loadedMaps[mapId] = map
-            await this.ensureTileSets(map.tileSets)
+            await this.tileSetManager.ensureTileSets(map.tileSets)
         }
 
         this.gameDataProvider.Context.currentMapId = mapId
@@ -118,25 +109,4 @@ export class MapManager implements IMapManager {
         })
     }
 
-    /**
-     * Ensures that the provided tile sets are loaded into memory.
-     *
-     * @param tileSetIds - Identifiers of tile sets required by the map.
-     * @remarks Loads tile sets that have not been previously loaded and stores
-     * them in the game data provider.
-     */
-    public async ensureTileSets(tileSetIds: string[]): Promise<void> {
-        await Promise.all(
-            tileSetIds.map(async tileSetId => {
-                const path = this.gameDataProvider.Game.game.tiles[tileSetId]
-                if (!path) fatalError(logName, 'Tile set not found for id {0}', tileSetId)
-
-                if (!this.gameDataProvider.Game.loadedTileSets.has(tileSetId)) {
-                    const tileSet = await this.tileSetLoader.loadTileSet(path)
-                    this.gameDataProvider.Game.loadedTileSets.add(tileSetId)
-                    tileSet.tiles.forEach(tile => this.gameDataProvider.Game.loadedTiles.set(tile.key, tile))
-                }
-            })
-        )
-    }
 }

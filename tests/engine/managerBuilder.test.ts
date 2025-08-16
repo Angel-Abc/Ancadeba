@@ -5,6 +5,8 @@ import { domManagerToken } from '@managers/domManager'
 import { languageManagerToken } from '@managers/languageManager'
 import { mapManagerToken } from '@managers/mapManager'
 import { pageManagerToken } from '@managers/pageManager'
+import { tileSetManagerToken } from '@managers/tileSetManager'
+import { playerPositionManagerToken } from '@managers/playerPositionManager'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 
@@ -23,6 +25,8 @@ describe('managersBuilder', () => {
         languageManagerToken,
         pageManagerToken,
         actionManagerToken,
+        tileSetManagerToken,
+        playerPositionManagerToken,
         mapManagerToken,
       ])
     )
