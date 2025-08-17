@@ -1,5 +1,5 @@
 import { useService } from '@app/iocProvider'
-import { type SquaresMapComponent as SquaresMapComponentData } from '@loader/data/component'
+import { type SquaresMapComponent } from '@loader/data/component'
 import { GameMap, Position } from '@loader/data/map'
 import { MAP_SWITCHED, POSITION_CHANGED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react'
 import { Tile } from './controls/tile'
 import { CSSCustomProperties } from '@app/types'
 
-interface SquaresMapComponentProps {
-    component: SquaresMapComponentData
+interface SquaresMapProps {
+    component: SquaresMapComponent
 }
 
 const logName = 'SquaresMapComponent'
@@ -20,7 +20,7 @@ const logName = 'SquaresMapComponent'
  *
  * @param component - Configuration describing the viewport size.
  */
-export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ component }): React.JSX.Element => {
+export const SquaresMap: React.FC<SquaresMapProps> = ({ component }): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
     const logger = useService<ILogger>(loggerToken)

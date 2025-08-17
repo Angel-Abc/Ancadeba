@@ -43,10 +43,10 @@ export class TurnManager implements ITurnManager {
     private onEndTurnStart(): void {
         // end turn code that may post new messages
         // no code here yet
+        this.inputSourcesService.updateInputs()
     }
 
     private onEndTurnFinalize(): void {
         // end turn code to run after all turn messages are processed
-        this.inputSourcesService.updateInputs()
     }
 }

@@ -7,6 +7,7 @@ import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/mess
 import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 import { KeyboardEventListener, keyboardEventListenerDependencies, keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { loggerToken } from '@utils/logger'
+import { InputMatrixBuilder, inputMatrixBuilderDependencies, inputMatrixBuilderToken } from '@builders/inputMatrixBuilder'
 
 /**
  * Registers core engine services like the game engine and messaging infrastructure.
@@ -46,6 +47,11 @@ export class CoreBuilder {
       token: keyboardEventListenerToken,
       useClass: KeyboardEventListener,
       deps: keyboardEventListenerDependencies
+    })
+    container.register({
+      token: inputMatrixBuilderToken,
+      useClass: InputMatrixBuilder,
+      deps: inputMatrixBuilderDependencies
     })
   }
 }

@@ -4,13 +4,14 @@
  * The registry enables dynamic component rendering by allowing components to
  * be looked up and extended at runtime.
  */
-import { GameMenuComponent } from '@app/controls/component/gameMenuComponent'
-import { ImageComponent } from '@app/controls/component/imageComponent'
+import { GameMenu } from '@app/controls/component/gameMenu'
+import { Image } from '@app/controls/component/image'
 import { ComponentType } from 'react'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { token, Token } from '@ioc/token'
-import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
+import { SquaresMap } from '@app/controls/component/squaresMap'
+import { InputMatrix } from '@app/controls/component/inputMatrix'
 
 export interface IComponentRegistry {
     /**
@@ -39,9 +40,10 @@ export const componentRegistryDependencies: Token<unknown>[] = [loggerToken]
 export class ComponentRegistry implements IComponentRegistry {
     private readonly registry = new Map<string, ComponentType<unknown>>()
     constructor(private logger: ILogger) {
-        this.registerComponent('image', ImageComponent)
-        this.registerComponent('game-menu', GameMenuComponent)
-        this.registerComponent('squares-map', SquaresMapComponent)
+        this.registerComponent('image', Image)
+        this.registerComponent('game-menu', GameMenu)
+        this.registerComponent('squares-map', SquaresMap)
+        this.registerComponent('input-matrix', InputMatrix)
     }
 
     /**

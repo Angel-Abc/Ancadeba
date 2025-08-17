@@ -2,11 +2,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { services } from './testUtils'
-import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
+import { SquaresMap } from '@app/controls/component/squaresMap'
 import { messageBusToken, type IMessageBus } from '@utils/messageBus'
 import { gameDataProviderToken, type IGameDataProvider } from '@providers/gameDataProvider'
 import { POSITION_CHANGED } from '@messages/system'
-import { SquaresMapComponent as SquaresMapComponentData } from '@loader/data/component'
+import { SquaresMapComponent } from '@loader/data/component'
 import type { Tile as TileData } from '@loader/data/tile'
 
 vi.mock('@app/controls/component/controls/tile', () => ({
@@ -26,8 +26,8 @@ describe('SquaresMapComponent', () => {
     services.set(gameDataProviderToken, provider)
     services.set(messageBusToken, { registerMessageListener: vi.fn() } as unknown as IMessageBus)
 
-    const component: SquaresMapComponentData = { type: 'squares-map', mapSize: { columns: 1, rows: 1 } }
-    const { container } = render(<SquaresMapComponent component={component} />)
+    const component: SquaresMapComponent = { type: 'squares-map', mapSize: { columns: 1, rows: 1 } }
+    const { container } = render(<SquaresMap component={component} />)
     expect(container.innerHTML).toBe('')
   })
 
@@ -68,8 +68,8 @@ describe('SquaresMapComponent', () => {
     services.set(messageBusToken, messageBus)
     services.set(gameDataProviderToken, provider)
 
-    const component: SquaresMapComponentData = { type: 'squares-map', mapSize: { columns: 3, rows: 3 } }
-    render(<SquaresMapComponent component={component} />)
+    const component: SquaresMapComponent = { type: 'squares-map', mapSize: { columns: 3, rows: 3 } }
+    render(<SquaresMap component={component} />)
 
     expect(screen.getByTestId('tile-t1').getAttribute('data-player')).toBe('true')
 

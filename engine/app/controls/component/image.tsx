@@ -1,15 +1,15 @@
 import { CSSCustomProperties } from '@app/types'
-import { ImageComponent as ImageComponentData } from '@loader/data/component'
+import { ImageComponent } from '@loader/data/component'
 
-interface ImageComponentProps {
-    component: ImageComponentData
+interface ImageProps {
+    component: ImageComponent
 }
 
 /**
  * Displays an image using CSS custom properties.
  * @param component - Image component definition.
  */
-export const ImageComponent: React.FC<ImageComponentProps> = ({ component }): React.JSX.Element => {
+export const Image: React.FC<ImageProps> = ({ component }): React.JSX.Element => {
     const style: CSSCustomProperties = {
         '--ge-image-path': `url("${component.image}")`,
     }
