@@ -25,13 +25,11 @@ export interface ITurnScheduler {
  * - `STARTED`: Initial end-of-turn message dispatched, awaiting completion.
  * - `FINALIZING`: Finalization message dispatched; next empty queue completes the turn.
  */
-export const EndingTurnState = {
-    NOT_STARTED: 0,
-    STARTED: 1,
-    FINALIZING: 2
-} as const
-// eslint-disable-next-line no-redeclare
-export type EndingTurnState = typeof EndingTurnState[keyof typeof EndingTurnState]
+export enum EndingTurnState {
+    NOT_STARTED,
+    STARTED,
+    FINALIZING
+}
 
 const logName: string = 'TurnScheduler'
 export const turnSchedulerToken = token<ITurnScheduler>(logName)
