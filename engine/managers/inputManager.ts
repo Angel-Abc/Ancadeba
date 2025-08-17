@@ -21,6 +21,10 @@ export class InputManager implements IInputManager {
         private actionExecutor: IActionExecutor
     ){}
 
+    /**
+     * Registers a listener for virtual input messages and resets any
+     * previously registered listener state.
+     */
     public initialize(): void {
         this.cleanup()
         this.cleanupFn = this.messageBus.registerMessageListener(
@@ -29,12 +33,20 @@ export class InputManager implements IInputManager {
         )
     }
 
+    /**
+     * Removes any registered virtual input listener, restoring the manager to
+     * a clean state.
+     */
     public cleanup(): void {
         const fn = this.cleanupFn
         this.cleanupFn = null
         fn?.()
     }
 
+    /**
+     * Looks up the active input associated with the provided virtual input and
+     * executes its action when the input is enabled.
+     */
     private onVirtualInput(virtualInput: string): void {
         if (this.gameDataProvider.Game.activeInputs.has(virtualInput)){
             const activeInput = this.gameDataProvider.Game.activeInputs.get(virtualInput)
