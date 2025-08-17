@@ -11,7 +11,7 @@ export type IPostMessageAction = IActionHandler<PostMessageActionData>
 
 const logName = 'PostMessageAction'
 export const postMessageActionToken = token<IPostMessageAction>(logName)
-export const PostMessageActionDependencies: Token<unknown>[] = [messageBusToken]
+export const postMessageActionDependencies: Token<unknown>[] = [messageBusToken]
 
 /**
  * {@link IActionHandler} implementation that forwards actions to the

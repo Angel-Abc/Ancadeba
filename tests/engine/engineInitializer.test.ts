@@ -16,7 +16,6 @@ import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvi
 import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
 import type { ITurnManager } from '../../engine/managers/turnManager'
 import type { Game } from '../../engine/loader/data/game'
-import type { ITurnManager } from '../../engine/managers/turnManager'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
