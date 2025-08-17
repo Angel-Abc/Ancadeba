@@ -73,6 +73,6 @@ describe('LanguageManager', () => {
     }
 
     const manager = new LanguageManager(loader, translationService, gameDataProvider, logger)
-    await expect(manager.setLanguage('empty')).rejects.toThrow('[LanguageLoader] No language paths provided')
+    await expect(manager.setLanguage('empty')).rejects.toThrow('No language paths provided')
   })
 })
