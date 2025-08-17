@@ -46,6 +46,7 @@ describe('ActionHandlersLoader', () => {
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const loader = new ActionHandlersLoader(dataPathProvider, logger)
     await expect(loader.loadActions([])).rejects.toThrow('No action handlers paths provided')
+    expect(logger.error).toHaveBeenCalledWith('ActionHandlersLoader', 'No action handlers paths provided')
   })
 
   it('throws when loadJsonResource rejects', async () => {

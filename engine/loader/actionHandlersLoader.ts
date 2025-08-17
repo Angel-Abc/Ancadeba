@@ -5,7 +5,6 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
-import { fatalError } from '@utils/logMessage'
 import { mapHandlers } from './mappers/handler'
 
 /**
@@ -47,7 +46,8 @@ export class ActionHandlersLoader implements IActionHandlersLoader {
      */
     public async loadActions(paths: string[]): Promise<HandlersData> {
         if (paths.length === 0) {
-            fatalError(logName, 'No action handlers paths provided')
+            this.logger.error(logName, 'No action handlers paths provided')
+            throw new Error('No action handlers paths provided')
         }
 
         const schemas = await Promise.all(
