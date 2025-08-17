@@ -3,6 +3,8 @@ import { Token, token } from '@ioc/token'
 import { Input } from '@loader/data/inputs'
 import { ActiveInput, gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
+import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 export interface IInputSourcesService {
     updateInputs(): void
@@ -10,7 +12,7 @@ export interface IInputSourcesService {
 
 const logName = 'InputSourcesService'
 export const inputSourcesServiceToken = token<IInputSourcesService>(logName)
-export const inputSourcesServiceDependencies: Token<unknown>[] = [gameDataProviderToken, conditionResolverToken, inputsProviderRegistryToken]
+export const inputSourcesServiceDependencies: Token<unknown>[] = [gameDataProviderToken, conditionResolverToken, inputsProviderRegistryToken, loggerToken]
 /**
  * Service responsible for gathering inputs from active providers and updating
  * the game's collection of active inputs.
@@ -19,7 +21,8 @@ export class InputSourcesService implements IInputSourcesService {
     constructor(
         private gameDataProvider: IGameDataProvider,
         private conditionResolver: IConditionResolver,
-        private inputsProviderRegistry: IInputsProviderRegistry
+        private inputsProviderRegistry: IInputsProviderRegistry,
+        private logger: ILogger
     ) {}
 
     /**
@@ -28,15 +31,15 @@ export class InputSourcesService implements IInputSourcesService {
      * {@link Game.activeInputs} map with the resolved values.
      */
     public updateInputs(): void {
-        const inputs: Input[] = []
-        this.inputsProviderRegistry.getInputsProviders().forEach(inputsProvider => {
-            if (inputsProvider.isActive()) {
-                inputsProvider.getInputs().forEach(input => inputs.push(input))
-            }
-        })
         const activeInputs = new Map<string, ActiveInput>()
-        inputs.forEach(input => {
-            activeInputs.set(input.virtualInput, this.resolveConditions(input))
+        this.inputsProviderRegistry.getInputsProviders().forEach(inputsProvider => {
+            if (!inputsProvider.isActive()) return
+            inputsProvider.getInputs().forEach(input => {
+                if (activeInputs.has(input.virtualInput)) {
+                    this.logger.warn(logName, 'Duplicate input for virtualInput {0}', input.virtualInput)
+                }
+                activeInputs.set(input.virtualInput, this.resolveConditions(input))
+            })
         })
         this.gameDataProvider.Game.activeInputs = activeInputs
     }
