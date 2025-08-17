@@ -1,27 +1,51 @@
 import { Token, token } from '@ioc/token'
 import { Position } from '@loader/data/map'
+import { CHANGE_POSITION, POSITION_CHANGED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
+import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { CleanUp } from '@utils/types'
 
 /**
  * Manages player position updates.
  */
 export interface IPlayerPositionManager {
     changePosition(position: Position): void
+    initialize(): void
+    cleanup(): void
 }
 
 const logName = 'PlayerPositionManager'
 export const playerPositionManagerToken = token<IPlayerPositionManager>(logName)
 export const playerPositionManagerDependencies: Token<unknown>[] = [
-    gameDataProviderToken
+    gameDataProviderToken,
+    messageBusToken
 ]
 
 /**
  * Default implementation of {@link IPlayerPositionManager}.
  */
 export class PlayerPositionManager implements IPlayerPositionManager {
+    private cleanupFn: CleanUp | null = null
+
     constructor(
-        private gameDataProvider: IGameDataProvider
-    ) {}
+        private gameDataProvider: IGameDataProvider,
+        private messageBus: IMessageBus
+    ) { }
+
+    public initialize() {
+        this.cleanupFn = this.messageBus.registerMessageListener(
+            CHANGE_POSITION,
+            message => {
+                this.changePosition(message.payload as Position)
+            }
+        )
+    }
+
+    public cleanup(): void {
+        const fn = this.cleanupFn
+        this.cleanupFn = null
+        fn?.()
+    }
 
     /**
      * Updates the player's position within the current map.
@@ -32,6 +56,10 @@ export class PlayerPositionManager implements IPlayerPositionManager {
      */
     public changePosition(position: Position): void {
         this.gameDataProvider.Context.player.position = position
+        this.messageBus.postMessage({
+            message: POSITION_CHANGED,
+            payload: position
+        })
     }
 }
 

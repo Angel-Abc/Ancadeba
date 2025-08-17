@@ -38,7 +38,7 @@ export class InputManager implements IInputManager {
     private onVirtualInput(virtualInput: string): void {
         if (this.gameDataProvider.Game.activeInputs.has(virtualInput)){
             const activeInput = this.gameDataProvider.Game.activeInputs.get(virtualInput)
-            if (activeInput) this.actionExecutor.execute(activeInput?.input.action)
+            if (activeInput && activeInput.enabled) this.actionExecutor.execute(activeInput?.input.action)
         }
     }
 }

@@ -1,14 +1,13 @@
 import { Token, token } from '@ioc/token'
-import { GameMap, Position } from '@loader/data/map'
+import { GameMap } from '@loader/data/map'
 import { gameMapLoaderToken, IGameMapLoader } from '@loader/gameMapLoader'
-import { CHANGE_POSITION, MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
+import { MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { ITileSetManager, tileSetManagerToken } from './tileSetManager'
-import { IPlayerPositionManager, playerPositionManagerToken } from './playerPositionManager'
 
 /**
  * Coordinates loading and activation of maps within the game engine.
@@ -28,7 +27,6 @@ export const mapManagerDependencies: Token<unknown>[] = [
     messageBusToken,
     gameDataProviderToken,
     tileSetManagerToken,
-    playerPositionManagerToken,
     loggerToken
 ]
 
@@ -37,16 +35,15 @@ export const mapManagerDependencies: Token<unknown>[] = [
  * the message bus and the game data provider to manage maps.
  */
 export class MapManager implements IMapManager {
-    private cleanupFns: CleanUp[] | null = null
+    private cleanupFn: CleanUp | null = null
 
     constructor(
         private gameMapLoader: IGameMapLoader,
         private messageBus: IMessageBus,
         private gameDataProvider: IGameDataProvider,
         private tileSetManager: ITileSetManager,
-        private playerPositionManager: IPlayerPositionManager,
         private logger: ILogger
-    ){}
+    ) { }
 
     /**
      * Removes any registered message listeners and cleans up resources.
@@ -56,9 +53,9 @@ export class MapManager implements IMapManager {
      * manager is no longer needed to avoid memory leaks.
      */
     public cleanup(): void {
-        const fns = this.cleanupFns
-        this.cleanupFns = null
-        fns?.forEach(fn => fn())
+        const fn = this.cleanupFn
+        this.cleanupFn = null
+        fn?.()
     }
 
     /**
@@ -70,20 +67,14 @@ export class MapManager implements IMapManager {
      */
     public initialize(): void {
         this.cleanup()
-        this.cleanupFns = [
+        this.cleanupFn =
             this.messageBus.registerMessageListener(
                 SWITCH_MAP,
                 async message => {
                     await this.setActiveMap(message.payload as string)
                 }
-            ),
-            this.messageBus.registerMessageListener(
-                CHANGE_POSITION,
-                message => {
-                    this.playerPositionManager.changePosition(message.payload as Position)
-                }
             )
-        ]
+
     }
 
     /**
@@ -102,7 +93,7 @@ export class MapManager implements IMapManager {
         }
 
         let map: GameMap
-        if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined){
+        if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined) {
             map = await this.gameMapLoader.loadMap(path)
             this.gameDataProvider.Game.loadedMaps[mapId] = map
             await this.tileSetManager.ensureTileSets(map.tileSets)
