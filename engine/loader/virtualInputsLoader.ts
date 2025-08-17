@@ -1,7 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { type VirtualInputs as VirtualInputsData } from './data/inputs'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
-import { fatalError } from '@utils/logMessage'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
@@ -50,7 +49,8 @@ export class VirtualInputsLoader implements IVirtualInputsLoader {
      */
     public async loadVirtualInputs(paths: string[]): Promise<VirtualInputsData> {
         if (paths.length === 0) {
-            fatalError(logName, 'No virtual inputs paths provided')
+            this.logger.error(logName, 'No virtual inputs paths provided')
+            throw new Error('No virtual inputs paths provided')
         }
 
         const schemas = await Promise.all(
