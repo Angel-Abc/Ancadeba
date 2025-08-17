@@ -18,6 +18,8 @@ import { ProvidersBuilder } from '@builders/providersBuilder'
 import { MapManager, mapManagerToken } from '@managers/mapManager'
 import { TileSetManager, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
+import { InputManager, inputManagerToken } from '@managers/inputManager'
+import { PageInputsProvider, pageInputsProviderToken } from '@inputs/pageInputsProvider'
 import type { ILogger } from '@utils/logger'
 
 describe('ContainerBuilder', () => {
@@ -31,6 +33,7 @@ describe('ContainerBuilder', () => {
     const mapManager = container.resolve(mapManagerToken)
     const tileSetManager = container.resolve(tileSetManagerToken)
     const playerPositionManager = container.resolve(playerPositionManagerToken)
+    const inputManager = container.resolve(inputManagerToken)
     expect(engine).toBeInstanceOf(GameEngine)
     expect(bus).toBeInstanceOf(MessageBus)
     expect(queue).toBeInstanceOf(MessageQueue)
@@ -38,13 +41,15 @@ describe('ContainerBuilder', () => {
     expect(mapManager).toBeInstanceOf(MapManager)
     expect(tileSetManager).toBeInstanceOf(TileSetManager)
     expect(playerPositionManager).toBeInstanceOf(PlayerPositionManager)
+    expect(inputManager).toBeInstanceOf(InputManager)
 
     const providers: { token: Token<unknown>, assert: (resolved: unknown) => void }[] = [
       { token: serviceProviderToken, assert: r => expect(r).toBeInstanceOf(ServiceProvider) },
       { token: dataPathProviderToken, assert: r => expect(r).toEqual({ dataPath: '/data' }) },
       { token: gameDataProviderToken, assert: r => expect(r).toBeInstanceOf(GameDataProvider) },
       { token: virtualKeyProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualKeyProvider) },
-      { token: virtualInputProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualInputProvider) }
+      { token: virtualInputProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualInputProvider) },
+      { token: pageInputsProviderToken, assert: r => expect(r).toBeInstanceOf(PageInputsProvider) }
     ]
 
     providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))

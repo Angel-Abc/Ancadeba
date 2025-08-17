@@ -4,7 +4,6 @@ import type { IGameMapLoader } from '../../engine/loader/gameMapLoader'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
 import type { ITileSetManager } from '../../engine/managers/tileSetManager'
-import type { IPlayerPositionManager } from '../../engine/managers/playerPositionManager'
 import { MAP_SWITCHED } from '../../engine/messages/system'
 import type { ILogger } from '../../utils/logger'
 
@@ -30,7 +29,6 @@ describe('MapManager.setActiveMap', () => {
     const mapLoader = { loadMap: vi.fn().mockResolvedValue(map) } as unknown as IGameMapLoader
     const ensureTileSets = vi.fn().mockResolvedValue(undefined)
     const tileSetManager = { ensureTileSets } as unknown as ITileSetManager
-    const playerPositionManager = { changePosition: vi.fn() } as unknown as IPlayerPositionManager
     const postMessage = vi.fn()
     const messageBus = { registerMessageListener: vi.fn(), postMessage } as unknown as IMessageBus
 
@@ -40,7 +38,6 @@ describe('MapManager.setActiveMap', () => {
       messageBus,
       provider,
       tileSetManager,
-      playerPositionManager,
       logger,
     )
     await manager.setActiveMap('m1')
@@ -54,12 +51,10 @@ describe('MapManager.setActiveMap', () => {
 })
 
 describe('MapManager.initialize', () => {
-  it('clears previous listeners on repeated initialization', () => {
-    const cleanup1 = vi.fn()
-    const cleanup2 = vi.fn()
+  it('clears previous listener on repeated initialization', () => {
+    const cleanup = vi.fn()
     const register = vi.fn()
-      .mockReturnValueOnce(cleanup1)
-      .mockReturnValueOnce(cleanup2)
+      .mockReturnValueOnce(cleanup)
       .mockReturnValue(() => {})
     const messageBus = {
       registerMessageListener: register
@@ -71,15 +66,13 @@ describe('MapManager.initialize', () => {
       messageBus,
       {} as IGameDataProvider,
       {} as ITileSetManager,
-      {} as IPlayerPositionManager,
       logger,
     )
 
     manager.initialize()
     manager.initialize()
 
-    expect(cleanup1).toHaveBeenCalledTimes(1)
-    expect(cleanup2).toHaveBeenCalledTimes(1)
-    expect(register).toHaveBeenCalledTimes(4)
+    expect(cleanup).toHaveBeenCalledTimes(1)
+    expect(register).toHaveBeenCalledTimes(2)
   })
 })

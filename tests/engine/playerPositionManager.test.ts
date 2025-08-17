@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { PlayerPositionManager } from '../../engine/managers/playerPositionManager'
 import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
 import type { Position } from '../../engine/loader/data/map'
+import type { IMessageBus } from '../../utils/messageBus'
+import { POSITION_CHANGED } from '../../engine/messages/system'
 
 function createManager(context: GameContext) {
   const provider = {
@@ -9,17 +11,22 @@ function createManager(context: GameContext) {
     get Context() { return context },
     initialize: vi.fn(),
   } as unknown as IGameDataProvider
-  return new PlayerPositionManager(provider)
+  const messageBus = { postMessage: vi.fn(), registerMessageListener: vi.fn() } as unknown as IMessageBus
+  return { manager: new PlayerPositionManager(provider, messageBus), messageBus }
 }
 
 describe('PlayerPositionManager.changePosition', () => {
   it('updates player position in context', () => {
     const context = { player: { position: { x: 0, y: 0 } } } as unknown as GameContext
-    const manager = createManager(context)
+    const { manager, messageBus } = createManager(context)
     const newPos: Position = { x: 5, y: 7 }
 
     manager.changePosition(newPos)
 
     expect(context.player.position).toEqual(newPos)
+    expect(messageBus.postMessage).toHaveBeenCalledWith({
+      message: POSITION_CHANGED,
+      payload: newPos,
+    })
   })
 })
