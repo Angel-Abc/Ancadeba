@@ -5,7 +5,6 @@ import { domManagerToken, IDomManager } from '@managers/domManager'
 import { ILanguageManager, languageManagerToken } from '@managers/languageManager'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { Game } from '@loader/data/game'
-import { fatalError } from '@utils/logMessage'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
@@ -144,11 +143,14 @@ export class EngineInitializer implements IEngineInitializer {
      * Loads the root {@link Game} data structure.
      *
      * @returns The fully loaded game information.
-     * @throws {@link fatalError} if no game data is returned.
+     * @throws Error if no game data is returned.
      */
     private async loadGameDataRoot(): Promise<Game> {
         const game = await this.gameLoader.loadGame()
-        if (!game) fatalError(logName, 'Game data is null or undefined')
+        if (!game) {
+            this.logger.error(logName, 'Game data is null or undefined')
+            throw new Error('Game data is null or undefined')
+        }
         this.logger.debug(logName, 'Game loaded with data {0}', game)
         return game
     }
