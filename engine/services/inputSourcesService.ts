@@ -11,6 +11,10 @@ export interface IInputSourcesService {
 const logName = 'InputSourcesService'
 export const inputSourcesServiceToken = token<IInputSourcesService>(logName)
 export const inputSourcesServiceDependencies: Token<unknown>[] = [gameDataProviderToken, conditionResolverToken, inputsProviderRegistryToken]
+/**
+ * Service responsible for gathering inputs from active providers and updating
+ * the game's collection of active inputs.
+ */
 export class InputSourcesService implements IInputSourcesService {
     constructor(
         private gameDataProvider: IGameDataProvider,
@@ -18,6 +22,11 @@ export class InputSourcesService implements IInputSourcesService {
         private inputsProviderRegistry: IInputsProviderRegistry
     ) {}
 
+    /**
+     * Aggregates inputs from all active input providers, evaluates their
+     * enabled and visible conditions, and updates the game's
+     * {@link Game.activeInputs} map with the resolved values.
+     */
     public updateInputs(): void {
         const inputs: Input[] = []
         this.inputsProviderRegistry.getInputsProviders().forEach(inputsProvider => {
@@ -32,6 +41,14 @@ export class InputSourcesService implements IInputSourcesService {
         this.gameDataProvider.Game.activeInputs = activeInputs
     }
 
+    /**
+     * Resolves the `enabled` and `visible` conditions for the provided input
+     * using the configured {@link IConditionResolver}.
+     *
+     * @param input The input definition whose conditions should be evaluated.
+     * @returns The resulting {@link ActiveInput} reflecting the input's enabled
+     * and visible states.
+     */
     private resolveConditions(input: Input): ActiveInput {
         return {
             input: input,
