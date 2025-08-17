@@ -19,7 +19,7 @@ import { MapManager, mapManagerToken } from '@managers/mapManager'
 import { TileSetManager, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
 import { InputManager, inputManagerToken } from '@managers/inputManager'
-import { PageInputsProvider, pageInputsProviderToken } from '@inputs/pageInputsProvider'
+import { PageInputs, pageInputsToken } from '@inputs/pageInputs'
 import type { ILogger } from '@utils/logger'
 
 describe('ContainerBuilder', () => {
@@ -49,7 +49,7 @@ describe('ContainerBuilder', () => {
       { token: gameDataProviderToken, assert: r => expect(r).toBeInstanceOf(GameDataProvider) },
       { token: virtualKeyProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualKeyProvider) },
       { token: virtualInputProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualInputProvider) },
-      { token: pageInputsProviderToken, assert: r => expect(r).toBeInstanceOf(PageInputsProvider) }
+      { token: pageInputsToken, assert: r => expect(r).toBeInstanceOf(PageInputs) }
     ]
 
     providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))

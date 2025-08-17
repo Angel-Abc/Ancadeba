@@ -19,7 +19,7 @@ import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
 import { scriptConditionToken } from '@conditions/scriptCondition'
 import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
-import { pageInputsProviderToken } from '@inputs/pageInputsProvider'
+import { pageInputsToken } from '@inputs/pageInputs'
 import { IInputManager, inputManagerToken } from '@managers/inputManager'
 import { scriptActionToken } from '@actions/scriptAction'
 import { IPlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
@@ -142,7 +142,7 @@ export class EngineInitializer implements IEngineInitializer {
     }
 
     private registerInputsProviders(): void {
-        this.inputsProviderRegistry.registerInputsProvider(pageInputsProviderToken)
+        this.inputsProviderRegistry.registerInputsProvider(pageInputsToken)
     }
 
     /**

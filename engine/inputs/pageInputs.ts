@@ -3,12 +3,12 @@ import { Input } from '@loader/data/inputs'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { IInputsProvider } from '@registries/inputsProviderRegistry'
 
-export type IPageInputsProvider = IInputsProvider
+export type IPageInputs = IInputsProvider
 
-const logName = 'PageInputsProvider'
-export const pageInputsProviderToken = token<IPageInputsProvider>(logName)
-export const pageInputsProviderDependencies: Token<unknown>[] = [gameDataProviderToken]
-export class PageInputsProvider implements IPageInputsProvider {
+const logName = 'PageInputs'
+export const pageInputsToken = token<IPageInputs>(logName)
+export const pageInputsDependencies: Token<unknown>[] = [gameDataProviderToken]
+export class PageInputs implements IPageInputs {
 
     constructor(private gameDataProvider: IGameDataProvider){}
 
