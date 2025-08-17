@@ -35,6 +35,7 @@ describe('GameDataProvider', () => {
       startPage: 'start',
       currentPageId: null,
       currentMapId: null,
+      isInmodalDialog: false,
       player: { position: { x: 0, y: 0 } }
     })
   })

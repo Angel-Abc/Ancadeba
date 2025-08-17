@@ -3,12 +3,14 @@ import { EngineInitializer } from '../../engine/engine/engineInitializer'
 import type { ILogger } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../../engine/messages/system'
 import { postMessageActionToken } from '../../engine/actions/postMessageAction'
+import { scriptConditionToken } from '../../engine/conditions/scriptCondition'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
 import type { IDomManager } from '../../engine/managers/domManager'
 import type { ILanguageManager } from '../../engine/managers/languageManager'
 import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 import type { IActionHandlerRegistry } from '../../engine/registries/actionHandlerRegistry'
+import type { IConditionResolverRegistry } from '../../engine/registries/conditionResolverRegistry'
 import type { IPageManager } from '../../engine/managers/pageManager'
 import type { IActionManager } from '../../engine/managers/actionManager'
 import type { IMapManager } from '../../engine/managers/mapManager'
@@ -41,6 +43,7 @@ describe('EngineInitializer', () => {
     const languageManager = { setLanguage: vi.fn().mockResolvedValue(undefined) } as unknown as ILanguageManager
     const gameDataProvider = { initialize: vi.fn() } as unknown as IGameDataProvider
     const actionHandlerRegistry = { registerActionHandler: vi.fn() } as unknown as IActionHandlerRegistry
+    const conditionResolverRegistry = { registerConditionResolver: vi.fn() } as unknown as IConditionResolverRegistry
     const pageManager = { initialize: vi.fn() } as unknown as IPageManager
     const actionManager = { initialize: vi.fn() } as unknown as IActionManager
     const mapManager = { initialize: vi.fn() } as unknown as IMapManager
@@ -56,6 +59,7 @@ describe('EngineInitializer', () => {
       languageManager,
       gameDataProvider,
       actionHandlerRegistry,
+      conditionResolverRegistry,
       pageManager,
       actionManager,
       mapManager,
@@ -82,6 +86,7 @@ describe('EngineInitializer', () => {
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(2, 'style2.css')
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(1)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledWith('post-message', postMessageActionToken)
+    expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenCalledWith('script', scriptConditionToken)
     expect(messageBus.postMessage).toHaveBeenCalledTimes(2)
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(1, { message: START_GAME_ENGINE_MESSAGE, payload: null })
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(2, { message: SWITCH_PAGE, payload: 'home' })
