@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TurnScheduler } from '../../engine/engine/turnScheduler'
+import { TurnScheduler } from '@engine/turnScheduler'
 import { START_END_TURN_MESSAGE, FINALIZE_END_TURN_MESSAGE } from '../../engine/messages/system'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { ILogger } from '@utils/logger'
