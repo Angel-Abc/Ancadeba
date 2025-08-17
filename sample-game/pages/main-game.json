@@ -92,7 +92,7 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_NORTH",
             "visible": {
                 "type": "script",
-                "script": "return !context.data.isInmodalDialog"
+                "script": "return !context.data.isInModalDialog"
             },
             "enabled": {
                 "type": "script",
@@ -111,7 +111,7 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_SOUTH",
             "visible": {
                 "type": "script",
-                "script": "return !context.data.isInmodalDialog"
+                "script": "return !context.data.isInModalDialog"
             },
             "enabled": {
                 "type": "script",
@@ -130,7 +130,7 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_WEST",
             "visible": {
                 "type": "script",
-                "script": "return !context.data.isInmodalDialog"
+                "script": "return !context.data.isInModalDialog"
             },
             "enabled": {
                 "type": "script",
@@ -149,7 +149,7 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_EAST",
             "visible": {
                 "type": "script",
-                "script": "return !context.data.isInmodalDialog"
+                "script": "return !context.data.isInModalDialog"
             },
             "enabled": {
                 "type": "script",
