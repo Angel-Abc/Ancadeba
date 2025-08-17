@@ -17,6 +17,8 @@ import { IMapManager, mapManagerToken } from '@managers/mapManager'
 import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
 import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
 import { ITurnManager, turnManagerToken } from '@managers/turnManager'
+import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
+import { scriptConditionToken } from '@conditions/scriptCondition'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -39,6 +41,7 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     languageManagerToken,
     gameDataProviderToken,
     actionHandlerRegistryToken,
+    conditionResolverRegistryToken,
     pageManagerToken,
     actionManagerToken,
     mapManagerToken,
@@ -71,6 +74,7 @@ export class EngineInitializer implements IEngineInitializer {
         private languageManager: ILanguageManager,
         private gameDataProvider: IGameDataProvider,
         private actionHandlerRegistry: IActionHandlerRegistry,
+        private conditionResolverRegistry: IConditionResolverRegistry,
         private pageManager: IPageManager,
         private actionManager: IActionManager,
         private mapManager: IMapManager,
@@ -94,6 +98,7 @@ export class EngineInitializer implements IEngineInitializer {
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
         this.registerActions()
+        this.registerConditions()
         this.messageBus.postMessage({
             message: START_GAME_ENGINE_MESSAGE,
             payload: null
@@ -116,6 +121,10 @@ export class EngineInitializer implements IEngineInitializer {
      */
     private registerActions(): void {
         this.actionHandlerRegistry.registerActionHandler('post-message', postMessageActionToken)
+    }
+
+    private registerConditions(): void {
+        this.conditionResolverRegistry.registerConditionResolver('script', scriptConditionToken)
     }
 
     /**

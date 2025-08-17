@@ -42,6 +42,7 @@ export type GameData = {
 export type GameContext = InitialData & {
     currentPageId: string | null
     currentMapId: string | null
+    isInmodalDialog: boolean,
     player: {
         position: Position
     }
@@ -113,6 +114,7 @@ export class GameDataProvider implements IGameDataProvider {
             ...gameData.initialData,
             currentPageId: null,
             currentMapId: null,
+            isInmodalDialog: false,
             player: {
                 position: {
                     x: 0,

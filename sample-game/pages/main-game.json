@@ -92,11 +92,11 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_NORTH",
             "visible": {
                 "type": "script",
-                "script": "return !dialogs.isModalDialog"
+                "script": "return !context.data.isInmodalDialog"
             },
             "enabled": {
                 "type": "script",
-                "script": "return (data.location.position.y > 0)"
+                "script": "return (context.data.player.position.y > 0)"
             },
             "action": {
                 "type": "script",

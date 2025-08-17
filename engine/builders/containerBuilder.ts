@@ -56,6 +56,7 @@ export class ContainerBuilder implements IContainerBuilder {
     new ActionsBuilder().register(result)
     new ConditionsBuilder().register(result)
     // Hook for custom service registrations
+    logger.info('ContainerBuilder', 'Container build: {0}', result)
     return result
   }
 }
