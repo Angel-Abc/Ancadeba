@@ -6,6 +6,7 @@ import { turnSchedulerToken } from '@core/turnScheduler'
 import { keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { messageBusToken } from '@utils/messageBus'
 import { messageQueueToken } from '@utils/messageQueue'
+import { inputMatrixBuilderToken } from '@builders/inputMatrixBuilder'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import type { ILogger } from '@utils/logger'
@@ -26,16 +27,18 @@ describe('coreBuilder', () => {
     const registeredTokens = Array.from(
       (container as unknown as { providers: Map<Token<unknown>, unknown> }).providers.keys()
     )
-    expect(new Set(registeredTokens)).toEqual(
-      new Set([
+    expect(registeredTokens).toEqual(
+      expect.arrayContaining([
         gameEngineToken,
         messageBusToken,
         messageQueueToken,
         turnSchedulerToken,
         engineInitializerToken,
         keyboardEventListenerToken,
+        inputMatrixBuilderToken,
       ])
     )
+    expect(registeredTokens).toHaveLength(7)
   })
 })
 
