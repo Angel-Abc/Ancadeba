@@ -30,7 +30,7 @@ export default defineConfig({
       '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
       '@builders': fileURLToPath(new URL('./engine/builders', import.meta.url)),
       '@conditions': fileURLToPath(new URL('./engine/conditions', import.meta.url)),
-      '@engine': fileURLToPath(new URL('./engine/engine', import.meta.url)),
+      '@core': fileURLToPath(new URL('./engine/core', import.meta.url)),
       '@ioc': fileURLToPath(new URL('./engine/ioc', import.meta.url)),
       '@loader': fileURLToPath(new URL('./engine/loader', import.meta.url)),
       '@managers': fileURLToPath(new URL('./engine/managers', import.meta.url)),
