@@ -12,7 +12,10 @@ interface PageProps {
  */
 export const Page: React.FC<PageProps> = ({ pageId }): React.JSX.Element => {
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
-    if (gameDataProvider.Context.currentPageId !== pageId || !gameDataProvider.Game.loadedPages[pageId]) return (<></>)
+    if (gameDataProvider.Context.currentPageId !== pageId || !gameDataProvider.Game.loadedPages[pageId]) {
+        console.warn(`Page ${pageId} is not loaded or is not current. Rendering fallback.`);
+        return (<div>Loading...</div>);
+    }
     const pageData = gameDataProvider.Game.loadedPages[pageId]
 
     return (
