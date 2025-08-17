@@ -18,6 +18,8 @@ import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/vir
 import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
 import { scriptConditionToken } from '@conditions/scriptCondition'
+import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
+import { pageInputsProviderToken } from '@inputs/pageInputsProvider'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -47,7 +49,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     virtualKeyProviderToken,
     virtualInputProviderToken,
     loggerToken,
-    turnManagerToken
+    turnManagerToken,
+    inputsProviderRegistryToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -80,7 +83,8 @@ export class EngineInitializer implements IEngineInitializer {
         private virtualKeyProvider: IVirtualKeyProvider,
         private virtualInputProvider: IVirtualInputProvider,
         private logger: ILogger,
-        private turnManager: ITurnManager
+        private turnManager: ITurnManager,
+        private inputsProviderRegistry: IInputsProviderRegistry
     ){}
 
     /**
@@ -124,6 +128,10 @@ export class EngineInitializer implements IEngineInitializer {
 
     private registerConditions(): void {
         this.conditionResolverRegistry.registerConditionResolver('script', scriptConditionToken)
+    }
+
+    private registerInputsProviders(): void {
+        this.inputsProviderRegistry.registerInputsProvider(pageInputsProviderToken)
     }
 
     /**

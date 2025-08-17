@@ -32,6 +32,7 @@ export default defineConfig({
       '@conditions': fileURLToPath(new URL('./engine/conditions', import.meta.url)),
       '@engine': fileURLToPath(new URL('./engine/core', import.meta.url)),
       '@ioc': fileURLToPath(new URL('./engine/ioc', import.meta.url)),
+      '@inputs': fileURLToPath(new URL('./engine/inputs', import.meta.url)),
       '@loader': fileURLToPath(new URL('./engine/loader', import.meta.url)),
       '@managers': fileURLToPath(new URL('./engine/managers', import.meta.url)),
       '@messages': fileURLToPath(new URL('./engine/messages', import.meta.url)),

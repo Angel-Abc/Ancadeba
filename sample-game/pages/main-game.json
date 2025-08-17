@@ -100,7 +100,7 @@
             },
             "action": {
                 "type": "script",
-                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x, y: data.location.position.y - 1}})"
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: context.data.player.position.x, y: context.data.player.position.y - 1}})"
             }
         },
         {
@@ -111,15 +111,15 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_SOUTH",
             "visible": {
                 "type": "script",
-                "script": "return !dialogs.isModalDialog"
+                "script": "return !context.data.isInmodalDialog"
             },
             "enabled": {
                 "type": "script",
-                "script": "return (data.location.position.y < (data.location.mapSize.height - 1))"
+                "script": "return (context.data.player.position.y < (context.data.currentMap.height - 1))"
             },
             "action": {
                 "type": "script",
-                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x, y: data.location.position.y + 1}})"
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: context.data.player.position.x, y: context.data.player.position.y + 1}})"
             }
         },
         {
@@ -130,15 +130,15 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_WEST",
             "visible": {
                 "type": "script",
-                "script": "return !dialogs.isModalDialog"
+                "script": "return !context.data.isInmodalDialog"
             },
             "enabled": {
                 "type": "script",
-                "script": "return (data.location.position.x > 0)"
+                "script": "return (context.data.player.position.x > 0)"
             },
             "action": {
                 "type": "script",
-                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x - 1, y: data.location.position.y}})"
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: context.data.player.position.x - 1, y: context.data.player.position.y}})"
             }
         },
         {
@@ -149,15 +149,15 @@
             "description": "NAVIGATE.DESCRIPTION_MOVE_EAST",
             "visible": {
                 "type": "script",
-                "script": "return !dialogs.isModalDialog"
+                "script": "return !context.data.isInmodalDialog"
             },
             "enabled": {
                 "type": "script",
-                "script": "return (data.location.position.x < (data.location.mapSize.width - 1))"
+                "script": "return (context.data.player.position.x < (context.data.currentMap.width - 1))"
             },
             "action": {
                 "type": "script",
-                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: data.location.position.x + 1, y: data.location.position.y}})"
+                "script": "context.postMessage({message: 'SYSTEM.CHANGE-POSITION', payload: {x: context.data.player.position.x + 1, y: context.data.player.position.y}})"
             }
         }
     ]
