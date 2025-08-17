@@ -3,6 +3,7 @@ import { EngineInitializer } from '../../engine/core/engineInitializer'
 import type { ILogger } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../../engine/messages/system'
 import { postMessageActionToken } from '../../engine/actions/postMessageAction'
+import { scriptActionToken } from '../../engine/actions/scriptAction'
 import { scriptConditionToken } from '../../engine/conditions/scriptCondition'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
@@ -19,6 +20,8 @@ import type { IVirtualInputProvider } from '../../engine/providers/virtualInputP
 import type { ITurnManager } from '../../engine/managers/turnManager'
 import type { IInputsProviderRegistry } from '../../engine/registries/inputsProviderRegistry'
 import type { Game } from '../../engine/loader/data/game'
+import type { IInputManager } from '../../engine/managers/inputManager'
+import { pageInputsProviderToken } from '../../engine/inputs/pageInputsProvider'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -52,6 +55,7 @@ describe('EngineInitializer', () => {
     const virtualInputProvider = { initialize: vi.fn() } as unknown as IVirtualInputProvider
     const turnManager = { initialize: vi.fn() } as unknown as ITurnManager
     const inputsProviderRegistry = { registerInputsProvider: vi.fn() } as unknown as IInputsProviderRegistry
+    const inputManager = { initialize: vi.fn() } as unknown as IInputManager
 
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
@@ -69,7 +73,8 @@ describe('EngineInitializer', () => {
       virtualInputProvider,
       logger,
       turnManager,
-      inputsProviderRegistry
+      inputsProviderRegistry,
+      inputManager
     )
 
     await initializer.initialize()
@@ -80,6 +85,7 @@ describe('EngineInitializer', () => {
     expect(actionManager.initialize).toHaveBeenCalledTimes(1)
     expect(mapManager.initialize).toHaveBeenCalledTimes(1)
     expect(turnManager.initialize).toHaveBeenCalledTimes(1)
+    expect(inputManager.initialize).toHaveBeenCalledTimes(1)
     expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
     expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
@@ -87,9 +93,12 @@ describe('EngineInitializer', () => {
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(1, 'style1.css')
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(2, 'style2.css')
-    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(1)
-    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledWith('post-message', postMessageActionToken)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(2)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(1, 'post-message', postMessageActionToken)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(2, 'script', scriptActionToken)
     expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenCalledWith('script', scriptConditionToken)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenCalledTimes(1)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenCalledWith(pageInputsProviderToken)
     expect(messageBus.postMessage).toHaveBeenCalledTimes(2)
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(1, { message: START_GAME_ENGINE_MESSAGE, payload: null })
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(2, { message: SWITCH_PAGE, payload: 'home' })
