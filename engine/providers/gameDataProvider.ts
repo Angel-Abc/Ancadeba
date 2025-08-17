@@ -30,7 +30,7 @@ export type GameData = {
     loadedTileSets: Set<string>,
     loadedVirtualKeys: Map<string, VirtualKey>,
     loadedVirtualInputs: Map<string, VirtualInput>,
-    activeInputs: ActiveInput[]
+    activeInputs: Map<string, ActiveInput>
 }
 
 /**
@@ -112,7 +112,7 @@ export class GameDataProvider implements IGameDataProvider {
             loadedTileSets: new Set<string>(),
             loadedVirtualKeys: new Map<string, VirtualKey>(),
             loadedVirtualInputs: new Map<string, VirtualInput>(),
-            activeInputs: []
+            activeInputs: new Map<string, ActiveInput>()
         }
         this.context = { 
             ...gameData.initialData,

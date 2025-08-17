@@ -1,3 +1,4 @@
+import { PageInputsProvider, pageInputsProviderDependencies, pageInputsProviderToken } from '@inputs/pageInputsProvider'
 import { Container } from '@ioc/container'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { GameDataProvider, gameDataProviderDependencies, gameDataProviderToken } from '@providers/gameDataProvider'
@@ -37,6 +38,11 @@ export class ProvidersBuilder {
       token: virtualInputProviderToken,
       useClass: VirtualInputProvider,
       deps: virtualInputProviderDependencies
+    })
+    container.register({
+      token: pageInputsProviderToken,
+      useClass: PageInputsProvider,
+      deps: pageInputsProviderDependencies
     })
   }
 }

@@ -7,6 +7,7 @@ import { PageManager, pageManagerDependencies, pageManagerToken } from '@manager
 import { TileSetManager, tileSetManagerDependencies, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerDependencies, playerPositionManagerToken } from '@managers/playerPositionManager'
 import { TurnManager, turnManagerDependencies, turnManagerToken } from '@managers/turnManager'
+import { InputManager, inputManagerDependencies, inputManagerToken } from '@managers/inputManager'
 
 /**
  * Registers manager classes that orchestrate major engine systems.
@@ -57,6 +58,12 @@ export class ManagersBuilder {
       useClass: TurnManager,
       deps: turnManagerDependencies
     })
+    container.register({
+      token: inputManagerToken,
+      useClass: InputManager,
+      deps: inputManagerDependencies
+    })
+
   }
 }
 

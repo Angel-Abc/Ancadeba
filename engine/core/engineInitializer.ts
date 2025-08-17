@@ -20,6 +20,8 @@ import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@reg
 import { scriptConditionToken } from '@conditions/scriptCondition'
 import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
 import { pageInputsProviderToken } from '@inputs/pageInputsProvider'
+import { IInputManager, inputManagerToken } from '@managers/inputManager'
+import { scriptActionToken } from '@actions/scriptAction'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -50,7 +52,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     virtualInputProviderToken,
     loggerToken,
     turnManagerToken,
-    inputsProviderRegistryToken
+    inputsProviderRegistryToken,
+    inputManagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -84,7 +87,8 @@ export class EngineInitializer implements IEngineInitializer {
         private virtualInputProvider: IVirtualInputProvider,
         private logger: ILogger,
         private turnManager: ITurnManager,
-        private inputsProviderRegistry: IInputsProviderRegistry
+        private inputsProviderRegistry: IInputsProviderRegistry,
+        private inputManager: IInputManager
     ){}
 
     /**
@@ -102,6 +106,7 @@ export class EngineInitializer implements IEngineInitializer {
         this.setupBrowser(game)
         this.registerActions()
         this.registerConditions()
+        this.registerInputsProviders()
         this.messageBus.postMessage({
             message: START_GAME_ENGINE_MESSAGE,
             payload: null
@@ -117,6 +122,7 @@ export class EngineInitializer implements IEngineInitializer {
         await this.actionManager.initialize()
         this.mapManager.initialize()
         this.turnManager.initialize()
+        this.inputManager.initialize()
     }
 
     /**
@@ -124,6 +130,7 @@ export class EngineInitializer implements IEngineInitializer {
      */
     private registerActions(): void {
         this.actionHandlerRegistry.registerActionHandler('post-message', postMessageActionToken)
+        this.actionHandlerRegistry.registerActionHandler('script', scriptActionToken)
     }
 
     private registerConditions(): void {

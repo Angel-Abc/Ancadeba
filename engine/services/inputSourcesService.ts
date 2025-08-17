@@ -25,7 +25,10 @@ export class InputSourcesService implements IInputSourcesService {
                 inputsProvider.getInputs().forEach(input => inputs.push(input))
             }
         })
-        const activeInputs: ActiveInput[] = inputs.map(input => this.resolveConditions(input))
+        const activeInputs = new Map<string, ActiveInput>()
+        inputs.forEach(input => {
+            activeInputs.set(input.virtualInput, this.resolveConditions(input))
+        })
         this.gameDataProvider.Game.activeInputs = activeInputs
     }
 
