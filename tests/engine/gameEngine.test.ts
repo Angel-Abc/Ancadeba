@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { GameEngine } from '../../engine/core/gameEngine'
-import type { IEngineInitializer } from '../../engine/core/engineInitializer'
+import { GameEngine } from '../../engine/runtime/gameEngine'
+import type { IEngineInitializer } from '../../engine/runtime/engineInitializer'
 import type { ILogger } from '@utils/logger'
 
 describe('GameEngine', () => {

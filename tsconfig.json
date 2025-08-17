@@ -15,7 +15,7 @@
       "@app/*": ["./engine/app/*"],
       "@builders/*": ["./engine/builders/*"],
       "@conditions/*": ["./engine/conditions/*"],
-      "@core/*": ["./engine/core/*"],
+      "@runtime/*": ["./engine/runtime/*"],
       "@ioc/*": ["./engine/ioc/*"],
       "@loader/*": ["./engine/loader/*"],
       "@managers/*": ["./engine/managers/*"],
