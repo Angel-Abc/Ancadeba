@@ -46,7 +46,7 @@ export type GameContext = InitialData & {
         width: number,
         height: number
     },
-    isInmodalDialog: boolean,
+    isInModalDialog: boolean,
     player: {
         position: Position
     }
@@ -144,7 +144,7 @@ export class GameDataProvider implements IGameDataProvider {
                 width: 0,
                 height: 0
             },
-            isInmodalDialog: false,
+            isInModalDialog: false,
             player: {
                 position: {
                     x: 0,

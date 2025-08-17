@@ -39,7 +39,7 @@ describe('GameDataProvider', () => {
         width: 0,
         height: 0
       },
-      isInmodalDialog: false,
+      isInModalDialog: false,
       player: { position: { x: 0, y: 0 } }
     })
   })
