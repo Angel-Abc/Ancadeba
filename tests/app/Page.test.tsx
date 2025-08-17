@@ -13,7 +13,7 @@ import { Page } from '@app/controls/page'
 describe('Page', () => {
   beforeEach(() => services.clear())
 
-  it('renders nothing when current page does not match', () => {
+  it('renders fallback when current page does not match', () => {
     const provider = {
       Context: { currentPageId: 'other' },
       Game: { loadedPages: { my: { screen: 'scr' } } }
@@ -21,10 +21,10 @@ describe('Page', () => {
     services.set(gameDataProviderToken, provider)
 
     const { container } = render(<Page pageId='my' />)
-    expect(container.innerHTML).toBe('')
+    expect(container.textContent).toBe('Loading...')
   })
 
-  it('renders nothing when page data is missing', () => {
+  it('renders fallback when page data is missing', () => {
     const provider = {
       Context: { currentPageId: 'my' },
       Game: { loadedPages: {} }
@@ -32,7 +32,7 @@ describe('Page', () => {
     services.set(gameDataProviderToken, provider)
 
     const { container } = render(<Page pageId='my' />)
-    expect(container.innerHTML).toBe('')
+    expect(container.textContent).toBe('Loading...')
   })
 
   it('renders screen for loaded current page', () => {
