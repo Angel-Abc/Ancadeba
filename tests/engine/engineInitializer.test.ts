@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { EngineInitializer } from '../../engine/engine/engineInitializer'
+import { EngineInitializer } from '../../engine/core/engineInitializer'
 import type { ILogger } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../../engine/messages/system'
 import { postMessageActionToken } from '../../engine/actions/postMessageAction'
