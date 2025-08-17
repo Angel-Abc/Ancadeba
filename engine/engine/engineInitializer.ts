@@ -88,9 +88,9 @@ export class EngineInitializer implements IEngineInitializer {
     public async initialize(): Promise<void> {
         const game = await this.loadGameDataRoot()
         this.gameDataProvider.initialize(game)
-        this.virtualKeyProvider.initialize()
-        this.virtualInputProvider.initialize()
-        this.initializeManagers()
+        await this.virtualKeyProvider.initialize()
+        await this.virtualInputProvider.initialize()
+        await this.initializeManagers()
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
         this.registerActions()
@@ -104,9 +104,9 @@ export class EngineInitializer implements IEngineInitializer {
         })
     }
 
-    private initializeManagers() {
+    private async initializeManagers(): Promise<void> {
         this.pageManager.initialize()
-        this.actionManager.initialize()
+        await this.actionManager.initialize()
         this.mapManager.initialize()
         this.turnManager.initialize()
     }
