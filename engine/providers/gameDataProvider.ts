@@ -56,7 +56,17 @@ export type GameContext = InitialData & {
  * Provides access to the game data and contextual information.
  */
 export interface IGameDataProvider {
+    /**
+     * Retrieves the loaded game data.
+     *
+     * @throws Error If {@link initialize} has not been invoked.
+     */
     get Game(): GameData
+    /**
+     * Retrieves the current game context.
+     *
+     * @throws Error If {@link initialize} has not been invoked.
+     */
     get Context(): GameContext
     initialize(gameData: Game): void
 }
@@ -70,6 +80,12 @@ export class GameDataProvider implements IGameDataProvider {
 
     constructor(private logger: ILogger) {}
 
+    /**
+     * Returns the loaded game data.
+     *
+     * @remarks {@link initialize} must be called before accessing this getter.
+     * @throws Error If the provider has not been initialized.
+     */
     public get Game(): GameData {
         if (!this.game) {
             const message = this.logger.error(logName, 'Game data not loaded')
@@ -78,6 +94,12 @@ export class GameDataProvider implements IGameDataProvider {
         return this.game
     }
 
+    /**
+     * Returns the current game context.
+     *
+     * @remarks {@link initialize} must be called before accessing this getter.
+     * @throws Error If the provider has not been initialized.
+     */
     public get Context(): GameContext {
         if (!this.context) {
             const message = this.logger.error(logName, 'Game context not loaded')
