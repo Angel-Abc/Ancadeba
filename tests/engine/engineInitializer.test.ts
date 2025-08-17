@@ -17,6 +17,7 @@ import type { IMapManager } from '../../engine/managers/mapManager'
 import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
 import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
 import type { ITurnManager } from '../../engine/managers/turnManager'
+import type { IInputsProviderRegistry } from '../../engine/registries/inputsProviderRegistry'
 import type { Game } from '../../engine/loader/data/game'
 
 describe('EngineInitializer', () => {
@@ -50,6 +51,7 @@ describe('EngineInitializer', () => {
     const virtualKeyProvider = { initialize: vi.fn() } as unknown as IVirtualKeyProvider
     const virtualInputProvider = { initialize: vi.fn() } as unknown as IVirtualInputProvider
     const turnManager = { initialize: vi.fn() } as unknown as ITurnManager
+    const inputsProviderRegistry = { registerInputsProvider: vi.fn() } as unknown as IInputsProviderRegistry
 
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
@@ -66,7 +68,8 @@ describe('EngineInitializer', () => {
       virtualKeyProvider,
       virtualInputProvider,
       logger,
-      turnManager
+      turnManager,
+      inputsProviderRegistry
     )
 
     await initializer.initialize()
