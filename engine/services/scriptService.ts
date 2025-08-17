@@ -66,9 +66,9 @@ export class ScriptService implements IScriptService {
         try {
             return runScript<T>(script, context, data)
         } catch (error) {
-            this.logger.info(logName, 'Failed script: {0}', script)
-            this.logger.info(logName, 'context: {0}', context)
-            this.logger.info(logName, 'data: {0}', data)
+            this.logger.error(logName, 'Failed script: {0}', script)
+            this.logger.error(logName, 'context: {0}', context)
+            this.logger.error(logName, 'data: {0}', data)
             throw error
         }
 
