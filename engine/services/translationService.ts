@@ -1,6 +1,5 @@
 import { token, type Token } from '@ioc/token'
 import { Language } from '@loader/data/language'
-import { fatalError } from '@utils/logMessage'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 
@@ -11,7 +10,7 @@ export interface ITranslationService {
     /**
      * Looks up the localized string for a key.
      * Logs a warning and returns the key itself if the translation is missing.
-     * Implementations should trigger a fatal error when no language has been configured.
+     * Implementations should throw an error when no language has been configured.
      *
      * @param key - Translation key to look up.
      * @returns Localized string for the key or the key itself when missing.
@@ -32,7 +31,7 @@ export const translationServiceDependencies: Token<unknown>[] = [loggerToken]
 
 /**
  * Service that resolves translation keys using provided {@link Language} data.
- * Must have a language configured before translation; otherwise `fatalError` is invoked.
+ * Must have a language configured before translation; otherwise an error is thrown.
  * If a key cannot be translated, a warning is emitted and the key is returned.
  */
 export class TranslationService implements ITranslationService {
@@ -44,11 +43,14 @@ export class TranslationService implements ITranslationService {
      *
      * @param key - Translation key to resolve.
      * @returns Localized string for the key or the key itself when missing.
-     * @throws via `fatalError` when language is not set.
+     * @throws Error when language is not set.
      * Logs a warning when the key is absent in translations.
      */
     public translate(key: string): string {
-        if (this.language === null) fatalError(logName, 'Language not set for translation')
+        if (this.language === null) {
+            this.logger.error(logName, 'Language not set for translation')
+            throw new Error('Language not set for translation')
+        }
         const translation = this.language.translations[key]
         if (translation === undefined) {
             this.logger.warn(logName, 'Missing translation for key {0}', key)
