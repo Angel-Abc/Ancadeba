@@ -1,15 +1,15 @@
 import { Container } from '@ioc/container'
 import type { Container as IContainer } from '@ioc/types'
 
-import { ActionsBuilder } from './actionsBuilder'
-import { CoreBuilder } from './coreBuilder'
-import { LoadersBuilder } from './loadersBuilder'
-import { ManagersBuilder } from './managersBuilder'
-import { ProvidersBuilder } from './providersBuilder'
-import { RegistriesBuilder } from './registriesBuilder'
-import { ServicesBuilder } from './servicesBuilder'
+import { ActionsBuilder } from './containerBuilders/actionsBuilder'
+import { CoreBuilder } from './containerBuilders/coreBuilder'
+import { LoadersBuilder } from './containerBuilders/loadersBuilder'
+import { ManagersBuilder } from './containerBuilders/managersBuilder'
+import { ProvidersBuilder } from './containerBuilders/providersBuilder'
+import { RegistriesBuilder } from './containerBuilders/registriesBuilder'
+import { ServicesBuilder } from './containerBuilders/servicesBuilder'
 import { ConsoleLogger, loggerToken } from '@utils/logger'
-import { ConditionsBuilder } from './conditionsBuilder'
+import { ConditionsBuilder } from './containerBuilders/conditionsBuilder'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.

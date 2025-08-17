@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { ManagersBuilder } from '@builders/managersBuilder'
+import { ManagersBuilder } from '@builders/containerBuilders/managersBuilder'
 import { actionManagerToken } from '@managers/actionManager'
 import { domManagerToken } from '@managers/domManager'
 import { languageManagerToken } from '@managers/languageManager'

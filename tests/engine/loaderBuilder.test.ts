@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { LoadersBuilder } from '@builders/loadersBuilder'
+import { LoadersBuilder } from '@builders/containerBuilders/loadersBuilder'
 import { actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
 import { gameLoaderToken } from '@loader/gameLoader'
 import { gameMapLoaderToken } from '@loader/gameMapLoader'

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { CoreBuilder } from '@builders/coreBuilder'
+import { CoreBuilder } from '@builders/containerBuilders/coreBuilder'
 import { engineInitializerToken } from '@core/engineInitializer'
 import { gameEngineToken } from '@core/gameEngine'
 import { turnSchedulerToken } from '@core/turnScheduler'

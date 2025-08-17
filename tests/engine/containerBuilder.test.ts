@@ -14,7 +14,7 @@ import { VirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualK
 import { VirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
-import { ProvidersBuilder } from '@builders/providersBuilder'
+import { ProvidersBuilder } from '@builders/containerBuilders/providersBuilder'
 import { MapManager, mapManagerToken } from '@managers/mapManager'
 import { TileSetManager, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
