@@ -1,7 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { VirtualKeys as VirtualKeysData } from './data/inputs'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
-import { fatalError } from '@utils/logMessage'
 import { VirtualKeys, virtualKeysSchema } from './schema/inputs'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
@@ -50,7 +49,8 @@ export class VirtualKeysLoader implements IVirtualKeysLoader {
      */
     public async loadVirtualKeys(paths: string[]): Promise<VirtualKeysData> {
         if (paths.length === 0) {
-            fatalError(logName, 'No virtual keys paths provided')
+            this.logger.error(logName, 'No virtual keys paths provided')
+            throw new Error('No virtual keys paths provided')
         }
 
         const schemas = await Promise.all(
