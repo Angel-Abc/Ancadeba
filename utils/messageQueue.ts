@@ -97,7 +97,11 @@ export class MessageQueue implements IMessageQueue {
      * Decrease the counter and attempt to drain the queue.
      */
     public enableEmptyQueueAfterPost(): void {
-        this.emptyQueueAfterPost = Math.max(0, this.emptyQueueAfterPost - 1)
+        if (this.emptyQueueAfterPost === 0) {
+            this.logger.warn(logName, 'enableEmptyQueueAfterPost called but counter is already zero')
+        } else {
+            this.emptyQueueAfterPost = this.emptyQueueAfterPost - 1
+        }
         void this.emptyQueue()
     }
 

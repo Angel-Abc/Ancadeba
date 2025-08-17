@@ -122,5 +122,18 @@ describe('MessageQueue', () => {
     expect(handled).toEqual(['a', 'b'])
     expect(onEmpty).toHaveBeenCalledTimes(1)
   })
+
+  it('logs a warning when enableEmptyQueueAfterPost is called at zero', () => {
+    const onEmpty = vi.fn()
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const queue = new MessageQueue(onEmpty, logger)
+
+    queue.enableEmptyQueueAfterPost()
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'MessageQueue',
+      'enableEmptyQueueAfterPost called but counter is already zero'
+    )
+  })
 })
 
