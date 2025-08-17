@@ -13,8 +13,21 @@ import { token, Token } from '@ioc/token'
 import { SquaresMapComponent } from '@app/controls/component/squaresMapComponent'
 
 export interface IComponentRegistry {
+    /**
+     * Registers a React component with the given identifier.
+     *
+     * @param type - Unique identifier of the component
+     * @param component - The component to associate with the identifier
+     */
     registerComponent<T = unknown>(type: string, component: ComponentType<T>): void
+    /**
+     * Retrieves a component previously registered under the provided identifier.
+     *
+     * @param type - Identifier of the component to retrieve
+     * @returns The component if found, otherwise `undefined`
+     */
     getComponent<T = unknown>(type: string): ComponentType<T> | undefined
+    /** Clears all registered components. */
     clear(): void
 }
 
@@ -31,6 +44,12 @@ export class ComponentRegistry implements IComponentRegistry {
         this.registerComponent('squares-map', SquaresMapComponent)
     }
 
+    /**
+     * Registers a React component with the given identifier.
+     *
+     * @param type - Unique identifier of the component
+     * @param component - The component to associate with the identifier
+     */
     public registerComponent<T = unknown>(type: string, component: ComponentType<T>): void {
         if (this.registry.has(type)) {
             this.logger.warn(logName, 'Component already registered under key {0}', type)
@@ -39,10 +58,17 @@ export class ComponentRegistry implements IComponentRegistry {
         this.registry.set(type, component as ComponentType<unknown>)
     }
 
+    /**
+     * Retrieves a component previously registered under the provided identifier.
+     *
+     * @param type - Identifier of the component to retrieve
+     * @returns The component if found, otherwise `undefined`
+     */
     public getComponent<T = unknown>(type: string): ComponentType<T> | undefined {
         return this.registry.get(type) as ComponentType<T> | undefined
     }
 
+    /** Clears all registered components. */
     public clear(): void {
         this.registry.clear()
     }
