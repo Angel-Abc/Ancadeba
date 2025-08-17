@@ -14,8 +14,10 @@ describe('TranslationService', () => {
   })
 
   it('throws if language was not set', () => {
-    const service = new TranslationService({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() })
-    expect(() => service.translate('any')).toThrow('[TranslationService] Language not set for translation')
+    const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const service = new TranslationService(logger)
+    expect(() => service.translate('any')).toThrow('Language not set for translation')
+    expect(logger.error).toHaveBeenCalledWith('TranslationService', 'Language not set for translation')
   })
 })
 
