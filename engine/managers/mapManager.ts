@@ -61,9 +61,9 @@ export class MapManager implements IMapManager {
     /**
      * Registers listeners required for map management.
      *
-     * @remarks Attaches listeners for {@link SWITCH_MAP} and
-     * {@link CHANGE_POSITION} messages to the message bus and records the
-     * corresponding cleanup functions for later removal.
+     * @remarks Attaches a listener for {@link SWITCH_MAP} messages to the
+     * message bus and records the corresponding cleanup function for later
+     * removal.
      */
     public initialize(): void {
         this.cleanup()
