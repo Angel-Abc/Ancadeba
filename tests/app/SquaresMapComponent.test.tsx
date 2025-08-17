@@ -20,7 +20,7 @@ describe('SquaresMapComponent', () => {
 
   it('renders nothing when map id is missing', () => {
     const provider = {
-      Context: { currentMapId: null, player: { position: { x: 0, y: 0 } } },
+      Context: { currentMap: { id: null }, player: { position: { x: 0, y: 0 } } },
       Game: { loadedMaps: {}, loadedTiles: new Map<string, TileData>() }
     } as unknown as IGameDataProvider
     services.set(gameDataProviderToken, provider)
@@ -41,7 +41,7 @@ describe('SquaresMapComponent', () => {
     } as unknown as IMessageBus
 
     const provider = {
-      Context: { currentMapId: 'map1', player: { position: { x: 0, y: 0 } } },
+      Context: { currentMap: { id: 'map1' }, player: { position: { x: 0, y: 0 } } },
       Game: {
         loadedMaps: {
           map1: {

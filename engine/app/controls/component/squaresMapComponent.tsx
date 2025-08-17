@@ -24,12 +24,12 @@ export const SquaresMapComponent: React.FC<SquaresMapComponentProps> = ({ compon
     const messageBus = useService<IMessageBus>(messageBusToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
     const logger = useService<ILogger>(loggerToken)
-    const [mapId, setMapId] = useState<string | null>(gameDataProvider.Context.currentMapId)
+    const [mapId, setMapId] = useState<string | null>(gameDataProvider.Context.currentMap.id)
     const [position, setPosition] = useState<Position>(gameDataProvider.Context.player.position)
 
     useEffect(() => {
         return messageBus.registerMessageListener(MAP_SWITCHED, () => {
-            setMapId(gameDataProvider.Context.currentMapId)
+            setMapId(gameDataProvider.Context.currentMap.id)
         })
     }, [
         messageBus,

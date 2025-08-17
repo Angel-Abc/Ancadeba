@@ -34,7 +34,11 @@ describe('GameDataProvider', () => {
       language: 'en',
       startPage: 'start',
       currentPageId: null,
-      currentMapId: null,
+      currentMap: {
+        id: null,
+        width: 0,
+        height: 0
+      },
       isInmodalDialog: false,
       player: { position: { x: 0, y: 0 } }
     })

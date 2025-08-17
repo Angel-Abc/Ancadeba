@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { Position } from '@loader/data/map'
+import { GameMap, Position } from '@loader/data/map'
 import { gameMapLoaderToken, IGameMapLoader } from '@loader/gameMapLoader'
 import { CHANGE_POSITION, MAP_SWITCHED, SWITCH_MAP } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
@@ -101,13 +101,20 @@ export class MapManager implements IMapManager {
             throw new Error(this.logger.error(logName, 'Map not found for id {0}', mapId))
         }
 
+        let map: GameMap
         if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined){
-            const map = await this.gameMapLoader.loadMap(path)
+            map = await this.gameMapLoader.loadMap(path)
             this.gameDataProvider.Game.loadedMaps[mapId] = map
             await this.tileSetManager.ensureTileSets(map.tileSets)
+        } else {
+            map = this.gameDataProvider.Game.loadedMaps[mapId]
         }
 
-        this.gameDataProvider.Context.currentMapId = mapId
+        this.gameDataProvider.Context.currentMap = {
+            id: mapId,
+            width: map.width,
+            height: map.height
+        }
         this.messageBus.postMessage({
             message: MAP_SWITCHED,
             payload: mapId

@@ -48,7 +48,7 @@ describe('MapManager.setActiveMap', () => {
     expect(mapLoader.loadMap).toHaveBeenCalledWith('m1.json')
     expect(ensureTileSets).toHaveBeenCalledWith(['ts1'])
     expect(gameData.loadedMaps['m1']).toBe(map)
-    expect(context.currentMapId).toBe('m1')
+    expect(context.currentMap.id).toBe('m1')
     expect(postMessage).toHaveBeenCalledWith({ message: MAP_SWITCHED, payload: 'm1' })
   })
 })
