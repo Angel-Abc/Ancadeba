@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, PropsWithChildren } from 'react'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
-import { fatalError } from '@utils/logMessage'
+import { ConsoleLogger, loggerToken, type ILogger } from '@utils/logger'
 
 const logName = 'IocProvider'
 
@@ -26,11 +26,13 @@ export const IocProvider = ({ container, children }: PropsWithChildren<{ contain
  * Resolve a service instance for the provided token.
  *
  * @param t - Token identifying the desired service.
+ * @param logger - Optional logger used to report errors when the provider is missing.
  * @returns The resolved service instance.
- * @throws via {@link fatalError} when `IocProvider` is missing from the tree.
+ * @throws When `IocProvider` is missing from the tree.
  */
-export const useService = <T,>(t: Token<T>): T => {
+export const useService = <T,>(t: Token<T>, logger?: ILogger): T => {
   const c = useContext(IocContext)
-  if (!c) fatalError(logName, 'IocProvider is missing in the tree')
+  const log = logger ?? c?.resolve<ILogger>(loggerToken) ?? new ConsoleLogger()
+  if (!c) throw new Error(log.error(logName, 'IocProvider is missing in the tree'))
   return useMemo(() => c.resolve(t), [c, t])
 }
