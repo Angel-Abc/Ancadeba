@@ -30,3 +30,27 @@ describe('PlayerPositionManager.changePosition', () => {
     })
   })
 })
+
+describe('PlayerPositionManager.initialize', () => {
+  it('clears previous listener on repeated initialization', () => {
+    const cleanup = vi.fn()
+    const register = vi.fn()
+      .mockReturnValueOnce(cleanup)
+      .mockReturnValue(() => {})
+
+    const messageBus = {
+      registerMessageListener: register,
+      postMessage: vi.fn(),
+    } as unknown as IMessageBus
+
+    const provider = {} as unknown as IGameDataProvider
+
+    const manager = new PlayerPositionManager(provider, messageBus)
+
+    manager.initialize()
+    manager.initialize()
+
+    expect(cleanup).toHaveBeenCalledTimes(1)
+    expect(register).toHaveBeenCalledTimes(2)
+  })
+})

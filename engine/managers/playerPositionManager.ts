@@ -33,6 +33,7 @@ export class PlayerPositionManager implements IPlayerPositionManager {
     ) { }
 
     public initialize() {
+        this.cleanup()
         this.cleanupFn = this.messageBus.registerMessageListener(
             CHANGE_POSITION,
             message => {
