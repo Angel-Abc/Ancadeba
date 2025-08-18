@@ -15,9 +15,13 @@ Messaging enables decoupled communication. The [`MessageBus`](../utils/messageBu
 Builders in [`builders`](../engine/builders) modularize container configuration:
 
 - `CoreBuilder` registers fundamental infrastructure from [core](../engine/core) including the game engine, message bus, and turn scheduler.
-- `ActionsBuilder` adds the action executor and built-in actions from [actions](../engine/actions).
+- `ProvidersBuilder` sets up data, configuration, and input providers.
+- `LoadersBuilder` wires data loaders for fetching game resources.
 - `ServicesBuilder` wires shared utilities exposed under [services](../engine/services).
-- Additional builders register providers, managers, registries, and conditions.
+- `RegistriesBuilder` populates registries for actions, components, and conditions.
+- `ManagersBuilder` registers managers that orchestrate engine systems.
+- `ActionsBuilder` adds the action executor and built-in actions from [actions](../engine/actions).
+- `ConditionsBuilder` registers condition resolvers and default conditions.
 
 The top-level `ContainerBuilder` composes these builders and returns a fully configured container ready for the engine.
 
