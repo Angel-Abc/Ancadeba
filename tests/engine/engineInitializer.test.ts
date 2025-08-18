@@ -22,21 +22,9 @@ import type { ILanguageManager } from '@managers/languageManager'
 import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 import type { IActionHandlerRegistry } from '../../engine/registries/actionHandlerRegistry'
 import type { IConditionResolverRegistry } from '../../engine/registries/conditionResolverRegistry'
-import type { IPageManager } from '@managers/pageManager'
-import type { IActionManager } from '@managers/actionManager'
-import type { IMapManager } from '@managers/mapManager'
-import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
-import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
-import type { ITurnManager } from '@managers/turnManager'
 import type { IInputsProviderRegistry } from '../../engine/registries/inputsProviderRegistry'
-import type { IInputManager } from '@managers/inputManager'
-import type { IPlayerPositionManager } from '@managers/playerPositionManager'
 import type { Game } from '../../engine/loader/data/game'
-import type { ITileTriggerManager } from '@managers/tileTriggerManager'
-import { IDialogSetManager } from '@managers/dialogSetManager'
-import { IDialogManager } from '@managers/dialogManager'
-import { IDialogOutputManager } from '@managers/dialogOutputManager'
-import { ITurnOutputManager } from '@managers/turnOutputManager'
+import type { ISubsystemInitializer } from '../../engine/core/subsystemInitializer'
 
 interface CustomAction extends BaseAction {
   type: 'custom'
@@ -57,7 +45,7 @@ describe('EngineInitializer', () => {
       actions: [],
       virtualKeys: [],
       virtualInputs: [],
-      cssFiles: ['style1.css', 'style2.css']
+      cssFiles: ['style1.css', 'style2.css'],
     }
 
     const messageBus = { postMessage: vi.fn() } as unknown as IMessageBus
@@ -67,20 +55,10 @@ describe('EngineInitializer', () => {
     const gameDataProvider = { initialize: vi.fn() } as unknown as IGameDataProvider
     const actionHandlerRegistry = { registerActionHandler: vi.fn() } as unknown as IActionHandlerRegistry
     const conditionResolverRegistry = { registerConditionResolver: vi.fn() } as unknown as IConditionResolverRegistry
-    const pageManager = { initialize: vi.fn() } as unknown as IPageManager
-    const actionManager = { initialize: vi.fn() } as unknown as IActionManager
-    const mapManager = { initialize: vi.fn() } as unknown as IMapManager
-    const virtualKeyProvider = { initialize: vi.fn() } as unknown as IVirtualKeyProvider
-    const virtualInputProvider = { initialize: vi.fn() } as unknown as IVirtualInputProvider
-    const turnManager = { initialize: vi.fn() } as unknown as ITurnManager
     const inputsProviderRegistry = { registerInputsProvider: vi.fn() } as unknown as IInputsProviderRegistry
-    const inputManager = { initialize: vi.fn() } as unknown as IInputManager
-    const playerPositionManager = { initialize: vi.fn() } as unknown as IPlayerPositionManager
-    const tileTriggerManager = { initialize: vi.fn() } as unknown as ITileTriggerManager
-    const dialogSetManager = { initialize: vi.fn() } as unknown as IDialogSetManager
-    const dialogManager = { initialize: vi.fn() } as unknown as IDialogManager
-    const dialogOutputManager = { initialize: vi.fn() } as unknown as IDialogOutputManager
-    const turnOutputManager = { initialize: vi.fn() } as unknown as ITurnOutputManager
+
+    const subsystemInitializerA = { initialize: vi.fn() } as unknown as ISubsystemInitializer
+    const subsystemInitializerB = { initialize: vi.fn() } as unknown as ISubsystemInitializer
 
     const customActionToken = token<IActionHandler<CustomAction>>('custom-action')
     const customConditionToken = token<IConditionResolver>('custom-condition')
@@ -112,21 +90,9 @@ describe('EngineInitializer', () => {
       gameDataProvider,
       actionHandlerRegistry,
       conditionResolverRegistry,
-      pageManager,
-      actionManager,
-      mapManager,
-      virtualKeyProvider,
-      virtualInputProvider,
       logger,
-      turnManager,
       inputsProviderRegistry,
-      inputManager,
-      playerPositionManager,
-      tileTriggerManager,
-      dialogSetManager,
-      dialogManager,
-      dialogOutputManager,
-      turnOutputManager,
+      [subsystemInitializerA, subsystemInitializerB],
       actionRegistrars,
       conditionRegistrars,
       inputsRegistrars,
@@ -136,19 +102,8 @@ describe('EngineInitializer', () => {
 
     expect(gameLoader.loadGame).toHaveBeenCalledTimes(1)
     expect(gameDataProvider.initialize).toHaveBeenCalledWith(game)
-    expect(pageManager.initialize).toHaveBeenCalledTimes(1)
-    expect(actionManager.initialize).toHaveBeenCalledTimes(1)
-    expect(mapManager.initialize).toHaveBeenCalledTimes(1)
-    expect(turnManager.initialize).toHaveBeenCalledTimes(1)
-    expect(inputManager.initialize).toHaveBeenCalledTimes(1)
-    expect(playerPositionManager.initialize).toHaveBeenCalledTimes(1)
-    expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
-    expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
-    expect(tileTriggerManager.initialize).toHaveBeenCalledTimes(1)
-    expect(dialogSetManager.initialize).toHaveBeenCalledTimes(1)
-    expect(dialogManager.initialize).toHaveBeenCalledTimes(1)
-    expect(dialogOutputManager.initialize).toHaveBeenCalledTimes(1)
-    expect(turnOutputManager.initialize).toHaveBeenCalledTimes(1)
+    expect(subsystemInitializerA.initialize).toHaveBeenCalledTimes(1)
+    expect(subsystemInitializerB.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
     expect(domManager.setTitle).toHaveBeenCalledWith('Test Game')
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
