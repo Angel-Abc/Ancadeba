@@ -28,7 +28,8 @@ describe('VirtualInputProvider', () => {
         loadedTiles: new Map(),
         loadedTileSets: new Set(),
         loadedVirtualKeys: new Map(),
-        loadedVirtualInputs: new Map()
+        loadedVirtualInputsByInput: new Map(),
+        loadedVirtualInputsByKey: new Map()
       }
     } as unknown as IGameDataProvider
 
@@ -66,7 +67,8 @@ describe('VirtualInputProvider', () => {
         loadedTiles: new Map(),
         loadedTileSets: new Set(),
         loadedVirtualKeys: new Map(),
-        loadedVirtualInputs: new Map()
+        loadedVirtualInputsByInput: new Map(),
+        loadedVirtualInputsByKey: new Map()
       }
     } as unknown as IGameDataProvider
 

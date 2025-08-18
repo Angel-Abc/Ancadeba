@@ -1,4 +1,4 @@
-import { useService } from '@app/iocProvider'
+import { useService } from '@ioc/iocProvider'
 import { type SquaresMapComponent } from '@loader/data/component'
 import { GameMap, Position } from '@loader/data/map'
 import { MAP_SWITCHED, POSITION_CHANGED } from '@messages/system'

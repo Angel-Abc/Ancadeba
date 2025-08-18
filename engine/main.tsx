@@ -8,7 +8,7 @@ import './styling/reset.css'
 import './styling/variables.css'
 import './styling/engine.css'
 import { App } from '@app/app'
-import { IocProvider } from '@app/iocProvider'
+import { IocProvider } from '@ioc/iocProvider'
 import { ConsoleLogger } from '@utils/logger'
 
 const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
