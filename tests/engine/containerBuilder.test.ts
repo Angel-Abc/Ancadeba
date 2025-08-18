@@ -49,10 +49,13 @@ describe('ContainerBuilder', () => {
       { token: gameDataProviderToken, assert: r => expect(r).toBeInstanceOf(GameDataProvider) },
       { token: virtualKeyProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualKeyProvider) },
       { token: virtualInputProviderToken, assert: r => expect(r).toBeInstanceOf(VirtualInputProvider) },
-      { token: pageInputsToken, assert: r => expect(r).toBeInstanceOf(PageInputs) }
     ]
 
-    providers.forEach(p => p.assert(container.resolve(p.token as Token<unknown>)))
+    const pageInputs = { token: pageInputsToken, assert: (r: unknown) => expect(r).toBeInstanceOf(PageInputs) }
+
+    ;[...providers, pageInputs].forEach(p =>
+      p.assert(container.resolve(p.token as Token<unknown>))
+    )
 
     const logger: ILogger = {
       debug: vi.fn(),
