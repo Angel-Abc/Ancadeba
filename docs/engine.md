@@ -25,3 +25,7 @@ Builders in [`builders`](../engine/builders) modularize container configuration:
 
 The top-level `ContainerBuilder` composes these builders and returns a fully configured container ready for the engine.
 
+## Entry Point
+
+[`engine/main.tsx`](../engine/main.tsx) bootstraps the runtime. It constructs a `ContainerBuilder` with a queue-empty callback for the `TurnScheduler` and builds the container with the configured data path. The resulting `Container` is supplied to React's root through `<IocProvider>`, which wraps `<App />` so components can resolve services. Finally, the entry script retrieves the `gameEngine` from the container and asynchronously calls `start()` to begin processing turns.
+
