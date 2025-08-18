@@ -14,6 +14,7 @@ import type { IActionHandler } from '../../engine/registries/actionHandlerRegist
 import type { IConditionResolver } from '../../engine/registries/conditionResolverRegistry'
 import type { IInputsProvider } from '../../engine/registries/inputsProviderRegistry'
 import type { Condition } from '../../engine/loader/data/condition'
+import type { BaseAction } from '../../engine/loader/data/action'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
 import type { IDomManager } from '@managers/domManager'
@@ -36,6 +37,10 @@ import { IDialogSetManager } from '@managers/dialogSetManager'
 import { IDialogManager } from '@managers/dialogManager'
 import { IDialogOutputManager } from '@managers/dialogOutputManager'
 import { ITurnOutputManager } from '@managers/turnOutputManager'
+
+interface CustomAction extends BaseAction {
+  type: 'custom'
+}
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -77,7 +82,7 @@ describe('EngineInitializer', () => {
     const dialogOutputManager = { initialize: vi.fn() } as unknown as IDialogOutputManager
     const turnOutputManager = { initialize: vi.fn() } as unknown as ITurnOutputManager
 
-    const customActionToken = token<IActionHandler>('custom-action')
+    const customActionToken = token<IActionHandler<CustomAction>>('custom-action')
     const customConditionToken = token<IConditionResolver>('custom-condition')
     const customInputsToken = token<IInputsProvider>('custom-inputs')
 
@@ -86,7 +91,7 @@ describe('EngineInitializer', () => {
       r => r.registerActionHandler('script', scriptActionToken),
       r => r.registerActionHandler('goto', gotoDialogToken),
       r => r.registerActionHandler('end-dialog', endDialogToken),
-      r => r.registerActionHandler('custom' as any, customActionToken),
+      r => r.registerActionHandler<CustomAction>('custom', customActionToken),
     ]
     const conditionRegistrars: ConditionResolverRegistrar[] = [
       r => r.registerConditionResolver('script', scriptConditionToken),
