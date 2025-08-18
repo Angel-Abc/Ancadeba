@@ -11,6 +11,9 @@ import {
   type ConditionResolverRegistrar,
   type InputsProviderRegistrar,
 } from '@core/engineInitializer'
+import { PageManagersInitializer, pageManagersInitializerDependencies, pageManagersInitializerToken } from '@core/pageManagersInitializer'
+import { DialogManagersInitializer, dialogManagersInitializerDependencies, dialogManagersInitializerToken } from '@core/dialogManagersInitializer'
+import { subsystemInitializersToken } from '@core/subsystemInitializer'
 import { Container } from '@ioc/container'
 import type { Container as IContainer } from '@ioc/types'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
@@ -67,6 +70,23 @@ export class CoreBuilder {
       ],
     })
     container.register({
+      token: pageManagersInitializerToken,
+      useClass: PageManagersInitializer,
+      deps: pageManagersInitializerDependencies
+    })
+    container.register({
+      token: dialogManagersInitializerToken,
+      useClass: DialogManagersInitializer,
+      deps: dialogManagersInitializerDependencies
+    })
+    container.register({
+      token: subsystemInitializersToken,
+      useFactory: c => [
+        c.resolve(pageManagersInitializerToken),
+        c.resolve(dialogManagersInitializerToken),
+      ],
+    })
+    container.register({
       token: turnSchedulerToken,
       useClass: TurnScheduler,
       deps: turnSchedulerDependencies
@@ -112,4 +132,3 @@ export class CoreBuilder {
     })
   }
 }
-

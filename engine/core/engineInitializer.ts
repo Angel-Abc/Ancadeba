@@ -9,21 +9,9 @@ import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
 import { actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
-import { pageManagerToken, IPageManager } from '@managers/pageManager'
-import { actionManagerToken, IActionManager } from '@managers/actionManager'
-import { IMapManager, mapManagerToken } from '@managers/mapManager'
-import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtualKeyProvider'
-import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
-import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
 import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
-import { IInputManager, inputManagerToken } from '@managers/inputManager'
-import { IPlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
-import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTriggerManager'
-import { dialogSetManagerToken, IDialogSetManager } from '@managers/dialogSetManager'
-import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
-import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
-import { turnOutputManagerToken, ITurnOutputManager } from '@managers/turnOutputManager'
+import { subsystemInitializersToken, ISubsystemInitializer } from '@core/subsystemInitializer'
 
 export type ActionHandlerRegistrar = (registry: IActionHandlerRegistry) => void
 export type ConditionResolverRegistrar = (registry: IConditionResolverRegistry) => void
@@ -55,24 +43,12 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     gameDataProviderToken,
     actionHandlerRegistryToken,
     conditionResolverRegistryToken,
-    pageManagerToken,
-    actionManagerToken,
-    mapManagerToken,
-    virtualKeyProviderToken,
-    virtualInputProviderToken,
     loggerToken,
-    turnManagerToken,
     inputsProviderRegistryToken,
-    inputManagerToken,
-    playerPositionManagerToken,
-    tileTriggerManagerToken,
-    dialogSetManagerToken,
-    dialogManagerToken,
-    dialogOutputManagerToken,
-    turnOutputManagerToken,
+    subsystemInitializersToken,
     actionHandlerRegistrarsToken,
     conditionResolverRegistrarsToken,
-    inputsProviderRegistrarsToken
+    inputsProviderRegistrarsToken,
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -88,8 +64,6 @@ export class EngineInitializer implements IEngineInitializer {
      * @param languageManager - Handles localization and language setup.
      * @param gameDataProvider - Stores and provides loaded game data.
      * @param actionHandlerRegistry - Registry used to register action handlers.
-     * @param pageManager - Manages page initialization and navigation.
-     * @param actionManager - Initializes and manages actions.
      */
     constructor(
         private messageBus: IMessageBus,
@@ -99,21 +73,9 @@ export class EngineInitializer implements IEngineInitializer {
         private gameDataProvider: IGameDataProvider,
         private actionHandlerRegistry: IActionHandlerRegistry,
         private conditionResolverRegistry: IConditionResolverRegistry,
-        private pageManager: IPageManager,
-        private actionManager: IActionManager,
-        private mapManager: IMapManager,
-        private virtualKeyProvider: IVirtualKeyProvider,
-        private virtualInputProvider: IVirtualInputProvider,
         private logger: ILogger,
-        private turnManager: ITurnManager,
         private inputsProviderRegistry: IInputsProviderRegistry,
-        private inputManager: IInputManager,
-        private playerPositionManager: IPlayerPositionManager,
-        private tileTriggerManager: ITileTriggerManager,
-        private dialogSetManager: IDialogSetManager,
-        private dialogManager: IDialogManager,
-        private dialogOutputManager: IDialogOutputManager,
-        private turnOutputManager: ITurnOutputManager,
+        private subsystemInitializers: ISubsystemInitializer[],
         private actionHandlerRegistrars: ActionHandlerRegistrar[],
         private conditionResolverRegistrars: ConditionResolverRegistrar[],
         private inputsProviderRegistrars: InputsProviderRegistrar[],
@@ -127,9 +89,9 @@ export class EngineInitializer implements IEngineInitializer {
     public async initialize(): Promise<void> {
         const game = await this.loadGameDataRoot()
         this.gameDataProvider.initialize(game)
-        await this.virtualKeyProvider.initialize()
-        await this.virtualInputProvider.initialize()
-        await this.initializeManagers()
+        for (const initializer of this.subsystemInitializers) {
+            await initializer.initialize()
+        }
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
         this.actionHandlerRegistrars.forEach(r => r(this.actionHandlerRegistry))
@@ -143,20 +105,6 @@ export class EngineInitializer implements IEngineInitializer {
             message: SWITCH_PAGE,
             payload: game.initialData.startPage
         })
-    }
-
-    private async initializeManagers(): Promise<void> {
-        this.pageManager.initialize()
-        await this.actionManager.initialize()
-        this.mapManager.initialize()
-        this.turnManager.initialize()
-        this.inputManager.initialize()
-        this.playerPositionManager.initialize()
-        this.tileTriggerManager.initialize()
-        this.dialogSetManager.initialize()
-        this.dialogManager.initialize()
-        this.dialogOutputManager.initialize()
-        this.turnOutputManager.initialize()
     }
 
     /**
