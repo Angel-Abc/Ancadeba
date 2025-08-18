@@ -6,6 +6,7 @@ import { MapManager, mapManagerDependencies, mapManagerToken } from '@managers/m
 import { PageManager, pageManagerDependencies, pageManagerToken } from '@managers/pageManager'
 import { TileSetManager, tileSetManagerDependencies, tileSetManagerToken } from '@managers/tileSetManager'
 import { PlayerPositionManager, playerPositionManagerDependencies, playerPositionManagerToken } from '@managers/playerPositionManager'
+import { TileTriggerManager, tileTriggerManagerDependencies, tileTriggerManagerToken } from '@managers/tileTriggerManager'
 import { TurnManager, turnManagerDependencies, turnManagerToken } from '@managers/turnManager'
 import { InputManager, inputManagerDependencies, inputManagerToken } from '@managers/inputManager'
 
@@ -52,6 +53,11 @@ export class ManagersBuilder {
       token: mapManagerToken,
       useClass: MapManager,
       deps: mapManagerDependencies
+    })
+    container.register({
+      token: tileTriggerManagerToken,
+      useClass: TileTriggerManager,
+      deps: tileTriggerManagerDependencies
     })
     container.register({
       token: turnManagerToken,
