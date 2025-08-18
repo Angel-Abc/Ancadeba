@@ -4,6 +4,8 @@ import type { ILogger } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../../engine/messages/system'
 import { postMessageActionToken } from '../../engine/actions/postMessageAction'
 import { scriptActionToken } from '../../engine/actions/scriptAction'
+import { gotoDialogToken } from '../../engine/actions/gotoDialog'
+import { endDialogToken } from '../../engine/actions/endDialog'
 import { scriptConditionToken } from '../../engine/conditions/scriptCondition'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
@@ -116,9 +118,11 @@ describe('EngineInitializer', () => {
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(1, 'style1.css')
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(2, 'style2.css')
-    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(2)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(4)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(1, 'post-message', postMessageActionToken)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(2, 'script', scriptActionToken)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(3, 'goto', gotoDialogToken)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(4, 'end-dialog', endDialogToken)
     expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenCalledWith('script', scriptConditionToken)
     expect(messageBus.postMessage).toHaveBeenCalledTimes(2)
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(1, { message: START_GAME_ENGINE_MESSAGE, payload: null })

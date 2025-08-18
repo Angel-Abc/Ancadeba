@@ -25,7 +25,10 @@ function setup(tile?: MapTile) {
   } as unknown as IGameDataProvider
   let handler: (message: Message<unknown>) => void = () => {}
   const messageBus = {
-    registerMessageListener: vi.fn().mockImplementation((_msg, cb) => { handler = cb; return () => {} }),
+    registerMessageListener: vi.fn().mockImplementation((msg, cb) => {
+      if (msg === POSITION_CHANGED) handler = cb
+      return () => {}
+    }),
     postMessage: vi.fn()
   } as unknown as IMessageBus
   const manager = new TileTriggerManager(provider, messageBus, actionExecutor)

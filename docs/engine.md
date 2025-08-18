@@ -4,7 +4,7 @@ The `engine` directory contains the runtime of the game. It is organized into mo
 
 ## IoC Setup
 
-Dependencies are resolved through a lightweight inversion of control container found in [`ioc`](../engine/ioc). Tokens defined in [`token.ts`](../engine/ioc/token.ts) uniquely identify services, while [`container.ts`](../engine/ioc/container.ts) resolves them. The overall container is assembled by [`ContainerBuilder`](../engine/builders/containerBuilder.ts), which wires together subsystems through a collection of specialized builders.
+Dependencies are resolved through a lightweight inversion of control container found in [`ioc`](../engine/ioc). Tokens defined in [`token.ts`](../engine/ioc/token.ts) uniquely identify services, while [`container.ts`](../engine/ioc/container.ts) resolves them. The overall container is assembled by [`ContainerBuilder`](../engine/builders/containerBuilder.ts), which wires together subsystems through a collection of specialized builders. `ContainerBuilder` accepts an optional logger or factory and registers it under the `ILogger` token so consumers remain agnostic of the concrete logger implementation.
 
 ## Message Flow
 
@@ -27,5 +27,5 @@ The top-level `ContainerBuilder` composes these builders and returns a fully con
 
 ## Entry Point
 
-[`engine/main.tsx`](../engine/main.tsx) bootstraps the runtime. It constructs a `ContainerBuilder` with a queue-empty callback for the `TurnScheduler` and builds the container with the configured data path. The resulting `Container` is supplied to React's root through `<IocProvider>`, which wraps `<App />` so components can resolve services. Finally, the entry script retrieves the `gameEngine` from the container and asynchronously calls `start()` to begin processing turns.
+[`engine/main.tsx`](../engine/main.tsx) bootstraps the runtime. It constructs a `ContainerBuilder` with a queue-empty callback for the `TurnScheduler`, the data path, and a logger factory. The resulting `Container` is supplied to React's root through `<IocProvider>`, which wraps `<App />` so components can resolve services. Finally, the entry script retrieves the `gameEngine` from the container and asynchronously calls `start()` to begin processing turns.
 
