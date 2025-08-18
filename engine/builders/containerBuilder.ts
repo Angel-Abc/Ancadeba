@@ -8,7 +8,7 @@ import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'
 import { RegistriesBuilder } from './containerBuilders/registriesBuilder'
 import { ServicesBuilder } from './containerBuilders/servicesBuilder'
-import { ConsoleLogger, loggerToken } from '@utils/logger'
+import { ConsoleLogger, loggerToken, type ILogger } from '@utils/logger'
 import { ConditionsBuilder } from './containerBuilders/conditionsBuilder'
 
 /**
@@ -34,7 +34,12 @@ export class ContainerBuilder implements IContainerBuilder {
   constructor(
     private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {},
     private dataPath: string = process.env.DATA_PATH ?? '/data',
-  ) {}
+    logger: ILogger | (() => ILogger) = () => new ConsoleLogger(),
+  ) {
+    this.loggerFactory = typeof logger === 'function' ? (logger as () => ILogger) : () => logger
+  }
+
+  private readonly loggerFactory: () => ILogger
 
   /**
    * Build and configure the dependency container.
@@ -43,7 +48,7 @@ export class ContainerBuilder implements IContainerBuilder {
    * @remarks Mutates the new container by registering all engine services.
    */
   public build(): Container {
-    const logger = new ConsoleLogger()
+    const logger = this.loggerFactory()
     const result = new Container(logger)
     result.register({ token: loggerToken, useValue: logger })
     new CoreBuilder(this.onQueueEmptyProvider).register(result)

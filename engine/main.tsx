@@ -9,6 +9,7 @@ import './styling/variables.css'
 import './styling/engine.css'
 import { App } from '@app/app'
 import { IocProvider } from '@app/iocProvider'
+import { ConsoleLogger } from '@utils/logger'
 
 const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
@@ -17,6 +18,7 @@ const containerBuilder: IContainerBuilder = new ContainerBuilder(
     scheduler.onQueueEmpty()
   },
   dataPath,
+  () => new ConsoleLogger(),
 )
 const container: Container = containerBuilder.build()
 

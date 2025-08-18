@@ -21,10 +21,18 @@ import { PlayerPositionManager, playerPositionManagerToken } from '@managers/pla
 import { InputManager, inputManagerToken } from '@managers/inputManager'
 import { PageInputs, pageInputsToken } from '@inputs/pageInputs'
 import type { ILogger } from '@utils/logger'
+import { loggerToken } from '@utils/logger'
 
 describe('ContainerBuilder', () => {
   it('registers default dependencies', () => {
-    const builder = new ContainerBuilder(() => () => {}, '/data')
+    const logger: ILogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
+        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
+    }
+    const builder = new ContainerBuilder(() => () => {}, '/data', () => logger)
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)
     const bus = container.resolve(messageBusToken)
@@ -42,6 +50,7 @@ describe('ContainerBuilder', () => {
     expect(tileSetManager).toBeInstanceOf(TileSetManager)
     expect(playerPositionManager).toBeInstanceOf(PlayerPositionManager)
     expect(inputManager).toBeInstanceOf(InputManager)
+    expect(container.resolve(loggerToken)).toBe(logger)
 
     const providers: { token: Token<unknown>, assert: (resolved: unknown) => void }[] = [
       { token: serviceProviderToken, assert: r => expect(r).toBeInstanceOf(ServiceProvider) },
@@ -57,13 +66,6 @@ describe('ContainerBuilder', () => {
       p.assert(container.resolve(p.token as Token<unknown>))
     )
 
-    const logger: ILogger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn((category: string, message: string, ...args: unknown[]) =>
-        `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
-    }
     const providerContainer = new Container(logger)
     new ProvidersBuilder('/data').register(providerContainer)
     const registeredTokens = Array.from(
@@ -75,7 +77,12 @@ describe('ContainerBuilder', () => {
 
   it('uses supplied callback when queue empties', async () => {
     const callback = vi.fn()
-    const builder = new ContainerBuilder(() => callback, '/data')
+    const builder = new ContainerBuilder(() => callback, '/data', () => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    }))
     const container = builder.build()
     const queue = container.resolve(messageQueueToken)
     queue.setHandler(() => {})
@@ -91,6 +98,7 @@ describe('ContainerBuilder', () => {
         scheduler.onQueueEmpty()
       },
       '/data',
+      () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
     )
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)

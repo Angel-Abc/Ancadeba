@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, PropsWithChildren } from 'react'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
-import { ConsoleLogger, loggerToken, type ILogger } from '@utils/logger'
+import { loggerToken, type ILogger } from '@utils/logger'
 
 const logName = 'IocProvider'
 
@@ -32,7 +32,14 @@ export const IocProvider = ({ container, children }: PropsWithChildren<{ contain
  */
 export const useService = <T,>(t: Token<T>, logger?: ILogger): T => {
   const c = useContext(IocContext)
-  const log = logger ?? c?.resolve<ILogger>(loggerToken) ?? new ConsoleLogger()
-  if (!c) throw new Error(log.error(logName, 'IocProvider is missing in the tree'))
+  const log = logger ?? c?.resolve<ILogger>(loggerToken)
+  if (!c) {
+    const err = 'IocProvider is missing in the tree'
+    if (log) log.error(logName, err)
+    throw new Error(err)
+  }
+  if (!log) {
+    throw new Error('Logger service is missing')
+  }
   return useMemo(() => c.resolve(t), [c, t])
 }
