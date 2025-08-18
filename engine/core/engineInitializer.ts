@@ -9,7 +9,6 @@ import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '@messages/system'
 import { actionHandlerRegistryToken, IActionHandlerRegistry } from '@registries/actionHandlerRegistry'
-import { postMessageActionToken } from '@actions/postMessageAction'
 import { pageManagerToken, IPageManager } from '@managers/pageManager'
 import { actionManagerToken, IActionManager } from '@managers/actionManager'
 import { IMapManager, mapManagerToken } from '@managers/mapManager'
@@ -17,20 +16,22 @@ import { IVirtualKeyProvider, virtualKeyProviderToken } from '@providers/virtual
 import { IVirtualInputProvider, virtualInputProviderToken } from '@providers/virtualInputProvider'
 import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 import { conditionResolverRegistryToken, IConditionResolverRegistry } from '@registries/conditionResolverRegistry'
-import { scriptConditionToken } from '@conditions/scriptCondition'
 import { IInputsProviderRegistry, inputsProviderRegistryToken } from '@registries/inputsProviderRegistry'
-import { pageInputsToken } from '@inputs/pageInputs'
 import { IInputManager, inputManagerToken } from '@managers/inputManager'
-import { scriptActionToken } from '@actions/scriptAction'
 import { IPlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
 import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTriggerManager'
 import { dialogSetManagerToken, IDialogSetManager } from '@managers/dialogSetManager'
 import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
 import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
 import { turnOutputManagerToken, ITurnOutputManager } from '@managers/turnOutputManager'
-import { dialogInputsToken } from '@inputs/dialogInputs'
-import { gotoDialogToken } from '@actions/gotoDialog'
-import { endDialogToken } from '@actions/endDialog'
+
+export type ActionHandlerRegistrar = (registry: IActionHandlerRegistry) => void
+export type ConditionResolverRegistrar = (registry: IConditionResolverRegistry) => void
+export type InputsProviderRegistrar = (registry: IInputsProviderRegistry) => void
+
+export const actionHandlerRegistrarsToken = token<ActionHandlerRegistrar[]>('action-handler-registrars')
+export const conditionResolverRegistrarsToken = token<ConditionResolverRegistrar[]>('condition-resolver-registrars')
+export const inputsProviderRegistrarsToken = token<InputsProviderRegistrar[]>('inputs-provider-registrars')
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -68,7 +69,10 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     dialogSetManagerToken,
     dialogManagerToken,
     dialogOutputManagerToken,
-    turnOutputManagerToken
+    turnOutputManagerToken,
+    actionHandlerRegistrarsToken,
+    conditionResolverRegistrarsToken,
+    inputsProviderRegistrarsToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -109,7 +113,10 @@ export class EngineInitializer implements IEngineInitializer {
         private dialogSetManager: IDialogSetManager,
         private dialogManager: IDialogManager,
         private dialogOutputManager: IDialogOutputManager,
-        private turnOutputManager: ITurnOutputManager
+        private turnOutputManager: ITurnOutputManager,
+        private actionHandlerRegistrars: ActionHandlerRegistrar[],
+        private conditionResolverRegistrars: ConditionResolverRegistrar[],
+        private inputsProviderRegistrars: InputsProviderRegistrar[],
     ){}
 
     /**
@@ -125,9 +132,9 @@ export class EngineInitializer implements IEngineInitializer {
         await this.initializeManagers()
         await this.languageManager.setLanguage(game.initialData.language)
         this.setupBrowser(game)
-        this.registerActions()
-        this.registerConditions()
-        this.registerInputsProviders()
+        this.actionHandlerRegistrars.forEach(r => r(this.actionHandlerRegistry))
+        this.conditionResolverRegistrars.forEach(r => r(this.conditionResolverRegistry))
+        this.inputsProviderRegistrars.forEach(r => r(this.inputsProviderRegistry))
         this.messageBus.postMessage({
             message: START_GAME_ENGINE_MESSAGE,
             payload: null
@@ -150,25 +157,6 @@ export class EngineInitializer implements IEngineInitializer {
         this.dialogManager.initialize()
         this.dialogOutputManager.initialize()
         this.turnOutputManager.initialize()
-    }
-
-    /**
-     * Registers built-in action handlers with the registry.
-     */
-    private registerActions(): void {
-        this.actionHandlerRegistry.registerActionHandler('post-message', postMessageActionToken)
-        this.actionHandlerRegistry.registerActionHandler('script', scriptActionToken)
-        this.actionHandlerRegistry.registerActionHandler('goto', gotoDialogToken)
-        this.actionHandlerRegistry.registerActionHandler('end-dialog', endDialogToken)
-    }
-
-    private registerConditions(): void {
-        this.conditionResolverRegistry.registerConditionResolver('script', scriptConditionToken)
-    }
-
-    private registerInputsProviders(): void {
-        this.inputsProviderRegistry.registerInputsProvider(pageInputsToken)
-        this.inputsProviderRegistry.registerInputsProvider(dialogInputsToken)
     }
 
     /**

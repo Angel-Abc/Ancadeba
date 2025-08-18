@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { CoreBuilder } from '@builders/containerBuilders/coreBuilder'
-import { engineInitializerToken } from '@core/engineInitializer'
+import { engineInitializerToken, actionHandlerRegistrarsToken, conditionResolverRegistrarsToken, inputsProviderRegistrarsToken } from '@core/engineInitializer'
 import { gameEngineToken } from '@core/gameEngine'
 import { turnSchedulerToken } from '@core/turnScheduler'
 import { keyboardEventListenerToken } from '@utils/keyboardEventListener'
@@ -40,9 +40,12 @@ describe('coreBuilder', () => {
         inputMatrixBuilderToken,
         pageInputsToken,
         dialogInputsToken,
+        actionHandlerRegistrarsToken,
+        conditionResolverRegistrarsToken,
+        inputsProviderRegistrarsToken,
       ])
     )
-    expect(registeredTokens).toHaveLength(9)
+    expect(registeredTokens).toHaveLength(12)
   })
 })
 

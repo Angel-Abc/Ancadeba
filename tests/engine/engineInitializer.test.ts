@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { EngineInitializer } from '../../engine/core/engineInitializer'
+import { EngineInitializer, type ActionHandlerRegistrar, type ConditionResolverRegistrar, type InputsProviderRegistrar } from '../../engine/core/engineInitializer'
 import type { ILogger } from '@utils/logger'
 import { START_GAME_ENGINE_MESSAGE, SWITCH_PAGE } from '../../engine/messages/system'
 import { postMessageActionToken } from '../../engine/actions/postMessageAction'
@@ -7,6 +7,13 @@ import { scriptActionToken } from '../../engine/actions/scriptAction'
 import { gotoDialogToken } from '../../engine/actions/gotoDialog'
 import { endDialogToken } from '../../engine/actions/endDialog'
 import { scriptConditionToken } from '../../engine/conditions/scriptCondition'
+import { pageInputsToken } from '../../engine/inputs/pageInputs'
+import { dialogInputsToken } from '../../engine/inputs/dialogInputs'
+import { token } from '../../engine/ioc/token'
+import type { IActionHandler } from '../../engine/registries/actionHandlerRegistry'
+import type { IConditionResolver } from '../../engine/registries/conditionResolverRegistry'
+import type { IInputsProvider } from '../../engine/registries/inputsProviderRegistry'
+import type { Condition } from '../../engine/loader/data/condition'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
 import type { IDomManager } from '@managers/domManager'
@@ -70,6 +77,27 @@ describe('EngineInitializer', () => {
     const dialogOutputManager = { initialize: vi.fn() } as unknown as IDialogOutputManager
     const turnOutputManager = { initialize: vi.fn() } as unknown as ITurnOutputManager
 
+    const customActionToken = token<IActionHandler>('custom-action')
+    const customConditionToken = token<IConditionResolver>('custom-condition')
+    const customInputsToken = token<IInputsProvider>('custom-inputs')
+
+    const actionRegistrars: ActionHandlerRegistrar[] = [
+      r => r.registerActionHandler('post-message', postMessageActionToken),
+      r => r.registerActionHandler('script', scriptActionToken),
+      r => r.registerActionHandler('goto', gotoDialogToken),
+      r => r.registerActionHandler('end-dialog', endDialogToken),
+      r => r.registerActionHandler('custom' as any, customActionToken),
+    ]
+    const conditionRegistrars: ConditionResolverRegistrar[] = [
+      r => r.registerConditionResolver('script', scriptConditionToken),
+      r => r.registerConditionResolver('custom-cond' as Condition['type'], customConditionToken),
+    ]
+    const inputsRegistrars: InputsProviderRegistrar[] = [
+      r => r.registerInputsProvider(pageInputsToken),
+      r => r.registerInputsProvider(dialogInputsToken),
+      r => r.registerInputsProvider(customInputsToken),
+    ]
+
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
       messageBus,
@@ -93,7 +121,10 @@ describe('EngineInitializer', () => {
       dialogSetManager,
       dialogManager,
       dialogOutputManager,
-      turnOutputManager
+      turnOutputManager,
+      actionRegistrars,
+      conditionRegistrars,
+      inputsRegistrars,
     )
 
     await initializer.initialize()
@@ -118,12 +149,19 @@ describe('EngineInitializer', () => {
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(1, 'style1.css')
     expect(domManager.setCssFile).toHaveBeenNthCalledWith(2, 'style2.css')
-    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(4)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenCalledTimes(5)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(1, 'post-message', postMessageActionToken)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(2, 'script', scriptActionToken)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(3, 'goto', gotoDialogToken)
     expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(4, 'end-dialog', endDialogToken)
-    expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenCalledWith('script', scriptConditionToken)
+    expect(actionHandlerRegistry.registerActionHandler).toHaveBeenNthCalledWith(5, 'custom', customActionToken)
+    expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenCalledTimes(2)
+    expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenNthCalledWith(1, 'script', scriptConditionToken)
+    expect(conditionResolverRegistry.registerConditionResolver).toHaveBeenNthCalledWith(2, 'custom-cond', customConditionToken)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenCalledTimes(3)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenNthCalledWith(1, pageInputsToken)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenNthCalledWith(2, dialogInputsToken)
+    expect(inputsProviderRegistry.registerInputsProvider).toHaveBeenNthCalledWith(3, customInputsToken)
     expect(messageBus.postMessage).toHaveBeenCalledTimes(2)
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(1, { message: START_GAME_ENGINE_MESSAGE, payload: null })
     expect(messageBus.postMessage).toHaveBeenNthCalledWith(2, { message: SWITCH_PAGE, payload: 'home' })
