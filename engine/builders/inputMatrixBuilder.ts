@@ -82,7 +82,7 @@ export class InputMatrixBuilder implements IInputMatrxBuilder {
             label: this.translationService.translate(inputItem.input.label),
             description: this.translationService.translate(inputItem.input.description),
             virtualInput: inputItem.input.virtualInput,
-            character: this.gameDataProvider.Game.loadedVirtualInputs.get(inputItem.input.virtualInput)?.label ?? ''
+            character: this.gameDataProvider.Game.loadedVirtualInputsByInput.get(inputItem.input.virtualInput)?.label ?? ''
         }
     }
 

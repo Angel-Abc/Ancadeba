@@ -34,7 +34,8 @@ export type GameData = {
     loadedTiles: Map<string, Tile>,
     loadedTileSets: Set<string>,
     loadedVirtualKeys: Map<string, VirtualKey>,
-    loadedVirtualInputs: Map<string, VirtualInput>,
+    loadedVirtualInputsByKey: Map<string, VirtualInput>,
+    loadedVirtualInputsByInput: Map<string, VirtualInput>,
     loadedDialogSets: Map<string, DialogSet>,
     activeInputs: Map<string, ActiveInput>
 }
@@ -144,7 +145,8 @@ export class GameDataProvider implements IGameDataProvider {
             loadedTiles: new Map<string, Tile>(),
             loadedTileSets: new Set<string>(),
             loadedVirtualKeys: new Map<string, VirtualKey>(),
-            loadedVirtualInputs: new Map<string, VirtualInput>(),
+            loadedVirtualInputsByKey: new Map<string, VirtualInput>(),
+            loadedVirtualInputsByInput: new Map<string, VirtualInput>(),
             loadedDialogSets: new Map<string, DialogSet>(),
             activeInputs: new Map<string, ActiveInput>()
         }

@@ -50,14 +50,14 @@ export class VirtualInputProvider implements IVirtualInputProvider {
      * @returns {Promise<void>} Resolves once initialization completes.
      */
     public async initialize(): Promise<void> {
-        if (this.gameDataProvider.Game.loadedVirtualInputs.size === 0) await this.loadVirtualInputs()
+        if (this.gameDataProvider.Game.loadedVirtualInputsByKey.size === 0) await this.loadVirtualInputs()
         this.cleanupFn = this.messageBus.registerMessageListener(
             VIRTUAL_KEY,
             message => {
-                if (message.payload && this.gameDataProvider.Game.loadedVirtualInputs.has(message.payload as string)) {
+                if (message.payload && this.gameDataProvider.Game.loadedVirtualInputsByKey.has(message.payload as string)) {
                     this.messageBus.postMessage({
                         message: VIRTUAL_INPUT,
-                        payload: this.gameDataProvider.Game.loadedVirtualInputs.get(message.payload as string)?.virtualInput
+                        payload: this.gameDataProvider.Game.loadedVirtualInputsByKey.get(message.payload as string)?.virtualInput
                     })
                 }
             }
@@ -86,7 +86,8 @@ export class VirtualInputProvider implements IVirtualInputProvider {
     private async loadVirtualInputs(): Promise<void> {
         const inputs = await this.virtualInputsLoader.loadVirtualInputs(this.gameDataProvider.Game.game.virtualInputs)
         inputs.forEach(input => {
-            input.virtualKeys.forEach(virtualKey => this.gameDataProvider.Game.loadedVirtualInputs.set(virtualKey, input))
+            this.gameDataProvider.Game.loadedVirtualInputsByInput.set(input.virtualInput, input)
+            input.virtualKeys.forEach(virtualKey => this.gameDataProvider.Game.loadedVirtualInputsByKey.set(virtualKey, input))
         })
     }
 }
