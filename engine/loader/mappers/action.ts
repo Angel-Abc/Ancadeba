@@ -1,5 +1,5 @@
-import type { Action as ActionData } from '@loader/data/action'
-import { type Action } from '@loader/schema/action'
+import type { Action as ActionData, Actions as ActionsData } from '@loader/data/action'
+import { type Action, type Actions } from '@loader/schema/action'
 import { fatalError } from '@utils/logMessage'
 
 const logName = 'mapAction'
@@ -29,8 +29,18 @@ export function mapAction(action: Action): ActionData {
                 type: 'script',
                 script: Array.isArray(action.script) ? action.script.join('\n') : action.script
             }
+        case 'end-dialog':
+            return {
+                type: 'end-dialog',
+                message: action.message
+            }
         default:
             // Halt execution if an unsupported action type is encountered
             fatalError(logName, 'Unsupported action type: {0}', (action as { type: string }).type)
     }
+}
+
+export function mapActions(actions: Actions): ActionsData {
+    if (Array.isArray(actions)) return actions.map(mapAction)
+    return mapAction(actions)
 }

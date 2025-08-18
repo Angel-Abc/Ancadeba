@@ -20,6 +20,10 @@
                 "type": "post-message",
                 "message": "SYSTEM/START-DIALOG-SET",
                 "payload": "start-beach.start-dialog"
+            },
+            "onExit": {
+                "type": "end-dialog",
+                "message": "START-BEACH.START-DIALOG.INTRO.EXIT"
             }
         },
         {

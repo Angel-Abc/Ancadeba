@@ -13,6 +13,7 @@
         "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.MESSAGE": "<p>You try to remember how you got here, but your mind is blank.</p>",
         "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.CHOICE-1": "Continue walking",
         "START-BEACH.START-DIALOG.LOOK-AROUND.CHOICE-1.MESSAGE": "<p>You continue walking along the beach, feeling the sand between your toes.</p>",
-        "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.CHOICE-1.MESSAGE": "<p>As continue your walk, you feel a sense of calm wash over you, despite the confusion.</p>"
+        "START-BEACH.START-DIALOG.TRY-TO-REMEMBER.CHOICE-1.MESSAGE": "<p>As continue your walk, you feel a sense of calm wash over you, despite the confusion.</p>",
+        "START-BEACH.START-DIALOG.INTRO.EXIT": "<p>Whatever! It's better to move.</p>"
     }
 }

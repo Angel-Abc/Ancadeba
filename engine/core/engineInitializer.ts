@@ -29,6 +29,8 @@ import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
 import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
 import { turnOutputManagerToken, ITurnOutputManager } from '@managers/turnOutputManager'
 import { dialogInputsToken } from '@inputs/dialogInputs'
+import { gotoDialogToken } from '@actions/gotoDialog'
+import { endDialogToken } from '@actions/endDialog'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -156,6 +158,8 @@ export class EngineInitializer implements IEngineInitializer {
     private registerActions(): void {
         this.actionHandlerRegistry.registerActionHandler('post-message', postMessageActionToken)
         this.actionHandlerRegistry.registerActionHandler('script', scriptActionToken)
+        this.actionHandlerRegistry.registerActionHandler('goto', gotoDialogToken)
+        this.actionHandlerRegistry.registerActionHandler('end-dialog', endDialogToken)
     }
 
     private registerConditions(): void {

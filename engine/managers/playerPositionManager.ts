@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { Position } from '@loader/data/map'
-import { CHANGE_POSITION, POSITION_CHANGED } from '@messages/system'
+import { CHANGE_POSITION, CHANGING_POSITION, POSITION_CHANGED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
@@ -56,6 +56,10 @@ export class PlayerPositionManager implements IPlayerPositionManager {
      * provider's context.
      */
     public changePosition(position: Position): void {
+        this.messageBus.postMessage({
+            message: CHANGING_POSITION,
+            payload: this.gameDataProvider.Context.player.position
+        })
         this.gameDataProvider.Context.player.position = position
         this.messageBus.postMessage({
             message: POSITION_CHANGED,

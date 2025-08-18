@@ -38,8 +38,8 @@ export class DialogInputs implements IDialogInputs {
                             virtualInput: `VI_${index + 1}`,
                             preferredRow: 0,
                             preferredCol: index,
-                            label: this.translationService.translate(choice.label),
-                            description: this.translationService.translate(choice.label),
+                            label: choice.label,
+                            description: choice.label,
                             visible: choice.visible,
                             enabled: choice.enabled,
                             action: choice.action

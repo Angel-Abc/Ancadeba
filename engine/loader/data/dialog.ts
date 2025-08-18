@@ -21,19 +21,8 @@ export type GotoDialogAction = {
     target: string
 }
 
-/**
- * Action that terminates the dialog sequence.
- *
- * @property type    Discriminator for the action, always `'end-dialog'`.
- * @property message Optional message displayed when ending the dialog.
- */
-export type EndDialogAction = {
-    type: 'end-dialog',
-    message?: string
-}
-
 /** Union of all actions that may occur as a dialog result. */
-export type DialogAction = Action | GotoDialogAction | EndDialogAction
+export type DialogAction = Action | GotoDialogAction
 
 /**
  * Single selectable option presented to the player in a dialog.

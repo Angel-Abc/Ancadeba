@@ -1,3 +1,4 @@
+
 /**
  * Action that posts a message to the outer environment.
  *
@@ -22,8 +23,20 @@ export interface ScriptAction {
     script: string
 }
 
+/**
+ * Action that terminates the dialog sequence.
+ *
+ * @property type    Discriminator for the action, always `'end-dialog'`.
+ * @property message Optional message displayed when ending the dialog.
+ */
+export interface EndDialogAction {
+    type: 'end-dialog',
+    message?: string
+}
+
 /** Union of all supported action definitions. */
-export type Action = PostMessageAction | ScriptAction
+export type Action = PostMessageAction | ScriptAction | EndDialogAction
+export type Actions = Action | Action[]
 
 /** Base shape for actions used when only the type discriminator is known. */
 export type BaseAction = { type: string }

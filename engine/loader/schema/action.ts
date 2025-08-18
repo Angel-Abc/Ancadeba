@@ -11,6 +11,14 @@ export const scriptActionSchema = z.object({
     script: z.union([z.string(), z.array(z.string())])  
 })
 
-export const actionSchema = z.discriminatedUnion('type', [postMessageActionSchema, scriptActionSchema])
+export const endDialogActionSchema = z.object({
+    type: z.literal('end-dialog'),
+    message: z.string().optional()
+})
+
+
+export const actionSchema = z.discriminatedUnion('type', [postMessageActionSchema, scriptActionSchema, endDialogActionSchema])
+export const actionsSchema = z.union([actionSchema, z.array(actionSchema)])
 
 export type Action = z.infer<typeof actionSchema>
+export type Actions = z.infer<typeof actionsSchema>

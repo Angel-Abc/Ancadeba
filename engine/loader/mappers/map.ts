@@ -1,9 +1,7 @@
 import type { GameMap as GameMapData, MapTile as MapTileData, Position as PositionData } from '@loader/data/map'
 import { type GameMap, type MapTile, type Position } from '@loader/schema/map'
-import type { Action as ActionData } from '@loader/data/action'
 import { fatalError } from '@utils/logMessage'
-import { mapAction } from './action'
-import { Action } from '@loader/schema/action'
+import { mapActions } from './action'
 
 const logName = 'mapGameMap'
 
@@ -26,16 +24,12 @@ export function mapGameMap(gameMap: GameMap): GameMapData {
     }
 }
 
-function mapTileAction(action: Action | Action[]): ActionData | ActionData[] {
-    if (Array.isArray(action)) return action.map(mapAction)
-    return mapAction(action)
-}
-
 export function mapMapTile(mapTile: MapTile): MapTileData {
     return {
         key: mapTile.key,
         tile: mapTile.tile,
-        onEnter: mapTile.onEnter ? mapTileAction(mapTile.onEnter) : undefined
+        onEnter: mapTile.onEnter ? mapActions(mapTile.onEnter) : undefined,
+        onExit: mapTile.onExit ? mapActions(mapTile.onExit) : undefined
     }
 }
 

@@ -1,4 +1,4 @@
-import type { Action } from './action'
+import type { Actions } from './action'
 
 /**
  * Tile instance placed on a map grid.
@@ -10,7 +10,8 @@ import type { Action } from './action'
 export type MapTile = {
     key: string
     tile: string
-    onEnter?: Action | Action[]
+    onEnter?: Actions
+    onExit?: Actions
 }
 
 /**

@@ -16,7 +16,7 @@ export type ActiveInput = {
 }
 
 export type TurnOutput = {
-    outputs: unknown[]
+    outputs: string[]
 }
 
 /**

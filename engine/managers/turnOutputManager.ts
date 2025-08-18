@@ -48,12 +48,15 @@ export class TurnOutputManager implements ITurnOutputManager {
     private onWriteOutput(payload: unknown): void {
         const context = this.gameDataProvider.Context
         const current = context.turnOutputs[context.turnOutputs.length - 1]
-        current.outputs.push(payload)
+        current.outputs.push(payload as string)
     }
 
     private onFinalizeTurn(): void {
         const context = this.gameDataProvider.Context
-        context.turnOutputs.push({ outputs: [] })
+        const current = context.turnOutputs[context.turnOutputs.length - 1]
+        if (current.outputs.length > 0) {
+            context.turnOutputs.push({ outputs: [] })
+        }
     }
 }
 
