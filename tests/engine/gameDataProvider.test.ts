@@ -42,6 +42,8 @@ describe('GameDataProvider', () => {
       isInModalDialog: false,
       player: { position: { x: 0, y: 0 } },
       currentDialogSet: { dialogSetId: null, dialogId: null }
+      ,
+      turnOutputs: [ { outputs: [] } ]
     })
   })
 

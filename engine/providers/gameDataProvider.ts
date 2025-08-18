@@ -15,6 +15,10 @@ export type ActiveInput = {
     visible: boolean
 }
 
+export type TurnOutput = {
+    outputs: unknown[]
+}
+
 /**
  * Runtime representation of the game state.
  *
@@ -55,7 +59,8 @@ export type GameContext = InitialData & {
     currentDialogSet: {
         dialogSetId: string | null,
         dialogId: string | null
-    }
+    },
+    turnOutputs: TurnOutput[]
 }
 
 /**
@@ -143,7 +148,7 @@ export class GameDataProvider implements IGameDataProvider {
             loadedDialogSets: new Map<string, DialogSet>(),
             activeInputs: new Map<string, ActiveInput>()
         }
-        this.context = { 
+        this.context = {
             ...gameData.initialData,
             currentPageId: null,
             currentMap: {
@@ -161,7 +166,10 @@ export class GameDataProvider implements IGameDataProvider {
             currentDialogSet: {
                 dialogSetId: null,
                 dialogId: null
-            }
+            },
+            turnOutputs: [
+                { outputs: [] }
+            ]
         }
     }
 }
