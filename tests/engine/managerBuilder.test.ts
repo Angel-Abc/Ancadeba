@@ -13,6 +13,9 @@ import { inputManagerToken } from '@managers/inputManager'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import type { ILogger } from '@utils/logger'
+import { dialogManagerToken } from '@managers/dialogManager'
+import { dialogSetManagerToken } from '@managers/dialogSetManager'
+import { dialogOutputManagerToken } from '@managers/dialogOutputManager'
 
 describe('managersBuilder', () => {
   it('registers managers', () => {
@@ -41,6 +44,9 @@ describe('managersBuilder', () => {
         mapManagerToken,
         turnManagerToken,
         inputManagerToken,
+        dialogManagerToken,
+        dialogSetManagerToken,
+        dialogOutputManagerToken
       ].map(String))
     )
   })

@@ -1,4 +1,5 @@
 import { Token, token } from '@ioc/token'
+import { DialogSet } from '@loader/data/dialog'
 import { Game, InitialData } from '@loader/data/game'
 import { Input, VirtualInput, VirtualKey } from '@loader/data/inputs'
 import { Language } from '@loader/data/language'
@@ -30,6 +31,7 @@ export type GameData = {
     loadedTileSets: Set<string>,
     loadedVirtualKeys: Map<string, VirtualKey>,
     loadedVirtualInputs: Map<string, VirtualInput>,
+    loadedDialogSets: Map<string, DialogSet>,
     activeInputs: Map<string, ActiveInput>
 }
 
@@ -49,6 +51,10 @@ export type GameContext = InitialData & {
     isInModalDialog: boolean,
     player: {
         position: Position
+    },
+    currentDialogSet: {
+        dialogSetId: string | null,
+        dialogId: string | null
     }
 }
 
@@ -134,6 +140,7 @@ export class GameDataProvider implements IGameDataProvider {
             loadedTileSets: new Set<string>(),
             loadedVirtualKeys: new Map<string, VirtualKey>(),
             loadedVirtualInputs: new Map<string, VirtualInput>(),
+            loadedDialogSets: new Map<string, DialogSet>(),
             activeInputs: new Map<string, ActiveInput>()
         }
         this.context = { 
@@ -150,6 +157,10 @@ export class GameDataProvider implements IGameDataProvider {
                     x: 0,
                     y: 0
                 }
+            },
+            currentDialogSet: {
+                dialogSetId: null,
+                dialogId: null
             }
         }
     }

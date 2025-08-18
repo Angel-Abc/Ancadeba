@@ -11,6 +11,7 @@ import { virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import type { ILogger } from '@utils/logger'
+import { dialogSetLoaderToken } from '@loader/dialogSetLoader'
 
 describe('loadersBuilder', () => {
   it('registers loaders', () => {
@@ -38,6 +39,7 @@ describe('loadersBuilder', () => {
         tileSetLoaderToken,
         virtualKeysLoaderToken,
         virtualInputsLoaderToken,
+        dialogSetLoaderToken
       ])
     )
   })

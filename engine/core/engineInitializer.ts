@@ -24,6 +24,9 @@ import { IInputManager, inputManagerToken } from '@managers/inputManager'
 import { scriptActionToken } from '@actions/scriptAction'
 import { IPlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
 import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTriggerManager'
+import { dialogSetManagerToken, IDialogSetManager } from '@managers/dialogSetManager'
+import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
+import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -57,7 +60,10 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     inputsProviderRegistryToken,
     inputManagerToken,
     playerPositionManagerToken,
-    tileTriggerManagerToken
+    tileTriggerManagerToken,
+    dialogSetManagerToken,
+    dialogManagerToken,
+    dialogOutputManagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -94,7 +100,10 @@ export class EngineInitializer implements IEngineInitializer {
         private inputsProviderRegistry: IInputsProviderRegistry,
         private inputManager: IInputManager,
         private playerPositionManager: IPlayerPositionManager,
-        private tileTriggerManager: ITileTriggerManager
+        private tileTriggerManager: ITileTriggerManager,
+        private dialogSetManager: IDialogSetManager,
+        private dialogManager: IDialogManager,
+        private dialogOutputManager: IDialogOutputManager
     ){}
 
     /**
@@ -131,6 +140,9 @@ export class EngineInitializer implements IEngineInitializer {
         this.inputManager.initialize()
         this.playerPositionManager.initialize()
         this.tileTriggerManager.initialize()
+        this.dialogSetManager.initialize()
+        this.dialogManager.initialize()
+        this.dialogOutputManager.initialize()
     }
 
     /**

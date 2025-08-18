@@ -7,21 +7,25 @@ import { scriptActionToken } from '../../engine/actions/scriptAction'
 import { scriptConditionToken } from '../../engine/conditions/scriptCondition'
 import type { IMessageBus } from '../../utils/messageBus'
 import type { IGameLoader } from '../../engine/loader/gameLoader'
-import type { IDomManager } from '../../engine/managers/domManager'
-import type { ILanguageManager } from '../../engine/managers/languageManager'
+import type { IDomManager } from '@managers/domManager'
+import type { ILanguageManager } from '@managers/languageManager'
 import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
 import type { IActionHandlerRegistry } from '../../engine/registries/actionHandlerRegistry'
 import type { IConditionResolverRegistry } from '../../engine/registries/conditionResolverRegistry'
-import type { IPageManager } from '../../engine/managers/pageManager'
-import type { IActionManager } from '../../engine/managers/actionManager'
-import type { IMapManager } from '../../engine/managers/mapManager'
+import type { IPageManager } from '@managers/pageManager'
+import type { IActionManager } from '@managers/actionManager'
+import type { IMapManager } from '@managers/mapManager'
 import type { IVirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
 import type { IVirtualInputProvider } from '../../engine/providers/virtualInputProvider'
-import type { ITurnManager } from '../../engine/managers/turnManager'
+import type { ITurnManager } from '@managers/turnManager'
 import type { IInputsProviderRegistry } from '../../engine/registries/inputsProviderRegistry'
-import type { IInputManager } from '../../engine/managers/inputManager'
-import type { IPlayerPositionManager } from '../../engine/managers/playerPositionManager'
+import type { IInputManager } from '@managers/inputManager'
+import type { IPlayerPositionManager } from '@managers/playerPositionManager'
 import type { Game } from '../../engine/loader/data/game'
+import type { ITileTriggerManager } from '@managers/tileTriggerManager'
+import { IDialogSetManager } from '@managers/dialogSetManager'
+import { IDialogManager } from '@managers/dialogManager'
+import { IDialogOutputManager } from '@managers/dialogOutputManager'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -57,6 +61,10 @@ describe('EngineInitializer', () => {
     const inputsProviderRegistry = { registerInputsProvider: vi.fn() } as unknown as IInputsProviderRegistry
     const inputManager = { initialize: vi.fn() } as unknown as IInputManager
     const playerPositionManager = { initialize: vi.fn() } as unknown as IPlayerPositionManager
+    const tileTriggerManager = { initialize: vi.fn() } as unknown as ITileTriggerManager
+    const dialogSetManager = { initialize: vi.fn() } as unknown as IDialogSetManager
+    const dialogManager = { initialize: vi.fn() } as unknown as IDialogManager
+    const dialogOutputManager = { initialize: vi.fn() } as unknown as IDialogOutputManager
 
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
@@ -76,7 +84,11 @@ describe('EngineInitializer', () => {
       turnManager,
       inputsProviderRegistry,
       inputManager,
-      playerPositionManager
+      playerPositionManager,
+      tileTriggerManager,
+      dialogSetManager,
+      dialogManager,
+      dialogOutputManager
     )
 
     await initializer.initialize()
@@ -91,6 +103,10 @@ describe('EngineInitializer', () => {
     expect(playerPositionManager.initialize).toHaveBeenCalledTimes(1)
     expect(virtualKeyProvider.initialize).toHaveBeenCalledTimes(1)
     expect(virtualInputProvider.initialize).toHaveBeenCalledTimes(1)
+    expect(tileTriggerManager.initialize).toHaveBeenCalledTimes(1)
+    expect(dialogSetManager.initialize).toHaveBeenCalledTimes(1)
+    expect(dialogManager.initialize).toHaveBeenCalledTimes(1)
+    expect(dialogOutputManager.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
     expect(domManager.setTitle).toHaveBeenCalledWith('Test Game')
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)

@@ -9,6 +9,9 @@ import { PlayerPositionManager, playerPositionManagerDependencies, playerPositio
 import { TileTriggerManager, tileTriggerManagerDependencies, tileTriggerManagerToken } from '@managers/tileTriggerManager'
 import { TurnManager, turnManagerDependencies, turnManagerToken } from '@managers/turnManager'
 import { InputManager, inputManagerDependencies, inputManagerToken } from '@managers/inputManager'
+import { DialogSetManager, dialogSetManagerDependencies, dialogSetManagerToken } from '@managers/dialogSetManager'
+import { DialogManager, dialogManagerDependencies, dialogManagerToken } from '@managers/dialogManager'
+import { DialogOutputManager, dialogOutputManagerDependencies, dialogOutputManagerToken } from '@managers/dialogOutputManager'
 
 /**
  * Registers manager classes that orchestrate major engine systems.
@@ -69,7 +72,21 @@ export class ManagersBuilder {
       useClass: InputManager,
       deps: inputManagerDependencies
     })
-
+    container.register({
+      token: dialogSetManagerToken,
+      useClass: DialogSetManager,
+      deps: dialogSetManagerDependencies
+    })
+    container.register({
+      token: dialogManagerToken,
+      useClass: DialogManager,
+      deps: dialogManagerDependencies
+    })
+    container.register({
+      token: dialogOutputManagerToken,
+      useClass: DialogOutputManager,
+      deps: dialogOutputManagerDependencies
+    })
   }
 }
 

@@ -1,5 +1,6 @@
 import { Container } from '@ioc/container'
 import { ActionHandlersLoader, actionHandlersLoaderDependencies, actionHandlersLoaderToken } from '@loader/actionHandlersLoader'
+import { DialogSetLoader, dialogSetLoaderDependencies, dialogSetLoaderToken } from '@loader/dialogSetLoader'
 import { GameLoader, gameLoaderDependencies, gameLoaderToken } from '@loader/gameLoader'
 import { GameMapLoader, gameMapLoaderDependencies, gameMapLoaderToken } from '@loader/gameMapLoader'
 import { LanguageLoader, languageLoaderDependencies, languageLoaderToken } from '@loader/languageLoader'
@@ -55,6 +56,11 @@ export class LoadersBuilder {
       token: virtualInputsLoaderToken,
       useClass: VirtualInputsLoader,
       deps: virtualInputsLoaderDependencies
+    })
+    container.register({
+      token: dialogSetLoaderToken,
+      useClass: DialogSetLoader,
+      deps: dialogSetLoaderDependencies
     })
   }
 }
