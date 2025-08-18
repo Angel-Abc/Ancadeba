@@ -7,6 +7,8 @@ import { keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { messageBusToken } from '@utils/messageBus'
 import { messageQueueToken } from '@utils/messageQueue'
 import { inputMatrixBuilderToken } from '@builders/inputMatrixBuilder'
+import { pageInputsToken } from '@inputs/pageInputs'
+import { dialogInputsToken } from '@inputs/dialogInputs'
 import { Container } from '@ioc/container'
 import type { Token } from '@ioc/token'
 import type { ILogger } from '@utils/logger'
@@ -36,9 +38,11 @@ describe('coreBuilder', () => {
         engineInitializerToken,
         keyboardEventListenerToken,
         inputMatrixBuilderToken,
+        pageInputsToken,
+        dialogInputsToken,
       ])
     )
-    expect(registeredTokens).toHaveLength(7)
+    expect(registeredTokens).toHaveLength(9)
   })
 })
 
