@@ -3,6 +3,9 @@ import { CoreBuilder } from '@builders/containerBuilders/coreBuilder'
 import { engineInitializerToken, actionHandlerRegistrarsToken, conditionResolverRegistrarsToken, inputsProviderRegistrarsToken } from '@core/engineInitializer'
 import { gameEngineToken } from '@core/gameEngine'
 import { turnSchedulerToken } from '@core/turnScheduler'
+import { pageManagersInitializerToken } from '@core/pageManagersInitializer'
+import { dialogManagersInitializerToken } from '@core/dialogManagersInitializer'
+import { subsystemInitializersToken } from '@core/subsystemInitializer'
 import { keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { messageBusToken } from '@utils/messageBus'
 import { messageQueueToken } from '@utils/messageQueue'
@@ -43,9 +46,11 @@ describe('coreBuilder', () => {
         actionHandlerRegistrarsToken,
         conditionResolverRegistrarsToken,
         inputsProviderRegistrarsToken,
+        pageManagersInitializerToken,
+        dialogManagersInitializerToken,
+        subsystemInitializersToken,
       ])
     )
-    expect(registeredTokens).toHaveLength(12)
+    expect(registeredTokens).toHaveLength(15)
   })
 })
-
