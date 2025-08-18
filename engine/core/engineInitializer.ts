@@ -27,6 +27,7 @@ import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTrig
 import { dialogSetManagerToken, IDialogSetManager } from '@managers/dialogSetManager'
 import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
 import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
+import { dialogInputsToken } from '@inputs/dialogInputs'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -159,6 +160,7 @@ export class EngineInitializer implements IEngineInitializer {
 
     private registerInputsProviders(): void {
         this.inputsProviderRegistry.registerInputsProvider(pageInputsToken)
+        this.inputsProviderRegistry.registerInputsProvider(dialogInputsToken)
     }
 
     /**

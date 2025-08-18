@@ -8,6 +8,8 @@ import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 import { KeyboardEventListener, keyboardEventListenerDependencies, keyboardEventListenerToken } from '@utils/keyboardEventListener'
 import { loggerToken } from '@utils/logger'
 import { InputMatrixBuilder, inputMatrixBuilderDependencies, inputMatrixBuilderToken } from '@builders/inputMatrixBuilder'
+import { PageInputs, pageInputsDependencies, pageInputsToken } from '@inputs/pageInputs'
+import { DialogInputs, dialogInputsDependencies, dialogInputsToken } from '@inputs/dialogInputs'
 
 /**
  * Registers core engine services like the game engine and messaging infrastructure.
@@ -52,6 +54,16 @@ export class CoreBuilder {
       token: inputMatrixBuilderToken,
       useClass: InputMatrixBuilder,
       deps: inputMatrixBuilderDependencies
+    })
+    container.register({
+      token: pageInputsToken,
+      useClass: PageInputs,
+      deps: pageInputsDependencies
+    })
+    container.register({
+      token: dialogInputsToken,
+      useClass: DialogInputs,
+      deps: dialogInputsDependencies
     })
   }
 }

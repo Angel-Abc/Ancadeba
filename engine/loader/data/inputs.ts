@@ -53,7 +53,7 @@ export interface Input {
     preferredCol?: number
     label: string
     description: string
-    visible: Condition
-    enabled: Condition
+    visible?: Condition
+    enabled?: Condition
     action: BaseAction
 }
