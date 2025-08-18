@@ -12,6 +12,7 @@ import { InputManager, inputManagerDependencies, inputManagerToken } from '@mana
 import { DialogSetManager, dialogSetManagerDependencies, dialogSetManagerToken } from '@managers/dialogSetManager'
 import { DialogManager, dialogManagerDependencies, dialogManagerToken } from '@managers/dialogManager'
 import { DialogOutputManager, dialogOutputManagerDependencies, dialogOutputManagerToken } from '@managers/dialogOutputManager'
+import { TurnOutputManager, turnOutputManagerDependencies, turnOutputManagerToken } from '@managers/turnOutputManager'
 
 /**
  * Registers manager classes that orchestrate major engine systems.
@@ -87,6 +88,10 @@ export class ManagersBuilder {
       useClass: DialogOutputManager,
       deps: dialogOutputManagerDependencies
     })
+    container.register({
+      token: turnOutputManagerToken,
+      useClass: TurnOutputManager,
+      deps: turnOutputManagerDependencies
+    })
   }
 }
-

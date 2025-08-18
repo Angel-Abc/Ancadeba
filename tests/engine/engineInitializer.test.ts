@@ -26,6 +26,7 @@ import type { ITileTriggerManager } from '@managers/tileTriggerManager'
 import { IDialogSetManager } from '@managers/dialogSetManager'
 import { IDialogManager } from '@managers/dialogManager'
 import { IDialogOutputManager } from '@managers/dialogOutputManager'
+import { ITurnOutputManager } from '@managers/turnOutputManager'
 
 describe('EngineInitializer', () => {
   it('initializes engine and posts start messages', async () => {
@@ -65,6 +66,7 @@ describe('EngineInitializer', () => {
     const dialogSetManager = { initialize: vi.fn() } as unknown as IDialogSetManager
     const dialogManager = { initialize: vi.fn() } as unknown as IDialogManager
     const dialogOutputManager = { initialize: vi.fn() } as unknown as IDialogOutputManager
+    const turnOutputManager = { initialize: vi.fn() } as unknown as ITurnOutputManager
 
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     const initializer = new EngineInitializer(
@@ -88,7 +90,8 @@ describe('EngineInitializer', () => {
       tileTriggerManager,
       dialogSetManager,
       dialogManager,
-      dialogOutputManager
+      dialogOutputManager,
+      turnOutputManager
     )
 
     await initializer.initialize()
@@ -107,6 +110,7 @@ describe('EngineInitializer', () => {
     expect(dialogSetManager.initialize).toHaveBeenCalledTimes(1)
     expect(dialogManager.initialize).toHaveBeenCalledTimes(1)
     expect(dialogOutputManager.initialize).toHaveBeenCalledTimes(1)
+    expect(turnOutputManager.initialize).toHaveBeenCalledTimes(1)
     expect(languageManager.setLanguage).toHaveBeenCalledWith('en')
     expect(domManager.setTitle).toHaveBeenCalledWith('Test Game')
     expect(domManager.setCssFile).toHaveBeenCalledTimes(2)

@@ -27,6 +27,7 @@ import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTrig
 import { dialogSetManagerToken, IDialogSetManager } from '@managers/dialogSetManager'
 import { dialogManagerToken, IDialogManager } from '@managers/dialogManager'
 import { dialogOutputManagerToken, IDialogOutputManager } from '@managers/dialogOutputManager'
+import { turnOutputManagerToken, ITurnOutputManager } from '@managers/turnOutputManager'
 import { dialogInputsToken } from '@inputs/dialogInputs'
 
 /**
@@ -64,7 +65,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     tileTriggerManagerToken,
     dialogSetManagerToken,
     dialogManagerToken,
-    dialogOutputManagerToken
+    dialogOutputManagerToken,
+    turnOutputManagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -104,7 +106,8 @@ export class EngineInitializer implements IEngineInitializer {
         private tileTriggerManager: ITileTriggerManager,
         private dialogSetManager: IDialogSetManager,
         private dialogManager: IDialogManager,
-        private dialogOutputManager: IDialogOutputManager
+        private dialogOutputManager: IDialogOutputManager,
+        private turnOutputManager: ITurnOutputManager
     ){}
 
     /**
@@ -144,6 +147,7 @@ export class EngineInitializer implements IEngineInitializer {
         this.dialogSetManager.initialize()
         this.dialogManager.initialize()
         this.dialogOutputManager.initialize()
+        this.turnOutputManager.initialize()
     }
 
     /**
