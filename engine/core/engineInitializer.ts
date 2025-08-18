@@ -23,6 +23,7 @@ import { pageInputsToken } from '@inputs/pageInputs'
 import { IInputManager, inputManagerToken } from '@managers/inputManager'
 import { scriptActionToken } from '@actions/scriptAction'
 import { IPlayerPositionManager, playerPositionManagerToken } from '@managers/playerPositionManager'
+import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTriggerManager'
 
 /**
  * Contract for components that prepare and start the game engine.
@@ -55,7 +56,8 @@ export const engineInitializerDependencies: Token<unknown>[] = [
     turnManagerToken,
     inputsProviderRegistryToken,
     inputManagerToken,
-    playerPositionManagerToken
+    playerPositionManagerToken,
+    tileTriggerManagerToken
 ]
 /**
  * Default {@link IEngineInitializer} implementation that orchestrates loading
@@ -91,7 +93,8 @@ export class EngineInitializer implements IEngineInitializer {
         private turnManager: ITurnManager,
         private inputsProviderRegistry: IInputsProviderRegistry,
         private inputManager: IInputManager,
-        private playerPositionManager: IPlayerPositionManager
+        private playerPositionManager: IPlayerPositionManager,
+        private tileTriggerManager: ITileTriggerManager
     ){}
 
     /**
@@ -127,6 +130,7 @@ export class EngineInitializer implements IEngineInitializer {
         this.turnManager.initialize()
         this.inputManager.initialize()
         this.playerPositionManager.initialize()
+        this.tileTriggerManager.initialize()
     }
 
     /**

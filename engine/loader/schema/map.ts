@@ -4,7 +4,7 @@ import { actionSchema } from './action'
 export const mapTileSchema = z.object({
     key: z.string(),
     tile: z.string(),
-    onEnter: actionSchema.optional()
+    onEnter: z.union([actionSchema, z.array(actionSchema)]) .optional()
 })
 
 export const squaresMapSchema = z.object({

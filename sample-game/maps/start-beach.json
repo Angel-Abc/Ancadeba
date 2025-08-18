@@ -18,7 +18,7 @@
             "tile": "outdoor.beach",
             "onEnter": {
                 "type": "post-message",
-                "message": "SYSTEM.START-DIALOG",
+                "message": "SYSTEM/START-DIALOG",
                 "payload": "start-beach.start-dialog"
             }
         },

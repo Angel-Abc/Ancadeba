@@ -10,7 +10,7 @@ import type { Action } from './action'
 export type MapTile = {
     key: string
     tile: string
-    onEnter?: Action
+    onEnter?: Action | Action[]
 }
 
 /**
