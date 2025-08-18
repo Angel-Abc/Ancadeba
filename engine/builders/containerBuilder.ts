@@ -10,6 +10,11 @@ import { RegistriesBuilder } from './containerBuilders/registriesBuilder'
 import { ServicesBuilder } from './containerBuilders/servicesBuilder'
 import { ConsoleLogger, loggerToken, type ILogger } from '@utils/logger'
 import { ConditionsBuilder } from './containerBuilders/conditionsBuilder'
+import {
+  type ActionHandlerRegistrar,
+  type ConditionResolverRegistrar,
+  type InputsProviderRegistrar,
+} from '@core/engineInitializer'
 
 /**
  * Builder abstraction for creating and configuring a dependency injection container.
@@ -35,6 +40,9 @@ export class ContainerBuilder implements IContainerBuilder {
     private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {},
     private dataPath: string = process.env.DATA_PATH ?? '/data',
     logger: ILogger | (() => ILogger) = () => new ConsoleLogger(),
+    private actionHandlerRegistrars: ActionHandlerRegistrar[] = [],
+    private conditionResolverRegistrars: ConditionResolverRegistrar[] = [],
+    private inputsProviderRegistrars: InputsProviderRegistrar[] = [],
   ) {
     this.loggerFactory = typeof logger === 'function' ? (logger as () => ILogger) : () => logger
   }
@@ -51,7 +59,12 @@ export class ContainerBuilder implements IContainerBuilder {
     const logger = this.loggerFactory()
     const result = new Container(logger)
     result.register({ token: loggerToken, useValue: logger })
-    new CoreBuilder(this.onQueueEmptyProvider).register(result)
+    new CoreBuilder(
+      this.onQueueEmptyProvider,
+      this.actionHandlerRegistrars,
+      this.conditionResolverRegistrars,
+      this.inputsProviderRegistrars,
+    ).register(result)
     new ProvidersBuilder(this.dataPath).register(result)
     new LoadersBuilder().register(result)
     new ServicesBuilder().register(result)
