@@ -1,4 +1,4 @@
-import { useService } from '@app/iocProvider'
+import { useService } from '@ioc/iocProvider'
 import { OutputComponent } from '@loader/data/component'
 import { FINALIZE_END_TURN_MESSAGE } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'

@@ -1,7 +1,7 @@
 import { Screen as ScreenData } from '@loader/data/page'
 import { Grid } from './grid'
 import { loggerToken, type ILogger } from '@utils/logger'
-import { useService } from '@app/iocProvider'
+import { useService } from '@ioc/iocProvider'
 
 interface ScreenProps {
     screen: ScreenData

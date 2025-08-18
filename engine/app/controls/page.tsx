@@ -1,4 +1,4 @@
-import { useService } from '@app/iocProvider'
+import { useService } from '@ioc/iocProvider'
 import { Screen } from './screen/screen'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 
