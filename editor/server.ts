@@ -18,7 +18,7 @@ const safeJoin = (subPath: string): string => {
 
 const relativePath = (p: string) => p.replace(/^\/data\/?/, '')
 
-app.get('/data/*', async (req, res) => {
+app.get('/data/*subPath', async (req, res) => {
   try {
     const filePath = safeJoin(relativePath(req.path))
     const data = await fs.readFile(filePath, 'utf8')
@@ -28,7 +28,7 @@ app.get('/data/*', async (req, res) => {
   }
 })
 
-app.put('/data/*', async (req, res) => {
+app.put('/data/*subPath', async (req, res) => {
   try {
     const filePath = safeJoin(relativePath(req.path))
     await fs.mkdir(path.dirname(filePath), { recursive: true })
