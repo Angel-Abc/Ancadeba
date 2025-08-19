@@ -6,7 +6,7 @@ import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
 import { ScrollContainer } from '../scrollContainer'
 
-export type OutputLogProps = {
+interface OutputLogProps {
     component: OutputComponent
 }
 

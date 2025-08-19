@@ -13,6 +13,7 @@ import { token, Token } from '@ioc/token'
 import { SquaresMap } from '@app/controls/component/squaresMap'
 import { InputMatrix } from '@app/controls/component/inputMatrix'
 import { OutputLog } from '@app/controls/component/outputLog'
+import { Inventory } from '@app/controls/component/inventory'
 
 export interface IComponentRegistry {
     /**
@@ -46,6 +47,7 @@ export class ComponentRegistry implements IComponentRegistry {
         this.registerComponent('squares-map', SquaresMap)
         this.registerComponent('input-matrix', InputMatrix)
         this.registerComponent('output-log', OutputLog)
+        this.registerComponent('inventory', Inventory)
     }
 
     /**
