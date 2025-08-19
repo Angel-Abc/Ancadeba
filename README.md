@@ -28,6 +28,17 @@ npm run dev
 
 This will launch the engine in development mode and watch for changes.
 
+To work on the editor along with a local data server:
+
+```bash
+npm run dev:editor
+```
+
+The server reads from `VITE_DATA_PATH` (defaults to `/data`) and exposes:
+
+- `GET /data/*` - return the JSON content of the requested file
+- `PUT /data/*` - write the request body as JSON to the file
+
 ## Testing and Build Commands
 Run the following commands before submitting changes:
 
