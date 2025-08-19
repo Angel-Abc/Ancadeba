@@ -6,7 +6,6 @@ import { resolve } from 'node:path'
 
 const gameFolder = process.env.GAME_FOLDER || 'sample-game'
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
-const withEditor = process.env.WITH_EDITOR !== 'false'
 
 export default defineConfig({
   envPrefix: ['VITE_', 'LOG_', 'GAME_'],
@@ -25,7 +24,6 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@editor': fileURLToPath(new URL('./editor', import.meta.url)),
       '@actions': fileURLToPath(new URL('./engine/actions', import.meta.url)),
       '@app': fileURLToPath(new URL('./engine/app', import.meta.url)),
       '@builders': fileURLToPath(new URL('./engine/builders', import.meta.url)),
@@ -46,7 +44,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(rootDir, 'index.html'),
-        ...(withEditor ? { editor: resolve(rootDir, 'editor/editor.html') } : {}),
       },
     },
   }

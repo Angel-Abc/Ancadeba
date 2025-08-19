@@ -16,7 +16,8 @@
         "lint": "eslint .",
         "preview": "vite preview",
         "dev:engine": "vite",
-        "dev:editor": "vite --open editor/editor.html --port 5174"
+        "dev:editor": "vite --config editor/vite.config.ts",
+        "build:editor": "vite build --config editor/vite.config.ts"
     },
     "devDependencies": {
         "@eslint/js": "^9.32.0",
