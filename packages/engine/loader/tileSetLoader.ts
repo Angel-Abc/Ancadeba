@@ -4,7 +4,7 @@
  */
 import { Token, token } from '@ioc/token'
 import { type TileSet as TileSetData } from './data/tile'
-import { TileSet, tileSetSchema } from './schema/tile'
+import { TileSet, tileSetSchema } from '@loader/schema/tile'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'

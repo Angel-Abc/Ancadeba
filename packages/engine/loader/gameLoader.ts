@@ -8,7 +8,7 @@ import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { Game as GameData } from './data/game'
-import { Game, gameSchema } from './schema/game'
+import { Game, gameSchema } from '@loader/schema/game'
 import { mapGame } from './mappers/game'
 import { Token, token } from '@ioc/token'
 

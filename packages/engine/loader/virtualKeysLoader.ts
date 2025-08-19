@@ -1,7 +1,7 @@
 import { Token, token } from '@ioc/token'
 import { VirtualKeys as VirtualKeysData } from './data/inputs'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
-import { VirtualKeys, virtualKeysSchema } from './schema/inputs'
+import { VirtualKeys, virtualKeysSchema } from '@loader/schema/inputs'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
@@ -57,7 +57,13 @@ export class VirtualKeysLoader implements IVirtualKeysLoader {
             paths.map(path => loadJsonResource<VirtualKeys>(`${this.dataPathProvider.dataPath}/${path}`, virtualKeysSchema, this.logger))
         )
 
-        const result = schemas.reduce<VirtualKeysData>((acc, schema) => [...acc, ...mapVirtualKeys(schema)], [])
+        const result = schemas.reduce<VirtualKeysData>(
+            (acc: VirtualKeysData, schema: VirtualKeys) => [
+                ...acc,
+                ...mapVirtualKeys(schema)
+            ],
+            []
+        )
         return result
     }
 }

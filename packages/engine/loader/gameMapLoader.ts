@@ -9,7 +9,7 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
-import { GameMap, gameMapSchema } from './schema/map'
+import { GameMap, gameMapSchema } from '@loader/schema/map'
 import { mapGameMap } from './mappers/map'
 
 /**
