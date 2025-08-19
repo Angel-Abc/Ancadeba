@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TileTriggerManager } from '../../engine/managers/tileTriggerManager'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
-import type { IMessageBus } from '../../utils/messageBus'
-import type { IActionExecutor } from '../../engine/actions/actionExecutor'
-import type { GameMap, MapTile, Position } from '../../engine/loader/data/map'
-import { POSITION_CHANGED } from '../../engine/messages/system'
-import type { Message } from '../../utils/types'
+import { TileTriggerManager } from '../../packages/engine/managers/tileTriggerManager'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IActionExecutor } from '../../packages/engine/actions/actionExecutor'
+import type { GameMap, MapTile, Position } from '../../packages/engine/loader/data/map'
+import { POSITION_CHANGED } from '../../packages/engine/messages/system'
+import type { Message } from '../../packages/shared/types'
 
 function setup(tile?: MapTile) {
   const actionExecutor = { execute: vi.fn() } as unknown as IActionExecutor

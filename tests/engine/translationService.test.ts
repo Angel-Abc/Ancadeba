@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TranslationService } from '../../engine/services/translationService'
+import { TranslationService } from '../../packages/engine/services/translationService'
 import type { Language } from '@loader/data/language'
 import type { ILogger } from '@utils/logger'
 

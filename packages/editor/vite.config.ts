@@ -15,9 +15,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@utils': fileURLToPath(new URL('../utils', import.meta.url)),
+      '@utils': fileURLToPath(new URL('../shared', import.meta.url)),
       '@ioc': fileURLToPath(new URL('../engine/ioc', import.meta.url)),
-      '@editor': fileURLToPath(new URL('../editor', import.meta.url)),
+      '@editor': fileURLToPath(new URL('.', import.meta.url)),
       '@loader/schema': fileURLToPath(new URL('../engine/loader/schema', import.meta.url)),
     },
   },

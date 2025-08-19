@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import { MapManager } from '../../engine/managers/mapManager'
-import type { IGameMapLoader } from '../../engine/loader/gameMapLoader'
-import type { IMessageBus } from '../../utils/messageBus'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
-import type { ITileSetManager } from '../../engine/managers/tileSetManager'
-import { MAP_SWITCHED } from '../../engine/messages/system'
-import type { ILogger } from '../../utils/logger'
+import { MapManager } from '../../packages/engine/managers/mapManager'
+import type { IGameMapLoader } from '../../packages/engine/loader/gameMapLoader'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
+import type { ITileSetManager } from '../../packages/engine/managers/tileSetManager'
+import { MAP_SWITCHED } from '../../packages/engine/messages/system'
+import type { ILogger } from '../../packages/shared/logger'
 
 function createProvider(gameData: GameData, context: GameContext): IGameDataProvider {
   return {

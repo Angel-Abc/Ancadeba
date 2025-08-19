@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { VIRTUAL_INPUT, VIRTUAL_KEY } from '../../engine/messages/system'
-import { VirtualInputProvider } from '../../engine/providers/virtualInputProvider'
-import type { IVirtualInputsLoader } from '../../engine/loader/virtualInputsLoader'
-import type { IMessageBus } from '../../utils/messageBus'
-import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
+import { VIRTUAL_INPUT, VIRTUAL_KEY } from '../../packages/engine/messages/system'
+import { VirtualInputProvider } from '../../packages/engine/providers/virtualInputProvider'
+import type { IVirtualInputsLoader } from '../../packages/engine/loader/virtualInputsLoader'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IGameDataProvider } from '../../packages/engine/providers/gameDataProvider'
 
 // Tests for VirtualInputProvider
 

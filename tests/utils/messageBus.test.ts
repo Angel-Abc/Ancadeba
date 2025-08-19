@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
-import { MessageBus } from '../../utils/messageBus'
-import type { IMessageQueue } from '../../utils/messageQueue'
-import type { Message } from '../../utils/types'
-import type { ILogger } from '../../utils/logger'
+import { MessageBus } from '../../packages/shared/messageBus'
+import type { IMessageQueue } from '../../packages/shared/messageQueue'
+import type { Message } from '../../packages/shared/types'
+import type { ILogger } from '../../packages/shared/logger'
 
 class TestQueue implements IMessageQueue {
     private handler: ((message: Message) => void | Promise<void>) | null = null

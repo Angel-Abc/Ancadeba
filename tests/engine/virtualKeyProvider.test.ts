@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { VIRTUAL_KEY } from '../../engine/messages/system'
-import { VirtualKeyProvider } from '../../engine/providers/virtualKeyProvider'
-import type { IKeyboardEventListener } from '../../utils/keyboardEventListener'
-import type { IMessageBus } from '../../utils/messageBus'
-import type { IVirtualKeysLoader } from '../../engine/loader/virtualKeysLoader'
-import type { IGameDataProvider } from '../../engine/providers/gameDataProvider'
+import { VIRTUAL_KEY } from '../../packages/engine/messages/system'
+import { VirtualKeyProvider } from '../../packages/engine/providers/virtualKeyProvider'
+import type { IKeyboardEventListener } from '../../packages/shared/keyboardEventListener'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IVirtualKeysLoader } from '../../packages/engine/loader/virtualKeysLoader'
+import type { IGameDataProvider } from '../../packages/engine/providers/gameDataProvider'
 
 describe('VirtualKeyProvider', () => {
   it('loads keys when loadedVirtualKeys is empty and emits VIRTUAL_KEY messages', async () => {

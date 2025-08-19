@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { KeyboardEventListener } from '../../utils/keyboardEventListener'
+import { KeyboardEventListener } from '../../packages/shared/keyboardEventListener'
 
 describe('KeyboardEventListener', () => {
     let listener: KeyboardEventListener
