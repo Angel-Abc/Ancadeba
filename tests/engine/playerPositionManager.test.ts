@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { PlayerPositionManager } from '../../packages/engine/managers/playerPositionManager'
 import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
 import type { Position } from '../../packages/engine/loader/data/map'
-import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IMessageBus } from '@utils/messageBus'
 import { POSITION_CHANGED } from '../../packages/engine/messages/system'
 
 function createManager(context: GameContext) {

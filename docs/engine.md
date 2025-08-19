@@ -8,7 +8,7 @@ Dependencies are resolved through a lightweight inversion of control container f
 
 ## Message Flow
 
-Messaging enables decoupled communication. The [`MessageBus`](../packages/shared/messageBus.ts) publishes messages to a queue and notifies registered listeners. System-wide messages defined in [`messages/system.ts`](../packages/engine/messages/system.ts) coordinate high-level events: the initializer dispatches `START_GAME_ENGINE_MESSAGE`, and the [`TurnScheduler`](../packages/engine/core/turnScheduler.ts) progresses turns by emitting `START_END_TURN_MESSAGE` and `FINALIZE_END_TURN_MESSAGE` as the queue empties.
+Messaging enables decoupled communication. The [`MessageBus`](../packages/shared/utils/messageBus.ts) publishes messages to a queue and notifies registered listeners. System-wide messages defined in [`messages/system.ts`](../packages/engine/messages/system.ts) coordinate high-level events: the initializer dispatches `START_GAME_ENGINE_MESSAGE`, and the [`TurnScheduler`](../packages/engine/core/turnScheduler.ts) progresses turns by emitting `START_END_TURN_MESSAGE` and `FINALIZE_END_TURN_MESSAGE` as the queue empties.
 
 ## Builders and Component Registration
 

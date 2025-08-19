@@ -24,7 +24,7 @@
       "@providers/*": ["./packages/engine/providers/*"],
       "@registries/*": ["./packages/engine/registries/*"],
       "@services/*": ["./packages/engine/services/*"],
-      "@utils/*": ["./packages/shared/*"]
+      "@utils/*": ["./packages/shared/utils/*"]
     }
   }
 }

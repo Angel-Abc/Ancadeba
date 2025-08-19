@@ -37,7 +37,7 @@ export default defineConfig({
       '@providers': fileURLToPath(new URL('./packages/engine/providers', import.meta.url)),
       '@registries': fileURLToPath(new URL('./packages/engine/registries', import.meta.url)),
       '@services': fileURLToPath(new URL('./packages/engine/services', import.meta.url)),
-      '@utils': fileURLToPath(new URL('./packages/shared', import.meta.url)),
+      '@utils': fileURLToPath(new URL('./packages/shared/utils', import.meta.url)),
     }
   },
   build: {
