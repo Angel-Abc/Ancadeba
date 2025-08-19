@@ -5,6 +5,7 @@ import { ContainerBuilder, IContainerBuilder } from './builders/containerBuilder
 import { ConsoleLogger } from '@utils/logger'
 import { IocProvider } from '@ioc/iocProvider'
 import { Container } from '@ioc/container'
+import { editorToken, IEditor } from './core/editor'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
   () => new ConsoleLogger()
@@ -21,3 +22,12 @@ if (rootElement) {
     </React.StrictMode>,
   )
 }
+
+(async () => {
+  try {
+    const editor = container.resolve<IEditor>(editorToken)
+    await editor.start()
+  } catch (err) {
+    console.error('Editor failed to start', err)
+  }
+})()
