@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { GameDataProvider } from '../../packages/engine/providers/gameDataProvider'
 import type { Game } from '../../packages/engine/loader/data/game'
-import type { ILogger } from '../../packages/shared/logger'
+import type { ILogger } from '@utils/logger'
 
 describe('GameDataProvider', () => {
   it('initializes game and context', () => {

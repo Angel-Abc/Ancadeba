@@ -3,7 +3,7 @@ import { InputSourcesService } from '../../packages/engine/services/inputSources
 import type { IGameDataProvider, ActiveInput } from '../../packages/engine/providers/gameDataProvider'
 import type { IConditionResolver } from '../../packages/engine/conditions/conditionResolver'
 import type { IInputsProvider, IInputsProviderRegistry } from '../../packages/engine/registries/inputsProviderRegistry'
-import type { ILogger } from '../../packages/shared/logger'
+import type { ILogger } from '@utils/logger'
 import type { Input } from '../../packages/engine/loader/data/inputs'
 import type { Condition } from '../../packages/engine/loader/data/condition'
 

@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { CleanUp } from '@utils/types'
+import { CleanUp } from './types'
 
 /**
  * Normalized keyboard event information passed to listeners.

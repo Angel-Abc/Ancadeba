@@ -15,7 +15,7 @@ import type { IConditionResolver } from '../../packages/engine/registries/condit
 import type { IInputsProvider } from '../../packages/engine/registries/inputsProviderRegistry'
 import type { Condition } from '../../packages/engine/loader/data/condition'
 import type { BaseAction } from '../../packages/engine/loader/data/action'
-import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IMessageBus } from '@utils/messageBus'
 import type { IGameLoader } from '../../packages/engine/loader/gameLoader'
 import type { IDomManager } from '@managers/domManager'
 import type { ILanguageManager } from '@managers/languageManager'
