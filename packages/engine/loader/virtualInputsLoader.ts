@@ -4,7 +4,7 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
-import { VirtualInputs, virtualInputsSchema } from './schema/inputs'
+import { VirtualInputs, virtualInputsSchema } from '@loader/schema/inputs'
 import { mapVirtualInputs } from './mappers/input'
 
 /**
@@ -57,7 +57,13 @@ export class VirtualInputsLoader implements IVirtualInputsLoader {
             paths.map(path => loadJsonResource<VirtualInputs>(`${this.dataPathProvider.dataPath}/${path}`, virtualInputsSchema, this.logger))
         )
 
-        const result = schemas.reduce<VirtualInputsData>((acc, schema) => [...acc, ...mapVirtualInputs(schema)], [])
+        const result = schemas.reduce<VirtualInputsData>(
+            (acc: VirtualInputsData, schema: VirtualInputs) => [
+                ...acc,
+                ...mapVirtualInputs(schema)
+            ],
+            []
+        )
         return result
     }
 }

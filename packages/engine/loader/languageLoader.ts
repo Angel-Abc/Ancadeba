@@ -5,7 +5,7 @@
 import { Token, token } from '@ioc/token'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { type Language as LanguageData } from './data/language'
-import { Language, languageSchema } from './schema/language'
+import { Language, languageSchema } from '@loader/schema/language'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
@@ -72,9 +72,10 @@ export class LanguageLoader implements ILanguageLoader {
 
         return {
             id: sharedId,
-            translations: languages.reduce((acc, lang) => {
-                return { ...acc, ...lang.translations }
-            }, {})
+            translations: languages.reduce<Record<string, string>>(
+                (acc, lang) => ({ ...acc, ...lang.translations }),
+                {}
+            )
         }
     }
 }

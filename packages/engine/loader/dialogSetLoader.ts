@@ -1,7 +1,7 @@
 import { Token, token } from '@ioc/token'
 import { type DialogSet as DialogSetData } from './data/dialog'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
-import { DialogSet, dialogSetSchema } from './schema/dialog'
+import { DialogSet, dialogSetSchema } from '@loader/schema/dialog'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
 import { mapDialogSet } from './mappers/dialog'

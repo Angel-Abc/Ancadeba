@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { type Handlers as HandlersData } from './data/handler'
-import { Handlers, handlersSchema } from './schema/handler'
+import { Handlers, handlersSchema } from '@loader/schema/handler'
 import { dataPathProviderToken, IDataPathProvider } from '@providers/configProviders'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'

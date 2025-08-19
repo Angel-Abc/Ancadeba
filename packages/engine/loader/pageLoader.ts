@@ -8,7 +8,7 @@ import { dataPathProviderToken, IDataPathProvider } from '@providers/configProvi
 import { loadJsonResource } from '@utils/loadJsonResource'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
-import { Page, pageSchema } from './schema/page'
+import { Page, pageSchema } from '@loader/schema/page'
 import { mapPage } from './mappers/page'
 
 /**

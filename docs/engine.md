@@ -4,7 +4,7 @@ The `engine` directory contains the runtime of the game. It is organized into mo
 
 ## IoC Setup
 
-Dependencies are resolved through a lightweight inversion of control container found in [`ioc`](../packages/engine/ioc). Tokens defined in [`token.ts`](../packages/engine/ioc/token.ts) uniquely identify services, while [`container.ts`](../packages/engine/ioc/container.ts) resolves them. The overall container is assembled by [`ContainerBuilder`](../packages/engine/builders/containerBuilder.ts), which wires together subsystems through a collection of specialized builders. `ContainerBuilder` accepts an optional logger or factory and registers it under the `ILogger` token so consumers remain agnostic of the concrete logger implementation.
+Dependencies are resolved through a lightweight inversion of control container found in [`ioc`](../packages/shared/ioc). Tokens defined in [`token.ts`](../packages/shared/ioc/token.ts) uniquely identify services, while [`container.ts`](../packages/shared/ioc/container.ts) resolves them. The overall container is assembled by [`ContainerBuilder`](../packages/engine/builders/containerBuilder.ts), which wires together subsystems through a collection of specialized builders. `ContainerBuilder` accepts an optional logger or factory and registers it under the `ILogger` token so consumers remain agnostic of the concrete logger implementation.
 
 ## Message Flow
 
