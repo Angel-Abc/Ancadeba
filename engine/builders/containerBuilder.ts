@@ -1,6 +1,5 @@
 import { Container } from '@ioc/container'
 import type { Container as IContainer } from '@ioc/types'
-
 import { ActionsBuilder } from './containerBuilders/actionsBuilder'
 import { CoreBuilder } from './containerBuilders/coreBuilder'
 import { LoadersBuilder } from './containerBuilders/loadersBuilder'
@@ -8,7 +7,7 @@ import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'
 import { RegistriesBuilder } from './containerBuilders/registriesBuilder'
 import { ServicesBuilder } from './containerBuilders/servicesBuilder'
-import { ConsoleLogger, loggerToken, type ILogger } from '@utils/logger'
+import { loggerToken, type ILogger } from '@utils/logger'
 import { ConditionsBuilder } from './containerBuilders/conditionsBuilder'
 import {
   type ActionHandlerRegistrar,
@@ -37,17 +36,14 @@ export class ContainerBuilder implements IContainerBuilder {
    * @param dataPath Base path for loading game data resources.
    */
   constructor(
-    private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => {},
+    private onQueueEmptyProvider: (container: IContainer) => () => void = () => () => { },
     private dataPath: string = process.env.DATA_PATH ?? '/data',
-    logger: ILogger | (() => ILogger) = () => new ConsoleLogger(),
+    private loggerFactory: () => ILogger,
     private actionHandlerRegistrars: ActionHandlerRegistrar[] = [],
     private conditionResolverRegistrars: ConditionResolverRegistrar[] = [],
     private inputsProviderRegistrars: InputsProviderRegistrar[] = [],
   ) {
-    this.loggerFactory = typeof logger === 'function' ? (logger as () => ILogger) : () => logger
   }
-
-  private readonly loggerFactory: () => ILogger
 
   /**
    * Build and configure the dependency container.

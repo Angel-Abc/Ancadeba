@@ -13,11 +13,9 @@ export class Container {
   private singletons = new Map<Token<unknown>, unknown>()
   private resolving: Token<unknown>[] = []
   readonly parent?: Container
-  private logger: ILogger
 
-  constructor(logger: ILogger, parent?: Container) {
+  constructor(private logger: ILogger, parent?: Container) {
     this.parent = parent
-    this.logger = logger
   }
 
   /**
