@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 vi.mock('@utils/runScript', () => ({ runScript: vi.fn() }))
 
 import { runScript } from '@utils/runScript'
-import { ScriptService } from '../../engine/services/scriptService'
+import { ScriptService } from '../../packages/engine/services/scriptService'
 import type { IGameDataProvider, GameData, GameContext } from '@providers/gameDataProvider'
 import type { IMessageBus } from '@utils/messageBus'
 import type { ILogger } from '@utils/logger'

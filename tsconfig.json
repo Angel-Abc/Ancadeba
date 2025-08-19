@@ -10,21 +10,21 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@editor/*": ["./editor/*"],
-      "@actions/*": ["./engine/actions/*"],
-      "@app/*": ["./engine/app/*"],
-      "@builders/*": ["./engine/builders/*"],
-      "@conditions/*": ["./engine/conditions/*"],
-      "@core/*": ["./engine/core/*"],
-      "@inputs/*": ["./engine/inputs/*"],
-      "@ioc/*": ["./engine/ioc/*"],
-      "@loader/*": ["./engine/loader/*"],
-      "@managers/*": ["./engine/managers/*"],
-      "@messages/*": ["./engine/messages/*"],
-      "@providers/*": ["./engine/providers/*"],
-      "@registries/*": ["./engine/registries/*"],
-      "@services/*": ["./engine/services/*"],
-      "@utils/*": ["./utils/*"]
+      "@editor/*": ["./packages/editor/*"],
+      "@actions/*": ["./packages/engine/actions/*"],
+      "@app/*": ["./packages/engine/app/*"],
+      "@builders/*": ["./packages/engine/builders/*"],
+      "@conditions/*": ["./packages/engine/conditions/*"],
+      "@core/*": ["./packages/engine/core/*"],
+      "@inputs/*": ["./packages/engine/inputs/*"],
+      "@ioc/*": ["./packages/engine/ioc/*"],
+      "@loader/*": ["./packages/engine/loader/*"],
+      "@managers/*": ["./packages/engine/managers/*"],
+      "@messages/*": ["./packages/engine/messages/*"],
+      "@providers/*": ["./packages/engine/providers/*"],
+      "@registries/*": ["./packages/engine/registries/*"],
+      "@services/*": ["./packages/engine/services/*"],
+      "@utils/*": ["./packages/shared/*"]
     }
   }
 }

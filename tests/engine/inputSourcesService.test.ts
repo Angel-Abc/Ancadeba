@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import { InputSourcesService } from '../../engine/services/inputSourcesService'
-import type { IGameDataProvider, ActiveInput } from '../../engine/providers/gameDataProvider'
-import type { IConditionResolver } from '../../engine/conditions/conditionResolver'
-import type { IInputsProvider, IInputsProviderRegistry } from '../../engine/registries/inputsProviderRegistry'
-import type { ILogger } from '../../utils/logger'
-import type { Input } from '../../engine/loader/data/inputs'
-import type { Condition } from '../../engine/loader/data/condition'
+import { InputSourcesService } from '../../packages/engine/services/inputSourcesService'
+import type { IGameDataProvider, ActiveInput } from '../../packages/engine/providers/gameDataProvider'
+import type { IConditionResolver } from '../../packages/engine/conditions/conditionResolver'
+import type { IInputsProvider, IInputsProviderRegistry } from '../../packages/engine/registries/inputsProviderRegistry'
+import type { ILogger } from '../../packages/shared/logger'
+import type { Input } from '../../packages/engine/loader/data/inputs'
+import type { Condition } from '../../packages/engine/loader/data/condition'
 
 describe('InputSourcesService', () => {
   it('uses the last provider and warns when duplicate virtualInputs are supplied', () => {

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { PageManager } from '../../engine/managers/pageManager'
-import { SWITCH_PAGE, PAGE_SWITCHED } from '../../engine/messages/system'
-import type { IMessageBus } from '../../utils/messageBus'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
-import type { IPageLoader } from '../../engine/loader/pageLoader'
-import type { ILogger } from '../../utils/logger'
+import { PageManager } from '../../packages/engine/managers/pageManager'
+import { SWITCH_PAGE, PAGE_SWITCHED } from '../../packages/engine/messages/system'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
+import type { IPageLoader } from '../../packages/engine/loader/pageLoader'
+import type { ILogger } from '../../packages/shared/logger'
 
 type Msg = { message: string, payload: unknown }
 

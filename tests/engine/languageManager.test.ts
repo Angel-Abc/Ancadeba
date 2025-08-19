@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { LanguageManager } from '../../engine/managers/languageManager'
-import { LanguageLoader, type ILanguageLoader } from '../../engine/loader/languageLoader'
+import { LanguageManager } from '../../packages/engine/managers/languageManager'
+import { LanguageLoader, type ILanguageLoader } from '../../packages/engine/loader/languageLoader'
 import type { ILogger } from '@utils/logger'
-import type { ITranslationService } from '../../engine/services/translationService'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
+import type { ITranslationService } from '../../packages/engine/services/translationService'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
 import type { Language } from '@loader/data/language'
 import type { Game } from '@loader/data/game'
 

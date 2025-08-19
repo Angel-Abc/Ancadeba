@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TurnOutputManager } from '../../engine/managers/turnOutputManager'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
-import type { IMessageBus } from '../../utils/messageBus'
-import { WRITE_OUTPUT, FINALIZE_END_TURN_MESSAGE } from '../../engine/messages/system'
+import { TurnOutputManager } from '../../packages/engine/managers/turnOutputManager'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
+import type { IMessageBus } from '../../packages/shared/messageBus'
+import { WRITE_OUTPUT, FINALIZE_END_TURN_MESSAGE } from '../../packages/engine/messages/system'
 
 function createManager(context: GameContext) {
   const provider = {

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { DomManager } from '../../engine/managers/domManager'
+import { DomManager } from '../../packages/engine/managers/domManager'
 import type { ILogger } from '@utils/logger'
 
 describe('DomManager', () => {

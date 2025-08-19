@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TileSetManager } from '../../engine/managers/tileSetManager'
-import type { IGameDataProvider, GameData, GameContext } from '../../engine/providers/gameDataProvider'
-import type { ITileSetLoader } from '../../engine/loader/tileSetLoader'
-import type { ILogger } from '../../utils/logger'
+import { TileSetManager } from '../../packages/engine/managers/tileSetManager'
+import type { IGameDataProvider, GameData, GameContext } from '../../packages/engine/providers/gameDataProvider'
+import type { ITileSetLoader } from '../../packages/engine/loader/tileSetLoader'
+import type { ILogger } from '../../packages/shared/logger'
 
 function createManager(gameData: GameData, loadTileSet: ReturnType<typeof vi.fn>) {
   const provider = {

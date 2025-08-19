@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { TurnScheduler, EndingTurnState } from '../../engine/core/turnScheduler'
-import { START_END_TURN_MESSAGE, FINALIZE_END_TURN_MESSAGE } from '../../engine/messages/system'
-import type { IMessageBus } from '../../utils/messageBus'
+import { TurnScheduler, EndingTurnState } from '../../packages/engine/core/turnScheduler'
+import { START_END_TURN_MESSAGE, FINALIZE_END_TURN_MESSAGE } from '../../packages/engine/messages/system'
+import type { IMessageBus } from '../../packages/shared/messageBus'
 import type { ILogger } from '@utils/logger'
 
 describe('TurnScheduler', () => {
