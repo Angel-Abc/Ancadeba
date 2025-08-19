@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import { promises as fs } from 'fs'
 import path from 'path'
 
@@ -7,6 +8,7 @@ const resolvedBase = path.resolve(basePath)
 
 const app = express()
 app.use(express.json())
+app.use(cors({ origin: 'http://localhost:5174' }))
 
 const safeJoin = (subPath: string): string => {
   const filePath = path.resolve(resolvedBase, subPath)
