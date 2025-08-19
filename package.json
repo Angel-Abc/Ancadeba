@@ -8,15 +8,12 @@
     "license": "MPL-2.0",
     "type": "module",
     "scripts": {
-        "build": "tsc && vite build",
-        "dev": "concurrently -n \"vite,tsc\" \"npm run dev:engine\" \"tsc --noEmit --watch\"",
-        "build:release": "cross-env WITH_EDITOR=false npm run build",
+        "dev": "concurrently -n \"vite,tsc\" \"vite\" \"tsc --noEmit --watch\"",
+        "dev:editor": "vite --config editor/vite.config.ts",
         "test": "vitest run",
         "test:dev": "vitest watch",
         "lint": "eslint .",
-        "preview": "vite preview",
-        "dev:engine": "vite",
-        "dev:editor": "vite --config editor/vite.config.ts",
+        "build": "tsc && vite build",
         "build:editor": "vite build --config editor/vite.config.ts"
     },
     "devDependencies": {

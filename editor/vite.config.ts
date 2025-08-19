@@ -22,7 +22,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      input: resolve(rootDir, 'editor.html'),
+      input: resolve(rootDir, 'index.html'),
     },
   },
   server: {

@@ -10,6 +10,7 @@ Before marking any code task as complete, ensure the following commands are run 
 
 ```
 npm run build
+npm run build:editor
 npm run lint
 npm run test
 ```
