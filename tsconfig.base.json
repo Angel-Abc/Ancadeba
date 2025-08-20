@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@utils/*": ["./packages/shared/utils/*"],
+      "@ioc/*": ["./packages/shared/ioc/*"],
+      "@loader/schema/*": ["./packages/shared/loader/schema/*"]
+    }
+  }
+}
