@@ -93,7 +93,7 @@ export class EditTreeProvider implements IEditTreeProvider {
     }
 
     private getItemLabel(item: GameItem): string {
-        if (item.type === 'root') return item.current?.description ?? 'game'
+        if (item.type === 'root') return item.current?.title ?? 'game'
         return item.currentFilename
     }
 
