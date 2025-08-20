@@ -1,0 +1,12 @@
+[
+    {
+        "key": "collar-leather-1",
+        "description": "A leather collar with a sturdy d-ring in the front",
+        "label": "Leather collar",
+        "image": "images/item/test-items/collar-leather-1",
+        "tags": [
+            "clothes",
+            "neck"
+        ]
+    }
+]
