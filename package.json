@@ -13,12 +13,12 @@
     "license": "MPL-2.0",
     "type": "module",
     "scripts": {
-        "dev": "concurrently -n \"vite,tsc\" \"vite\" \"tsc --noEmit --watch\"",
+        "dev": "concurrently -n \"vite,tsc\" \"vite\" \"tsc -p packages/engine/tsconfig.json --noEmit --watch\"",
         "dev:editor": "concurrently -n \"vite,server\" \"vite --config packages/editor/vite.config.ts\" \"node packages/editor/server.ts\"",
         "test": "vitest run",
         "test:dev": "vitest watch",
         "lint": "eslint .",
-        "build": "tsc && vite build",
+        "build": "tsc -p packages/engine/tsconfig.json && vite build",
         "build:editor": "vite build --config packages/editor/vite.config.ts"
     },
     "devDependencies": {

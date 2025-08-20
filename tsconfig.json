@@ -1,31 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "noEmit": true,
-    "paths": {
-      "@editor/*": ["./packages/editor/*"],
-      "@actions/*": ["./packages/engine/actions/*"],
-      "@app/*": ["./packages/engine/app/*"],
-      "@builders/*": ["./packages/engine/builders/*"],
-      "@conditions/*": ["./packages/engine/conditions/*"],
-      "@core/*": ["./packages/engine/core/*"],
-      "@inputs/*": ["./packages/engine/inputs/*"],
-      "@ioc/*": ["./packages/shared/ioc/*"],
-      "@loader/schema/*": ["./packages/shared/loader/schema/*"],
-      "@loader/*": ["./packages/engine/loader/*"],
-      "@managers/*": ["./packages/engine/managers/*"],
-      "@messages/*": ["./packages/engine/messages/*"],
-      "@providers/*": ["./packages/engine/providers/*"],
-      "@registries/*": ["./packages/engine/registries/*"],
-      "@services/*": ["./packages/engine/services/*"],
-      "@utils/*": ["./packages/shared/utils/*"]
-    }
-  }
+  "extends": "./tsconfig.base.json"
 }

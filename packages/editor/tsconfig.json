@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": ["./*"],
+      "@utils/*": ["../shared/utils/*"],
+      "@ioc/*": ["../shared/ioc/*"],
+      "@loader/schema/*": ["../shared/loader/schema/*"]
+    }
+  },
+  "include": ["./**/*"]
+}

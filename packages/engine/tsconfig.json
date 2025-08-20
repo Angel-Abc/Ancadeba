@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@actions/*": ["./actions/*"],
+      "@app/*": ["./app/*"],
+      "@builders/*": ["./builders/*"],
+      "@conditions/*": ["./conditions/*"],
+      "@core/*": ["./core/*"],
+      "@inputs/*": ["./inputs/*"],
+      "@loader/*": ["./loader/*"],
+      "@managers/*": ["./managers/*"],
+      "@messages/*": ["./messages/*"],
+      "@providers/*": ["./providers/*"],
+      "@registries/*": ["./registries/*"],
+      "@services/*": ["./services/*"],
+      "@utils/*": ["../shared/utils/*"],
+      "@ioc/*": ["../shared/ioc/*"],
+      "@loader/schema/*": ["../shared/loader/schema/*"]
+    }
+  },
+  "include": ["./**/*"]
+}
