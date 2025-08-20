@@ -1,6 +1,7 @@
 import { Editor, editorDependencies, editorToken } from '@editor/core/editor'
 import { EditorInitializer, editorInitializerDependencies, editorInitializerToken } from '@editor/core/editorInitializer'
 import { GameDefinitionLoaderManager, gameDefinitionLoaderManagerDependencies, gameDefinitionLoaderManagerToken } from '@editor/managers/gameDefinitionManager'
+import { EditTreeProvider, editTreeProviderDependencies, editTreeProviderToken } from '@editor/providers/editTreeProvider'
 import { Container } from '@ioc/container'
 import { ILogger, loggerToken } from '@utils/logger'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
@@ -45,6 +46,11 @@ export class ContainerBuilder implements IContainerBuilder {
             token: gameDefinitionLoaderManagerToken,
             useClass: GameDefinitionLoaderManager,
             deps: gameDefinitionLoaderManagerDependencies
+        })
+        result.register({
+            token: editTreeProviderToken,
+            useClass: EditTreeProvider,
+            deps: editTreeProviderDependencies
         })
         return result
     }
