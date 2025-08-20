@@ -1,10 +1,12 @@
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-const basePath = process.env.VITE_DATA_PATH ?? '/data'
+const basePath = process.env.GAME_DIR ?? process.env.VITE_DATA_PATH ?? '/data'
 const resolvedBase = path.resolve(basePath)
+console.log(`Serving data from ${resolvedBase}`)
 
 const app = express()
 app.use(express.json())
