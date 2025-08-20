@@ -1,0 +1,43 @@
+body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+#root {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100%;
+    width: 100%;
+    background-color: aqua;
+}
+
+aside.side-bar {
+    border-right: solid 1px black;
+    overflow: auto;
+    background-color: brown;
+}
+
+.main {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-width: 0;
+    overflow: hidden;
+    background-color: yellow;
+}
+
+header.content-bar {
+    height: 100px;
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: cadetblue;
+}
+
+main.content {
+    height: 100%;
+    overflow: auto;
+    background-color: chocolate;
+}
+

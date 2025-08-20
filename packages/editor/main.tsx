@@ -1,11 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from './app/App'
+import { App } from './app/app'
 import { ContainerBuilder, IContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger } from '@utils/logger'
 import { IocProvider } from '@ioc/iocProvider'
 import { Container } from '@ioc/container'
 import { editorToken, IEditor } from './core/editor'
+import './styling/reset.css'
+import './styling/variables.css'
+import './styling/editor.css'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
   () => new ConsoleLogger()
