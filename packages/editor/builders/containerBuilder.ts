@@ -1,6 +1,6 @@
 import { Editor, editorDependencies, editorToken } from '@editor/core/editor'
 import { EditorInitializer, editorInitializerDependencies, editorInitializerToken } from '@editor/core/editorInitializer'
-import { StructureLoaderManager, structureLoaderManagerDependencies, structureLoaderManagerToken } from '@editor/managers/structureLoaderManager'
+import { GameDefinitionLoaderManager, gameDefinitionLoaderManagerDependencies, gameDefinitionLoaderManagerToken } from '@editor/managers/gameDefinitionManager'
 import { Container } from '@ioc/container'
 import { ILogger, loggerToken } from '@utils/logger'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
@@ -42,9 +42,9 @@ export class ContainerBuilder implements IContainerBuilder {
             deps: editorInitializerDependencies
         })
         result.register({
-            token: structureLoaderManagerToken,
-            useClass: StructureLoaderManager,
-            deps: structureLoaderManagerDependencies
+            token: gameDefinitionLoaderManagerToken,
+            useClass: GameDefinitionLoaderManager,
+            deps: gameDefinitionLoaderManagerDependencies
         })
         return result
     }

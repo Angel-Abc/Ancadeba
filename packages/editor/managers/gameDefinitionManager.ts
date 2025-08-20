@@ -1,24 +1,26 @@
-import { INITIALIZED } from '@editor/messages/editor'
 import { Token, token } from '@ioc/token'
 import { Game, gameSchema } from '@loader/schema/game'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
+import { INITIALIZED } from '../messages/editor'
+import { gameDefinitionProviderToken, IGameDefinitionProvider } from '@editor/providers/gameDefinitionProvider'
 
-export interface IStructureLoaderManager {
+export interface IGameDefinitionLoaderManager {
     initialize(): void
     cleanup(): void
 }
 
-const logName = 'StructureLoaderManager'
-export const structureLoaderManagerToken = token<IStructureLoaderManager>(logName)
-export const structureLoaderManagerDependencies: Token<unknown>[] = [loggerToken, messageBusToken]
-export class StructureLoaderManager implements IStructureLoaderManager {
+const logName = 'GameDefinitionLoaderManager'
+export const gameDefinitionLoaderManagerToken = token<IGameDefinitionLoaderManager>(logName)
+export const gameDefinitionLoaderManagerDependencies: Token<unknown>[] = [loggerToken, messageBusToken, gameDefinitionProviderToken]
+export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager {
     private cleanupFn: CleanUp | null = null
     constructor(
         private logger: ILogger,
-        private messageBus: IMessageBus
+        private messageBus: IMessageBus,
+        private gameDefinitionProvider: IGameDefinitionProvider
     ){}
 
     public cleanup(): void {
@@ -37,6 +39,6 @@ export class StructureLoaderManager implements IStructureLoaderManager {
 
     private async onInitialized(): Promise<void> {
         const game = await loadJsonResource<Game>('http://localhost:3000/data/index.json', gameSchema, this.logger)
-        this.logger.debug(logName, 'Loaded game data: {0}', game)
+        this.gameDefinitionProvider.setRoot(game)
     }
 }
