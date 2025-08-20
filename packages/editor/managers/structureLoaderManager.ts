@@ -1,5 +1,7 @@
 import { INITIALIZED } from '@editor/messages/editor'
 import { Token, token } from '@ioc/token'
+import { Game, gameSchema } from '@loader/schema/game'
+import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
@@ -34,6 +36,7 @@ export class StructureLoaderManager implements IStructureLoaderManager {
     }
 
     private async onInitialized(): Promise<void> {
-
+        const game = await loadJsonResource<Game>('http://localhost:3000/data/index.json', gameSchema, this.logger)
+        this.logger.debug(logName, 'Loaded game data: {0}', game)
     }
 }
