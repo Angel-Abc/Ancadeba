@@ -1,8 +1,11 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import express from 'express'
 import cors from 'cors'
 import { promises as fs } from 'fs'
 import path from 'path'
+
+loadEnv()
+loadEnv({ path: '.env.local', override: true })
 
 const basePath = process.env.GAME_DIR ?? process.env.VITE_DATA_PATH ?? '/data'
 const resolvedBase = path.resolve(basePath)
