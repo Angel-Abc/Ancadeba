@@ -1,8 +1,10 @@
 import { Editor, editorDependencies, editorToken } from '@editor/core/editor'
-import { JsonFileSerive, jsonFileServiceDependencies, jsonFileServiceToken } from '@editor/services/jsonFileService'
+import { EditorInitializer, editorInitializerDependencies, editorInitializerToken } from '@editor/core/editorInitializer'
+import { StructureLoaderManager, structureLoaderManagerDependencies, structureLoaderManagerToken } from '@editor/managers/structureLoaderManager'
 import { Container } from '@ioc/container'
 import { ILogger, loggerToken } from '@utils/logger'
 import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
+import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
 
 export interface IContainerBuilder {
     build(): Container
@@ -16,14 +18,13 @@ export class ContainerBuilder implements IContainerBuilder {
     public build(): Container {
         const logger = this.loggerFactory()
         const result = new Container(logger)
-        result.register({ 
-            token: loggerToken, 
-            useValue: logger 
+        result.register({
+            token: loggerToken,
+            useValue: logger
         })
-        result.register({ 
-            token: jsonFileServiceToken, 
-            useClass: JsonFileSerive,
-            deps: jsonFileServiceDependencies
+        result.register({
+            token: messageQueueToken,
+            useFactory: c => new MessageQueue(() => { }, c.resolve(loggerToken))
         })
         result.register({
             token: messageBusToken,
@@ -34,6 +35,16 @@ export class ContainerBuilder implements IContainerBuilder {
             token: editorToken,
             useClass: Editor,
             deps: editorDependencies
+        })
+        result.register({
+            token: editorInitializerToken,
+            useClass: EditorInitializer,
+            deps: editorInitializerDependencies
+        })
+        result.register({
+            token: structureLoaderManagerToken,
+            useClass: StructureLoaderManager,
+            deps: structureLoaderManagerDependencies
         })
         return result
     }
