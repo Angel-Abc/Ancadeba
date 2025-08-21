@@ -39,6 +39,8 @@ The server reads from `VITE_DATA_PATH` (defaults to `/data`) and exposes:
 - `GET /data/*` - return the JSON content of the requested file
 - `PUT /data/*` - write the request body as JSON to the file
 
+`VITE_EDITOR_ORIGIN` may be set to configure the allowed CORS origin for the server. It defaults to `http://localhost:5174`.
+
 ## Testing and Build Commands
 Run the following commands before submitting changes:
 
