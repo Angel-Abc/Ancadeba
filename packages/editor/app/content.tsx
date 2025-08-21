@@ -21,7 +21,7 @@ export const Content: React.FC = (): React.JSX.Element => {
                 setContentInfo(message.payload as ContentInfo)
             }
         )
-    }, [])
+    }, [messageBus, setContentInfo])
     return (
         <section className='main'>
             <ContentBar />
