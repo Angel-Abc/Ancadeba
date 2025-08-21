@@ -17,9 +17,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node }): React.JSX.Element =
 
     const toggle = (): void => {
         if (!hasChildren) return
-        const newValue = !isCollapsed
-        node.isCollapsed = newValue
-        setIsCollapsed(newValue)
+        setIsCollapsed(prev => !prev)
     }
 
     const select = (): void => {
@@ -35,7 +33,15 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node }): React.JSX.Element =
 
     return (
         <div>
-            <label><span onClick={toggle}>{icon}</span> <span onClick={select}>{node.label}</span></label>
+            <label>
+                {hasChildren && (
+                    <button type='button' onClick={toggle} aria-label='toggle'>
+                        {icon}
+                    </button>
+                )}
+                {' '}
+                <button type='button' onClick={select}>{node.label}</button>
+            </label>
             {!isCollapsed && hasChildren && (
                 <div className='children'>
                     {node.children.map(child => <TreeNode node={child} key={child.data?.id ?? child.label} />)}
