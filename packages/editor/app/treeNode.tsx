@@ -38,7 +38,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node }): React.JSX.Element =
             <label><span onClick={toggle}>{icon}</span> <span onClick={select}>{node.label}</span></label>
             {!isCollapsed && hasChildren && (
                 <div className='children'>
-                    {node.children.map(child => <TreeNode node={child} key={child.label} />)}
+                    {node.children.map(child => <TreeNode node={child} key={child.data?.id ?? child.label} />)}
                 </div>
             )}
         </div>
