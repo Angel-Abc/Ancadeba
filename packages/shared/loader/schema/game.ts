@@ -39,6 +39,12 @@ export const gameSchema = z.object({
   // Virtual inputs and keys must be JSON files
   "virtual-keys": z.array(jsonFile),
   "virtual-inputs": z.array(jsonFile),
+
+  // Tags
+  tags: z.array(jsonFile),
+
+  "item-definitions": z.array(jsonFile)
+
 }).strict(); // Ensures no unknown properties
 
 export type Game = z.infer<typeof gameSchema>;

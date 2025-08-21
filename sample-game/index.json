@@ -37,5 +37,11 @@
   ],
   "virtual-inputs": [
     "virtual-inputs/common.json"
+  ],
+  "tags": [
+    "tags/items.json"
+  ],
+  "item-definitions": [
+    "item-definitions/test-items.json"
   ]
 }

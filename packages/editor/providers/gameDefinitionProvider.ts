@@ -8,6 +8,8 @@ import { TileSet } from '@loader/schema/tile'
 import { DialogSet } from '@loader/schema/dialog'
 import { VirtualKeys } from '@loader/schema/inputs'
 import { VirtualInputs } from '@loader/schema/inputs'
+import { Tags } from '@loader/schema/tags'
+import { ItemDefinitions } from '@loader/schema/itemDefinitions'
 
 export interface BaseItem<T, Type extends string = string> {
     id: number
@@ -36,9 +38,12 @@ export type DialogItem = BaseRecordItem<DialogSet> & { type: 'dialog' }
 export type StylingItem = BaseFileItem<string> & { type: 'styling' }
 export type VirtualKeysItem = BaseFileItem<VirtualKeys> & { type: 'virtual-keys' }
 export type VirtualInputsItem = BaseFileItem<VirtualInputs> & { type: 'virtual-inputs' }
+export type TagsItem = BaseFileItem<Tags> & { type: 'tags' }
+export type ItemDefinitionsItem = BaseFileItem<ItemDefinitions> & { type: 'item-definions' }
 
 export type GameItem = RootItem | PageItem | ActionsItem | LanguageItem | MapItem
     | TileItem | DialogItem | StylingItem | VirtualInputsItem | VirtualKeysItem
+    | TagsItem | ItemDefinitionsItem
 
 export interface IGameDefinitionProvider {
     get Items(): GameItem[]
@@ -77,6 +82,8 @@ export class GameDefinitionProvider implements IGameDefinitionProvider {
         this.addStylingItems(root)
         this.addVirtualKeysItems(root)
         this.addVirtualInputsItems(root)
+        this.addTags(root)
+        this.addItemDefinitions(root)
     }
 
     private addMapItems(root: Game): void {
@@ -144,6 +151,28 @@ export class GameDefinitionProvider implements IGameDefinitionProvider {
         this.addArrayItems<VirtualInputsItem>(root["virtual-inputs"], (id, filename) => ({
             id,
             type: 'virtual-inputs',
+            current: null,
+            original: null,
+            currentFilename: filename,
+            originalFilename: filename
+        }))
+    }
+
+    private addTags(root: Game): void {
+        this.addArrayItems<TagsItem>(root.tags, (id, filename) => ({
+            id,
+            type: 'tags',
+            current: null,
+            original: null,
+            currentFilename: filename,
+            originalFilename: filename
+        }))
+    }
+
+    private addItemDefinitions(root: Game): void {
+        this.addArrayItems<ItemDefinitionsItem>(root['item-definitions'], (id, filename) => ({
+            id,
+            type: 'item-definions',
             current: null,
             original: null,
             currentFilename: filename,
