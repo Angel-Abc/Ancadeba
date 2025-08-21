@@ -2,6 +2,7 @@ body {
     overflow: hidden;
     width: 100vw;
     height: 100vh;
+    font-family: arial;
 }
 
 #root {
@@ -9,13 +10,12 @@ body {
     grid-template-columns: 300px 1fr;
     min-height: 100%;
     width: 100%;
-    background-color: aqua;
 }
 
 aside.side-bar {
     border-right: solid 1px black;
     overflow: auto;
-    background-color: brown;
+    line-height: 110%;
 }
 
 .main {
@@ -42,9 +42,17 @@ main.content {
 }
 
 .side-bar .children {
-    padding-left: 20px;
+    padding-left: 22px;
 }
 
+.side-bar label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/*
 .side-bar svg {
     display: inline-block;
-}
+} */

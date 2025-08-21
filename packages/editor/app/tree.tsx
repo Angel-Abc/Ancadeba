@@ -9,17 +9,19 @@ export const Tree: React.FC = (): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const editTreeProvider = useService<IEditTreeProvider>(editTreeProviderToken)
     const [root, setRoot] = useState<GameItemTreeNode>(editTreeProvider.Root)
-    
+
     useEffect(() => {
         return messageBus.registerMessageListener(
-            GAME_DEFINITION_UPDATED, 
+            GAME_DEFINITION_UPDATED,
             () => setRoot(editTreeProvider.Root)
         )
-    }, [ messageBus, editTreeProvider])
+    }, [messageBus, editTreeProvider])
 
     return (
         <aside className='side-bar'>
-            <TreeNode node={root} />
+            {root.children.length > 0 && (
+                <TreeNode node={root} />
+            )}
         </aside>
     )
 }
