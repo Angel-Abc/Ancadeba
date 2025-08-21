@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { EditTreeProvider } from './editTreeProvider'
-import { IGameDefinitionProvider, GameItem, RootItem, PageItem, LanguageItem } from './gameDefinitionProvider'
+import { EditTreeProvider } from '../../packages/editor/providers/editTreeProvider'
+import { IGameDefinitionProvider, GameItem, RootItem, PageItem, LanguageItem } from '../../packages/editor/providers/gameDefinitionProvider'
 import type { ILogger } from '@utils/logger'
 import type { Game } from '@loader/schema/game'
 
