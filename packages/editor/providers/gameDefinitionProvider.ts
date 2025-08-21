@@ -39,7 +39,7 @@ export type StylingItem = BaseFileItem<string> & { type: 'styling' }
 export type VirtualKeysItem = BaseFileItem<VirtualKeys> & { type: 'virtual-keys' }
 export type VirtualInputsItem = BaseFileItem<VirtualInputs> & { type: 'virtual-inputs' }
 export type TagsItem = BaseFileItem<Tags> & { type: 'tags' }
-export type ItemDefinitionsItem = BaseFileItem<ItemDefinitions> & { type: 'item-definions' }
+export type ItemDefinitionsItem = BaseFileItem<ItemDefinitions> & { type: 'item-definitions' }
 
 export type GameItem = RootItem | PageItem | ActionsItem | LanguageItem | MapItem
     | TileItem | DialogItem | StylingItem | VirtualInputsItem | VirtualKeysItem
@@ -172,7 +172,7 @@ export class GameDefinitionProvider implements IGameDefinitionProvider {
     private addItemDefinitions(root: Game): void {
         this.addArrayItems<ItemDefinitionsItem>(root['item-definitions'], (id, filename) => ({
             id,
-            type: 'item-definions',
+            type: 'item-definitions',
             current: null,
             original: null,
             currentFilename: filename,
