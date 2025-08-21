@@ -11,7 +11,8 @@ import './styling/variables.css'
 import './styling/editor.css'
 
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
-  () => new ConsoleLogger()
+  () => new ConsoleLogger(),
+  import.meta.env.VITE_DATA_URL ?? 'http://localhost:3000/data'
 )
 const container: Container = containerBuilder.build()
 
