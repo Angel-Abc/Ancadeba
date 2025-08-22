@@ -3,7 +3,7 @@ import { describe, it, expect, vi, Mock } from 'vitest'
 vi.mock('@utils/loadJsonResource', () => ({ loadJsonResource: vi.fn() }))
 
 import { loadJsonResource } from '@utils/loadJsonResource'
-import { GameDefinitionLoaderManager } from '../../packages/editor/managers/gameDefinitionManager'
+import { GameDefinitionLoaderManager } from '../../packages/editor/managers/gameDefinitionLoaderManager'
 import { INITIALIZED } from '../../packages/editor/messages/editor'
 import type { ILogger } from '@utils/logger'
 import type { IMessageBus } from '@utils/messageBus'
