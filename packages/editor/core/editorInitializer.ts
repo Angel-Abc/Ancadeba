@@ -1,19 +1,23 @@
-import { gameDefinitionLoaderManagerToken, IGameDefinitionLoaderManager } from '@editor/managers/gameDefinitionManager'
 import { Token, token } from '@ioc/token'
+import { IManagersInitializer, managersInitializerToken } from './initializers/managersInitializer'
 
-export interface IEditorInitializer {
-    initialize(): void
+export interface IInitializer {
+    initialize(): Promise<void>
 }
+
+export type IEditorInitializer = IInitializer
 
 const logName = 'EditorInitializer'
 export const editorInitializerToken = token<IEditorInitializer>(logName)
-export const editorInitializerDependencies: Token<unknown>[] = [gameDefinitionLoaderManagerToken]
+export const editorInitializerDependencies: Token<unknown>[] = [
+    managersInitializerToken
+]
 export class EditorInitializer implements IEditorInitializer {
     constructor(
-        private structureLoaderManager: IGameDefinitionLoaderManager
+        private managersInitializer: IManagersInitializer
     ){}
 
-    public initialize(): void {
-        this.structureLoaderManager.initialize()
+    public async initialize(): Promise<void> {
+        await this.managersInitializer.initialize()
     }
 }

@@ -65,7 +65,7 @@ export class EditTreeProvider implements IEditTreeProvider {
                 result.push(parentNode)
                 nodeLookup.set(item.type, parentNode)
             }
-            if (item.type === 'language') {
+            if (item.type === 'languages') {
                 let languageRootNode: GameItemTreeNode
                 if (nodeLookup.has(item.currentKey)) languageRootNode = nodeLookup.get(item.currentKey)!
                 else {

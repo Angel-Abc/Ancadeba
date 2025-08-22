@@ -10,6 +10,7 @@ import { VirtualKeys } from '@loader/schema/inputs'
 import { VirtualInputs } from '@loader/schema/inputs'
 import { Tags } from '@loader/schema/tags'
 import { ItemDefinitions } from '@loader/schema/itemDefinitions'
+import { ILogger, loggerToken } from '@utils/logger'
 
 export interface BaseItem<T, Type extends string = string> {
     id: number
@@ -31,7 +32,7 @@ export type BaseRecordItem<T> = BaseFileItem<T> & {
 export type RootItem = BaseItem<Game> & { type: 'root' }
 export type PageItem = BaseRecordItem<Page> & { type: 'page' }
 export type ActionsItem = BaseFileItem<Actions> & { type: 'actions' }
-export type LanguageItem = BaseRecordItem<Language> & { type: 'language' }
+export type LanguageItem = BaseRecordItem<Language> & { type: 'languages' }
 export type MapItem = BaseRecordItem<GameMap> & { type: 'map' }
 export type TileItem = BaseRecordItem<TileSet> & { type: 'tile' }
 export type DialogItem = BaseRecordItem<DialogSet> & { type: 'dialog' }
@@ -48,16 +49,23 @@ export type GameItem = RootItem | PageItem | ActionsItem | LanguageItem | MapIte
 export interface IGameDefinitionProvider {
     get Items(): GameItem[]
     setRoot(root: Game): void
+    getItemById(id: number): GameItem
+    setItem<T>(id: number, item: T): void
+    setOriginal<T>(id: number, item: T): void
 }
 
 const logName = 'GameDefinitionProvider'
 export const gameDefinitionProviderToken = token<IGameDefinitionProvider>(logName)
-export const gameDefinitionProviderDependencies: Token<unknown>[] = []
+export const gameDefinitionProviderDependencies: Token<unknown>[] = [
+    loggerToken
+]
 export class GameDefinitionProvider implements IGameDefinitionProvider {
     private items: GameItem[] = []
     private lookUp: Map<number, GameItem> = new Map<number, GameItem>()
     private nextId: number = 1
-    constructor() { }
+    constructor(
+        private logger: ILogger
+    ) { }
 
     public get Items(): GameItem[] {
         return this.items
@@ -84,6 +92,21 @@ export class GameDefinitionProvider implements IGameDefinitionProvider {
         this.addVirtualInputsItems(root)
         this.addTags(root)
         this.addItemDefinitions(root)
+    }
+
+    public getItemById(id: number): GameItem {
+        if (this.lookUp.has(id)) return this.lookUp.get(id)!
+        throw new Error(this.logger.error(logName, 'No game item with id {0} was found', id))
+    }
+
+    public setItem<T>(id: number, item: T): void {
+        const gameItem = this.getItemById(id) as BaseItem<T>
+        gameItem.current = item
+    }
+
+    public setOriginal<T>(id: number, item: T): void {
+        const gameItem = this.getItemById(id) as BaseItem<T>
+        gameItem.original = item
     }
 
     private addMapItems(root: Game): void {
@@ -207,7 +230,7 @@ export class GameDefinitionProvider implements IGameDefinitionProvider {
     private addLanguageItems(root: Game): void {
         this.addRecordArrayItems<LanguageItem>(root.languages, (id, lang, filename) => ({
             id,
-            type: 'language',
+            type: 'languages',
             current: null,
             original: null,
             currentFilename: filename,

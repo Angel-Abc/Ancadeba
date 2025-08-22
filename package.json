@@ -14,7 +14,7 @@
     "type": "module",
     "scripts": {
         "dev": "concurrently -n \"vite,tsc\" \"vite\" \"tsc -p packages/engine/tsconfig.json --noEmit --watch\"",
-        "dev:editor": "concurrently -n \"vite,server\" \"vite --config packages/editor/vite.config.ts\" \"node packages/editor/server.ts\"",
+        "dev:editor": "concurrently -n \"vite,server,tsc\" \"vite --config packages/editor/vite.config.ts\" \"node packages/editor/server.ts\" \"tsc -p packages/editor/tsconfig.json --noEmit --watch\"",
         "test": "vitest run",
         "test:dev": "vitest watch",
         "lint": "eslint .",
