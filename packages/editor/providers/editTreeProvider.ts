@@ -1,5 +1,4 @@
 import { Token, token } from '@ioc/token'
-import { gameDefinitionProviderToken, GameItem, IGameDefinitionProvider, RootItem } from './gameDefinitionProvider'
 import { ILogger, loggerToken } from '@utils/logger'
 
 interface TreeNode<T> {
@@ -10,7 +9,7 @@ interface TreeNode<T> {
     level: number
 }
 
-export type GameItemTreeNode = TreeNode<GameItem>
+export type GameItemTreeNode = TreeNode<unknown>
 
 export interface IEditTreeProvider {
     get Root(): GameItemTreeNode
@@ -18,93 +17,94 @@ export interface IEditTreeProvider {
 
 const logName = 'EditTreeProvider'
 export const editTreeProviderToken = token<IEditTreeProvider>(logName)
-export const editTreeProviderDependencies: Token<unknown>[] = [loggerToken, gameDefinitionProviderToken]
+export const editTreeProviderDependencies: Token<unknown>[] = [loggerToken]
 export class EditTreeProvider implements IEditTreeProvider {
     constructor(
         private logger: ILogger,
-        private gameDefinitionProvider: IGameDefinitionProvider
     ) { }
 
     public get Root(): GameItemTreeNode {
-        if (this.gameDefinitionProvider.Items.length === 0) {
-            return {
-                label: 'No Data',
-                children: [],
-                isCollapsed: true,
-                data: null,
-                level: 0
-            }
-        }
-        const rootItem = this.gameDefinitionProvider.Items[0] as RootItem
-        const result = {
-            label: this.getItemLabel(rootItem),
-            children: this.getChildren(1),
+        return {
+            label: 'Sample Game',
             isCollapsed: false,
-            data: rootItem,
-            level: 0
-        }
-        return result
-    }
-
-    private getChildren(level: number): GameItemTreeNode[] {
-        const result: GameItemTreeNode[] = []
-        const nodeLookup: Map<string, GameItemTreeNode> = new Map()
-        for (let index = 1; index < this.gameDefinitionProvider.Items.length; index++) {
-            const item = this.gameDefinitionProvider.Items[index]
-            const treeNode = this.getTreeNode(item, level + 1)
-            let parentNode: GameItemTreeNode
-            if (nodeLookup.has(item.type)) parentNode = nodeLookup.get(item.type)!
-            else {
-                parentNode = {
-                    label: this.getCategoryLabel(item.type),
-                    children: [],
+            data: null,
+            level: 0,
+            children: [
+                {
+                    label: 'pages',
                     isCollapsed: true,
                     data: null,
-                    level: level
+                    level: 1,
+                    children: [
+                        {
+                            label: 'main-game',
+                            isCollapsed: false,
+                            data: null,
+                            level: 2,
+                            children: []
+                        },
+                        {
+                            label: 'start-page',
+                            isCollapsed: false,
+                            data: null,
+                            level: 2,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    label: 'actions',
+                    isCollapsed: true,
+                    data: null,
+                    level: 1,
+                    children: [
+                        {
+                            label: 'actions/general-actions.json',
+                            isCollapsed: false,
+                            data: null,
+                            level: 2,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    label: 'languages',
+                    isCollapsed: true,
+                    data: null,
+                    level: 1,
+                    children: [
+                        {
+                            label: 'en',
+                            isCollapsed: false,
+                            data: null,
+                            level: 2,
+                            children: [
+                                {
+                                    label: 'languages/en/start-beach.json',
+                                    isCollapsed: false,
+                                    data: null,
+                                    level: 3,
+                                    children: []
+                                },
+                                {
+                                    label: 'languages/en/system.json',
+                                    isCollapsed: false,
+                                    data: null,
+                                    level: 3,
+                                    children: []
+                                },
+                                {
+                                    label: 'languages/en/tiles.json',
+                                    isCollapsed: false,
+                                    data: null,
+                                    level: 3,
+                                    children: []
+                                }
+                            ]
+                        }
+                    ]
                 }
-                result.push(parentNode)
-                nodeLookup.set(item.type, parentNode)
-            }
-            if (item.type === 'languages') {
-                let languageRootNode: GameItemTreeNode
-                if (nodeLookup.has(item.currentKey)) languageRootNode = nodeLookup.get(item.currentKey)!
-                else {
-                    languageRootNode = {
-                        label: item.currentKey,
-                        children: [],
-                        isCollapsed: true,
-                        data: null,
-                        level: level + 1
-                    }
-                    parentNode.children.push(languageRootNode)
-                }
-                treeNode.level = level + 2
-                nodeLookup.set(item.currentKey, languageRootNode)
-                languageRootNode.children.push(treeNode)
-            } else {
-                parentNode.children.push(treeNode)
-            }
+            ]
         }
-        return result
-    }
-
-    private getTreeNode(item: GameItem, level: number): GameItemTreeNode {
-        const result: GameItemTreeNode = {
-            label: this.getItemLabel(item),
-            data: item,
-            isCollapsed: false,
-            children: [],
-            level: level
-        }
-        return result
-    }
-
-    private getItemLabel(item: GameItem): string {
-        if (item.type === 'root') return item.current?.title ?? 'game'
-        return item.currentFilename
-    }
-
-    private getCategoryLabel(type: GameItem['type']): string {
-        return type
     }
 }

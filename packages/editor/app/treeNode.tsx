@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { useService } from '@ioc/iocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
-import { SetContentPayload } from '@editor/messages/types'
-import { GameItem } from '@editor/providers/gameDefinitionProvider'
 
 interface TreeNodeProps {
     node: GameItemTreeNode
@@ -25,19 +23,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node }): React.JSX.Element =
     }
 
     const select = (): void => {
-        const payload: SetContentPayload = node.data === null
-        ? {
-            label: node.label as GameItem['type'],
-            level: node.level,
-            dataId: null
-        } : {
-            label: node.data.type,
-            level: node.level,
-            dataId: node.data.id
-        }
         messageBus.postMessage({
             message: SET_EDITOR_CONTENT,
-            payload: payload
+            payload: 'TODO'
         })
     }
 
@@ -46,7 +34,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node }): React.JSX.Element =
             <label><span onClick={toggle}>{icon}</span> <span onClick={select}>{node.label}</span></label>
             {!isCollapsed && hasChildren && (
                 <div className='children'>
-                    {node.children.map(child => <TreeNode node={child} key={child.data?.id ?? child.label} />)}
+                    {node.children.map(child => <TreeNode node={child} key={child.label} />)}
                 </div>
             )}
         </div>

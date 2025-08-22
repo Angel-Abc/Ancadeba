@@ -5,7 +5,6 @@ import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { GAME_DEFINITION_UPDATED, INITIALIZED } from '../messages/editor'
-import { gameDefinitionProviderToken, IGameDefinitionProvider } from '../providers/gameDefinitionProvider'
 
 export interface IGameDefinitionLoaderManager {
     initialize(): void
@@ -18,7 +17,6 @@ export const dataUrlToken = token<string>('dataUrl')
 export const gameDefinitionLoaderManagerDependencies: Token<unknown>[] = [
     loggerToken,
     messageBusToken,
-    gameDefinitionProviderToken,
     dataUrlToken
 ]
 export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager {
@@ -26,7 +24,6 @@ export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager
     constructor(
         private logger: ILogger,
         private messageBus: IMessageBus,
-        private gameDefinitionProvider: IGameDefinitionProvider,
         private dataUrl: string
     ){}
 
@@ -46,7 +43,7 @@ export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager
 
     private async onInitialized(): Promise<void> {
         const game = await loadJsonResource<Game>(`${this.dataUrl}/index.json`, gameSchema, this.logger)
-        this.gameDefinitionProvider.setRoot(game)
+        this.logger.debug(logName, 'loaded game root data {0}', game)
         this.messageBus.postMessage({
             message: GAME_DEFINITION_UPDATED,
             payload: null
