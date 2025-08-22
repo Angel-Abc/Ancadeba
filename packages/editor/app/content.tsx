@@ -3,12 +3,10 @@ import { ContentBar } from './contentBar'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
-import { GameItem } from '@editor/providers/gameDefinitionProvider'
 
 interface ContentInfo {
     label: string
     level: number
-    data: GameItem
 }
 
 export const Content: React.FC = (): React.JSX.Element => {
