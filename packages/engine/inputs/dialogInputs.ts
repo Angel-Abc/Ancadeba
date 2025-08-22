@@ -2,17 +2,15 @@ import { Token, token } from '@ioc/token'
 import { Input } from '@loader/data/inputs'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { IInputsProvider } from '@registries/inputsProviderRegistry'
-import { ITranslationService, translationServiceToken } from '@services/translationService'
 
 export type IDialogInputs = IInputsProvider
 
 const logName = 'DialogInputs'
 export const dialogInputsToken = token<IDialogInputs>(logName)
-export const dialogInputsDependencies: Token<unknown>[] = [gameDataProviderToken, translationServiceToken]
+export const dialogInputsDependencies: Token<unknown>[] = [gameDataProviderToken]
 export class DialogInputs implements IDialogInputs {
     constructor(
-        private gameDataProvider: IGameDataProvider,
-        private translationService: ITranslationService
+        private gameDataProvider: IGameDataProvider
     ) { }
 
     public isActive(): boolean {
@@ -31,8 +29,6 @@ export class DialogInputs implements IDialogInputs {
             if (dialogSet){
                 const dialog = dialogSet.dialogs[dialogId]
                 if (dialog) {
-                    // TODO: how to handle more than 9 choices?
-                    // TODO: how does this handle with the input matrix width?
                     return dialog.choices.map<Input>((choice, index) => {
                         return {
                             virtualInput: `VI_${index + 1}`,
