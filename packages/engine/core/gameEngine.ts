@@ -1,7 +1,7 @@
 import { Token, token } from '@ioc/token'
-import { engineInitializerToken, IEngineInitializer } from './engineInitializer'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
+import { engineInitializerToken, IEngineInitializer } from './initializers/engineInitializer'
 
 
 /**

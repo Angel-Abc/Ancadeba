@@ -4,9 +4,8 @@ import { GameDefinitionLoaderManager, gameDefinitionLoaderManagerDependencies, g
 import { EditTreeProvider, editTreeProviderDependencies, editTreeProviderToken } from '@editor/providers/editTreeProvider'
 import { GameDefinitionProvider, gameDefinitionProviderDependencies, gameDefinitionProviderToken } from '@editor/providers/gameDefinitionProvider'
 import { Container } from '@ioc/container'
-import { ILogger, loggerToken } from '@utils/logger'
-import { MessageBus, messageBusDependencies, messageBusToken } from '@utils/messageBus'
-import { MessageQueue, messageQueueToken } from '@utils/messageQueue'
+import { ILogger } from '@utils/logger'
+import { UtilsBuilder } from '../../shared/builder/utilsBuilder'
 
 export interface IContainerBuilder {
     build(): Container
@@ -21,19 +20,7 @@ export class ContainerBuilder implements IContainerBuilder {
     public build(): Container {
         const logger = this.loggerFactory()
         const result = new Container(logger)
-        result.register({
-            token: loggerToken,
-            useValue: logger
-        })
-        result.register({
-            token: messageQueueToken,
-            useFactory: c => new MessageQueue(() => { }, c.resolve(loggerToken))
-        })
-        result.register({
-            token: messageBusToken,
-            useClass: MessageBus,
-            deps: messageBusDependencies
-        })
+        new UtilsBuilder(logger, () => () => {}).register(result)
         result.register({
             token: editorToken,
             useClass: Editor,

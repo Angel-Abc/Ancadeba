@@ -1,5 +1,5 @@
 import { describeToken, type Token } from './token'
-import type { Provider, Scope } from './types'
+import type { IContainer, Provider, Scope } from './types'
 import type { ILogger } from '@utils/logger'
 
 const logName: string = 'Container'
@@ -8,7 +8,7 @@ function isFunction(v: unknown): v is (...args: unknown[]) => unknown {
   return typeof v === 'function'
 }
 
-export class Container {
+export class Container implements IContainer {
   private providers = new Map<Token<unknown>, Provider<unknown>>()
   private singletons = new Map<Token<unknown>, unknown>()
   private resolving: Token<unknown>[] = []

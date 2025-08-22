@@ -3,7 +3,7 @@ import { ScriptCondition, scriptConditionDependencies, scriptConditionToken } fr
 import { Container } from '@ioc/container'
 
 export class ConditionsBuilder {
-    public register(container: Container){
+    public register(container: Container): void {
         container.register({
             token: conditionResolverToken,
             useClass: ConditionResolver,

@@ -9,59 +9,52 @@ import { TileSetLoader, tileSetLoaderDependencies, tileSetLoaderToken } from '@l
 import { VirtualInputsLoader, virtualInputsLoaderDependencies, virtualInputsLoaderToken } from '@loader/virtualInputsLoader'
 import { VirtualKeysLoader, virtualKeysLoaderDependencies, virtualKeysLoaderToken } from '@loader/virtualKeysLoader'
 
-/**
- * Registers loader components responsible for fetching game resources.
- */
 export class LoadersBuilder {
-  /**
-   * Register loader dependencies into the container.
-   */
-  register(container: Container): void {
-    container.register({
-      token: gameLoaderToken,
-      useClass: GameLoader,
-      deps: gameLoaderDependencies
-    })
-    container.register({
-      token: languageLoaderToken,
-      useClass: LanguageLoader,
-      deps: languageLoaderDependencies
-    })
-    container.register({
-      token: pageLoaderToken,
-      useClass: PageLoader,
-      deps: pageLoaderDependencies
-    })
-    container.register({
-      token: actionHandlersLoaderToken,
-      useClass: ActionHandlersLoader,
-      deps: actionHandlersLoaderDependencies
-    })
-    container.register({
-      token: gameMapLoaderToken,
-      useClass: GameMapLoader,
-      deps: gameMapLoaderDependencies
-    })
-    container.register({
-      token: tileSetLoaderToken,
-      useClass: TileSetLoader,
-      deps: tileSetLoaderDependencies
-    })
-    container.register({
-      token: virtualKeysLoaderToken,
-      useClass: VirtualKeysLoader,
-      deps: virtualKeysLoaderDependencies
-    })
-    container.register({
-      token: virtualInputsLoaderToken,
-      useClass: VirtualInputsLoader,
-      deps: virtualInputsLoaderDependencies
-    })
-    container.register({
-      token: dialogSetLoaderToken,
-      useClass: DialogSetLoader,
-      deps: dialogSetLoaderDependencies
-    })
-  }
+    public register(container: Container): void {
+        container.register({
+            token: gameLoaderToken,
+            useClass: GameLoader,
+            deps: gameLoaderDependencies
+        })
+        container.register({
+            token: languageLoaderToken,
+            useClass: LanguageLoader,
+            deps: languageLoaderDependencies
+        })
+        container.register({
+            token: virtualKeysLoaderToken,
+            useClass: VirtualKeysLoader,
+            deps: virtualKeysLoaderDependencies
+        })
+        container.register({
+            token: virtualInputsLoaderToken,
+            useClass: VirtualInputsLoader,
+            deps: virtualInputsLoaderDependencies
+        })
+        container.register({
+            token: actionHandlersLoaderToken,
+            useClass: ActionHandlersLoader,
+            deps: actionHandlersLoaderDependencies
+        })
+        container.register({
+            token: dialogSetLoaderToken,
+            useClass: DialogSetLoader,
+            deps: dialogSetLoaderDependencies
+        })
+        container.register({
+            token: gameMapLoaderToken,
+            useClass: GameMapLoader,
+            deps: gameMapLoaderDependencies
+        })
+        container.register({
+            token: tileSetLoaderToken,
+            useClass: TileSetLoader,
+            deps: tileSetLoaderDependencies
+        })
+        container.register({
+            token: pageLoaderToken,
+            useClass: PageLoader,
+            deps: pageLoaderDependencies
+        })
+    }
 }
-

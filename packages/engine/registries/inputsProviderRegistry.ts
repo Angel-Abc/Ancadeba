@@ -42,7 +42,7 @@ export interface IInputsProviderRegistry {
     clear(): void
 }
 
-const logName = 'InputServiceProvider'
+const logName = 'InputsProviderRegistry'
 export const inputsProviderRegistryToken = token<IInputsProviderRegistry>(logName)
 export const inputsProviderRegistryDependencies: Token<unknown>[] = [serviceProviderToken]
 

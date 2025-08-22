@@ -1,5 +1,5 @@
 import { token, Token } from '@ioc/token'
-import { Container } from '@ioc/types'
+import { IContainer } from '@ioc/types'
 
 /**
  * Defines a contract for resolving services by their {@link Token}.
@@ -23,7 +23,7 @@ export class ServiceProvider implements IServiceProvider {
      *
      * @param container - Container used to resolve services.
      */
-    constructor(private container: Container){}
+    constructor(private container: IContainer){}
 
     /**
      * Resolve a service instance for the provided token.

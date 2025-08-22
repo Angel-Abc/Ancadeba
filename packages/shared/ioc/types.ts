@@ -4,7 +4,7 @@ import type { Token } from './token'
 // Using `any[]` here lets us register classes whose constructors expect
 // specific dependency types without TypeScript rejecting them.
 export type Class<T> = new (...args: any[]) => T // eslint-disable-line @typescript-eslint/no-explicit-any
-export type Factory<T> = (c: Container) => T
+export type Factory<T> = (c: IContainer) => T
 
 export type Scope = 'singleton' | 'transient'
 
@@ -15,6 +15,6 @@ export type FactoryProvider<T> = BaseProvider<T> & { useFactory: Factory<T>, dep
 export type Provider<T = unknown> = ValueProvider<T> | ClassProvider<T> | FactoryProvider<T>
 
 // Note: circular import breaker – we only need the type here
-export type Container = {
+export type IContainer = {
   resolve<T>(t: Token<T>): T
 }

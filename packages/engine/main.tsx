@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
 import { gameEngineToken, IGameEngine } from '@core/gameEngine'
 import { Container } from '@ioc/container'
 import { turnSchedulerToken } from '@core/turnScheduler'
@@ -10,15 +9,37 @@ import './styling/engine.css'
 import { App } from '@app/app'
 import { IocProvider } from '@ioc/iocProvider'
 import { ConsoleLogger } from '@utils/logger'
+import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
+import { ActionHandlerRegistrar, ConditionResolverRegistrar, InputsProviderRegistrar } from '@builders/containerBuilders/registrars'
+import { postMessageActionToken } from '@actions/postMessageAction'
+import { scriptActionToken } from '@actions/scriptAction'
+import { gotoDialogToken } from '@actions/gotoDialog'
+import { endDialogToken } from '@actions/endDialog'
+import { pageInputsToken } from '@inputs/pageInputs'
+import { dialogInputsToken } from '@inputs/dialogInputs'
+import { scriptConditionToken } from '@conditions/scriptCondition'
 
 const dataPath = import.meta.env.VITE_DATA_PATH ?? '/data'
 const containerBuilder: IContainerBuilder = new ContainerBuilder(
+  new ConsoleLogger(),
+  dataPath,
   container => () => {
     const scheduler = container.resolve(turnSchedulerToken)
-    scheduler.onQueueEmpty()
+    return scheduler.onQueueEmpty()
   },
-  dataPath,
-  () => new ConsoleLogger(),
+  [
+    (r => r.registerActionHandler('post-message', postMessageActionToken)) as ActionHandlerRegistrar,
+    (r => r.registerActionHandler('script', scriptActionToken)) as ActionHandlerRegistrar,
+    (r => r.registerActionHandler('goto', gotoDialogToken)) as ActionHandlerRegistrar,
+    (r => r.registerActionHandler('end-dialog', endDialogToken)) as ActionHandlerRegistrar,
+  ],
+  [
+    (r => r.registerInputsProvider(pageInputsToken)) as InputsProviderRegistrar,
+    (r => r.registerInputsProvider(dialogInputsToken)) as InputsProviderRegistrar,
+  ],
+  [
+    (r => r.registerConditionResolver('script', scriptConditionToken)) as ConditionResolverRegistrar,
+  ]
 )
 const container: Container = containerBuilder.build()
 
