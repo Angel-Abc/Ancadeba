@@ -32,7 +32,14 @@ describe('ContainerBuilder', () => {
       error: vi.fn((category: string, message: string, ...args: unknown[]) =>
         `[${category}] ${message.replace(/\{(\d+)\}/g, (_: string, i: string) => String(args[Number(i)]))}`),
     }
-    const builder = new ContainerBuilder(() => () => {}, '/data', () => logger)
+    const builder = new ContainerBuilder(
+      logger,
+      '/data',
+      () => () => {},
+      [],
+      [],
+      [],
+    )
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)
     const bus = container.resolve(messageBusToken)
@@ -67,22 +74,30 @@ describe('ContainerBuilder', () => {
     )
 
     const providerContainer = new Container(logger)
-    new ProvidersBuilder('/data').register(providerContainer)
+    new ProvidersBuilder().register(providerContainer)
     const registeredTokens = Array.from(
       (providerContainer as unknown as { providers: Map<Token<unknown>, unknown> }).providers.keys()
     )
-    expect(registeredTokens).toHaveLength(providers.length)
-    expect(new Set(registeredTokens)).toEqual(new Set(providers.map(p => p.token)))
+    const registeredProviderTokens = [serviceProviderToken, gameDataProviderToken, virtualKeyProviderToken, virtualInputProviderToken]
+    expect(registeredTokens).toHaveLength(registeredProviderTokens.length)
+    expect(new Set(registeredTokens)).toEqual(new Set(registeredProviderTokens))
   })
 
   it('uses supplied callback when queue empties', async () => {
     const callback = vi.fn()
-    const builder = new ContainerBuilder(() => callback, '/data', () => ({
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-    }))
+    const builder = new ContainerBuilder(
+      {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+      },
+      '/data',
+      () => callback,
+      [],
+      [],
+      [],
+    )
     const container = builder.build()
     const queue = container.resolve(messageQueueToken)
     queue.setHandler(() => {})
@@ -93,12 +108,15 @@ describe('ContainerBuilder', () => {
 
   it('resolves gameEngine without circular dependency', () => {
     const builder = new ContainerBuilder(
+      { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+      '/data',
       container => () => {
         const scheduler = container.resolve(turnSchedulerToken)
         scheduler.onQueueEmpty()
       },
-      '/data',
-      () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+      [],
+      [],
+      [],
     )
     const container = builder.build()
     const engine = container.resolve(gameEngineToken)
