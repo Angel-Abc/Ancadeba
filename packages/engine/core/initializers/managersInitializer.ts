@@ -12,6 +12,9 @@ import { ITileTriggerManager, tileTriggerManagerToken } from '@managers/tileTrig
 import { ITurnManager, turnManagerToken } from '@managers/turnManager'
 import { ITurnOutputManager, turnOutputManagerToken } from '@managers/turnOutputManager'
 
+/**
+ * Aggregated initializer for all engine manager components.
+ */
 export type IManagersInitializer = IInitializer
 
 const logName = 'ManagersInitializer'
@@ -29,7 +32,23 @@ export const managersInitializerDependencies: Token<unknown>[] = [
     turnManagerToken,
     turnOutputManagerToken
 ]
+/**
+ * Sequentially initializes all manager instances that coordinate game logic.
+ */
 export class ManagersInitializer implements IManagersInitializer {
+    /**
+     * @param actionManager Handles player actions.
+     * @param dialogManager Manages dialog state and flow.
+     * @param dialogOutputManager Renders dialog output.
+     * @param dialogSetManager Provides dialog definitions.
+     * @param inputManager Captures and processes player input.
+     * @param mapManager Maintains the game map state.
+     * @param pageManager Controls high level page navigation.
+     * @param playerPositionManager Tracks player location.
+     * @param tileTriggerManager Evaluates tile based triggers.
+     * @param turnManager Coordinates turn based progression.
+     * @param turnOutputManager Displays the results of each turn.
+     */
     constructor(
         private actionManager: IActionManager,
         private dialogManager: IDialogManager,
@@ -44,6 +63,9 @@ export class ManagersInitializer implements IManagersInitializer {
         private turnOutputManager: ITurnOutputManager
     ){}
 
+    /**
+     * Initializes each manager in the order required for correct dependencies.
+     */
     public async initialize(): Promise<void> {
         await this.actionManager.initialize()
         await this.dialogManager.initialize()
