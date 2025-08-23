@@ -6,14 +6,16 @@ import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { BaseItemType } from '@editor/types/gameItems'
 import { RootContent } from './content/rootContent'
 import { GameItemTreeNode } from '@editor/providers/editTreeProvider'
+import { BaseContent, BaseContentProps } from './content/baseContent'
+import { PagesContent } from './content/pagesContent'
 
-const contentPages: Record<BaseItemType, ComponentType<unknown>> = {
-    'root': RootContent as ComponentType<unknown>,
-    'pages': RootContent as ComponentType<unknown>,
-    'page': RootContent as ComponentType<unknown>,
-    'languages': RootContent as ComponentType<unknown>,
-    'language': RootContent as ComponentType<unknown>,
-    'translations': RootContent as ComponentType<unknown>,
+const contentPages: Record<BaseItemType, ComponentType<BaseContentProps>> = {
+    'root': RootContent,
+    'pages': PagesContent,
+    'page': BaseContent,
+    'languages': BaseContent,
+    'language': BaseContent,
+    'translations': BaseContent,
 }
 
 export const Content: React.FC = (): React.JSX.Element => {

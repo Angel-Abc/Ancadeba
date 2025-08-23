@@ -1,10 +1,6 @@
-import { GameItemTreeNode } from '@editor/providers/editTreeProvider'
+import { BaseContentProps } from './baseContent'
 
-interface RootContentProps {
-    content: GameItemTreeNode
-}
-
-export const RootContent: React.FC<RootContentProps> = ({ content }): React.JSX.Element => {
+export const RootContent: React.FC<BaseContentProps> = ({ content }): React.JSX.Element => {
     return (
         <>ROOT CONTENT {content.id}</>
     )
