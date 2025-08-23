@@ -56,6 +56,11 @@ export class PageManager implements IPageManager {
     ) {
     }
 
+    /**
+     * Registers a listener for {@link SWITCH_PAGE} messages to load and activate
+     * requested pages. If invoked multiple times, any existing listener is
+     * removed first so the manager can be safely re-initialized.
+     */
     initialize(): void {
         // Ensure we don't register multiple listeners if initialize is called more than once
         this.cleanupFn?.()
