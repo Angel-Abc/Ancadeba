@@ -27,7 +27,7 @@ aside.side-bar {
 }
 
 header.content-bar {
-    height: 100px;
+    height: 55px;
     display: flex;
     position: sticky;
     top: 0;
