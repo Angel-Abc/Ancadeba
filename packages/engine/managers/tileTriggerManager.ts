@@ -34,6 +34,11 @@ export class TileTriggerManager implements ITileTriggerManager {
         private actionExecutor: IActionExecutor
     ) { }
 
+    /**
+     * Registers listeners for position change messages and wires them to
+     * handlers that execute tile actions. Existing listeners are removed
+     * before new ones are added.
+     */
     public initialize(): void {
         this.cleanup()
         this.cleanupFns = [
@@ -54,12 +59,25 @@ export class TileTriggerManager implements ITileTriggerManager {
         ]
     }
 
+    /**
+     * Removes any registered message listeners used for tile action triggers.
+     */
     cleanup(): void {
         const fns = this.cleanupFns
         this.cleanupFns = null
         fns?.forEach(fn => fn())
     }
 
+    /**
+     * Executes a tile's `onExit` actions when the player is about to leave a
+     * given position.
+     *
+     * @param position - The position the player is moving away from.
+     * @param message - The message associated with the move, forwarded to
+     *   executed actions.
+     * @returns Nothing. Actions run only when the current map and the tile at
+     *   the provided position define `onExit` behavior.
+     */
     private preparePositionChange(position: Position, message: Message<unknown>): void {
         const currentMapId = this.gameDataProvider.Context.currentMap.id
         if (!currentMapId) return
@@ -76,6 +94,16 @@ export class TileTriggerManager implements ITileTriggerManager {
         actions.forEach(action => this.actionExecutor.execute(action, message))
     }
 
+    /**
+     * Executes a tile's `onEnter` actions when the player moves into a new
+     * position.
+     *
+     * @param position - The position the player has moved to.
+     * @param message - The message describing the position change, forwarded
+     *   to executed actions.
+     * @returns Nothing. Actions run only when the current map and the tile at
+     *   the provided position define `onEnter` behavior.
+     */
     private handlePositionChange(position: Position, message: Message<unknown>): void {
         const currentMapId = this.gameDataProvider.Context.currentMap.id
         if (!currentMapId) return
