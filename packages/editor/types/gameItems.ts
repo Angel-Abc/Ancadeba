@@ -41,3 +41,7 @@ export type LanguageItem = BaseItem & {
 export type TranslationsItem = FileItem & {
     type: 'translations'
 }
+
+type AllItems = RootItem | PagesItem | PageItem | LanguagesItem | LanguageItem | TranslationsItem
+
+export type BaseItemType = AllItems['type']
