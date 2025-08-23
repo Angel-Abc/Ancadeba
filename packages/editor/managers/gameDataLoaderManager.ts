@@ -5,26 +5,29 @@ import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { GAME_DEFINITION_UPDATED, INITIALIZED } from '../messages/editor'
+import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
 
-export interface IGameDefinitionLoaderManager {
+export interface IGameDataLoaderManager {
     initialize(): void
     cleanup(): void
 }
 
-const logName = 'GameDefinitionLoaderManager'
-export const gameDefinitionLoaderManagerToken = token<IGameDefinitionLoaderManager>(logName)
+const logName = 'GameDataLoaderManager'
+export const gameDataLoaderManagerToken = token<IGameDataLoaderManager>(logName)
 export const dataUrlToken = token<string>('dataUrl')
-export const gameDefinitionLoaderManagerDependencies: Token<unknown>[] = [
+export const gameDataLoaderManagerDependencies: Token<unknown>[] = [
     loggerToken,
     messageBusToken,
-    dataUrlToken
+    dataUrlToken,
+    gameDataProviderToken
 ]
-export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager {
+export class GameDataLoaderManager implements IGameDataLoaderManager {
     private cleanupFn: CleanUp | null = null
     constructor(
         private logger: ILogger,
         private messageBus: IMessageBus,
-        private dataUrl: string
+        private dataUrl: string,
+        private gameDataProvider: IGameDataProvider
     ){}
 
     public cleanup(): void {
@@ -42,8 +45,9 @@ export class GameDefinitionLoaderManager implements IGameDefinitionLoaderManager
     }
 
     private async onInitialized(): Promise<void> {
-        const game = await loadJsonResource<Game>(`${this.dataUrl}/index.json`, gameSchema, this.logger)
-        this.logger.debug(logName, 'loaded game root data {0}', game)
+        const path = `${this.dataUrl}/index.json`
+        const game = await loadJsonResource<Game>(path, gameSchema, this.logger)
+        this.gameDataProvider.setGame(game)
         this.messageBus.postMessage({
             message: GAME_DEFINITION_UPDATED,
             payload: null

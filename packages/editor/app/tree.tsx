@@ -8,7 +8,7 @@ import { TreeNode } from './treeNode'
 export const Tree: React.FC = (): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const editTreeProvider = useService<IEditTreeProvider>(editTreeProviderToken)
-    const [root, setRoot] = useState<GameItemTreeNode>(editTreeProvider.Root)
+    const [root, setRoot] = useState<GameItemTreeNode | null>(null)
 
     useEffect(() => {
         return messageBus.registerMessageListener(
@@ -19,8 +19,8 @@ export const Tree: React.FC = (): React.JSX.Element => {
 
     return (
         <aside className='side-bar'>
-            {root.children.length > 0 && (
-                <TreeNode node={root} />
+            {root !== null && root.children.length > 0 && (
+                <TreeNode node={root} key={root.id} initialCollapse={false}  />
             )}
         </aside>
     )

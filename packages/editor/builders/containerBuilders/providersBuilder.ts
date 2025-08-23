@@ -1,4 +1,5 @@
 import { EditTreeProvider, editTreeProviderDependencies, editTreeProviderToken } from '@editor/providers/editTreeProvider'
+import { GameDataProvider, gameDataProviderDependencies, gameDataProviderToken } from '@editor/providers/gameDataProvider'
 import { Container } from '@ioc/container'
 
 export class ProvidersBuilder {
@@ -7,6 +8,11 @@ export class ProvidersBuilder {
             token: editTreeProviderToken,
             useClass: EditTreeProvider,
             deps: editTreeProviderDependencies
+        })
+        container.register({
+            token: gameDataProviderToken,
+            useClass: GameDataProvider,
+            deps: gameDataProviderDependencies
         })
     }    
 }

@@ -1,4 +1,4 @@
-import { dataUrlToken } from '@editor/managers/gameDefinitionLoaderManager'
+import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
 import { Token, token } from '@ioc/token'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
@@ -18,7 +18,7 @@ export class GameJsonLoader implements IGameJsonLoader {
     constructor(
         private logger: ILogger,
         private dataUrl: string
-    ){}
+    ) { }
 
     public async loadJson<T>(path: string, schema: ZodType<T>): Promise<T> {
         const result = await loadJsonResource<T>(`${this.dataUrl}/${path}`, schema, this.logger)

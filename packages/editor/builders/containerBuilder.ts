@@ -1,10 +1,10 @@
-import { dataUrlToken } from '@editor/managers/gameDefinitionLoaderManager'
 import { Container } from '@ioc/container'
 import { ILogger } from '@utils/logger'
 import { UtilsBuilder } from '../../shared/builder/utilsBuilder'
 import { CoreBuilder } from './containerBuilders/coreBuilder'
 import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'
+import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
 
 export interface IContainerBuilder {
     build(): Container
