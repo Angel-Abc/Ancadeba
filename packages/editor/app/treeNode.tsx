@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useService } from '@ioc/iocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
+import { SetEditorContentPayload } from '@editor/messages/types'
+import { BaseItemType } from '@editor/types/gameItems'
 
 interface TreeNodeProps {
     node: GameItemTreeNode
@@ -22,9 +24,14 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, initialCollapse }): Re
     }
 
     const select = (): void => {
+        const payload: SetEditorContentPayload = {
+            id: node.id,
+            label: node.label,
+            type: node.data ? node.data.type as BaseItemType : null 
+        }
         messageBus.postMessage({
             message: SET_EDITOR_CONTENT,
-            payload: node
+            payload: payload
         })
     }
 

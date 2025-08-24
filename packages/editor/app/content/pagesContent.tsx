@@ -1,7 +1,7 @@
 import { BaseContentProps } from './baseContent'
 
-export const PagesContent: React.FC<BaseContentProps> = ({ content }): React.JSX.Element => {
+export const PagesContent: React.FC<BaseContentProps> = ({ id, label }): React.JSX.Element => {
     return (
-        <>PAGES CONTENT {content.id}</>
+        <>PAGES CONTENT {id} {label}</>
     )
 }

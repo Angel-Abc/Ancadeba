@@ -1,8 +1,11 @@
-import { BaseItem, LanguageItem, LanguagesItem, PageItem, PagesItem, RootItem, TranslationsItem } from '@editor/types/gameItems'
+import { BaseItem, BaseItemType, LanguageItem, LanguagesItem, PageItem, PagesItem, RootItem, TranslationsItem } from '@editor/types/gameItems'
 import { Token, token } from '@ioc/token'
 import { Game } from '@loader/schema/game'
 import { ILogger, loggerToken } from '@utils/logger'
 import { gameDataStoreProviderToken, IGameDataStoreProvider } from './gameDataStoreProvider'
+import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
+import { SetEditorContentPayload } from '@editor/messages/types'
 
 export interface IGameDataProvider {
     setGame(game: Game): void
@@ -13,6 +16,7 @@ const logName = 'GameDataProvider'
 export const gameDataProviderToken = token<IGameDataProvider>(logName)
 export const gameDataProviderDependencies: Token<unknown>[] = [
     loggerToken,
+    messageBusToken,
     gameDataStoreProviderToken
 ]
 export class GameDataProvider implements IGameDataProvider {
@@ -21,21 +25,32 @@ export class GameDataProvider implements IGameDataProvider {
 
     constructor(
         private logger: ILogger,
+        private messageBus: IMessageBus,
         private gameDataStoreProvider: IGameDataStoreProvider
     ) { }
 
     public setGame(game: Game): void {
-        this.root = {
+        const root: RootItem = {
             type: 'root',
             id: this.nextId++,
             game: game,
             label: game.title,
             children: []
         }
+        this.root = root
         this.addPages()
         this.addLanguages()
         this.sortRoot()
-        this.gameDataStoreProvider.store(this.Root.id, game)
+        this.gameDataStoreProvider.store(root.id, game)
+        const payload: SetEditorContentPayload = {
+            id: root.id,
+            label: root.label,
+            type: root.type as BaseItemType
+        }
+        this.messageBus.postMessage({
+            message: SET_EDITOR_CONTENT,
+            payload: payload
+        })
     }
 
     public get Root(): RootItem {
