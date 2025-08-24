@@ -46,7 +46,13 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
 
     private async onInitialized(): Promise<void> {
         const path = `${this.dataUrl}/index.json`
-        const game = await loadJsonResource<Game>(path, gameSchema, this.logger)
+        let game: Game
+        try {
+            game = await loadJsonResource<Game>(path, gameSchema, this.logger)
+        } catch (error) {
+            this.logger.error(logName, 'Failed to load game definition from {0}: {1}', path, error)
+            return
+        }
         this.gameDataProvider.setGame(game)
         this.messageBus.postMessage({
             message: GAME_DEFINITION_UPDATED,
