@@ -19,7 +19,7 @@ export const gameDataLoaderManagerDependencies: Token<unknown>[] = [
     loggerToken,
     messageBusToken,
     dataUrlToken,
-    gameDataProviderToken
+    gameDataProviderToken,
 ]
 export class GameDataLoaderManager implements IGameDataLoaderManager {
     private cleanupFn: CleanUp | null = null
@@ -27,7 +27,7 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
         private logger: ILogger,
         private messageBus: IMessageBus,
         private dataUrl: string,
-        private gameDataProvider: IGameDataProvider
+        private gameDataProvider: IGameDataProvider,
     ){}
 
     public cleanup(): void {

@@ -2,6 +2,7 @@ import { BaseItem, LanguageItem, LanguagesItem, PageItem, PagesItem, RootItem, T
 import { Token, token } from '@ioc/token'
 import { Game } from '@loader/schema/game'
 import { ILogger, loggerToken } from '@utils/logger'
+import { gameDataStoreProviderToken, IGameDataStoreProvider } from './gameDataStoreProvider'
 
 export interface IGameDataProvider {
     setGame(game: Game): void
@@ -11,14 +12,16 @@ export interface IGameDataProvider {
 const logName = 'GameDataProvider'
 export const gameDataProviderToken = token<IGameDataProvider>(logName)
 export const gameDataProviderDependencies: Token<unknown>[] = [
-    loggerToken
+    loggerToken,
+    gameDataStoreProviderToken
 ]
 export class GameDataProvider implements IGameDataProvider {
     private nextId: number = 1
     private root: RootItem | null = null
 
     constructor(
-        private logger: ILogger
+        private logger: ILogger,
+        private gameDataStoreProvider: IGameDataStoreProvider
     ) { }
 
     public setGame(game: Game): void {
@@ -32,6 +35,7 @@ export class GameDataProvider implements IGameDataProvider {
         this.addPages()
         this.addLanguages()
         this.sortRoot()
+        this.gameDataStoreProvider.store(this.Root.id, game)
     }
 
     public get Root(): RootItem {
