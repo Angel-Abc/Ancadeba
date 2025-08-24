@@ -5,7 +5,7 @@ import { EngineInitializer, engineInitializerDependencies, engineInitializerToke
 import { EngineStartInitializer, engineStartInitializerDependencies, engineStartInitializerToken } from '@core/initializers/engineStartInitializer'
 import { ManagersInitializer, managersInitializerDependencies, managersInitializerToken } from '@core/initializers/managersInitializer'
 import { ProvidersInitializer, providersInitializerDependencies, providersInitializerToken } from '@core/initializers/providersInitializer'
-import { RegistriesInitializer, registriesInitializerDependencies, registriesInitializerToken } from '@core/initializers/registriesInitializers'
+import { RegistriesInitializer, registriesInitializerDependencies, registriesInitializerToken } from '@core/initializers/registriesInitializer'
 import { TurnScheduler, turnSchedulerDependencies, turnSchedulerToken } from '@core/turnScheduler'
 import { Container } from '@ioc/container'
 
