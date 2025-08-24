@@ -44,7 +44,7 @@ export class EditTreeProvider implements IEditTreeProvider {
     }
 
     private getItem(item: BaseItem): GameItemTreeNode {
-        var result = {
+        const result = {
             label: item.label,
             id: item.id,
             data: item,
