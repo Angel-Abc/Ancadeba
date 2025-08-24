@@ -41,6 +41,10 @@ The server reads from `VITE_DATA_PATH` (defaults to `/data`) and exposes:
 
 `VITE_EDITOR_ORIGIN` may be set to configure the allowed CORS origin for the server. It defaults to `http://localhost:5174`.
 
+## Documentation
+- [Engine Overview](docs/engine.md)
+- [Editor Architecture](docs/editor.md)
+
 ## Testing and Build Commands
 Run the following commands before submitting changes:
 
