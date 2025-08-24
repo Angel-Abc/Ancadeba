@@ -13,7 +13,7 @@ import { ContainerBuilder, IContainerBuilder } from '@builders/containerBuilder'
 import { ActionHandlerRegistrar, ConditionResolverRegistrar, InputsProviderRegistrar } from '@builders/containerBuilders/registrars'
 import { postMessageActionToken } from '@actions/postMessageAction'
 import { scriptActionToken } from '@actions/scriptAction'
-import { gotoDialogToken } from '@actions/gotoDialog'
+import { goToDialogToken } from '@actions/goToDialog'
 import { endDialogToken } from '@actions/endDialog'
 import { pageInputsToken } from '@inputs/pageInputs'
 import { dialogInputsToken } from '@inputs/dialogInputs'
@@ -30,7 +30,7 @@ const containerBuilder: IContainerBuilder = new ContainerBuilder(
   [
     (r => r.registerActionHandler('post-message', postMessageActionToken)) as ActionHandlerRegistrar,
     (r => r.registerActionHandler('script', scriptActionToken)) as ActionHandlerRegistrar,
-    (r => r.registerActionHandler('goto', gotoDialogToken)) as ActionHandlerRegistrar,
+    (r => r.registerActionHandler('goto', goToDialogToken)) as ActionHandlerRegistrar,
     (r => r.registerActionHandler('end-dialog', endDialogToken)) as ActionHandlerRegistrar,
   ],
   [
