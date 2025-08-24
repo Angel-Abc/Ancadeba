@@ -1,18 +1,18 @@
 import { useService } from '@ioc/iocProvider'
 import { CSSCustomProperties } from '@app/types'
-import { IInputMatrxBuilder, inputMatrixBuilderToken, MatrixInputItem } from '@builders/inputMatrixBuilder'
+import { IInputMatrixBuilder, inputMatrixBuilderToken, MatrixInputItem } from '@builders/inputMatrixBuilder'
 import { InputMatrixComponent } from '@loader/data/component'
 import { FINALIZE_END_TURN_MESSAGE, VIRTUAL_INPUT } from '@messages/system'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
 
-export type InputMatrxProps = {
+export type InputMatrixProps = {
     component: InputMatrixComponent
 }
 
-export const InputMatrix: React.FC<InputMatrxProps> = ({ component }): React.JSX.Element => {
+export const InputMatrix: React.FC<InputMatrixProps> = ({ component }): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
-    const inputMatrixBuilder = useService<IInputMatrxBuilder>(inputMatrixBuilderToken)
+    const inputMatrixBuilder = useService<IInputMatrixBuilder>(inputMatrixBuilderToken)
     const [inputMatrix, setInputMatrix] = useState(inputMatrixBuilder.build(component.matrixSize.width, component.matrixSize.height))
 
     const style: CSSCustomProperties = {
