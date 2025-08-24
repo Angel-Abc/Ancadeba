@@ -5,7 +5,7 @@ import type { ICoreInitializer } from '@core/initializers/coreInitializer'
 import type { IProvidersInitializer } from '@core/initializers/providersInitializer'
 import type { IManagersInitializer } from '@core/initializers/managersInitializer'
 import type { IEngineStartInitializer } from '@core/initializers/engineStartInitializer'
-import type { IRegistriesInitializer } from '@core/initializers/registriesInitializers'
+import type { IRegistriesInitializer } from '@core/initializers/registriesInitializer'
 import type { IGameLoader } from '@loader/gameLoader'
 import type { Game } from '@loader/data/game'
 

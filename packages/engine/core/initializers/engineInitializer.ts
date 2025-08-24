@@ -6,7 +6,7 @@ import { ILogger, loggerToken } from '@utils/logger'
 import { engineStartInitializerToken, IEngineStartInitializer } from './engineStartInitializer'
 import { IProvidersInitializer, providersInitializerToken } from './providersInitializer'
 import { IManagersInitializer, managersInitializerToken } from './managersInitializer'
-import { IRegistriesInitializer, registriesInitializerToken } from './registriesInitializers'
+import { IRegistriesInitializer, registriesInitializerToken } from './registriesInitializer'
 
 /**
  * Defines the contract for all engine initializers.
