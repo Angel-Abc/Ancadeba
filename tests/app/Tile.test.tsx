@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
-import { Tile } from '@app/controls/component/controls/tile'
+import { Tile } from '@app/controls/component/controls/Tile'
 import type { Tile as TileData } from '@loader/data/tile'
 
 describe('Tile', () => {

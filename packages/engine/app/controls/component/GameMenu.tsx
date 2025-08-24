@@ -1,7 +1,7 @@
 import { GameMenuComponent } from '@loader/data/component'
 import { Button } from '@loader/data/button'
 import { ITranslationService, translationServiceToken } from '@services/translationService'
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { actionExecutorToken, IActionExecutor } from '@actions/actionExecutor'
 
 interface GameMenuProps {

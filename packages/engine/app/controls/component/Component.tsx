@@ -1,7 +1,7 @@
 import { Component as ComponentData } from '@loader/data/component'
 import { loggerToken, type ILogger } from '@utils/logger'
 import { IComponentRegistry, componentRegistryToken } from '@registries/componentRegistry'
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 
 interface ComponentProps {
     component: ComponentData

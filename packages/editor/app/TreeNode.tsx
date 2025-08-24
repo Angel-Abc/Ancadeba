@@ -1,7 +1,7 @@
 import { GameItemTreeNode } from '@editor/providers/editTreeProvider'
 import { AiTwotoneFolder, AiTwotoneFolderOpen } from 'react-icons/ai'
 import { useState } from 'react'
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { SetEditorContentPayload } from '@editor/messages/types'

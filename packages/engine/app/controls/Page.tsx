@@ -1,5 +1,5 @@
-import { useService } from '@ioc/iocProvider'
-import { Screen } from './screen/screen'
+import { useService } from '@ioc/IocProvider'
+import { Screen } from './screen/Screen'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 
 interface PageProps {

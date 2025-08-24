@@ -1,12 +1,12 @@
-import { useService } from '@ioc/iocProvider'
-import { ContentBar } from './contentBar'
+import { useService } from '@ioc/IocProvider'
+import { ContentBar } from './ContentBar'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { ComponentType, useEffect, useState } from 'react'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { BaseItemType } from '@editor/types/gameItems'
-import { RootContent } from './content/rootContent'
-import { BaseContent, BaseContentProps } from './content/baseContent'
-import { PagesContent } from './content/pagesContent'
+import { RootContent } from './content/RootContent'
+import { BaseContent, BaseContentProps } from './content/BaseContent'
+import { PagesContent } from './content/PagesContent'
 import { SetEditorContentPayload } from '@editor/messages/types'
 
 const contentPages: Record<BaseItemType, ComponentType<BaseContentProps>> = {

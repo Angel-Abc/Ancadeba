@@ -1,7 +1,7 @@
 import { CSSCustomProperties } from '@app/types'
 import { GridScreen } from '@loader/data/page'
-import { Component } from '../component/component'
-import { useService } from '@ioc/iocProvider'
+import { Component } from '../component/Component'
+import { useService } from '@ioc/IocProvider'
 import { conditionResolverToken, IConditionResolver } from '@conditions/conditionResolver'
 
 interface GridProps {

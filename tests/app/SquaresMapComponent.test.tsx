@@ -2,14 +2,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { services } from './testUtils'
-import { SquaresMap } from '@app/controls/component/squaresMap'
+import { SquaresMap } from '@app/controls/component/SquaresMap'
 import { messageBusToken, type IMessageBus } from '@utils/messageBus'
 import { gameDataProviderToken, type IGameDataProvider } from '@providers/gameDataProvider'
 import { POSITION_CHANGED } from '@messages/system'
 import { SquaresMapComponent } from '@loader/data/component'
 import type { Tile as TileData } from '@loader/data/tile'
 
-vi.mock('@app/controls/component/controls/tile', () => ({
+vi.mock('@app/controls/component/controls/Tile', () => ({
   Tile: ({ tile, isPlayerPosition }: { tile: TileData & { id: string }; isPlayerPosition: boolean }) => (
     <div data-testid={`tile-${tile.id}`} data-player={isPlayerPosition ? 'true' : 'false'} />
   )

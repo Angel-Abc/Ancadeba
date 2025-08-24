@@ -4,11 +4,11 @@ import { render, screen } from '@testing-library/react'
 import { services } from './testUtils'
 import { gameDataProviderToken, type IGameDataProvider } from '@providers/gameDataProvider'
 
-vi.mock('@app/controls/screen/screen', () => ({
+vi.mock('@app/controls/screen/Screen', () => ({
   Screen: ({ screen }: { screen: string }) => <div data-testid='screen'>{screen}</div>
 }))
 
-import { Page } from '@app/controls/page'
+import { Page } from '@app/controls/Page'
 
 describe('Page', () => {
   beforeEach(() => services.clear())
