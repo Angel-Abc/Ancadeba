@@ -19,17 +19,17 @@ export const nullMatrixInputItem: MatrixInputItem = {
     character: ''
 }
 
-export interface IInputMatrxBuilder {
+export interface IInputMatrixBuilder {
     build(width: number, height: number): MatrixInputItem[][]
 }
 
 const logName = 'InputMatrixBuilder'
-export const inputMatrixBuilderToken = token<IInputMatrxBuilder>(logName)
+export const inputMatrixBuilderToken = token<IInputMatrixBuilder>(logName)
 export const inputMatrixBuilderDependencies: Token<unknown>[] = [
     gameDataProviderToken,
     translationServiceToken
 ]
-export class InputMatrixBuilder implements IInputMatrxBuilder {
+export class InputMatrixBuilder implements IInputMatrixBuilder {
     constructor(
         private gameDataProvider: IGameDataProvider,
         private translationService: ITranslationService
