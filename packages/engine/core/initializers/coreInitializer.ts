@@ -40,7 +40,7 @@ export class CoreInitializer implements ICoreInitializer {
      *
      * @param game The game metadata defining title and CSS files.
      */
-    public async initialize(game: Game): Promise<void> {
+    public initialize(game: Game): void {
         this.setupBrowser(game)
     }
 
