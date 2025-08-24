@@ -1,6 +1,6 @@
 import { ActionExecutor, actionExecutorDependencies, actionExecutorToken } from '@actions/actionExecutor'
 import { EndDialog, endDialogDependencies, endDialogToken } from '@actions/endDialog'
-import { GotoDialog, gotoDialogDependencies, gotoDialogToken } from '@actions/gotoDialog'
+import { GoToDialog, goToDialogDependencies, goToDialogToken } from '@actions/goToDialog'
 import { PostMessageAction, postMessageActionDependencies, postMessageActionToken } from '@actions/postMessageAction'
 import { ScriptAction, scriptActionDependencies, scriptActionToken } from '@actions/scriptAction'
 import { Container } from '@ioc/container'
@@ -18,9 +18,9 @@ export class ActionsBuilder {
             deps: endDialogDependencies
         })
         container.register({
-            token: gotoDialogToken,
-            useClass: GotoDialog,
-            deps: gotoDialogDependencies
+            token: goToDialogToken,
+            useClass: GoToDialog,
+            deps: goToDialogDependencies
         })
         container.register({
             token: postMessageActionToken,

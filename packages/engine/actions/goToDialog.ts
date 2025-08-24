@@ -6,12 +6,12 @@ import { ITranslationService, translationServiceToken } from '@services/translat
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { Message } from '@utils/types'
 
-export type IGotoDialog = IActionHandler<GotoDialogAction>
+export type IGoToDialog = IActionHandler<GotoDialogAction>
 
-const logName = 'GotoDialog'
-export const gotoDialogToken = token<IGotoDialog>(logName)
-export const gotoDialogDependencies: Token<unknown>[] = [messageBusToken, translationServiceToken]
-export class GotoDialog implements IGotoDialog {
+const logName = 'GoToDialog'
+export const goToDialogToken = token<IGoToDialog>(logName)
+export const goToDialogDependencies: Token<unknown>[] = [messageBusToken, translationServiceToken]
+export class GoToDialog implements IGoToDialog {
     readonly type = 'goto' as const
     constructor(
         private messageBus: IMessageBus,
