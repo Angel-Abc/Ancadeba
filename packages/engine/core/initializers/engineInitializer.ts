@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { coreInitializerToken, ICoreInitializer } from './coreInitializers'
+import { coreInitializerToken, ICoreInitializer } from './coreInitializer'
 import { gameLoaderToken, IGameLoader } from '@loader/gameLoader'
 import { Game } from '@loader/data/game'
 import { ILogger, loggerToken } from '@utils/logger'
