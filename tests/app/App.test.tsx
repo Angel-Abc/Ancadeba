@@ -5,11 +5,11 @@ import { services } from './testUtils'
 import { PAGE_SWITCHED } from '@messages/system'
 import { messageBusToken, type IMessageBus } from '@utils/messageBus'
 
-vi.mock('@app/controls/page', () => ({
+vi.mock('@app/controls/Page', () => ({
   Page: ({ pageId }: { pageId: string }) => <div data-testid='page'>{pageId}</div>
 }))
 
-import { App } from '@app/app'
+import { App } from '@app/App'
 
 describe('App', () => {
   beforeEach(() => services.clear())

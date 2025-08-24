@@ -1,4 +1,4 @@
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { CSSCustomProperties } from '@app/types'
 import { IInputMatrixBuilder, inputMatrixBuilderToken, MatrixInputItem } from '@builders/inputMatrixBuilder'
 import { InputMatrixComponent } from '@loader/data/component'

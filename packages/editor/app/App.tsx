@@ -1,6 +1,6 @@
 import React from 'react'
-import { Tree } from './tree'
-import { Content } from './content'
+import { Tree } from './Tree'
+import { Content } from './Content'
 
 export const App: React.FC = () => {
   return (

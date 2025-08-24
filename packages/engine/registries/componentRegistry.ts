@@ -4,16 +4,16 @@
  * The registry enables dynamic component rendering by allowing components to
  * be looked up and extended at runtime.
  */
-import { GameMenu } from '@app/controls/component/gameMenu'
-import { Image } from '@app/controls/component/image'
+import { GameMenu } from '@app/controls/component/GameMenu'
+import { Image } from '@app/controls/component/Image'
 import { ComponentType } from 'react'
 import type { ILogger } from '@utils/logger'
 import { loggerToken } from '@utils/logger'
 import { token, Token } from '@ioc/token'
-import { SquaresMap } from '@app/controls/component/squaresMap'
-import { InputMatrix } from '@app/controls/component/inputMatrix'
-import { OutputLog } from '@app/controls/component/outputLog'
-import { Inventory } from '@app/controls/component/inventory'
+import { SquaresMap } from '@app/controls/component/SquaresMap'
+import { InputMatrix } from '@app/controls/component/InputMatrix'
+import { OutputLog } from '@app/controls/component/OutputLog'
+import { Inventory } from '@app/controls/component/Inventory'
 
 export interface IComponentRegistry {
     /**

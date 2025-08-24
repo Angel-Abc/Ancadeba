@@ -1,10 +1,10 @@
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { OutputComponent } from '@loader/data/component'
 import { FINALIZE_END_TURN_MESSAGE } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
-import { ScrollContainer } from '../scrollContainer'
+import { ScrollContainer } from '../ScrollContainer'
 
 interface OutputLogProps {
     component: OutputComponent

@@ -1,9 +1,9 @@
 import { GAME_DEFINITION_UPDATED } from '@editor/messages/editor'
 import { editTreeProviderToken, GameItemTreeNode, IEditTreeProvider } from '@editor/providers/editTreeProvider'
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
-import { TreeNode } from './treeNode'
+import { TreeNode } from './TreeNode'
 
 export const Tree: React.FC = (): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)

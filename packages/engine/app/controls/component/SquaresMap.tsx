@@ -1,4 +1,4 @@
-import { useService } from '@ioc/iocProvider'
+import { useService } from '@ioc/IocProvider'
 import { type SquaresMapComponent } from '@loader/data/component'
 import { GameMap, Position } from '@loader/data/map'
 import { MAP_SWITCHED, POSITION_CHANGED } from '@messages/system'
@@ -6,7 +6,7 @@ import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataPro
 import { loggerToken, type ILogger } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
-import { Tile } from './controls/tile'
+import { Tile } from './controls/Tile'
 import { CSSCustomProperties } from '@app/types'
 
 interface SquaresMapProps {

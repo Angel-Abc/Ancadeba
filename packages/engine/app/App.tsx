@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
-import { Page } from './controls/page'
-import { useService } from '@ioc/iocProvider'
+import { Page } from './controls/Page'
+import { useService } from '@ioc/IocProvider'
 import { PAGE_SWITCHED } from '@messages/system'
 
 /**

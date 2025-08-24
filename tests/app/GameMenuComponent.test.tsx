@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { services } from './testUtils'
-import { GameMenu } from '@app/controls/component/gameMenu'
+import { GameMenu } from '@app/controls/component/GameMenu'
 import { translationServiceToken, type ITranslationService } from '@services/translationService'
 import { actionExecutorToken, type IActionExecutor } from '@actions/actionExecutor'
 import { GameMenuComponent } from '@loader/data/component'
