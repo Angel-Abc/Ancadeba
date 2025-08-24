@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { EngineInitializer } from '@core/initializers/engineInitializer'
 import type { ILogger } from '@utils/logger'
-import type { ICoreInitializer } from '@core/initializers/coreInitializers'
+import type { ICoreInitializer } from '@core/initializers/coreInitializer'
 import type { IProvidersInitializer } from '@core/initializers/providersInitializer'
 import type { IManagersInitializer } from '@core/initializers/managersInitializer'
 import type { IEngineStartInitializer } from '@core/initializers/engineStartInitializer'

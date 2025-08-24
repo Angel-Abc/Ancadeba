@@ -1,6 +1,6 @@
 import { InputMatrixBuilder, inputMatrixBuilderDependencies, inputMatrixBuilderToken } from '@builders/inputMatrixBuilder'
 import { GameEngine, gameEngineDependencies, gameEngineToken } from '@core/gameEngine'
-import { CoreInitializer, coreInitializerDependencies, coreInitializerToken } from '@core/initializers/coreInitializers'
+import { CoreInitializer, coreInitializerDependencies, coreInitializerToken } from '@core/initializers/coreInitializer'
 import { EngineInitializer, engineInitializerDependencies, engineInitializerToken } from '@core/initializers/engineInitializer'
 import { EngineStartInitializer, engineStartInitializerDependencies, engineStartInitializerToken } from '@core/initializers/engineStartInitializer'
 import { ManagersInitializer, managersInitializerDependencies, managersInitializerToken } from '@core/initializers/managersInitializer'
