@@ -28,7 +28,7 @@ export const Content: React.FC = (): React.JSX.Element => {
                 setContentInfo(message.payload as SetEditorContentPayload)
             }
         )
-    }, [messageBus, setContentInfo])
+    }, [messageBus])
 
     if (contentInfo === null || contentInfo.type === null) return (<></>)
 
