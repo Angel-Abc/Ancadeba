@@ -38,10 +38,15 @@ select:focus-visible {
     width: 100%;
 }
 
+#root.collapsed {
+    grid-template-columns: var(--sidebar-collapse-width) 1fr;
+}
+
 aside.side-bar {
     border-right: solid 1px var(--border-color);
     overflow: auto;
     line-height: 110%;
+    width: var(--sidebar-width);
 
     & .children {
         padding-left: 22px;
@@ -57,7 +62,8 @@ aside.side-bar {
     & .toggle-collapse {
         position: fixed;
         bottom: 2px;
-        left: calc(var(--sidebar-width) - 25px);
+        left: var(--sidebar-width);
+        transform: translateX(-100%);
     }
 }
 
@@ -66,7 +72,7 @@ aside.side-bar.collapsed {
     overflow: hidden;
 
     & .toggle-collapse {
-        left: calc(var(--sidebar-collapse-width) - 25px);
+        left: var(--sidebar-collapse-width);
     }
 }
 
