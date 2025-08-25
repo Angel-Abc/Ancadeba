@@ -33,7 +33,7 @@ select:focus-visible {
 
 #root {
     display: grid;
-    grid-template-columns: var(--sidebar-width, 300px) 1fr;
+    grid-template-columns: var(--sidebar-width) 1fr;
     min-height: 100%;
     width: 100%;
 }
@@ -53,14 +53,22 @@ aside.side-bar {
         align-items: center;
         gap: var(--spacing-sm);
     }
+
+    & .toggle-collapse {
+        position: fixed;
+        bottom: 2px;
+        left: calc(var(--sidebar-width) - 25px);
+    }
 }
 
 aside.side-bar.collapsed {
-    width: 0;
-    border-right: none;
+    width: var(--sidebar-collapse-width);
     overflow: hidden;
-}
 
+    & .toggle-collapse {
+        left: calc(var(--sidebar-collapse-width) - 25px);
+    }
+}
 
 .main {
     display: grid;
