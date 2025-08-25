@@ -16,7 +16,19 @@ aside.side-bar {
     border-right: solid 1px black;
     overflow: auto;
     line-height: 110%;
+
+    & .children {
+        padding-left: 22px;
+    }
+
+    & label {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
 }
+
 
 .main {
     display: grid;
@@ -33,26 +45,66 @@ header.content-bar {
     top: 0;
     z-index: 10;
     background-color: cadetblue;
+    padding: 10px;
+    font-size: 125%;
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 450px 170px;
+
+    & button {
+        width: 170px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 }
 
 main.content {
     height: 100%;
     overflow: auto;
     background-color: chocolate;
-}
+    padding: 8px;
 
-.side-bar .children {
-    padding-left: 22px;
-}
+    & .panel {
+        font-size: 125%;
+        margin-top: 25px;
 
-.side-bar label {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
+        & legend {
+            border-bottom: solid 1px #333;
+            margin-bottom: 20px;
+        }
+    }
 
-/*
-.side-bar svg {
-    display: inline-block;
-} */
+    & .panel:first-child {
+        margin-top: 0;
+    }
+
+    & .button-bar {
+        margin-top: 25px;
+        font-size: 125%;
+
+        & button {
+            width: 170px;
+            margin-right: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    }
+
+    & .labeled-control {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: 150px 1fr;
+
+        & input {
+            width: 100%;
+        }
+
+        & textarea {
+            width: 100%;
+        }
+
+        & select {
+            min-width: 50%;
+        }
+    }
+}
