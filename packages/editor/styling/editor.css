@@ -35,7 +35,6 @@ aside.side-bar {
     grid-template-rows: auto 1fr;
     min-width: 0;
     overflow: hidden;
-    background-color: yellow;
 }
 
 header.content-bar {
@@ -44,12 +43,12 @@ header.content-bar {
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: cadetblue;
     padding: 10px;
     font-size: 125%;
     align-items: center;
     display: grid;
     grid-template-columns: 1fr 450px 170px;
+    background-color: #ddd;
 
     & button {
         width: 170px;
@@ -61,7 +60,6 @@ header.content-bar {
 main.content {
     height: 100%;
     overflow: auto;
-    background-color: chocolate;
     padding: 8px;
 
     & .panel {
