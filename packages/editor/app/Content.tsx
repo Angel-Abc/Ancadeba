@@ -18,7 +18,11 @@ const contentPages: Record<BaseItemType, ComponentType<BaseContentProps>> = {
     'translations': BaseContent,
 }
 
-export const Content: React.FC = (): React.JSX.Element => {
+interface ContentProps {
+    onToggleSidebar: () => void
+}
+
+export const Content: React.FC<ContentProps> = ({ onToggleSidebar }): React.JSX.Element => {
     const [contentInfo, setContentInfo] = useState<SetEditorContentPayload | null>(null)
     const messageBus = useService<IMessageBus>(messageBusToken)
     useEffect(() => {
@@ -35,7 +39,7 @@ export const Content: React.FC = (): React.JSX.Element => {
     const MyContent = contentPages[contentInfo.type]
     return (
         <section className='main'>
-            <ContentBar />
+            <ContentBar onToggleSidebar={onToggleSidebar} />
             <main className='content'>
                 <MyContent id={contentInfo.id} label={contentInfo.label} />
             </main>
