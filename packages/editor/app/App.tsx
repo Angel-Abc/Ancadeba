@@ -8,7 +8,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     const root = document.getElementById('root')
-    root?.style.setProperty('--sidebar-width', collapsed ? '30px' : '300px')
+    root?.classList.toggle('collapsed', collapsed)
   }, [collapsed])
 
   return (
