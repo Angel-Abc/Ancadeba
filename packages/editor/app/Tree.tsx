@@ -3,9 +3,14 @@ import { editTreeProviderToken, GameItemTreeNode, IEditTreeProvider } from '@edi
 import { useService } from '@ioc/IocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
+import classNames from 'classnames'
 import { TreeNode } from './TreeNode'
 
-export const Tree: React.FC = (): React.JSX.Element => {
+interface TreeProps {
+    collapsed: boolean
+}
+
+export const Tree: React.FC<TreeProps> = ({ collapsed }): React.JSX.Element => {
     const messageBus = useService<IMessageBus>(messageBusToken)
     const editTreeProvider = useService<IEditTreeProvider>(editTreeProviderToken)
     const [root, setRoot] = useState<GameItemTreeNode | null>(null)
@@ -18,9 +23,9 @@ export const Tree: React.FC = (): React.JSX.Element => {
     }, [messageBus, editTreeProvider])
 
     return (
-        <aside className='side-bar'>
+        <aside className={classNames('side-bar', { collapsed })}>
             {root !== null && root.children.length > 0 && (
-                <TreeNode node={root} key={root.id} initialCollapse={false}  />
+                <TreeNode node={root} key={root.id} initialCollapse={false} />
             )}
         </aside>
     )

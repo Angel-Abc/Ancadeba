@@ -5,8 +5,12 @@ import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
 
+interface ContentBarProps {
+    onToggleSidebar: () => void
+}
+
 const logName = 'ContentBar'
-export const ContentBar: React.FC = (): React.JSX.Element => {
+export const ContentBar: React.FC<ContentBarProps> = ({ onToggleSidebar }): React.JSX.Element => {
     const gameDataStoreProvider = useService<IGameDataStoreProvider>(gameDataStoreProviderToken)
     const logger = useService<ILogger>(loggerToken)
     const messageBus = useService<IMessageBus>(messageBusToken)
@@ -24,7 +28,7 @@ export const ContentBar: React.FC = (): React.JSX.Element => {
 
     return (
         <header className='content-bar'>
-            <span />
+            <button type='button' onClick={onToggleSidebar}>Toggle Sidebar</button>
             <span className='notify'>
             {isChanged ? 'There are pending changes waiting to be saved.' : ''}
             </span>
