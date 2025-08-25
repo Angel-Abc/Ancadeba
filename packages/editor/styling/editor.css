@@ -56,7 +56,9 @@ aside.side-bar {
 }
 
 aside.side-bar.collapsed {
-    display: none;
+    width: 0;
+    border-right: none;
+    overflow: hidden;
 }
 
 
