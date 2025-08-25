@@ -5,6 +5,32 @@ body {
     font-family: var(--font-family);
 }
 
+button,
+input,
+textarea,
+select {
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color);
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+button:hover,
+input:hover,
+textarea:hover,
+select:hover {
+    background-color: #eee;
+    border-color: var(--primary-color);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    background-color: #eee;
+}
+
 #root {
     display: grid;
     grid-template-columns: var(--sidebar-width, 300px) 1fr;
