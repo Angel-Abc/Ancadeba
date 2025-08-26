@@ -35,6 +35,7 @@ export default defineConfig({
       '@loader/schema': fileURLToPath(new URL('./packages/shared/loader/schema', import.meta.url)),
       '@loader': fileURLToPath(new URL('./packages/engine/loader', import.meta.url)),
       '@managers': fileURLToPath(new URL('./packages/engine/managers', import.meta.url)),
+      '@editor': fileURLToPath(new URL('./packages/editor', import.meta.url)),
       '@messages': fileURLToPath(new URL('./packages/engine/messages', import.meta.url)),
       '@providers': fileURLToPath(new URL('./packages/engine/providers', import.meta.url)),
       '@registries': fileURLToPath(new URL('./packages/engine/registries', import.meta.url)),

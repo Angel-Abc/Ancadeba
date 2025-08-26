@@ -13,7 +13,8 @@
     "paths": {
       "@utils/*": ["./packages/shared/utils/*"],
       "@ioc/*": ["./packages/shared/ioc/*"],
-      "@loader/schema/*": ["./packages/shared/loader/schema/*"]
+      "@loader/schema/*": ["./packages/shared/loader/schema/*"],
+      "@editor/*": ["./packages/editor/*"]
     }
   }
 }
