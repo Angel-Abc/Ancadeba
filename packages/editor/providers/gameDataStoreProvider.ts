@@ -10,6 +10,8 @@ export interface IGameDataStoreProvider {
     retrieveItem<T>(id: number): StoreItem<T>
     hasData(id: number): boolean
     get IsChanged(): boolean
+    getChangedItems(): Array<{ path: string; data: unknown }>
+    markSaved(): void
 }
 
 export const rootPath = 'index.json'
@@ -87,6 +89,23 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
         }
         const error = this.logger.error(logName, 'Game item with id {0} not found in store', id)
         throw new Error(error)
+    }
+
+    public getChangedItems(): Array<{ path: string; data: unknown }> {
+        const changed: Array<{ path: string; data: unknown }> = []
+        this.items.forEach(item => {
+            if (JSON.stringify(item.Original) !== JSON.stringify(item.current)) {
+                changed.push({ path: item.path, data: item.current })
+            }
+        })
+        return changed
+    }
+
+    public markSaved(): void {
+        this.items.forEach(item => {
+            item.Original = item.current
+        })
+        this.isChanged = false
     }
 
 }
