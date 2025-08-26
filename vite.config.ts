@@ -29,6 +29,7 @@ export default defineConfig({
       '@builders': fileURLToPath(new URL('./packages/engine/builders', import.meta.url)),
       '@conditions': fileURLToPath(new URL('./packages/engine/conditions', import.meta.url)),
       '@core': fileURLToPath(new URL('./packages/engine/core', import.meta.url)),
+      '@editor': fileURLToPath(new URL('./packages/editor', import.meta.url)),
       '@ioc': fileURLToPath(new URL('./packages/shared/ioc', import.meta.url)),
       '@inputs': fileURLToPath(new URL('./packages/engine/inputs', import.meta.url)),
       '@loader/schema': fileURLToPath(new URL('./packages/shared/loader/schema', import.meta.url)),
