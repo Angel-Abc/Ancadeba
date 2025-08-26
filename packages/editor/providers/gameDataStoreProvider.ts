@@ -4,13 +4,18 @@ import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 
 export interface IGameDataStoreProvider {
-    store<T>(id: number, data: T): void
+    store<T>(id: number, data: T, path: string): void
     update<T>(id: number, data: T): void
     retrieve<T>(id: number): T
+    retrieveItem<T>(id: number): StoreItem<T>
+    hasData(id: number): boolean
     get IsChanged(): boolean
 }
 
-interface StoreItem<T> {
+export const rootPath = 'index.json'
+
+export interface StoreItem<T> {
+    path: string
     Original: T
     current: T
 }
@@ -33,11 +38,12 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
         return this.isChanged
     }
 
-    public store<T>(id: number, data: T): void {
+    public store<T>(id: number, data: T, path: string): void {
         if (this.items.has(id)) {
             this.logger.warn(logName, 'Overwriting stored item with id {0}', id)
         }
         this.items.set(id, {
+            path: path,
             Original: data,
             current: data
         })
@@ -45,6 +51,10 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
             message: GAME_DATA_STORE_CHANGED,
             payload: id
         })
+    }
+
+    public hasData(id: number): boolean {
+        return this.items.has(id)
     }
 
     public update<T>(id: number, data: T): void {
@@ -69,4 +79,14 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
         const error = this.logger.error(logName, 'Game item with id {0} not found in store', id)
         throw new Error(error)
     }
+
+    public retrieveItem<T>(id: number): StoreItem<T> {
+        if (this.items.has(id)) {
+            const item = this.items.get(id)!
+            return item as StoreItem<T>
+        }
+        const error = this.logger.error(logName, 'Game item with id {0} not found in store', id)
+        throw new Error(error)
+    }
+
 }

@@ -6,6 +6,7 @@ import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
 import { GAME_DEFINITION_UPDATED, INITIALIZED } from '../messages/editor'
 import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
+import { rootPath } from '@editor/providers/gameDataStoreProvider'
 
 export interface IGameDataLoaderManager {
     initialize(): void
@@ -45,7 +46,7 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
     }
 
     private async onInitialized(): Promise<void> {
-        const path = `${this.dataUrl}/index.json`
+        const path = `${this.dataUrl}/${rootPath}`
         let game: Game
         try {
             game = await loadJsonResource<Game>(path, gameSchema, this.logger)

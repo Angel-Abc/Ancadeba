@@ -101,6 +101,10 @@ header.content-bar {
         border-radius: 5px;
         cursor: pointer;
     }
+
+    & .notify {
+        color: #C44;
+    }
 }
 
 main.content {

@@ -2,7 +2,7 @@ import { BaseItem, BaseItemType, LanguageItem, LanguagesItem, PageItem, PagesIte
 import { Token, token } from '@ioc/token'
 import { Game } from '@loader/schema/game'
 import { ILogger, loggerToken } from '@utils/logger'
-import { gameDataStoreProviderToken, IGameDataStoreProvider } from './gameDataStoreProvider'
+import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from './gameDataStoreProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { SetEditorContentPayload } from '@editor/messages/types'
@@ -41,7 +41,7 @@ export class GameDataProvider implements IGameDataProvider {
         this.addPages()
         this.addLanguages()
         this.sortRoot()
-        this.gameDataStoreProvider.store(root.id, game)
+        this.gameDataStoreProvider.store(root.id, game, rootPath)
         const payload: SetEditorContentPayload = {
             id: root.id,
             label: root.label,
