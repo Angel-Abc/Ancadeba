@@ -7,9 +7,9 @@ export interface PanelProps {
 
 export const Panel: React.FC<PanelProps> = ({title, children}): React.JSX.Element => {
     return (
-        <div className='panel'>
+        <fieldset className='panel'>
             <legend>{title}</legend>
             {children}
-        </div>    
+        </fieldset>
         )
 }
