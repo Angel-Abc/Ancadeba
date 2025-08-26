@@ -11,8 +11,24 @@ export const ContentBar: React.FC = (): React.JSX.Element => {
     const logger = useService<ILogger>(loggerToken)
     const messageBus = useService<IMessageBus>(messageBusToken)
     const [isChanged, setIsChanged] = useState<boolean>(gameDataStoreProvider.IsChanged)
-    const onSaveClicked = (): void => {
-        logger.warn(logName, 'Not implemented yet')
+    const onSaveClicked = async (): Promise<void> => {
+        const items = gameDataStoreProvider.getChangedItems()
+        try {
+            await Promise.all(
+                items.map(item =>
+                    fetch(`/data/${item.path}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(item.data)
+                    })
+                )
+            )
+            gameDataStoreProvider.markSaved()
+            setIsChanged(false)
+            messageBus.postMessage({ message: GAME_DATA_STORE_CHANGED })
+        } catch (err) {
+            logger.warn(logName, 'Error saving changes: {0}', err)
+        }
     }
 
     useEffect(() => {
@@ -31,7 +47,7 @@ export const ContentBar: React.FC = (): React.JSX.Element => {
             <button
                 type='button'
                 disabled={!isChanged}
-                onClick={() => onSaveClicked}
+                onClick={onSaveClicked}
             >
                 Save
             </button>
