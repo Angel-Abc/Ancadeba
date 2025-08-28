@@ -6,17 +6,19 @@ import { useState } from 'react'
 import { Panel } from '../controls/Panel'
 import { LabeledControlContainer } from '../controls/LabeledControlContainer'
 import { ButtonBar } from '../controls/ButtonBar'
+import { IRootValidator, rootValidatorToken } from './validators/rootValidator'
 
 export const RootContent: React.FC<BaseContentProps> = ({ id }): React.JSX.Element => {
     const gameDataStoreProvider = useService<IGameDataStoreProvider>(gameDataStoreProviderToken)
     const game = gameDataStoreProvider.retrieve<Game>(id)
+    const validator = useService<IRootValidator>(rootValidatorToken)
     const [title, setTitle] = useState<string>(game.title)
     const [description, setDescription] = useState<string>(game.description)
     const [version, setVersion] = useState<string>(game.version)
     const [initialLanguage, setInitialLanguage] = useState<string>(game['initial-data'].language)
     const [startPage, setStartPage] = useState<string>(game['initial-data']['start-page'])
 
-    const languages = Object.keys(game.languages).sort()   
+    const languages = Object.keys(game.languages).sort()
     const pages = Object.keys(game.pages).sort()
 
     const onCancel = (): void => {
@@ -28,12 +30,14 @@ export const RootContent: React.FC<BaseContentProps> = ({ id }): React.JSX.Eleme
     }
 
     const onApply = (): void => {
-        game.title = title
-        game.description = description
-        game.version = version
-        game['initial-data'].language = initialLanguage
-        game['initial-data']['start-page'] = startPage
-        gameDataStoreProvider.update(id, game)
+        if (validator.validateTitle(title) && validator.validateDescription(description) && validator.validateVersion(version)) {
+            game.title = title
+            game.description = description
+            game.version = version
+            game['initial-data'].language = initialLanguage
+            game['initial-data']['start-page'] = startPage
+            gameDataStoreProvider.update(id, game)
+        }
     }
 
     return (

@@ -46,8 +46,8 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
         }
         this.items.set(id, {
             path: path,
-            Original: data,
-            current: data
+            Original: { ...data },
+            current: { ...data }
         })
         this.messageBus.postMessage({
             message: GAME_DATA_STORE_CHANGED,

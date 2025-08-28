@@ -5,6 +5,7 @@ import { CoreBuilder } from './containerBuilders/coreBuilder'
 import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'
 import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
+import { ValidatorsBuilder } from './containerBuilders/validatorsBuilder'
 
 export interface IContainerBuilder {
     build(): Container
@@ -24,6 +25,7 @@ export class ContainerBuilder implements IContainerBuilder {
         new CoreBuilder().register(result)
         new ManagersBuilder().register(result)
         new ProvidersBuilder().register(result)
+        new ValidatorsBuilder().register(result)
         return result
     }
 
