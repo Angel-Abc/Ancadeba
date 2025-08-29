@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { DIALOG_SET, WRITE_OUTPUT } from '@messages/system'
+import { DIALOG_SET_UPDATED, WRITE_OUTPUT } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { ITranslationService, translationServiceToken } from '@services/translationService'
 import { ILogger, loggerToken } from '@utils/logger'
@@ -32,7 +32,7 @@ export class DialogOutputManager implements IDialogOutputManager {
     public initialize(): void {
         this.cleanup()
         this.cleanupFn = this.messageBus.registerMessageListener(
-            DIALOG_SET,
+            DIALOG_SET_UPDATED,
             message => this.onDialogSet(message.payload as string)
         )
     }

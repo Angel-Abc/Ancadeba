@@ -1,5 +1,5 @@
 import { Token, token } from '@ioc/token'
-import { DIALOG_SET, SET_DIALOG } from '@messages/system'
+import { DIALOG_SET_SET, DIALOG_SET_UPDATED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
@@ -30,7 +30,7 @@ export class DialogManager implements IDialogManager {
     public initialize(): void {
         this.cleanup()
         this.cleanupFn = this.messageBus.registerMessageListener(
-            SET_DIALOG,
+            DIALOG_SET_SET,
             message => this.setDialog(message.payload as string)
         )
     }
@@ -50,7 +50,7 @@ export class DialogManager implements IDialogManager {
         this.gameDataProvider.Context.isInModalDialog = !dialog.behavior.canMove
         
         this.messageBus.postMessage({
-            message: DIALOG_SET,
+            message: DIALOG_SET_UPDATED,
             payload: dialogId
         })
     }
