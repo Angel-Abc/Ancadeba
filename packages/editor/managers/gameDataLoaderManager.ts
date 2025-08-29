@@ -46,16 +46,16 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
         this.cleanupFns = [
             this.messageBus.registerMessageListener(
                 INITIALIZED,
-                async () => await this.onInitialized()
+                async () => await this.loadGameDefinition()
             ),
             this.messageBus.registerMessageListener(
                 SET_EDITOR_CONTENT,
-                async message => await this.onSetContent(message.payload as SetEditorContentPayload)
+                async message => await this.loadContent(message.payload as SetEditorContentPayload)
             )
         ]
     }
 
-    private async onSetContent(setEditorContent: SetEditorContentPayload): Promise<void> {
+    private async loadContent(setEditorContent: SetEditorContentPayload): Promise<void> {
         if (this.gameDataStoreProvider.hasData(setEditorContent.id)) {
             // data is already loaded
             return
@@ -74,7 +74,7 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
         }
     }
 
-    private async onInitialized(): Promise<void> {
+    private async loadGameDefinition(): Promise<void> {
         const path = `${this.dataUrl}/${rootPath}`
         let game: Game
         try {
