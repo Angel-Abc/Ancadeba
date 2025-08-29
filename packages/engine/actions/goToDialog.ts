@@ -1,6 +1,6 @@
 import { Token, token } from '@ioc/token'
 import { GotoDialogAction } from '@loader/data/dialog'
-import { SET_DIALOG, WRITE_OUTPUT } from '@messages/system'
+import { DIALOG_SET_SET, WRITE_OUTPUT } from '@messages/system'
 import { IActionHandler } from '@registries/actionHandlerRegistry'
 import { ITranslationService, translationServiceToken } from '@services/translationService'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
@@ -27,7 +27,7 @@ export class GoToDialog implements IGoToDialog {
             })
         }
         this.messageBus.postMessage({
-            message: SET_DIALOG,
+            message: DIALOG_SET_SET,
             payload: action.target
         })
     }

@@ -2,7 +2,7 @@ import { conditionResolverToken, IConditionResolver } from '@conditions/conditio
 import { Token, token } from '@ioc/token'
 import { DialogSet } from '@loader/data/dialog'
 import { dialogSetLoaderToken, IDialogSetLoader } from '@loader/dialogSetLoader'
-import { DIALOG_SET_STARTED, SET_DIALOG, START_DIALOG_SET } from '@messages/system'
+import { DIALOG_SET_SET, DIALOG_SET_START, DIALOG_SET_STARTED } from '@messages/system'
 import { gameDataProviderToken, IGameDataProvider } from '@providers/gameDataProvider'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
@@ -35,7 +35,7 @@ export class DialogSetManager implements IDialogSetManager {
     public initialize(): void {
         this.cleanup()
         this.cleanupFn = this.messageBus.registerMessageListener(
-            START_DIALOG_SET,
+            DIALOG_SET_START,
             async message => {
                 await this.startDialogSet(message.payload as string)
             }
@@ -69,7 +69,7 @@ export class DialogSetManager implements IDialogSetManager {
             })
 
             this.messageBus.postMessage({
-                message: SET_DIALOG,
+                message: DIALOG_SET_SET,
                 payload: dialogSet.startWith
             })
         }
