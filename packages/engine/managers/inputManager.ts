@@ -48,8 +48,8 @@ export class InputManager implements IInputManager {
      * executes its action when the input is enabled.
      */
     private onVirtualInput(virtualInput: string): void {
-        if (this.gameDataProvider.Game.activeInputs.has(virtualInput)){
-            const activeInput = this.gameDataProvider.Game.activeInputs.get(virtualInput)
+        if (this.gameDataProvider.game.activeInputs.has(virtualInput)){
+            const activeInput = this.gameDataProvider.game.activeInputs.get(virtualInput)
             if (activeInput && activeInput.enabled) this.actionExecutor.execute(activeInput?.input.action, undefined, activeInput.input.label)
         }
     }

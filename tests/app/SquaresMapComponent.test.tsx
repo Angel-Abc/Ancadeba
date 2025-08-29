@@ -20,8 +20,8 @@ describe('SquaresMapComponent', () => {
 
   it('renders nothing when map id is missing', () => {
     const provider = {
-      Context: { currentMap: { id: null }, player: { position: { x: 0, y: 0 } } },
-      Game: { loadedMaps: {}, loadedTiles: new Map<string, TileData>() }
+      context: { currentMap: { id: null }, player: { position: { x: 0, y: 0 } } },
+      game: { loadedMaps: {}, loadedTiles: new Map<string, TileData>() }
     } as unknown as IGameDataProvider
     services.set(gameDataProviderToken, provider)
     services.set(messageBusToken, { registerMessageListener: vi.fn() } as unknown as IMessageBus)
@@ -41,8 +41,8 @@ describe('SquaresMapComponent', () => {
     } as unknown as IMessageBus
 
     const provider = {
-      Context: { currentMap: { id: 'map1' }, player: { position: { x: 0, y: 0 } } },
-      Game: {
+      context: { currentMap: { id: 'map1' }, player: { position: { x: 0, y: 0 } } },
+      game: {
         loadedMaps: {
           map1: {
             width: 2,
@@ -73,7 +73,7 @@ describe('SquaresMapComponent', () => {
 
     expect(screen.getByTestId('tile-t1').getAttribute('data-player')).toBe('true')
 
-    provider.Context.player.position = { x: 1, y: 1 }
+    provider.context.player.position = { x: 1, y: 1 }
     act(() => {
       listeners.get(POSITION_CHANGED)!()
     })

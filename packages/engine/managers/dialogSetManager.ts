@@ -43,22 +43,22 @@ export class DialogSetManager implements IDialogSetManager {
     }
 
     private async startDialogSet(dialogSetId: string): Promise<void> {
-        const path = this.gameDataProvider.Game.game.dialogs[dialogSetId]
+        const path = this.gameDataProvider.game.game.dialogs[dialogSetId]
         if (!path) {
             throw new Error(this.logger.error(logName, 'Dialog set not found for id {0}', dialogSetId))
         }
 
         let dialogSet: DialogSet
-        if (!this.gameDataProvider.Game.loadedDialogSets.has(dialogSetId)) {
+        if (!this.gameDataProvider.game.loadedDialogSets.has(dialogSetId)) {
             dialogSet = await this.dialogSetLoader.loadDialogSet(path)
-            this.gameDataProvider.Game.loadedDialogSets.set(dialogSetId, dialogSet)
+            this.gameDataProvider.game.loadedDialogSets.set(dialogSetId, dialogSet)
         } else {
-            dialogSet = this.gameDataProvider.Game.loadedDialogSets.get(dialogSetId)!
+            dialogSet = this.gameDataProvider.game.loadedDialogSets.get(dialogSetId)!
         }
 
         // Now always restart the dialog. In the future this might change depending on dialog settings
         if (this.conditionResolver.resolve(dialogSet.startCondition)){
-            this.gameDataProvider.Context.currentDialogSet = {
+            this.gameDataProvider.context.currentDialogSet = {
                 dialogSetId: dialogSetId,
                 dialogId: null
             }

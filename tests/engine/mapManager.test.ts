@@ -9,8 +9,8 @@ import type { ILogger } from '@utils/logger'
 
 function createProvider(gameData: GameData, context: GameContext): IGameDataProvider {
   return {
-    get Game() { return gameData },
-    get Context() { return context },
+    get game() { return gameData },
+    get context() { return context },
     initialize: vi.fn()
   } as unknown as IGameDataProvider
 }

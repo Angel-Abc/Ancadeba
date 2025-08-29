@@ -24,13 +24,13 @@ describe('GameDataProvider', () => {
     const provider = new GameDataProvider(logger)
     provider.initialize(gameData)
 
-    expect(provider.Game.game).toBe(gameData)
-    expect(provider.Game.loadedLanguages).toEqual({})
-    expect(provider.Game.loadedPages).toEqual({})
-    expect(provider.Game.loadedMaps).toEqual({})
-    expect(provider.Game.loadedTileSets).toEqual(new Set())
-    expect(provider.Game.loadedTiles).toEqual(new Map())
-    expect(provider.Context).toEqual({
+    expect(provider.game.game).toBe(gameData)
+    expect(provider.game.loadedLanguages).toEqual({})
+    expect(provider.game.loadedPages).toEqual({})
+    expect(provider.game.loadedMaps).toEqual({})
+    expect(provider.game.loadedTileSets).toEqual(new Set())
+    expect(provider.game.loadedTiles).toEqual(new Map())
+    expect(provider.context).toEqual({
       language: 'en',
       startPage: 'start',
       currentPageId: null,
@@ -47,12 +47,12 @@ describe('GameDataProvider', () => {
     })
   })
 
-  it('throws when accessing Game or Context before initialization', () => {
+  it('throws when accessing game or context before initialization', () => {
     const logger: ILogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn((c, m) => `[${c}] ${m}`) }
     const provider = new GameDataProvider(logger)
 
-    expect(() => provider.Game).toThrow('[GameDataProvider] Game data not loaded')
-    expect(() => provider.Context).toThrow('[GameDataProvider] Game context not loaded')
+    expect(() => provider.game).toThrow('[GameDataProvider] Game data not loaded')
+    expect(() => provider.context).toThrow('[GameDataProvider] Game context not loaded')
     expect(logger.error).toHaveBeenCalledTimes(2)
     expect(logger.error).toHaveBeenNthCalledWith(1, 'GameDataProvider', 'Game data not loaded')
     expect(logger.error).toHaveBeenNthCalledWith(2, 'GameDataProvider', 'Game context not loaded')

@@ -29,10 +29,10 @@ describe('LanguageManager', () => {
     } as unknown as GameData
     const context = {} as unknown as GameContext
     const gameDataProvider: IGameDataProvider = {
-      get Game() {
+      get game() {
         return gameData
       },
-      get Context() {
+      get context() {
         return context
       },
       initialize: vi.fn()
@@ -63,10 +63,10 @@ describe('LanguageManager', () => {
     } as unknown as GameData
     const context = {} as unknown as GameContext
     const gameDataProvider: IGameDataProvider = {
-      get Game() {
+      get game() {
         return gameData
       },
-      get Context() {
+      get context() {
         return context
       },
       initialize: vi.fn()

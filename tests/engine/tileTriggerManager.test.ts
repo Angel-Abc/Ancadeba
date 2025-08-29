@@ -19,8 +19,8 @@ function setup(tile?: MapTile) {
     map: [['t1']]
   }
   const provider = {
-    get Game() { return { loadedMaps: { map } } as unknown as GameData },
-    get Context() { return { currentMap: { id: 'map', width: 1, height: 1 } } as unknown as GameContext },
+    get game() { return { loadedMaps: { map } } as unknown as GameData },
+    get context() { return { currentMap: { id: 'map', width: 1, height: 1 } } as unknown as GameContext },
     initialize: vi.fn()
   } as unknown as IGameDataProvider
   let handler: (message: Message<unknown>) => void = () => {}

@@ -23,7 +23,7 @@ export class TurnOutputManager implements ITurnOutputManager {
 
     public initialize(): void {
         this.cleanup()
-        const context = this.gameDataProvider.Context
+        const context = this.gameDataProvider.context
         if (!context.turnOutputs || context.turnOutputs.length === 0) {
             context.turnOutputs = [{ outputs: [] } as TurnOutput]
         }
@@ -46,13 +46,13 @@ export class TurnOutputManager implements ITurnOutputManager {
     }
 
     private onWriteOutput(payload: unknown): void {
-        const context = this.gameDataProvider.Context
+        const context = this.gameDataProvider.context
         const current = context.turnOutputs[context.turnOutputs.length - 1]
         current.outputs.push(payload as string)
     }
 
     private onFinalizeTurn(): void {
-        const context = this.gameDataProvider.Context
+        const context = this.gameDataProvider.context
         const current = context.turnOutputs[context.turnOutputs.length - 1]
         if (current.outputs.length > 0) {
             context.turnOutputs.push({ outputs: [] })

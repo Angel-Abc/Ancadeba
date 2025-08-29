@@ -89,17 +89,17 @@ export class PageManager implements IPageManager {
      * @throws If no page is defined for the given id.
      */
     public async setActivePage(pageId: string): Promise<void> {
-        const path = this.gameDataProvider.Game.game.pages[pageId]
+        const path = this.gameDataProvider.game.game.pages[pageId]
         if (!path) {
             throw new Error(this.logger.error(logName, 'Page not found for id {0}', pageId))
         }
 
-        if (this.gameDataProvider.Game.loadedPages[pageId] === undefined) {
+        if (this.gameDataProvider.game.loadedPages[pageId] === undefined) {
             const page = await this.pageLoader.loadPage(path)
-            this.gameDataProvider.Game.loadedPages[pageId] = page
+            this.gameDataProvider.game.loadedPages[pageId] = page
         }
 
-        this.gameDataProvider.Context.currentPageId = pageId
+        this.gameDataProvider.context.currentPageId = pageId
 
         this.messageBus.postMessage({
             message: PAGE_SWITCHED,

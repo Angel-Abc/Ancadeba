@@ -62,11 +62,11 @@ export class LanguageManager implements ILanguageManager {
      * @throws If no language has been set yet.
      */
     public getLanguage(): string {
-        if (!this.gameDataProvider.Context.language) {
+        if (!this.gameDataProvider.context.language) {
             const message = this.logger.error(logName, 'No language set')
             throw new Error(message)
         }
-        return this.gameDataProvider.Context.language
+        return this.gameDataProvider.context.language
     }
 
     /**
@@ -77,19 +77,19 @@ export class LanguageManager implements ILanguageManager {
      * @throws If the provided language key is unknown.
      */
     public async setLanguage(languageKey: string): Promise<void> {
-        const paths = this.gameDataProvider.Game.game.languages[languageKey]
+        const paths = this.gameDataProvider.game.game.languages[languageKey]
         if (!paths) {
             const message = this.logger.error(logName, 'Unknown language key: {0}', languageKey)
             throw new Error(message)
         }
 
-        if (this.gameDataProvider.Game.loadedLanguages[languageKey] === undefined) {
+        if (this.gameDataProvider.game.loadedLanguages[languageKey] === undefined) {
             const language = await this.languageLoader.loadLanguage(paths)
-            this.gameDataProvider.Game.loadedLanguages[languageKey] = language
+            this.gameDataProvider.game.loadedLanguages[languageKey] = language
         }
 
-        const languageData = this.gameDataProvider.Game.loadedLanguages[languageKey]
+        const languageData = this.gameDataProvider.game.loadedLanguages[languageKey]
         this.translationService.setLanguage(languageData)
-        this.gameDataProvider.Context.language = languageKey
+        this.gameDataProvider.context.language = languageKey
     }
 }

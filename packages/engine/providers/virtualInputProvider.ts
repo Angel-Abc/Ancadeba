@@ -41,7 +41,7 @@ export class VirtualInputProvider implements IVirtualInputProvider {
      * wiring virtual key messages to virtual input dispatches.
      *
      * Side effects:
-     * - Mutates {@link IGameDataProvider.Game.loadedVirtualInputs} when empty by
+     * - Mutates {@link IGameDataProvider.game.loadedVirtualInputs} when empty by
      *   loading mappings via {@link loadVirtualInputs}.
      * - Registers a {@link VIRTUAL_KEY} listener and stores its cleanup
      *   function.
@@ -50,14 +50,14 @@ export class VirtualInputProvider implements IVirtualInputProvider {
      * @returns {Promise<void>} Resolves once initialization completes.
      */
     public async initialize(): Promise<void> {
-        if (this.gameDataProvider.Game.loadedVirtualInputsByKey.size === 0) await this.loadVirtualInputs()
+        if (this.gameDataProvider.game.loadedVirtualInputsByKey.size === 0) await this.loadVirtualInputs()
         this.cleanupFn = this.messageBus.registerMessageListener(
             VIRTUAL_KEY,
             message => {
-                if (message.payload && this.gameDataProvider.Game.loadedVirtualInputsByKey.has(message.payload as string)) {
+                if (message.payload && this.gameDataProvider.game.loadedVirtualInputsByKey.has(message.payload as string)) {
                     this.messageBus.postMessage({
                         message: VIRTUAL_INPUT,
-                        payload: this.gameDataProvider.Game.loadedVirtualInputsByKey.get(message.payload as string)?.virtualInput
+                        payload: this.gameDataProvider.game.loadedVirtualInputsByKey.get(message.payload as string)?.virtualInput
                     })
                 }
             }
@@ -84,10 +84,10 @@ export class VirtualInputProvider implements IVirtualInputProvider {
      * game data provider's state.
      */
     private async loadVirtualInputs(): Promise<void> {
-        const inputs = await this.virtualInputsLoader.loadVirtualInputs(this.gameDataProvider.Game.game.virtualInputs)
+        const inputs = await this.virtualInputsLoader.loadVirtualInputs(this.gameDataProvider.game.game.virtualInputs)
         inputs.forEach(input => {
-            this.gameDataProvider.Game.loadedVirtualInputsByInput.set(input.virtualInput, input)
-            input.virtualKeys.forEach(virtualKey => this.gameDataProvider.Game.loadedVirtualInputsByKey.set(virtualKey, input))
+            this.gameDataProvider.game.loadedVirtualInputsByInput.set(input.virtualInput, input)
+            input.virtualKeys.forEach(virtualKey => this.gameDataProvider.game.loadedVirtualInputsByKey.set(virtualKey, input))
         })
     }
 }

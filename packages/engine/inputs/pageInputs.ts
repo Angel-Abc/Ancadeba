@@ -13,17 +13,17 @@ export class PageInputs implements IPageInputs {
     constructor(private gameDataProvider: IGameDataProvider){}
 
     public isActive(): boolean {
-        const currentPageId = this.gameDataProvider.Context.currentPageId
+        const currentPageId = this.gameDataProvider.context.currentPageId
         if (!currentPageId) return false
-        const currentPage = this.gameDataProvider.Game.loadedPages[currentPageId]
+        const currentPage = this.gameDataProvider.game.loadedPages[currentPageId]
         if (currentPage) return true
         return false
     }
 
     public getInputs(): Input[] {
-        const currentPageId = this.gameDataProvider.Context.currentPageId
+        const currentPageId = this.gameDataProvider.context.currentPageId
         if (currentPageId) {
-            const currentPage = this.gameDataProvider.Game.loadedPages[currentPageId]
+            const currentPage = this.gameDataProvider.game.loadedPages[currentPageId]
             if (currentPage) {
                 return currentPage.inputs
             }

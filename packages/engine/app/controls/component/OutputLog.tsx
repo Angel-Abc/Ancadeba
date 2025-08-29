@@ -12,7 +12,7 @@ interface OutputLogProps {
 
 function getOutputLog(gameDataProvider: IGameDataProvider, logSize: number): string {
     const lines: string[] = []
-    gameDataProvider.Context.turnOutputs.slice(-logSize).forEach(turnOutput => {
+    gameDataProvider.context.turnOutputs.slice(-logSize).forEach(turnOutput => {
         if (turnOutput.outputs.length > 0) {
             lines.push('<hr/>')
             turnOutput.outputs.forEach(output => lines.push(output))

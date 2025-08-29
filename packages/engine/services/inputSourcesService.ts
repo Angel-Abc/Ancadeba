@@ -41,7 +41,7 @@ export class InputSourcesService implements IInputSourcesService {
                 activeInputs.set(input.virtualInput, this.resolveConditions(input))
             })
         })
-        this.gameDataProvider.Game.activeInputs = activeInputs
+        this.gameDataProvider.game.activeInputs = activeInputs
     }
 
     /**
