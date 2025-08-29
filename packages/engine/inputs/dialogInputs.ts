@@ -14,18 +14,18 @@ export class DialogInputs implements IDialogInputs {
     ) { }
 
     public isActive(): boolean {
-        const dialogSetId = this.gameDataProvider.Context.currentDialogSet.dialogSetId
+        const dialogSetId = this.gameDataProvider.context.currentDialogSet.dialogSetId
         if (!dialogSetId) return false
-        const dialogId = this.gameDataProvider.Context.currentDialogSet.dialogId
+        const dialogId = this.gameDataProvider.context.currentDialogSet.dialogId
         if (!dialogId) return false
         return true
     }
 
     public getInputs(): Input[] {
-        const dialogSetId = this.gameDataProvider.Context.currentDialogSet.dialogSetId
-        const dialogId = this.gameDataProvider.Context.currentDialogSet.dialogId
+        const dialogSetId = this.gameDataProvider.context.currentDialogSet.dialogSetId
+        const dialogId = this.gameDataProvider.context.currentDialogSet.dialogId
         if (dialogId && dialogSetId) {
-            const dialogSet = this.gameDataProvider.Game.loadedDialogSets.get(dialogSetId)
+            const dialogSet = this.gameDataProvider.game.loadedDialogSets.get(dialogSetId)
             if (dialogSet){
                 const dialog = dialogSet.dialogs[dialogId]
                 if (dialog) {

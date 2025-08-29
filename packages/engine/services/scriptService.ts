@@ -59,8 +59,8 @@ export class ScriptService implements IScriptService {
         }
 
         const context = {
-            game: this.gameDataProvider.Game,
-            data: this.gameDataProvider.Context,
+            game: this.gameDataProvider.game,
+            data: this.gameDataProvider.context,
             postMessage: postMessage
         }
         try {

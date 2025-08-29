@@ -35,8 +35,8 @@ describe('PageManager', () => {
     } as unknown as GameData
     const context = { currentPageId: null } as unknown as GameContext
     const provider = {
-      get Game() { return gameData },
-      get Context() { return context },
+      get game() { return gameData },
+      get context() { return context },
       initialize: vi.fn()
     } as unknown as IGameDataProvider
     const loadPage = vi.fn().mockResolvedValue({ id: 'home' })

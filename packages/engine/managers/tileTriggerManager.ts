@@ -79,9 +79,9 @@ export class TileTriggerManager implements ITileTriggerManager {
      *   the provided position define `onExit` behavior.
      */
     private preparePositionChange(position: Position, message: Message<unknown>): void {
-        const currentMapId = this.gameDataProvider.Context.currentMap.id
+        const currentMapId = this.gameDataProvider.context.currentMap.id
         if (!currentMapId) return
-        const map = this.gameDataProvider.Game.loadedMaps[currentMapId] as GameMap | undefined
+        const map = this.gameDataProvider.game.loadedMaps[currentMapId] as GameMap | undefined
         if (!map) return
         const row = map.map[position.y]
         if (!row) return
@@ -105,9 +105,9 @@ export class TileTriggerManager implements ITileTriggerManager {
      *   the provided position define `onEnter` behavior.
      */
     private handlePositionChange(position: Position, message: Message<unknown>): void {
-        const currentMapId = this.gameDataProvider.Context.currentMap.id
+        const currentMapId = this.gameDataProvider.context.currentMap.id
         if (!currentMapId) return
-        const map = this.gameDataProvider.Game.loadedMaps[currentMapId] as GameMap | undefined
+        const map = this.gameDataProvider.game.loadedMaps[currentMapId] as GameMap | undefined
         if (!map) return
         const row = map.map[position.y]
         if (!row) return

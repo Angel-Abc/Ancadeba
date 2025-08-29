@@ -58,9 +58,9 @@ export class PlayerPositionManager implements IPlayerPositionManager {
     public changePosition(position: Position): void {
         this.messageBus.postMessage({
             message: CHANGING_POSITION,
-            payload: this.gameDataProvider.Context.player.position
+            payload: this.gameDataProvider.context.player.position
         })
-        this.gameDataProvider.Context.player.position = position
+        this.gameDataProvider.context.player.position = position
         this.messageBus.postMessage({
             message: POSITION_CHANGED,
             payload: position

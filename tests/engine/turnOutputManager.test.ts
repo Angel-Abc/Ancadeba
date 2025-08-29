@@ -6,8 +6,8 @@ import { WRITE_OUTPUT, FINALIZE_END_TURN_MESSAGE } from '../../packages/engine/m
 
 function createManager(context: GameContext) {
   const provider = {
-    get Game() { return {} as GameData },
-    get Context() { return context },
+    get game() { return {} as GameData },
+    get context() { return context },
     initialize: vi.fn()
   } as unknown as IGameDataProvider
   const listeners: Record<string, (msg: { message: string, payload: unknown }) => void> = {}

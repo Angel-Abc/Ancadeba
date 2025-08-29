@@ -39,16 +39,16 @@ export class TileSetManager implements ITileSetManager {
     public async ensureTileSets(tileSetIds: string[]): Promise<void> {
         await Promise.all(
             tileSetIds.map(async tileSetId => {
-                const path = this.gameDataProvider.Game.game.tiles[tileSetId]
+                const path = this.gameDataProvider.game.game.tiles[tileSetId]
                 if (!path) {
                     this.logger.error(logName, 'Tile set not found for id {0}', tileSetId)
                     throw new Error(`Tile set not found for id ${tileSetId}`)
                 }
 
-                if (!this.gameDataProvider.Game.loadedTileSets.has(tileSetId)) {
+                if (!this.gameDataProvider.game.loadedTileSets.has(tileSetId)) {
                     const tileSet = await this.tileSetLoader.loadTileSet(path)
-                    this.gameDataProvider.Game.loadedTileSets.add(tileSetId)
-                    tileSet.tiles.forEach(tile => this.gameDataProvider.Game.loadedTiles.set(tile.key, tile))
+                    this.gameDataProvider.game.loadedTileSets.add(tileSetId)
+                    tileSet.tiles.forEach(tile => this.gameDataProvider.game.loadedTiles.set(tile.key, tile))
                 }
             })
         )

@@ -73,13 +73,13 @@ export interface IGameDataProvider {
      *
      * @throws Error If {@link initialize} has not been invoked.
      */
-    get Game(): GameData
+    get game(): GameData
     /**
      * Retrieves the current game context.
      *
      * @throws Error If {@link initialize} has not been invoked.
      */
-    get Context(): GameContext
+    get context(): GameContext
     initialize(gameData: Game): void
 }
 
@@ -87,8 +87,8 @@ const logName = 'GameDataProvider'
 export const gameDataProviderToken = token<IGameDataProvider>(logName)
 export const gameDataProviderDependencies: Token<unknown>[] = [loggerToken]
 export class GameDataProvider implements IGameDataProvider {
-    private game: GameData | null = null
-    private context: GameContext | null = null
+    private _game: GameData | null = null
+    private _context: GameContext | null = null
 
     constructor(private logger: ILogger) {}
 
@@ -98,12 +98,12 @@ export class GameDataProvider implements IGameDataProvider {
      * @remarks {@link initialize} must be called before accessing this getter.
      * @throws Error If the provider has not been initialized.
      */
-    public get Game(): GameData {
-        if (!this.game) {
+    public get game(): GameData {
+        if (!this._game) {
             const message = this.logger.error(logName, 'Game data not loaded')
             throw new Error(message)
         }
-        return this.game
+        return this._game
     }
 
     /**
@@ -112,12 +112,12 @@ export class GameDataProvider implements IGameDataProvider {
      * @remarks {@link initialize} must be called before accessing this getter.
      * @throws Error If the provider has not been initialized.
      */
-    public get Context(): GameContext {
-        if (!this.context) {
+    public get context(): GameContext {
+        if (!this._context) {
             const message = this.logger.error(logName, 'Game context not loaded')
             throw new Error(message)
         }
-        return this.context
+        return this._context
     }
 
     /**
@@ -127,17 +127,17 @@ export class GameDataProvider implements IGameDataProvider {
      * @throws If the provider has already been initialized.
      *
      * @remarks
-     * Preconditions: `initialize` must be called exactly once before accessing {@link Game} or {@link Context}.
+     * Preconditions: `initialize` must be called exactly once before accessing {@link game} or {@link context}.
      * Effects:
      * - Populates the internal `game` store with the provided game and empty caches for languages and pages.
      * - Sets `context` to the game's initial data with `currentPageId` reset to `null`.
      */
     public initialize(gameData: Game): void {
-        if (this.game) {
+        if (this._game) {
             const message = this.logger.error(logName, 'Game data already initialized')
             throw new Error(message)
         }
-        this.game = {
+        this._game = {
             game: gameData,
             loadedLanguages: {},
             loadedPages: {},
@@ -150,7 +150,7 @@ export class GameDataProvider implements IGameDataProvider {
             loadedDialogSets: new Map<string, DialogSet>(),
             activeInputs: new Map<string, ActiveInput>()
         }
-        this.context = {
+        this._context = {
             ...gameData.initialData,
             currentPageId: null,
             currentMap: {

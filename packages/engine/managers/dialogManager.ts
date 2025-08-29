@@ -36,9 +36,9 @@ export class DialogManager implements IDialogManager {
     }
 
     private setDialog(dialogId: string): void {
-        const dialogSetId = this.gameDataProvider.Context.currentDialogSet.dialogSetId
+        const dialogSetId = this.gameDataProvider.context.currentDialogSet.dialogSetId
         if (!dialogSetId) return
-        const dialogSet = this.gameDataProvider.Game.loadedDialogSets.get(dialogSetId)
+        const dialogSet = this.gameDataProvider.game.loadedDialogSets.get(dialogSetId)
         if (!dialogSet) {
             throw new Error(this.logger.error(logName, 'Dialog set not found for id {0}', dialogSetId))
         }
@@ -46,8 +46,8 @@ export class DialogManager implements IDialogManager {
         if (!dialog) {
             throw new Error(this.logger.error(logName, 'Dialog not found for id {0}', dialogId))
         }
-        this.gameDataProvider.Context.currentDialogSet.dialogId = dialogId
-        this.gameDataProvider.Context.isInModalDialog = !dialog.behavior.canMove
+        this.gameDataProvider.context.currentDialogSet.dialogId = dialogId
+        this.gameDataProvider.context.isInModalDialog = !dialog.behavior.canMove
         
         this.messageBus.postMessage({
             message: DIALOG_SET,

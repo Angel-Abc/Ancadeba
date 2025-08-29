@@ -36,7 +36,7 @@ export class InputMatrixBuilder implements IInputMatrixBuilder {
     ) { }
 
     public build(width: number, height: number): MatrixInputItem[][] {
-        const inputs: ActiveInput[] = Array.from(this.gameDataProvider.Game.activeInputs.values()).filter(i => i.visible)
+        const inputs: ActiveInput[] = Array.from(this.gameDataProvider.game.activeInputs.values()).filter(i => i.visible)
         const matrix: MatrixInputItem[][] = create2DArray<MatrixInputItem>(height, width, nullMatrixInputItem)
         const preferredIndex = new Map<string, ActiveInput>()
         const itemsToProcess: ActiveInput[] = []
@@ -82,7 +82,7 @@ export class InputMatrixBuilder implements IInputMatrixBuilder {
             label: this.translationService.translate(inputItem.input.label),
             description: this.translationService.translate(inputItem.input.description),
             virtualInput: inputItem.input.virtualInput,
-            character: this.gameDataProvider.Game.loadedVirtualInputsByInput.get(inputItem.input.virtualInput)?.label ?? ''
+            character: this.gameDataProvider.game.loadedVirtualInputsByInput.get(inputItem.input.virtualInput)?.label ?? ''
         }
     }
 

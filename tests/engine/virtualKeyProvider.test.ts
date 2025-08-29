@@ -22,7 +22,7 @@ describe('VirtualKeyProvider', () => {
     const virtualKeysLoader = { loadVirtualKeys } as unknown as IVirtualKeysLoader
 
     const gameDataProvider = {
-      Game: {
+      game: {
         game: { virtualKeys: ['path'] } as unknown,
         loadedLanguages: {},
         loadedPages: {},
@@ -69,7 +69,7 @@ describe('VirtualKeyProvider', () => {
     const virtualKeysLoader = { loadVirtualKeys } as unknown as IVirtualKeysLoader
 
     const gameDataProvider = {
-      Game: {
+      game: {
         game: { virtualKeys: ['path'] } as unknown,
         loadedLanguages: {},
         loadedPages: {},
@@ -105,7 +105,7 @@ describe('VirtualKeyProvider', () => {
     const messageBus = { postMessage: vi.fn() } as unknown as IMessageBus
     const virtualKeysLoader = { loadVirtualKeys: vi.fn().mockResolvedValue([]) } as unknown as IVirtualKeysLoader
     const gameDataProvider = {
-      Game: {
+      game: {
         game: { virtualKeys: [] } as unknown,
         loadedLanguages: {},
         loadedPages: {},

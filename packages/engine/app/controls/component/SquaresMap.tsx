@@ -24,12 +24,12 @@ export const SquaresMap: React.FC<SquaresMapProps> = ({ component }): React.JSX.
     const messageBus = useService<IMessageBus>(messageBusToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
     const logger = useService<ILogger>(loggerToken)
-    const [mapId, setMapId] = useState<string | null>(gameDataProvider.Context.currentMap.id)
-    const [position, setPosition] = useState<Position>(gameDataProvider.Context.player.position)
+    const [mapId, setMapId] = useState<string | null>(gameDataProvider.context.currentMap.id)
+    const [position, setPosition] = useState<Position>(gameDataProvider.context.player.position)
 
     useEffect(() => {
         return messageBus.registerMessageListener(MAP_SWITCHED, () => {
-            setMapId(gameDataProvider.Context.currentMap.id)
+            setMapId(gameDataProvider.context.currentMap.id)
         })
     }, [
         messageBus,
@@ -38,7 +38,7 @@ export const SquaresMap: React.FC<SquaresMapProps> = ({ component }): React.JSX.
 
     useEffect(() => {
         return messageBus.registerMessageListener(POSITION_CHANGED, () => {
-            setPosition(gameDataProvider.Context.player.position)
+            setPosition(gameDataProvider.context.player.position)
         })
     }, [
         messageBus,
@@ -46,7 +46,7 @@ export const SquaresMap: React.FC<SquaresMapProps> = ({ component }): React.JSX.
     ])
 
     if (!mapId) return (<></>)
-    const gameMap: GameMap = gameDataProvider.Game.loadedMaps[mapId]
+    const gameMap: GameMap = gameDataProvider.game.loadedMaps[mapId]
     if (!gameMap) {
         const message = logger.error(logName, 'Map with id {0} was not loaded!', mapId)
         throw new Error(message)
@@ -71,7 +71,7 @@ export const SquaresMap: React.FC<SquaresMapProps> = ({ component }): React.JSX.
                     {gameMap.map.map((row, rowIndex) => {
                         return row.map((tileKey, columnIndex) => {
                             const mapTile = gameMap.tiles[tileKey]
-                            const tile = gameDataProvider.Game.loadedTiles.get(mapTile.tile)
+                            const tile = gameDataProvider.game.loadedTiles.get(mapTile.tile)
                             if (!tile) {
                                 const message = logger.error(logName, 'Tile with key {0} was not loaded!', mapTile.tile)
                                 throw new Error(message)

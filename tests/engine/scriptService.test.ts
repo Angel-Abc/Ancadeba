@@ -9,8 +9,8 @@ import type { IMessageBus } from '@utils/messageBus'
 import type { ILogger } from '@utils/logger'
 
 const createGameDataProvider = (): IGameDataProvider => ({
-  get Game() { return { id: 'game' } as unknown as GameData },
-  get Context() { return { id: 'context' } as unknown as GameContext },
+  get game() { return { id: 'game' } as unknown as GameData },
+  get context() { return { id: 'context' } as unknown as GameContext },
   initialize: vi.fn()
 })
 

@@ -87,21 +87,21 @@ export class MapManager implements IMapManager {
      * {@link MAP_SWITCHED} message on the bus.
      */
     public async setActiveMap(mapId: string): Promise<void> {
-        const path = this.gameDataProvider.Game.game.maps[mapId]
+        const path = this.gameDataProvider.game.game.maps[mapId]
         if (!path) {
             throw new Error(this.logger.error(logName, 'Map not found for id {0}', mapId))
         }
 
         let map: GameMap
-        if (this.gameDataProvider.Game.loadedMaps[mapId] === undefined) {
+        if (this.gameDataProvider.game.loadedMaps[mapId] === undefined) {
             map = await this.gameMapLoader.loadMap(path)
-            this.gameDataProvider.Game.loadedMaps[mapId] = map
+            this.gameDataProvider.game.loadedMaps[mapId] = map
             await this.tileSetManager.ensureTileSets(map.tileSets)
         } else {
-            map = this.gameDataProvider.Game.loadedMaps[mapId]
+            map = this.gameDataProvider.game.loadedMaps[mapId]
         }
 
-        this.gameDataProvider.Context.currentMap = {
+        this.gameDataProvider.context.currentMap = {
             id: mapId,
             width: map.width,
             height: map.height

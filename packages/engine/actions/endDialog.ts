@@ -34,8 +34,8 @@ export class EndDialog implements IEndDialog {
                 payload: this.translationService.translate(action.message)
             })
         }
-        this.gameDataProvider.Context.currentDialogSet.dialogSetId = null
-        this.gameDataProvider.Context.currentDialogSet.dialogId = null
-        this.gameDataProvider.Context.isInModalDialog = false
+        this.gameDataProvider.context.currentDialogSet.dialogSetId = null
+        this.gameDataProvider.context.currentDialogSet.dialogId = null
+        this.gameDataProvider.context.isInModalDialog = false
     }
 }

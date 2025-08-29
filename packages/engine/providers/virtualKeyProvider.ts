@@ -55,12 +55,12 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
      * @returns {Promise<void>} Resolves when initialization is complete.
      */
     public async initialize(): Promise<void> {
-        if (this.gameDataProvider.Game.loadedVirtualKeys.size === 0) await this.loadVirtualKeys()
+        if (this.gameDataProvider.game.loadedVirtualKeys.size === 0) await this.loadVirtualKeys()
         this.cleanupFn?.()
         this.cleanupFn = this.keyboardEventListener.addListener(event => {
             const lookupKey = this.createKey(event.code, event.alt, event.ctrl, event.shift)
-            if (this.gameDataProvider.Game.loadedVirtualKeys.has(lookupKey)){
-                const virtualkey = this.gameDataProvider.Game.loadedVirtualKeys.get(lookupKey)
+            if (this.gameDataProvider.game.loadedVirtualKeys.has(lookupKey)){
+                const virtualkey = this.gameDataProvider.game.loadedVirtualKeys.get(lookupKey)
                 this.messageBus.postMessage({
                     message: VIRTUAL_KEY,
                     payload: virtualkey?.virtualKey
@@ -90,10 +90,10 @@ export class VirtualKeyProvider implements IVirtualKeyProvider {
      * @returns {Promise<void>} Resolves once all virtual key data has been loaded.
      */
     private async loadVirtualKeys(): Promise<void> {
-        const keys = await this.virtualKeysLoader.loadVirtualKeys(this.gameDataProvider.Game.game.virtualKeys)
+        const keys = await this.virtualKeysLoader.loadVirtualKeys(this.gameDataProvider.game.game.virtualKeys)
         keys.forEach(key => {
             const lookupKey = this.createKey(key.keyCode, key.alt, key.ctrl, key.shift)
-            this.gameDataProvider.Game.loadedVirtualKeys.set(lookupKey, key)
+            this.gameDataProvider.game.loadedVirtualKeys.set(lookupKey, key)
         })
     }
 

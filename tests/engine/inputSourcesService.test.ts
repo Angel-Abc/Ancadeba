@@ -48,12 +48,12 @@ describe('InputSourcesService', () => {
     }
 
     const gameData: { activeInputs: Map<string, ActiveInput> } = { activeInputs: new Map() }
-    const gameDataProvider: IGameDataProvider = { Game: gameData } as unknown as IGameDataProvider
+    const gameDataProvider: IGameDataProvider = { game: gameData } as unknown as IGameDataProvider
 
     const service = new InputSourcesService(gameDataProvider, conditionResolver, registry, logger)
     service.updateInputs()
 
-    const result = gameDataProvider.Game.activeInputs.get('jump')
+    const result = gameDataProvider.game.activeInputs.get('jump')
     expect(result?.input).toBe(input2)
     expect(result?.enabled).toBe(true)
     expect(result?.visible).toBe(true)

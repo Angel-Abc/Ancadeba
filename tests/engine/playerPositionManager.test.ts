@@ -7,8 +7,8 @@ import { POSITION_CHANGED } from '../../packages/engine/messages/system'
 
 function createManager(context: GameContext) {
   const provider = {
-    get Game() { return {} as GameData },
-    get Context() { return context },
+    get game() { return {} as GameData },
+    get context() { return context },
     initialize: vi.fn(),
   } as unknown as IGameDataProvider
   const messageBus = { postMessage: vi.fn(), registerMessageListener: vi.fn() } as unknown as IMessageBus

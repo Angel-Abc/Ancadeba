@@ -38,10 +38,10 @@ describe('ActionManager', () => {
     }
 
     const gameDataProvider: IGameDataProvider = {
-      get Game(): GameData {
+      get game(): GameData {
         return { game: { actions: ['path1'] } } as unknown as GameData
       },
-      get Context(): GameContext {
+      get context(): GameContext {
         return {} as unknown as GameContext
       },
       initialize: vi.fn()
@@ -99,10 +99,10 @@ describe('ActionManager', () => {
     }
 
     const gameDataProvider: IGameDataProvider = {
-      get Game(): GameData {
+      get game(): GameData {
         return { game: { actions: ['path1'] } } as unknown as GameData
       },
-      get Context(): GameContext {
+      get context(): GameContext {
         return {} as unknown as GameContext
       },
       initialize: vi.fn()

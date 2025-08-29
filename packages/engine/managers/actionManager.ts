@@ -73,7 +73,7 @@ export class ActionManager implements IActionManager {
      */
     public async initialize(): Promise<void> {
         this.cleanup()
-        const paths = this.gameDataProvider.Game.game.actions
+        const paths = this.gameDataProvider.game.game.actions
         const handlers = await this.actionHandlersLoader.loadActions(paths)
         this.cleanupFns = handlers.map(handler => {
             return this.messageBus.registerMessageListener(

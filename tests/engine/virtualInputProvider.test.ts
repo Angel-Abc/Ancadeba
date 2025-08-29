@@ -20,7 +20,7 @@ describe('VirtualInputProvider', () => {
     const messageBus = { registerMessageListener, postMessage } as unknown as IMessageBus
 
     const gameDataProvider = {
-      Game: {
+      game: {
         game: { virtualInputs: ['inputs.json'] } as unknown,
         loadedLanguages: {},
         loadedPages: {},
@@ -59,7 +59,7 @@ describe('VirtualInputProvider', () => {
     const messageBus = { registerMessageListener, postMessage } as unknown as IMessageBus
 
     const gameDataProvider = {
-      Game: {
+      game: {
         game: { virtualInputs: ['inputs.json'] } as unknown,
         loadedLanguages: {},
         loadedPages: {},

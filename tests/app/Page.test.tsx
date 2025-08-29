@@ -15,8 +15,8 @@ describe('Page', () => {
 
   it('renders fallback when current page does not match', () => {
     const provider = {
-      Context: { currentPageId: 'other' },
-      Game: { loadedPages: { my: { screen: 'scr' } } }
+      context: { currentPageId: 'other' },
+      game: { loadedPages: { my: { screen: 'scr' } } }
     } as unknown as IGameDataProvider
     services.set(gameDataProviderToken, provider)
 
@@ -26,8 +26,8 @@ describe('Page', () => {
 
   it('renders fallback when page data is missing', () => {
     const provider = {
-      Context: { currentPageId: 'my' },
-      Game: { loadedPages: {} }
+      context: { currentPageId: 'my' },
+      game: { loadedPages: {} }
     } as unknown as IGameDataProvider
     services.set(gameDataProviderToken, provider)
 
@@ -37,8 +37,8 @@ describe('Page', () => {
 
   it('renders screen for loaded current page', () => {
     const provider = {
-      Context: { currentPageId: 'my' },
-      Game: { loadedPages: { my: { screen: 'scr' } } }
+      context: { currentPageId: 'my' },
+      game: { loadedPages: { my: { screen: 'scr' } } }
     } as unknown as IGameDataProvider
     services.set(gameDataProviderToken, provider)
 

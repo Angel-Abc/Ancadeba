@@ -6,8 +6,8 @@ import type { ILogger } from '@utils/logger'
 
 function createManager(gameData: GameData, loadTileSet: ReturnType<typeof vi.fn>) {
   const provider = {
-    get Game() { return gameData },
-    get Context() { return {} as GameContext },
+    get game() { return gameData },
+    get context() { return {} as GameContext },
     initialize: vi.fn(),
   } as unknown as IGameDataProvider
   const tileSetLoader = { loadTileSet } as unknown as ITileSetLoader
