@@ -58,6 +58,16 @@ export class GameDataProvider implements IGameDataProvider {
         throw new Error(this.logger.error(logName, 'No game was set to create a root'))
     }
 
+    public refreshLanguages(): void {
+        const root = this.root
+        const index = root.children.findIndex(c => c.type === 'languages')
+        if (index !== -1) {
+            root.children.splice(index, 1)
+        }
+        this.addLanguages()
+        this.sortRoot()
+    }
+
     private sortRoot(): void {
         this.sortItem(this.root)
     }
