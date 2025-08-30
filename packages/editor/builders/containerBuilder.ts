@@ -1,6 +1,6 @@
 import { Container } from '@ioc/container'
 import { ILogger } from '@utils/logger'
-import { UtilsBuilder } from '../../shared/builder/utilsBuilder'
+import { UtilsBuilder } from '@utils/builder/utilsBuilder'
 import { CoreBuilder } from './containerBuilders/coreBuilder'
 import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'

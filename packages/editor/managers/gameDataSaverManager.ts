@@ -32,7 +32,7 @@ export class GameDataSaverManager implements IGameDataSaverManager {
         const root = this.gameDataProvider.root
         const item = this.gameDataStoreProvider.retrieveItem<Game>(root.id)
         if (JSON.stringify(item.Original) !== JSON.stringify(item.current)) {
-            this.gameJsonSaver.saveJson<Game>(item.path, item.current, gameSchema)
+            await this.gameJsonSaver.saveJson<Game>(item.path, item.current, gameSchema)
         }
     }
 }
