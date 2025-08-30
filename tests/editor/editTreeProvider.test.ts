@@ -56,7 +56,7 @@ describe('editor EditTreeProvider', () => {
   it('builds tree from game data', () => {
     const gameDataProvider: IGameDataProvider = {
       setGame: vi.fn(),
-      get Root () { return createRoot() }
+      get root () { return createRoot() }
     }
     const provider = new EditTreeProvider(logger, gameDataProvider)
 
@@ -71,7 +71,7 @@ describe('editor EditTreeProvider', () => {
   it('returns placeholder when no data is available', () => {
     const gameDataProvider: IGameDataProvider = {
       setGame: vi.fn(),
-      get Root () { return null as unknown as RootItem }
+      get root () { return null as unknown as RootItem }
     }
     const provider = new EditTreeProvider(logger, gameDataProvider)
 

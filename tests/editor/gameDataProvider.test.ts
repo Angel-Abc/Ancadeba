@@ -64,7 +64,7 @@ describe('editor GameDataProvider', () => {
     const game = createGame()
 
     provider.setGame(game)
-    const root = provider.Root
+    const root = provider.root
 
     expect(root.label).toBe('Test Game')
     expect(root.children.map(c => c.label)).toEqual(['Languages', 'Pages'])
