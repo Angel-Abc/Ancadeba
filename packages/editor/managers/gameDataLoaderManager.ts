@@ -9,7 +9,8 @@ import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@e
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { Languages, Pages } from '@editor/types/storeItems'
 import { gameJsonLoaderToken, IGameJsonLoader } from '@editor/loaders/gameJsonLoader'
-import { BaseItemType } from '@editor/types/gameItems'
+import { BaseItemType, TranslationsItem } from '@editor/types/gameItems'
+import { languageSchema, Language } from '@loader/schema/language'
 
 export interface IGameDataLoaderManager {
     initialize(): void
@@ -99,6 +100,24 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
                         .sort()
                         .map(k => ({ key: k, path: this.gameDataProvider.root.game.pages[k] }))
                     this.gameDataStoreProvider.store(setEditorContent.id, pages, '')
+                    break
+                }
+            case 'translations':
+                {
+                    const item = this.gameDataProvider.getItemById(setEditorContent.id) as TranslationsItem | null
+                    if (!item || !('path' in item)) {
+                        this.logger.error(logName, 'Unable to resolve translations path for id {0}', setEditorContent.id)
+                        return
+                    }
+                    const path = item.path
+                    let data: Language
+                    try {
+                        data = await this.gameJsonLoader.loadJson<Language>(path, languageSchema)
+                    } catch (error) {
+                        this.logger.error(logName, 'Failed to load translations from {0}: {1}', path, error)
+                        return
+                    }
+                    this.gameDataStoreProvider.store(setEditorContent.id, data, path)
                     break
                 }
             default:

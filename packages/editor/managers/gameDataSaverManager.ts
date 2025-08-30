@@ -1,8 +1,9 @@
 import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
-import { gameDataStoreProviderToken, IGameDataStoreProvider } from '@editor/providers/gameDataStoreProvider'
+import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@editor/providers/gameDataStoreProvider'
 import { gameJsonSaverToken, IGameJsonSaver } from '@editor/savers/gameJsonSaver'
 import { Token, token } from '@ioc/token'
 import { Game, gameSchema } from '@loader/schema/game'
+import { Language, languageSchema } from '@loader/schema/language'
 
 export interface IGameDataSaverManager {
     saveChanges(): Promise<void>
@@ -23,16 +24,18 @@ export class GameDataSaverManager implements IGameDataSaverManager {
     ) { }
 
     public async saveChanges(): Promise<void> {
+        const changed = this.gameDataStoreProvider.getChangedItems()
         const promises: Promise<void>[] = []
-        promises.push(this.saveRoot())
-        await Promise.all(promises)
-    }
-
-    private async saveRoot(): Promise<void> {
-        const root = this.gameDataProvider.root
-        const item = this.gameDataStoreProvider.retrieveItem<Game>(root.id)
-        if (JSON.stringify(item.Original) !== JSON.stringify(item.current)) {
-            await this.gameJsonSaver.saveJson<Game>(item.path, item.current, gameSchema)
+        for (const item of changed) {
+            const path = item.path
+            if (path === rootPath || path === 'index.json') {
+                promises.push(this.gameJsonSaver.saveJson<Game>(path, item.data as Game, gameSchema))
+            } else if (/(^|\/)languages\//i.test(path)) {
+                promises.push(this.gameJsonSaver.saveJson<Language>(path, item.data as Language, languageSchema))
+            } else {
+                // Unknown path type for now; skip
+            }
         }
+        await Promise.all(promises)
     }
 }

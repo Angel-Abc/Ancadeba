@@ -9,14 +9,16 @@ import { BaseContent, BaseContentProps } from './content/BaseContent'
 import { PagesContent } from './content/PagesContent'
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { LanguagesContent } from './content/LanguagesContent'
+import { LanguageContent } from './content/LanguageContent'
+import { TranslationsContent } from './content/TranslationsContent'
 
 const contentPages: Record<BaseItemType, ComponentType<BaseContentProps>> = {
     'root': RootContent,
     'pages': PagesContent,
     'page': BaseContent,
     'languages': LanguagesContent,
-    'language': BaseContent,
-    'translations': BaseContent,
+    'language': LanguageContent,
+    'translations': TranslationsContent,
 }
 
 export const Content: React.FC = (): React.JSX.Element => {

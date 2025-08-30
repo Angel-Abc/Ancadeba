@@ -10,6 +10,7 @@ import { SetEditorContentPayload } from '@editor/messages/types'
 export interface IGameDataProvider {
     setGame(game: Game): void
     get root(): RootItem
+    getItemById(id: number): BaseItem | null
 }
 
 const logName = 'GameDataProvider'
@@ -75,6 +76,19 @@ export class GameDataProvider implements IGameDataProvider {
     public get root(): RootItem {
         if (this._root) return this._root
         throw new Error(this.logger.error(logName, 'No game was set to create a root'))
+    }
+
+    public getItemById(id: number): BaseItem | null {
+        if (!this._root) return null
+        const search = (item: BaseItem): BaseItem | null => {
+            if (item.id === id) return item
+            for (const c of item.children) {
+                const r = search(c)
+                if (r) return r
+            }
+            return null
+        }
+        return search(this._root)
     }
 
     private sortRoot(): void {

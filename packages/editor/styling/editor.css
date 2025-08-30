@@ -202,3 +202,16 @@ main.content {
     grid-template-columns: 200px 300px 140px 1fr;
     gap: 10px;
 }
+
+.language-files {
+    display: grid;
+    grid-template-columns: 1fr 22px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.add-language-file {
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    gap: 10px;
+}
