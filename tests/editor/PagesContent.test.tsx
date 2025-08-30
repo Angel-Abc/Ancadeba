@@ -6,6 +6,7 @@ import { PagesContent } from '../../packages/editor/app/content/PagesContent'
 import { gameDataStoreProviderToken, type IGameDataStoreProvider } from '../../packages/editor/providers/gameDataStoreProvider'
 import { gameDataProviderToken, type IGameDataProvider } from '../../packages/editor/providers/gameDataProvider'
 import { messageBusToken, type IMessageBus } from '../../packages/shared/utils/messageBus'
+import { pagesValidatorToken, PagesValidator } from '../../packages/editor/app/content/validators/pagesValidator'
 
 describe('PagesContent', () => {
   beforeEach(() => services.clear())
@@ -33,6 +34,7 @@ describe('PagesContent', () => {
     services.set(gameDataStoreProviderToken, storeProvider)
     services.set(gameDataProviderToken, dataProvider)
     services.set(messageBusToken, messageBus)
+    services.set(pagesValidatorToken, new PagesValidator())
 
     render(<PagesContent id={1} label='Pages' />)
 

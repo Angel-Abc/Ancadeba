@@ -6,6 +6,7 @@ import { LanguagesContent } from '../../packages/editor/app/content/LanguagesCon
 import { gameDataStoreProviderToken, type IGameDataStoreProvider } from '../../packages/editor/providers/gameDataStoreProvider'
 import { gameDataProviderToken, type IGameDataProvider } from '../../packages/editor/providers/gameDataProvider'
 import { messageBusToken, type IMessageBus } from '../../packages/shared/utils/messageBus'
+import { languagesValidatorToken, LanguagesValidator } from '../../packages/editor/app/content/validators/languagesValidator'
 
 describe('LanguagesContent state management', () => {
   beforeEach(() => services.clear())
@@ -34,6 +35,7 @@ describe('LanguagesContent state management', () => {
     services.set(gameDataStoreProviderToken, provider)
     services.set(gameDataProviderToken, dataProvider)
     services.set(messageBusToken, messageBus)
+    services.set(languagesValidatorToken, new LanguagesValidator())
 
     render(<LanguagesContent id={1} label='Languages' />)
 

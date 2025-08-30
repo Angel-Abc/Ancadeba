@@ -5,6 +5,7 @@ import { services } from '../app/testUtils'
 import { LanguagesContent } from '../../packages/editor/app/content/LanguagesContent'
 import { gameDataStoreProviderToken, type IGameDataStoreProvider } from '../../packages/editor/providers/gameDataStoreProvider'
 import { gameDataProviderToken, type IGameDataProvider } from '../../packages/editor/providers/gameDataProvider'
+import { languagesValidatorToken, LanguagesValidator } from '../../packages/editor/app/content/validators/languagesValidator'
 
 describe('LanguagesContent', () => {
   beforeEach(() => services.clear())
@@ -19,6 +20,7 @@ describe('LanguagesContent', () => {
     } as IGameDataProvider
     services.set(gameDataStoreProviderToken, provider)
     services.set(gameDataProviderToken, dataProvider)
+    services.set(languagesValidatorToken, new LanguagesValidator())
 
     render(<LanguagesContent id={1} label='Languages' />)
 

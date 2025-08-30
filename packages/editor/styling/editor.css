@@ -185,6 +185,11 @@ main.content {
     gap: 10px;
 }
 
+.validation-error {
+    color: #C44;
+    margin-top: 6px;
+}
+
 .pages {
     display: grid;
     grid-template-columns: 200px 22px 300px 1fr;

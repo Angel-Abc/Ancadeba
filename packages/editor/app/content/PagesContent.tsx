@@ -9,6 +9,7 @@ import { AiOutlineDelete } from 'react-icons/ai'
 import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { GAME_DEFINITION_UPDATED } from '@editor/messages/editor'
+import { IPagesValidator, pagesValidatorToken } from './validators/pagesValidator'
 
 export const PagesContent: React.FC<BaseContentProps> = ({ id, label }): React.JSX.Element => {
     const gameDataStoreProvider = useService<IGameDataStoreProvider>(gameDataStoreProviderToken)
@@ -16,13 +17,22 @@ export const PagesContent: React.FC<BaseContentProps> = ({ id, label }): React.J
     const messageBus = useService<IMessageBus>(messageBusToken)
     const [pages, setPages] = useState<Pages>([...gameDataStoreProvider.retrieve<Pages>(id)])
     const [newKey, setNewKey] = useState('')
+    const pagesValidator = useService<IPagesValidator>(pagesValidatorToken)
 
     const derivePath = (key: string): string => `pages/${key}.json`
 
+    const validateKey = (keyRaw: string): string | null => {
+        const key = keyRaw.trim()
+        if (key.length === 0) return null // no input, no error yet
+        if (!pagesValidator.isValidKey(key)) return 'Use lowercase letters, numbers or dashes'
+        if (pagesValidator.isDuplicateKey(key, pages.map(p => p.key))) return 'Page key already exists'
+        return null
+    }
+    const keyError = validateKey(newKey)
+
     const addPage = (): void => {
         const key = newKey.trim()
-        if (key === '') return
-        if (pages.some(p => p.key.toLowerCase() === key.toLowerCase())) return
+        if (keyError !== null || key === '') return
         const updated = [...pages, { key, path: derivePath(key) }]
         updated.sort((a, b) => a.key.localeCompare(b.key))
         setPages(updated)
@@ -66,11 +76,12 @@ export const PagesContent: React.FC<BaseContentProps> = ({ id, label }): React.J
                 ))}
                 <div className='add-pages'>
                     <input aria-label='new-page-key' value={newKey} onChange={e => setNewKey(e.target.value)} />
-                    <button onClick={addPage}>Add page</button>
+                    <button disabled={keyError !== null} onClick={addPage}>Add page</button>
                 </div>
+                {keyError && <div className='validation-error' role='alert'>{keyError}</div>}
             </Panel>
             <ButtonBar>
-                <button type='button' onClick={() => onApply()}>Apply</button>
+                <button type='button' disabled={keyError !== null} onClick={() => onApply()}>Apply</button>
                 <button type='button' onClick={() => onCancel()}>Cancel</button>
             </ButtonBar>
         </>

@@ -13,7 +13,8 @@
       "languages/en/start-beach.json"
     ],
     "nl": [],
-    "fr": []
+    "fr": [],
+    "de": []
   },
   "pages": {
     "demo-path": "pages/demo-path.json",
