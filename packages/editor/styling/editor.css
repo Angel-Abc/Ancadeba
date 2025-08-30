@@ -158,3 +158,16 @@ main.content {
         }
     }
 }
+
+.languages {
+    display: grid;
+    grid-template-columns: 200px 22px 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+} 
+
+.add-languages {
+    display: grid;
+    grid-template-columns: 200px 140px 1fr;
+    gap: 10px;
+}
