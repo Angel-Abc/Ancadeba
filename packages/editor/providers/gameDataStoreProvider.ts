@@ -46,8 +46,8 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
         }
         this.items.set(id, {
             path: path,
-            Original: { ...data },
-            current: { ...data }
+            Original: structuredClone(data),
+            current: structuredClone(data)
         })
         this.messageBus.postMessage({
             message: GAME_DATA_STORE_CHANGED,
@@ -103,7 +103,7 @@ export class GameDataStoreProvider implements IGameDataStoreProvider {
 
     public markSaved(): void {
         this.items.forEach(item => {
-            item.Original = item.current
+            item.Original = structuredClone(item.current)
         })
         this.isChanged = false
     }
