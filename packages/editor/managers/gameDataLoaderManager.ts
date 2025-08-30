@@ -1,6 +1,5 @@
 import { Token, token } from '@ioc/token'
 import { Game, gameSchema } from '@loader/schema/game'
-import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { CleanUp } from '@utils/types'
@@ -9,6 +8,7 @@ import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/game
 import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@editor/providers/gameDataStoreProvider'
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { Languages } from '@editor/types/storeItems'
+import { gameJsonLoaderToken, IGameJsonLoader } from '@editor/loaders/gameJsonLoader'
 
 export interface IGameDataLoaderManager {
     initialize(): void
@@ -17,22 +17,21 @@ export interface IGameDataLoaderManager {
 
 const logName = 'GameDataLoaderManager'
 export const gameDataLoaderManagerToken = token<IGameDataLoaderManager>(logName)
-export const dataUrlToken = token<string>('dataUrl')
 export const gameDataLoaderManagerDependencies: Token<unknown>[] = [
     loggerToken,
     messageBusToken,
-    dataUrlToken,
     gameDataProviderToken,
-    gameDataStoreProviderToken
+    gameDataStoreProviderToken,
+    gameJsonLoaderToken
 ]
 export class GameDataLoaderManager implements IGameDataLoaderManager {
     private cleanupFns: CleanUp[] = []
     constructor(
         private logger: ILogger,
         private messageBus: IMessageBus,
-        private dataUrl: string,
         private gameDataProvider: IGameDataProvider,
-        private gameDataStoreProvider: IGameDataStoreProvider
+        private gameDataStoreProvider: IGameDataStoreProvider,
+        private gameJsonLoader: IGameJsonLoader
     ) { }
 
     public cleanup(): void {
@@ -63,7 +62,7 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
         switch (setEditorContent.type) {
             case 'languages':
                 {
-                    const languages: Languages = Object.keys(this.gameDataProvider.Root.game.languages).sort()
+                    const languages: Languages = Object.keys(this.gameDataProvider.root.game.languages).sort()
                     this.gameDataStoreProvider.store(setEditorContent.id, languages, '')
                     break
                 }
@@ -75,12 +74,11 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
     }
 
     private async loadGameDefinition(): Promise<void> {
-        const path = `${this.dataUrl}/${rootPath}`
         let game: Game
         try {
-            game = await loadJsonResource<Game>(path, gameSchema, this.logger)
+            game = await this.gameJsonLoader.loadJson<Game>(rootPath, gameSchema)
         } catch (error) {
-            this.logger.error(logName, 'Failed to load game definition from {0}: {1}', path, error)
+            this.logger.error(logName, 'Failed to load game definition from {0}: {1}', rootPath, error)
             return
         }
         this.gameDataProvider.setGame(game)

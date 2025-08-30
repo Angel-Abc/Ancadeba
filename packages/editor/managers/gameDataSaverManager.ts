@@ -2,6 +2,7 @@ import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/game
 import { gameDataStoreProviderToken, IGameDataStoreProvider } from '@editor/providers/gameDataStoreProvider'
 import { gameJsonSaverToken, IGameJsonSaver } from '@editor/savers/gameJsonSaver'
 import { Token, token } from '@ioc/token'
+import { Game, gameSchema } from '@loader/schema/game'
 
 export interface IGameDataSaverManager {
     saveChanges(): Promise<void>
@@ -14,7 +15,7 @@ export const gameDataSaverManagerDependencies: Token<unknown>[] = [
     gameDataProviderToken,
     gameJsonSaverToken
 ]
-export class GameDataSavermanager implements IGameDataSaverManager {
+export class GameDataSaverManager implements IGameDataSaverManager {
     constructor(
         private gameDataStoreProvider: IGameDataStoreProvider,
         private gameDataProvider: IGameDataProvider,
@@ -22,23 +23,16 @@ export class GameDataSavermanager implements IGameDataSaverManager {
     ) { }
 
     public async saveChanges(): Promise<void> {
-        const items = this.gameDataStoreProvider.getChangedItems()
         const promises: Promise<void>[] = []
-       // promises.push(this.saveRoot())
-
-        await Promise.all(
-            items.map(item =>
-                fetch(`/data/${item.path}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(item.data)
-                })
-            )
-        )
+        promises.push(this.saveRoot())
         await Promise.all(promises)
     }
-/*
+
     private async saveRoot(): Promise<void> {
-        const root = this.gameDataProvider.
-    }*/
+        const root = this.gameDataProvider.root
+        const item = this.gameDataStoreProvider.retrieveItem<Game>(root.id)
+        if (JSON.stringify(item.Original) !== JSON.stringify(item.current)) {
+            this.gameJsonSaver.saveJson<Game>(item.path, item.current, gameSchema)
+        }
+    }
 }

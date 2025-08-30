@@ -9,7 +9,7 @@ import { SetEditorContentPayload } from '@editor/messages/types'
 
 export interface IGameDataProvider {
     setGame(game: Game): void
-    get Root(): RootItem
+    get root(): RootItem
 }
 
 const logName = 'GameDataProvider'
@@ -21,7 +21,7 @@ export const gameDataProviderDependencies: Token<unknown>[] = [
 ]
 export class GameDataProvider implements IGameDataProvider {
     private nextId: number = 1
-    private root: RootItem | null = null
+    private _root: RootItem | null = null
 
     constructor(
         private logger: ILogger,
@@ -37,7 +37,7 @@ export class GameDataProvider implements IGameDataProvider {
             label: game.title,
             children: []
         }
-        this.root = root
+        this._root = root
         this.addPages()
         this.addLanguages()
         this.sortRoot()
@@ -53,13 +53,13 @@ export class GameDataProvider implements IGameDataProvider {
         })
     }
 
-    public get Root(): RootItem {
-        if (this.root) return this.root
+    public get root(): RootItem {
+        if (this._root) return this._root
         throw new Error(this.logger.error(logName, 'No game was set to create a root'))
     }
 
     private sortRoot(): void {
-        this.sortItem(this.Root)
+        this.sortItem(this.root)
     }
 
     private sortItem(item: BaseItem): void {
@@ -68,7 +68,7 @@ export class GameDataProvider implements IGameDataProvider {
     }
 
     private addPages(): void {
-        const root = this.Root
+        const root = this.root
         const pagesItem: PagesItem = {
             type: 'pages',
             id: this.nextId++,
@@ -91,7 +91,7 @@ export class GameDataProvider implements IGameDataProvider {
     }
 
     private addLanguages(): void {
-        const root = this.Root
+        const root = this.root
         const languagesItem: LanguagesItem = {
             type: 'languages',
             id: this.nextId++,

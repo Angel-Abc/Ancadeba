@@ -4,8 +4,10 @@ import { UtilsBuilder } from '../../shared/builder/utilsBuilder'
 import { CoreBuilder } from './containerBuilders/coreBuilder'
 import { ManagersBuilder } from './containerBuilders/managersBuilder'
 import { ProvidersBuilder } from './containerBuilders/providersBuilder'
-import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
 import { ValidatorsBuilder } from './containerBuilders/validatorsBuilder'
+import { dataUrlToken } from './staticDataTokens'
+import { LoadersBuilder } from './containerBuilders/loadersBuilder'
+import { SaversBuilder } from './containerBuilders/saversBuilder'
 
 export interface IContainerBuilder {
     build(): Container
@@ -20,12 +22,14 @@ export class ContainerBuilder implements IContainerBuilder {
     public build(): Container {
         const logger = this.loggerFactory()
         const result = new Container(logger)
-        new UtilsBuilder(logger, () => () => {}).register(result)
         this.registerStaticData(result)
+        new UtilsBuilder(logger, () => () => {}).register(result)
         new CoreBuilder().register(result)
         new ManagersBuilder().register(result)
         new ProvidersBuilder().register(result)
         new ValidatorsBuilder().register(result)
+        new LoadersBuilder().register(result)
+        new SaversBuilder().register(result)
         return result
     }
 

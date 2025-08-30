@@ -1,4 +1,4 @@
-import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
+import { dataUrlToken } from '@editor/builders/staticDataTokens'
 import { Token, token } from '@ioc/token'
 import { loadJsonResource } from '@utils/loadJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'

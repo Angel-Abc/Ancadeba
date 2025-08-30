@@ -29,7 +29,7 @@ export class EditTreeProvider implements IEditTreeProvider {
     ) { }
 
     public get Root(): GameItemTreeNode {
-        if (this.gameDataProvider.Root === null) {
+        if (this.gameDataProvider.root === null) {
             return {
                 label: 'No data',
                 data: null,
@@ -38,7 +38,7 @@ export class EditTreeProvider implements IEditTreeProvider {
             }
         }
 
-        const rootItem = this.gameDataProvider.Root
+        const rootItem = this.gameDataProvider.root
         const root = this.getItem(rootItem)
         return root
     }

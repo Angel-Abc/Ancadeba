@@ -1,6 +1,6 @@
 {
-  "title": "Sample Game",
-  "description": "A sample game for development of the game engine",
+  "title": "Sample Game - Lost",
+  "description": "A sample game for development of the game engine!",
   "version": "1.0.0",
   "initial-data": {
     "language": "en",

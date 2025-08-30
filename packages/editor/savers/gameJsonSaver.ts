@@ -1,8 +1,8 @@
-import { dataUrlToken } from '@editor/managers/gameDataLoaderManager'
 import { Token, token } from '@ioc/token'
 import { saveJsonResource } from '@utils/saveJsonResource'
 import { ILogger, loggerToken } from '@utils/logger'
 import { ZodType } from 'zod'
+import { dataUrlToken } from '@editor/builders/staticDataTokens'
 
 export interface IGameJsonSaver {
     saveJson<T>(path: string, data: T, schema: ZodType<T>): Promise<void>
