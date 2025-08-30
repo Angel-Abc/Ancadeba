@@ -5,17 +5,18 @@ import { ComponentType, useEffect, useState } from 'react'
 import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { BaseItemType } from '@editor/types/gameItems'
 import { RootContent } from './content/RootContent'
-import { BaseContent, BaseContentProps } from './content/BaseContent'
+import { BaseContentProps } from './content/BaseContent'
 import { PagesContent } from './content/PagesContent'
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { LanguagesContent } from './content/LanguagesContent'
 import { LanguageContent } from './content/LanguageContent'
 import { TranslationsContent } from './content/TranslationsContent'
+import { PageContent } from './content/PageContent'
 
 const contentPages: Record<BaseItemType, ComponentType<BaseContentProps>> = {
     'root': RootContent,
     'pages': PagesContent,
-    'page': BaseContent,
+    'page': PageContent,
     'languages': LanguagesContent,
     'language': LanguageContent,
     'translations': TranslationsContent,

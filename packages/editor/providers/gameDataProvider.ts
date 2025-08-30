@@ -38,6 +38,7 @@ export class GameDataProvider implements IGameDataProvider {
                     const id = msg.payload as number | undefined
                     if (!this._root) return
                     if (id === undefined || id === this._root.id) {
+                        this.refreshPagesFromGame()
                         this.refreshLanguagesFromGame()
                         this.sortRoot()
                         this.messageBus.postMessage({ message: GAME_DEFINITION_UPDATED })
@@ -216,5 +217,48 @@ export class GameDataProvider implements IGameDataProvider {
             newChildren.push(langItem)
         }
         languagesItem.children = newChildren
+    }
+
+    private refreshPagesFromGame(): void {
+        const root = this.root
+        let pagesItem = root.children.find(c => c.type === 'pages') as PagesItem | undefined
+        if (!pagesItem) {
+            pagesItem = {
+                type: 'pages',
+                id: this.nextId++,
+                label: 'Pages',
+                children: []
+            }
+            root.children.push(pagesItem)
+        }
+
+        const existingPages = new Map<string, PageItem>()
+        pagesItem.children.forEach(c => {
+            const pi = c as PageItem
+            existingPages.set(pi.label, pi)
+        })
+
+        const desiredKeys = Object.keys(root.game.pages).sort()
+        const newChildren: PageItem[] = []
+        for (const key of desiredKeys) {
+            let pageItem = existingPages.get(key)
+            const path = root.game.pages[key]
+            if (!pageItem) {
+                pageItem = {
+                    type: 'page',
+                    id: this.nextId++,
+                    label: key,
+                    key: key,
+                    path: path,
+                    children: []
+                }
+            } else {
+                pageItem.label = key
+                pageItem.key = key
+                pageItem.path = path
+            }
+            newChildren.push(pageItem)
+        }
+        pagesItem.children = newChildren
     }
 }

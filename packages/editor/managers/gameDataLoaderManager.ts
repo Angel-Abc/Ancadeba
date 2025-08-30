@@ -9,8 +9,10 @@ import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@e
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { Languages, Pages } from '@editor/types/storeItems'
 import { gameJsonLoaderToken, IGameJsonLoader } from '@editor/loaders/gameJsonLoader'
-import { BaseItemType, TranslationsItem } from '@editor/types/gameItems'
+import { gameJsonSaverToken, IGameJsonSaver } from '@editor/savers/gameJsonSaver'
+import { BaseItemType, PageItem, TranslationsItem } from '@editor/types/gameItems'
 import { languageSchema, Language } from '@loader/schema/language'
+import { Page, pageSchema } from '@loader/schema/page'
 
 export interface IGameDataLoaderManager {
     initialize(): void
@@ -24,7 +26,8 @@ export const gameDataLoaderManagerDependencies: Token<unknown>[] = [
     messageBusToken,
     gameDataProviderToken,
     gameDataStoreProviderToken,
-    gameJsonLoaderToken
+    gameJsonLoaderToken,
+    gameJsonSaverToken
 ]
 
 const validBaseItemTypes: BaseItemType[] = [
@@ -53,7 +56,8 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
         private messageBus: IMessageBus,
         private gameDataProvider: IGameDataProvider,
         private gameDataStoreProvider: IGameDataStoreProvider,
-        private gameJsonLoader: IGameJsonLoader
+        private gameJsonLoader: IGameJsonLoader,
+        private gameJsonSaver: IGameJsonSaver
     ) { }
 
     public cleanup(): void {
@@ -100,6 +104,36 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
                         .sort()
                         .map(k => ({ key: k, path: this.gameDataProvider.root.game.pages[k] }))
                     this.gameDataStoreProvider.store(setEditorContent.id, pages, '')
+                    break
+                }
+            case 'page':
+                {
+                    const item = this.gameDataProvider.getItemById(setEditorContent.id) as PageItem | null
+                    if (!item || !('path' in item)) {
+                        this.logger.error(logName, 'Unable to resolve page path for id {0}', setEditorContent.id)
+                        return
+                    }
+                    const path = item.path
+                    let data: Page
+                    try {
+                        data = await this.gameJsonLoader.loadJson<Page>(path, pageSchema)
+                    } catch (error) {
+                        // Page file missing or invalid; create a default one so editing can proceed
+                        const defaultPage: Page = {
+                            id: item.key,
+                            screen: { type: 'grid', width: 12, height: 8, components: [] },
+                            inputs: []
+                        }
+                        try {
+                            await this.gameJsonSaver.saveJson<Page>(path, defaultPage, pageSchema)
+                            data = defaultPage
+                        } catch (err2) {
+                            this.logger.error(logName, 'Failed to load page from {0}: {1}', path, error)
+                            this.logger.error(logName, 'Also failed to create default page at {0}: {1}', path, err2)
+                            return
+                        }
+                    }
+                    this.gameDataStoreProvider.store(setEditorContent.id, data, path)
                     break
                 }
             case 'translations':
