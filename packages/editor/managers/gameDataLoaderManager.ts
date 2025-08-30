@@ -9,6 +9,7 @@ import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@e
 import { SetEditorContentPayload } from '@editor/messages/types'
 import { Languages } from '@editor/types/storeItems'
 import { gameJsonLoaderToken, IGameJsonLoader } from '@editor/loaders/gameJsonLoader'
+import { BaseItemType } from '@editor/types/gameItems'
 
 export interface IGameDataLoaderManager {
     initialize(): void
@@ -24,6 +25,26 @@ export const gameDataLoaderManagerDependencies: Token<unknown>[] = [
     gameDataStoreProviderToken,
     gameJsonLoaderToken
 ]
+
+const validBaseItemTypes: BaseItemType[] = [
+    'root',
+    'pages',
+    'page',
+    'languages',
+    'language',
+    'translations'
+]
+
+function isSetEditorContentPayload(payload: unknown): payload is SetEditorContentPayload {
+    if (typeof payload !== 'object' || payload === null) {
+        return false
+    }
+    const { id, label, type } = payload as Record<string, unknown>
+    return typeof id === 'number' &&
+        typeof label === 'string' &&
+        (type === null || (typeof type === 'string' && validBaseItemTypes.includes(type as BaseItemType)))
+}
+
 export class GameDataLoaderManager implements IGameDataLoaderManager {
     private cleanupFns: CleanUp[] = []
     constructor(
@@ -49,7 +70,13 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
             ),
             this.messageBus.registerMessageListener(
                 SET_EDITOR_CONTENT,
-                async message => await this.loadContent(message.payload as SetEditorContentPayload)
+                async message => {
+                    if (!isSetEditorContentPayload(message.payload)) {
+                        this.logger.error(logName, 'Invalid payload for {0}', SET_EDITOR_CONTENT)
+                        return
+                    }
+                    await this.loadContent(message.payload)
+                }
             )
         ]
     }
@@ -66,10 +93,9 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
                     this.gameDataStoreProvider.store(setEditorContent.id, languages, '')
                     break
                 }
-            default: {
-                const error = this.logger.error(logName, 'No loader for type {0}', setEditorContent.type)
-                throw new Error(error)
-            }
+            default:
+                this.logger.error(logName, 'No loader for type {0}', setEditorContent.type)
+                return
         }
     }
 
