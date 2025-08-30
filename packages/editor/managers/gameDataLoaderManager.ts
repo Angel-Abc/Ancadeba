@@ -7,7 +7,7 @@ import { GAME_DEFINITION_UPDATED, INITIALIZED, SET_EDITOR_CONTENT } from '../mes
 import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
 import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from '@editor/providers/gameDataStoreProvider'
 import { SetEditorContentPayload } from '@editor/messages/types'
-import { Languages } from '@editor/types/storeItems'
+import { Languages, Pages } from '@editor/types/storeItems'
 import { gameJsonLoaderToken, IGameJsonLoader } from '@editor/loaders/gameJsonLoader'
 import { BaseItemType } from '@editor/types/gameItems'
 
@@ -91,6 +91,14 @@ export class GameDataLoaderManager implements IGameDataLoaderManager {
                 {
                     const languages: Languages = Object.keys(this.gameDataProvider.root.game.languages).sort()
                     this.gameDataStoreProvider.store(setEditorContent.id, languages, '')
+                    break
+                }
+            case 'pages':
+                {
+                    const pages: Pages = Object.keys(this.gameDataProvider.root.game.pages)
+                        .sort()
+                        .map(k => ({ key: k, path: this.gameDataProvider.root.game.pages[k] }))
+                    this.gameDataStoreProvider.store(setEditorContent.id, pages, '')
                     break
                 }
             default:

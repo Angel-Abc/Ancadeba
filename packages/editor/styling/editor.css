@@ -164,10 +164,36 @@ main.content {
     grid-template-columns: 200px 22px 1fr;
     gap: 10px;
     margin-bottom: 10px;
-} 
+}
 
 .add-languages {
     display: grid;
     grid-template-columns: 200px 140px 1fr;
+    gap: 10px;
+}
+
+.pages {
+    display: grid;
+    grid-template-columns: 200px 22px 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.add-pages {
+    display: grid;
+    grid-template-columns: 200px 140px 1fr;
+    gap: 10px;
+}
+
+.pages {
+    display: grid;
+    grid-template-columns: 200px 22px 300px 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.add-pages {
+    display: grid;
+    grid-template-columns: 200px 300px 140px 1fr;
     gap: 10px;
 }

@@ -16,8 +16,9 @@
     "fr": []
   },
   "pages": {
-    "start-page": "pages/start-page.json",
-    "main-game": "pages/main-game.json"
+    "demo-path": "pages/demo-path.json",
+    "main-game": "pages/main-game.json",
+    "start-page": "pages/start-page.json"
   },
   "maps": {
     "start-beach": "maps/start-beach.json"
