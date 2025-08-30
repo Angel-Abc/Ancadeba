@@ -7,10 +7,13 @@ import { Panel } from '../controls/Panel'
 import { AiOutlineDelete } from 'react-icons/ai'
 import { ButtonBar } from '../controls/ButtonBar'
 import { gameDataProviderToken, IGameDataProvider } from '@editor/providers/gameDataProvider'
+import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { GAME_DEFINITION_UPDATED } from '@editor/messages/editor'
 
 export const LanguagesContent: React.FC<BaseContentProps> = ({ id, label }): React.JSX.Element => {
     const gameDataStoreProvider = useService<IGameDataStoreProvider>(gameDataStoreProviderToken)
     const gameDataProvider = useService<IGameDataProvider>(gameDataProviderToken)
+    const messageBus = useService<IMessageBus>(messageBusToken)
     const [languages, setLanguages] = useState<Languages>([...gameDataStoreProvider.retrieve<Languages>(id)])
     const [deleted, setDeleted] = useState<string[]>([])
     const [newLanguage, setNewLanguage] = useState('')
@@ -44,7 +47,8 @@ export const LanguagesContent: React.FC<BaseContentProps> = ({ id, label }): Rea
             }
         })
         gameDataStoreProvider.update(root.id, root.game)
-        // TODO: update the tree
+        // notify the tree to refresh based on updated game definition
+        messageBus?.postMessage({ message: GAME_DEFINITION_UPDATED })
     }
     const onCancel = () => {
         setLanguages([...gameDataStoreProvider.retrieve<Languages>(id)])

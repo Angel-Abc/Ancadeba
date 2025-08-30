@@ -4,7 +4,7 @@ import { Game } from '@loader/schema/game'
 import { ILogger, loggerToken } from '@utils/logger'
 import { gameDataStoreProviderToken, IGameDataStoreProvider, rootPath } from './gameDataStoreProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
-import { SET_EDITOR_CONTENT } from '@editor/messages/editor'
+import { GAME_DATA_STORE_CHANGED, GAME_DEFINITION_UPDATED, SET_EDITOR_CONTENT } from '@editor/messages/editor'
 import { SetEditorContentPayload } from '@editor/messages/types'
 
 export interface IGameDataProvider {
@@ -27,7 +27,26 @@ export class GameDataProvider implements IGameDataProvider {
         private logger: ILogger,
         private messageBus: IMessageBus,
         private gameDataStoreProvider: IGameDataStoreProvider
-    ) { }
+    ) {
+        // Keep the editor tree in sync with store updates
+        this.messageBus.registerMessageListener(
+            GAME_DATA_STORE_CHANGED,
+            (msg) => {
+                try {
+                    // When root data changes (or payload is not provided), refresh languages subtree
+                    const id = msg.payload as number | undefined
+                    if (!this._root) return
+                    if (id === undefined || id === this._root.id) {
+                        this.refreshLanguagesFromGame()
+                        this.sortRoot()
+                        this.messageBus.postMessage({ message: GAME_DEFINITION_UPDATED })
+                    }
+                } catch {
+                    // swallow to avoid noisy errors in listeners
+                }
+            }
+        )
+    }
 
     public setGame(game: Game): void {
         const root: RootItem = {
@@ -122,5 +141,66 @@ export class GameDataProvider implements IGameDataProvider {
             languagesItem.children.push(languageItem)
         }
         root.children.push(languagesItem)
+    }
+
+    private refreshLanguagesFromGame(): void {
+        const root = this.root
+        let languagesItem = root.children.find(c => c.type === 'languages') as LanguagesItem | undefined
+        if (!languagesItem) {
+            // Create languages node if missing
+            languagesItem = {
+                type: 'languages',
+                id: this.nextId++,
+                label: 'Languages',
+                children: []
+            }
+            root.children.push(languagesItem)
+        }
+
+        const existingLangs = new Map<string, LanguageItem>()
+        languagesItem.children.forEach(c => {
+            const li = c as LanguageItem
+            existingLangs.set(li.label, li)
+        })
+
+        const desiredLangs = Object.keys(root.game.languages).sort()
+        const newChildren: LanguageItem[] = []
+        for (const lan of desiredLangs) {
+            let langItem = existingLangs.get(lan)
+            if (!langItem) {
+                langItem = {
+                    type: 'language',
+                    id: this.nextId++,
+                    language: lan,
+                    label: lan,
+                    children: []
+                }
+            }
+
+            // Sync translations for this language
+            const existingTrans = new Map<string, TranslationsItem>()
+            langItem.children.forEach(t => {
+                const ti = t as TranslationsItem
+                existingTrans.set(ti.label, ti)
+            })
+            const desiredTrans = (root.game.languages[lan] || []).slice()
+            const newTransChildren: TranslationsItem[] = []
+            for (const t of desiredTrans) {
+                let ti = existingTrans.get(t)
+                if (!ti) {
+                    ti = {
+                        type: 'translations',
+                        id: this.nextId++,
+                        label: t,
+                        path: t,
+                        children: []
+                    }
+                }
+                newTransChildren.push(ti)
+            }
+            langItem.children = newTransChildren
+            newChildren.push(langItem)
+        }
+        languagesItem.children = newChildren
     }
 }

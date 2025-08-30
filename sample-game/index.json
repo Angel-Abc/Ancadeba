@@ -12,8 +12,8 @@
       "languages/en/tiles.json",
       "languages/en/start-beach.json"
     ],
-    "fr": [],
-    "nl": []
+    "nl": [],
+    "fr": []
   },
   "pages": {
     "start-page": "pages/start-page.json",
