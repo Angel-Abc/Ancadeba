@@ -40,18 +40,26 @@ export const LanguagesContent: React.FC<BaseContentProps> = ({ id, label }): Rea
 
     const onApply = () => {
         const root = gameDataProvider.root
-        deleted.forEach(d => delete(root.game.languages[d]))
+        deleted.forEach(d => delete (root.game.languages[d]))
         languages.forEach(l => {
-            if (root.game.languages[l] === undefined){
+            if (root.game.languages[l] === undefined) {
                 root.game.languages[l] = []
             }
         })
         gameDataStoreProvider.update(root.id, root.game)
+        // ensure local state reflects applied changes and clear staging
+        setLanguages(Object.keys(root.game.languages).sort())
+        setDeleted([])
+        setNewLanguage('')
         // notify the tree to refresh based on updated game definition
         messageBus?.postMessage({ message: GAME_DEFINITION_UPDATED })
     }
     const onCancel = () => {
-        setLanguages([...gameDataStoreProvider.retrieve<Languages>(id)])
+        // reset to canonical game state (may have changed after previous apply)
+        const root = gameDataProvider.root
+        setLanguages(Object.keys(root.game.languages).sort())
+        setDeleted([])
+        setNewLanguage('')
     }
 
     return (
