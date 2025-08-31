@@ -1,21 +1,21 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from './app/App'
-import { ContainerBuilder, IContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger, loggerToken } from '@utils/logger'
 import { IocProvider } from '@ioc/IocProvider'
 import { Container } from '@ioc/container'
-import { editorToken, IEditor } from './core/editor'
 import './styling/reset.css'
 import './styling/variables.css'
 import './styling/editor.css'
+import { IRootBuilder, RootBuilder } from './builders/rootBuilder'
+import { editorToken, IEditor } from './core/editor'
+import { App } from './app/App'
 
 const logName = 'main'
-const containerBuilder: IContainerBuilder = new ContainerBuilder(
+const builder: IRootBuilder = new RootBuilder(
   () => new ConsoleLogger(),
   import.meta.env.VITE_DATA_URL ?? 'http://localhost:3000/data'
 )
-const container: Container = containerBuilder.build()
+const container: Container = builder.build()
 
 const rootElement = document.getElementById('root')
 if (rootElement) {

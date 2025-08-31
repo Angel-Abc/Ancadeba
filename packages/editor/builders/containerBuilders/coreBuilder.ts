@@ -1,6 +1,5 @@
 import { Editor, editorDependencies, editorToken } from '@editor/core/editor'
 import { EditorInitializer, editorInitializerDependencies, editorInitializerToken } from '@editor/core/editorInitializer'
-import { ManagersInitializer, managersInitializerDependencies, managersInitializerToken } from '@editor/core/initializers/managersInitializer'
 import { Container } from '@ioc/container'
 
 export class CoreBuilder {
@@ -14,11 +13,6 @@ export class CoreBuilder {
             token: editorInitializerToken,
             useClass: EditorInitializer,
             deps: editorInitializerDependencies
-        })
-        container.register({
-            token: managersInitializerToken,
-            useClass: ManagersInitializer,
-            deps: managersInitializerDependencies
         })
     }
 }

@@ -1,7 +1,7 @@
-import { INITIALIZED } from '@editor/messages/editor'
 import { Token, token } from '@ioc/token'
 import { ILogger, loggerToken } from '@utils/logger'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
+import { INITIALIZED } from '@editor/messages/editor'
 import { editorInitializerToken, IEditorInitializer } from './editorInitializer'
 
 export interface IEditor {
