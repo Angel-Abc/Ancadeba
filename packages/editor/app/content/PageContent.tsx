@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { BaseContentProps } from './BaseContent'
 import { Panel } from '../controls/Panel'
 import { ButtonBar } from '../controls/ButtonBar'
@@ -9,27 +12,37 @@ import { LabeledControlContainer } from '../controls/LabeledControlContainer'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { GAME_DATA_STORE_CHANGED } from '@editor/messages/editor'
 
+const formSchema = z.object({
+  pageId: z.string().trim().min(1, 'Id is required'),
+  gridWidth: z.coerce.number().int().positive('Width must be > 0'),
+  gridHeight: z.coerce.number().int().positive('Height must be > 0')
+})
+
+type FormModel = z.infer<typeof formSchema>
+
 export const PageContent: React.FC<BaseContentProps> = ({ id, label }): React.JSX.Element => {
   const store = useService<IGameDataStoreProvider>(gameDataStoreProviderToken)
   const messageBus = useService<IMessageBus>(messageBusToken)
 
   const [page, setPage] = useState<Page | null>(store.hasData(id) ? store.retrieve<Page>(id) : null)
 
-  // local editable fields (MVP): id + grid width/height
-  const [pageId, setPageId] = useState<string>('')
-  const [gridWidth, setGridWidth] = useState<number>(1)
-  const [gridHeight, setGridHeight] = useState<number>(1)
+  const { register, handleSubmit, formState, reset } = useForm<FormModel>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { pageId: '', gridWidth: 12, gridHeight: 8 },
+    mode: 'onChange',
+    reValidateMode: 'onChange'
+  })
 
-  // Sync local state whenever the canonical page changes
+  // Sync form with canonical data
   useEffect(() => {
     if (!page) return
-    setPageId(page.id)
-    // schema currently supports only grid screens
-    if (page.screen.type === 'grid') {
-      setGridWidth(page.screen.width)
-      setGridHeight(page.screen.height)
+    const defaults: FormModel = {
+      pageId: page.id,
+      gridWidth: page.screen.type === 'grid' ? page.screen.width : 12,
+      gridHeight: page.screen.type === 'grid' ? page.screen.height : 8
     }
-  }, [page])
+    reset(defaults, { keepDirty: false })
+  }, [page, reset])
 
   // Subscribe for async load or external updates
   useEffect(() => {
@@ -48,30 +61,26 @@ export const PageContent: React.FC<BaseContentProps> = ({ id, label }): React.JS
     )
   }, [id, store, messageBus])
 
-  const idError = useMemo(() => (pageId.trim().length === 0 ? 'Id is required' : null), [pageId])
-  const widthError = useMemo(() => (gridWidth <= 0 ? 'Width must be > 0' : null), [gridWidth])
-  const heightError = useMemo(() => (gridHeight <= 0 ? 'Height must be > 0' : null), [gridHeight])
-  const hasErrors = !!(idError || widthError || heightError)
-
-  const onApply = (): void => {
-    if (!page || hasErrors) return
+  const onApply = handleSubmit((model) => {
+    if (!page) return
     const updated: Page = {
       ...page,
-      id: pageId.trim(),
+      id: model.pageId.trim(),
       screen: page.screen.type === 'grid'
-        ? { ...page.screen, width: gridWidth, height: gridHeight }
+        ? { ...page.screen, width: model.gridWidth, height: model.gridHeight }
         : page.screen
     }
     store.update(id, updated)
-  }
+  })
 
   const onCancel = (): void => {
     if (!page) return
-    setPageId(page.id)
-    if (page.screen.type === 'grid') {
-      setGridWidth(page.screen.width)
-      setGridHeight(page.screen.height)
+    const defaults: FormModel = {
+      pageId: page.id,
+      gridWidth: page.screen.type === 'grid' ? page.screen.width : 12,
+      gridHeight: page.screen.type === 'grid' ? page.screen.height : 8
     }
+    reset(defaults, { keepDirty: false })
   }
 
   return (
@@ -81,32 +90,18 @@ export const PageContent: React.FC<BaseContentProps> = ({ id, label }): React.JS
         {page && (
           <>
             <LabeledControlContainer label='Id'>
-              <input aria-label='page-id' value={pageId} onChange={e => setPageId(e.target.value)} />
-              {idError && <div className='validation-error' role='alert'>{idError}</div>}
+              <input aria-label='page-id' {...register('pageId')} />
+              {formState.errors.pageId && <div className='validation-error' role='alert'>{formState.errors.pageId.message}</div>}
             </LabeledControlContainer>
             {page.screen.type === 'grid' && (
               <>
                 <LabeledControlContainer label='Grid width'>
-                  <input
-                    aria-label='grid-width'
-                    type='number'
-                    min={1}
-                    step={1}
-                    value={gridWidth}
-                    onChange={e => setGridWidth(Number(e.target.value))}
-                  />
-                  {widthError && <div className='validation-error' role='alert'>{widthError}</div>}
+                  <input aria-label='grid-width' type='number' min={1} step={1} {...register('gridWidth', { valueAsNumber: true })} />
+                  {formState.errors.gridWidth && <div className='validation-error' role='alert'>{formState.errors.gridWidth.message}</div>}
                 </LabeledControlContainer>
                 <LabeledControlContainer label='Grid height'>
-                  <input
-                    aria-label='grid-height'
-                    type='number'
-                    min={1}
-                    step={1}
-                    value={gridHeight}
-                    onChange={e => setGridHeight(Number(e.target.value))}
-                  />
-                  {heightError && <div className='validation-error' role='alert'>{heightError}</div>}
+                  <input aria-label='grid-height' type='number' min={1} step={1} {...register('gridHeight', { valueAsNumber: true })} />
+                  {formState.errors.gridHeight && <div className='validation-error' role='alert'>{formState.errors.gridHeight.message}</div>}
                 </LabeledControlContainer>
               </>
             )}
@@ -114,10 +109,9 @@ export const PageContent: React.FC<BaseContentProps> = ({ id, label }): React.JS
         )}
       </Panel>
       <ButtonBar>
-        <button type='button' disabled={!page || hasErrors} onClick={() => onApply()}>Apply</button>
+        <button type='button' disabled={!page || !formState.isDirty || !formState.isValid} onClick={() => onApply()}>Apply</button>
         <button type='button' onClick={() => onCancel()}>Cancel</button>
       </ButtonBar>
     </>
   )
 }
-

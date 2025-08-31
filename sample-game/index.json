@@ -17,9 +17,10 @@
     "de": []
   },
   "pages": {
-    "202508310134": "pages/202508310134.json",
+    "202508310814": "pages/202508310814.json",
     "main-game": "pages/main-game.json",
-    "start-page": "pages/start-page.json"
+    "start-page": "pages/start-page.json",
+    "tt-page": "pages/tt-page.json"
   },
   "maps": {
     "start-beach": "maps/start-beach.json"
