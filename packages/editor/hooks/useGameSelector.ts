@@ -5,7 +5,7 @@ import type { GameModelState } from '@editor/model/types'
 export function useGameSelector<T>(selector: (state: GameModelState) => T): T {
   const model = useGameModel()
   return useSyncExternalStore(
-    model.subscribe,
+    (listener) => model.subscribe(listener),
     () => selector(model.get())
   )
 }
