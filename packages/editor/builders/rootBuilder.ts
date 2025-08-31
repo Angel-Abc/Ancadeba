@@ -3,6 +3,8 @@ import { UtilsBuilder } from '@utils/builder/utilsBuilder'
 import { ILogger } from '@utils/logger'
 import { dataUrlToken } from './containerBuilders/staticDataTokens'
 import { CoreBuilder } from './containerBuilders/coreBuilder'
+import { ModelsBuilder } from './containerBuilders/modelsBuilder'
+import { LoadersBuilder } from './containerBuilders/loadersBuilder'
 
 export interface IRootBuilder {
     build(): Container
@@ -20,6 +22,8 @@ export class RootBuilder implements IRootBuilder {
         this.registerStaticData(result)
         new UtilsBuilder(logger, () => () => {}).register(result)
         new CoreBuilder().register(result)
+        new ModelsBuilder().register(result)
+        new LoadersBuilder().register(result)
         return result
     }
 

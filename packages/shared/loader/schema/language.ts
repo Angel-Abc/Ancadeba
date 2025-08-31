@@ -8,3 +8,4 @@ export const languageSchema = z.object({
     translations: TranslationsSchema
 })
 export type Language = z.infer<typeof languageSchema>
+export type Translations = z.infer<typeof TranslationsSchema>
