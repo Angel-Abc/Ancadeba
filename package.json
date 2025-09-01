@@ -22,7 +22,7 @@
         "build:editor": "vite build --config packages/editor/vite.config.ts"
     },
     "devDependencies": {
-        "@eslint/js": "^9.32.0",
+        "@eslint/js": "^9.34.0",
         "@testing-library/react": "^16.0.0",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.3",
