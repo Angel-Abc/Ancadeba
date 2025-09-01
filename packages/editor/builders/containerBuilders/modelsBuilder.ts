@@ -2,6 +2,7 @@ import { GameModel, gameModelDependencies, gameModelToken } from '@editor/model/
 import { LanguagesModel, languagesModelDependencies, languagesModelToken } from '@editor/model/LanguagesModel'
 import { Container } from '@ioc/container'
 import { PagesModel, pagesModelDependencies, pagesModelToken } from '@editor/model/PagesModel'
+import { EditorModel, editorModelDependencies, editorModelToken } from '@editor/model/EditorModel'
 
 export class ModelsBuilder {
     public register(container: Container): void {
@@ -19,6 +20,11 @@ export class ModelsBuilder {
             token: pagesModelToken,
             useClass: PagesModel,
             deps: pagesModelDependencies
+        })
+        container.register({
+            token: editorModelToken,
+            useClass: EditorModel,
+            deps: editorModelDependencies
         })
     }
 }

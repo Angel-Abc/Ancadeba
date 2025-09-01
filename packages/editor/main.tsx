@@ -19,6 +19,7 @@ const container: Container = builder.build()
 
 const rootElement = document.getElementById('root')
 if (rootElement) {
+  rootElement.className = 'root'
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <IocProvider container={ container }>
