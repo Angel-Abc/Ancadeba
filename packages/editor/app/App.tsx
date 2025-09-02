@@ -3,6 +3,8 @@ import { editorModelToken, EditorState, IEditorModel } from '@editor/model/Edito
 import { useService } from '@ioc/IocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
+import { Tree } from './Tree'
+import { Content } from './Content'
 
 export const App: React.FC = (): React.JSX.Element => {
   const editorModel = useService<IEditorModel>(editorModelToken)
@@ -21,6 +23,13 @@ export const App: React.FC = (): React.JSX.Element => {
       return (<>starting ...</>)
     case EditorState.loading:
       return (<>loading ...</>)
+    case EditorState.loaded:
+      return (
+        <div className="layout">
+          <Tree />
+          <Content />
+        </div>
+      )
     default: {
       return (
         <>Unknown editor state: {editorModel.state}</>
