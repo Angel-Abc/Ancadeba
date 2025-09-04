@@ -3,7 +3,7 @@ import { editorModelToken, EditorState, IEditorModel } from '@editor/model/Edito
 import { useService } from '@ioc/IocProvider'
 import { IMessageBus, messageBusToken } from '@utils/messageBus'
 import { useEffect, useState } from 'react'
-import { Tree } from './Tree'
+import { Tree } from './tree/Tree'
 import { Content } from './Content'
 
 export const App: React.FC = (): React.JSX.Element => {
