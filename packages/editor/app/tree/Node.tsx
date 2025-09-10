@@ -6,13 +6,15 @@ export interface NodeProps {
 
 export const Node: React.FC<NodeProps> = ({ node }): React.JSX.Element => {
     return (
-        <ul>
-            <a onClick={() => node.onClick()}>{node.label}</a>
-            {node.children.map(childNode => (
-                <li key={childNode.key}>
-                    <Node node={childNode} />
-                </li>
-            ))}
-        </ul>
+        <li>
+            <button type="button" onClick={() => node.onClick()}>{node.label}</button>
+            {node.children.length > 0 && (
+                <ul>
+                    {node.children.map(childNode => (
+                        <Node key={childNode.key} node={childNode} />
+                    ))}
+                </ul>
+            )}
+        </li>
     )
 }

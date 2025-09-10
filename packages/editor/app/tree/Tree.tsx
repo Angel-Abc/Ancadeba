@@ -57,8 +57,8 @@ export const Tree: React.FC = (): React.JSX.Element => {
     }, [gameModel.title, languagesModel.languages, messageBus, refresh])
 
     return (
-        <div className='tree'>
+        <ul className='tree'>
             <Node node={root} />
-        </div>
+        </ul>
     )
 }
