@@ -9,6 +9,10 @@ export interface IGameModel {
     set description(value: string)
     get version(): string
     set version(value: string)
+    get initialLanguage(): string
+    set initialLanguage(value: string)
+    get startPageId(): string
+    set startPageId(value: string)
 }
 
 export type IGameModelSet = IGameModel & {
@@ -60,5 +64,21 @@ export class GameModel implements IGameModelSet {
     }
     public set version(value: string) {
         this.game.version = value
+    }
+
+    public get initialLanguage(): string {
+        return this.game['initial-data'].language
+    }
+
+    public set initialLanguage(value: string) {
+        this.game['initial-data'].language = value
+    }
+
+    public get startPageId(): string {
+        return this.game['initial-data']['start-page']
+    }
+
+    public set startPageId(value: string) {
+        this.game['initial-data']['start-page'] = value
     }
 }
