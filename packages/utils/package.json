@@ -13,7 +13,12 @@
         "typecheck": "tsc -p tsconfig.json",
         "lint": "echo \"(add eslint later)\""
     },
+    "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0"
+    },
     "devDependencies": {
+        "@types/node": "^24.4.0",
+        "@types/react": "^19.1.13",
         "react": "^19.1.1",
         "typescript": "^5.9.2"
     }

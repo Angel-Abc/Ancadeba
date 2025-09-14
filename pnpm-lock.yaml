@@ -10,6 +10,12 @@ importers:
 
   packages/utils:
     devDependencies:
+      '@types/node':
+        specifier: ^24.4.0
+        version: 24.4.0
+      '@types/react':
+        specifier: ^19.1.13
+        version: 19.1.13
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -18,6 +24,15 @@ importers:
         version: 5.9.2
 
 packages:
+
+  '@types/node@24.4.0':
+    resolution: {integrity: sha512-gUuVEAK4/u6F9wRLznPUU4WGUacSEBDPoC2TrBkw3GAnOLHBL45QdfHOXp1kJ4ypBGLxTOB+t7NJLpKoC3gznQ==}
+
+  '@types/react@19.1.13':
+    resolution: {integrity: sha512-hHkbU/eoO3EG5/MZkuFSKmYqPbSVk5byPFa3e7y/8TybHiLMACgI8seVYlicwk7H5K/rI2px9xrQp/C+AUDTiQ==}
+
+  csstype@3.1.3:
+    resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
@@ -28,8 +43,23 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  undici-types@7.11.0:
+    resolution: {integrity: sha512-kt1ZriHTi7MU+Z/r9DOdAI3ONdaR3M3csEaRc6ewa4f4dTvX4cQCbJ4NkEn0ohE4hHtq85+PhPSTY+pO/1PwgA==}
+
 snapshots:
+
+  '@types/node@24.4.0':
+    dependencies:
+      undici-types: 7.11.0
+
+  '@types/react@19.1.13':
+    dependencies:
+      csstype: 3.1.3
+
+  csstype@3.1.3: {}
 
   react@19.1.1: {}
 
   typescript@5.9.2: {}
+
+  undici-types@7.11.0: {}
