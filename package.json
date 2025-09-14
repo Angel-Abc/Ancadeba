@@ -1,0 +1,16 @@
+{
+    "name": "@angelabc/ancadeba",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Game Engine",
+    "keywords": [],
+    "author": "AngelAbc",
+    "license": "MPL-2.0",
+    "type": "module",
+    "packageManager": "pnpm@10.16.1",
+    "engines": {
+        "node": ">=22.0.0",
+        "pnpm": ">=10.16.1"
+    },
+    "scripts": {}
+}

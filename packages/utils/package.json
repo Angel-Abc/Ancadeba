@@ -1,0 +1,20 @@
+{
+    "name": "@angelabc/utils",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "dev": "tsc -w -p tsconfig.json",
+        "typecheck": "tsc -p tsconfig.json",
+        "lint": "echo \"(add eslint later)\""
+    },
+    "devDependencies": {
+        "react": "^19.1.1",
+        "typescript": "^5.9.2"
+    }
+}
