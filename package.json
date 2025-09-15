@@ -12,5 +12,8 @@
         "node": ">=22.0.0",
         "pnpm": ">=10.16.1"
     },
-    "scripts": {}
+    "scripts": {
+        "build": "pnpm -r --if-present --workspace-concurrency=4 --stream build",
+        "dev": "pnpm -r --if-present --workspace-concurrency=4 --stream dev"
+    }
 }
