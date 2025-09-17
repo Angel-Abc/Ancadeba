@@ -94,6 +94,9 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
+      zod:
+        specifier: ^4.1.9
+        version: 4.1.9
 
 packages:
 
@@ -1092,6 +1095,9 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  zod@4.1.9:
+    resolution: {integrity: sha512-HI32jTq0AUAC125z30E8bQNz0RQ+9Uc+4J7V97gLYjZVKRjeydPgGt6dvQzFrav7MYOUGFqqOGiHpA/fdbd0cQ==}
+
 snapshots:
 
   '@babel/code-frame@7.27.1':
@@ -2005,3 +2011,5 @@ snapshots:
   wrappy@1.0.2: {}
 
   yallist@3.1.1: {}
+
+  zod@4.1.9: {}
