@@ -5,7 +5,8 @@
     "private": true,
     "scripts": {
         "dev": "tsx watch src/index.ts",
-        "build": "tsc -b tsconfig.json"
+        "build": "tsc -b tsconfig.json",
+        "lint": "eslint --ext .ts src"
     },
     "dependencies": {
         "@angelabc/utils": "workspace:*",

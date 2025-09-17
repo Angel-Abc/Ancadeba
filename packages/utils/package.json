@@ -11,7 +11,7 @@
         "dev": "tsc -w -p tsconfig.json",
         "build": "tsc -b tsconfig.json",
         "typecheck": "tsc -p tsconfig.json",
-        "lint": "echo \"(add eslint later)\""
+        "lint": "eslint --ext .ts src"
     },
     "peerDependencies": {
         "react": "^18.2.0 || ^19.0.0"

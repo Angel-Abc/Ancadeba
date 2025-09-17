@@ -31,9 +31,8 @@ export const LogLevel = {
     debug: 0,
     info: 1,
     warning: 2,
-    error: 3,
+    error: 3
 } as const
 
 /** Type representing the value union of {@link LogLevel}. */
-// eslint-disable-next-line no-redeclare
 export type LogLevel = typeof LogLevel[keyof typeof LogLevel]

@@ -1,4 +1,4 @@
 export default function App() {
-  return <main>Ancadeba Engine</main>;
+  return <main>Ancadeba Engine</main>
 }
 
