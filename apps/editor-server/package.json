@@ -11,7 +11,8 @@
     "dependencies": {
         "@angelabc/utils": "workspace:*",
         "dotenv": "^17.2.2",
-        "express": "^5.1.0"
+        "express": "^5.1.0",
+        "express-rate-limit": "^8.1.0"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",

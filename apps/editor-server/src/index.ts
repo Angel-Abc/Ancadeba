@@ -1,4 +1,5 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 import path from 'node:path'
 import fs from 'node:fs'
 import dotenv from 'dotenv'
@@ -8,12 +9,54 @@ import { fileURLToPath } from 'node:url'
 const currentDir = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(currentDir, '..')
 const repoRoot = path.resolve(packageRoot, '..', '..')
+
 dotenv.config({ path: path.join(repoRoot, '.env') })
 
 const app = express()
 
 const port = Number(process.env.PORT ?? 3001)
 const gameDirEnv = (process.env.GAME_DIR ?? '').trim()
+
+const readPositiveInteger = (
+  value: string | undefined,
+  fallback: number,
+  label: string
+): number => {
+  if (!value) {
+    return fallback
+  }
+
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.warn(
+      `[editor-server] Invalid ${label}. Using fallback value: ${fallback}`
+    )
+    return fallback
+  }
+
+  return parsed
+}
+
+const limiterWindowMs = readPositiveInteger(
+  process.env.RATE_LIMIT_WINDOW_MS,
+  60_000,
+  'RATE_LIMIT_WINDOW_MS'
+)
+const limiterMaxRequests = readPositiveInteger(
+  process.env.RATE_LIMIT_MAX,
+  120,
+  'RATE_LIMIT_MAX'
+)
+
+const rateLimiter = rateLimit({
+  windowMs: limiterWindowMs,
+  max: limiterMaxRequests,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ error: 'Too many requests' })
+  }
+})
 
 if (!gameDirEnv) {
   throw new TypeError(
@@ -30,6 +73,8 @@ if (!fs.existsSync(baseDir) || !fs.statSync(baseDir).isDirectory()) {
   console.error(`[editor-server] GAME_DIR path is invalid: ${baseDir}`)
   process.exit(1)
 }
+
+app.use(rateLimiter)
 
 // Serve only JSON files from configured directory
 // Express 5 uses path-to-regexp v8; use a RegExp for *.json
