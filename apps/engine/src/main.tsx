@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { ContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger } from '@angelabc/utils/utils'
+import { Container, IocProvider } from '@angelabc/utils/ioc'
 
-const _containerBuilder = new ContainerBuilder(
+const containerBuilder = new ContainerBuilder(
   new ConsoleLogger()
 )
+const container: Container = containerBuilder.build()
 
 const root = document.getElementById('root')
 
@@ -16,6 +18,9 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <IocProvider container={container}>
+      <App />
+    </IocProvider>
   </StrictMode>
 )
+
