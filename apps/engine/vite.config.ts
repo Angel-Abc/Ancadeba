@@ -8,6 +8,37 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const repoRoot = path.resolve(__dirname, '..', '..')
+const tsconfigPath = path.resolve(repoRoot, 'tsconfig.base.json')
+
+type Tsconfig = {
+  compilerOptions?: {
+    paths?: Record<string, string[]>
+  }
+}
+
+const trimStarSuffix = (value: string) => value.endsWith('/*') ? value.slice(0, -2) : value
+
+const loadTsconfigAliases = (): Record<string, string> => {
+  if (!fs.existsSync(tsconfigPath)) {
+    return {}
+  }
+
+  const source = fs.readFileSync(tsconfigPath, 'utf8')
+  const config = JSON.parse(source) as Tsconfig
+  const paths = config.compilerOptions?.paths ?? {}
+
+  return Object.entries(paths).reduce<Record<string, string>>((acc, [key, values]) => {
+    const firstPath = values[0]
+    if (!firstPath) {
+      return acc
+    }
+
+    acc[trimStarSuffix(key)] = path.resolve(repoRoot, trimStarSuffix(firstPath))
+    return acc
+  }, {})
+}
+
+const alias = loadTsconfigAliases()
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, repoRoot, '')
@@ -48,7 +79,9 @@ export default defineConfig(({ mode }) => {
           }
         ]
       })
-    ]
+    ],
+    resolve: {
+      alias
+    }
   }
 })
-
