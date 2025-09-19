@@ -1,5 +1,6 @@
 import { Container } from '@angelabc/utils/ioc'
-import { ILogger } from '@angelabc/utils/utils'
+import { ILogger, UtilsBuilder } from '@angelabc/utils/utils'
+import { CoreBuilder } from './containers/coreBuilder'
 
 export interface IContainerBuilder {
     build(): Container
@@ -11,7 +12,10 @@ export class ContainerBuilder implements IContainerBuilder {
     ){}
 
     public build(): Container {
-        // no code here yet
+        const result = new Container(this.logger)
+        new UtilsBuilder().register(this.logger, result)
+        new CoreBuilder().register(result)
+        return result
     }
 }
 
