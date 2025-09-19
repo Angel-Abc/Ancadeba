@@ -4,11 +4,13 @@
  */
 import { LogLevel } from './types'
 
-const env = (
-    globalThis.process?.env ??
-    (import.meta as unknown as { env?: Record<string, string | undefined> }).env ??
-    {}
-) as Record<string, string | undefined>
+const processEnv = (globalThis.process?.env ?? {}) as Record<string, string | undefined>
+const importMetaEnv = ((import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {}) as Record<string, string | undefined>
+// Merge both sources so bundler stubs don't mask browser env values
+const env = {
+    ...importMetaEnv,
+    ...processEnv
+}
 const currentLevelName = (env.LOG_LEVEL ?? env.VITE_LOG_LEVEL ?? 'info').toLowerCase()
 const currentLevel: LogLevel = (LogLevel as Record<string, LogLevel>)[currentLevelName] ?? LogLevel.info
 
@@ -118,3 +120,4 @@ export function fatalError(categoryOrMessage: string, messageOrArg?: unknown, ..
     const params = messageOrArg === undefined ? args : [messageOrArg, ...args]
     throw new Error(logMessage(LogLevel.error, undefined, categoryOrMessage, ...params))
 }
+

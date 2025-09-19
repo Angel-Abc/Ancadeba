@@ -64,6 +64,7 @@ export default defineConfig(({ mode }) => {
   const sourcePattern = `${gameDirPrefix}/**/*`
 
   return {
+    envDir: repoRoot,
     plugins: [
       react(),
       viteStaticCopy({
@@ -85,3 +86,4 @@ export default defineConfig(({ mode }) => {
     }
   }
 })
+
