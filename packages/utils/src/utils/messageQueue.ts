@@ -101,10 +101,13 @@ export class MessageQueue implements IMessageQueue {
     public enableEmptyQueueAfterPost(): void {
         if (this.emptyQueueAfterPost === 0) {
             this.logger.warn(logName, 'enableEmptyQueueAfterPost called but counter is already zero')
-        } else {
-            this.emptyQueueAfterPost = this.emptyQueueAfterPost - 1
+            void this.emptyQueue()
+            return
         }
-        void this.emptyQueue()
+        this.emptyQueueAfterPost = this.emptyQueueAfterPost - 1
+        if (this.emptyQueueAfterPost === 0) {
+            void this.emptyQueue()
+        }
     }
 
     /**
@@ -148,6 +151,8 @@ export class MessageQueue implements IMessageQueue {
         this.queue = []
         this.emptyingQueue = false
         this.emptyQueueAfterPost = 0
+        this.handler = null
+        this.onQueueEmpty = null
     }
 
     public setOnQueueEmpty(onQueueEmpty: OnQueueEmptyType): void {
