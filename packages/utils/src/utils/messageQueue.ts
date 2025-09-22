@@ -6,8 +6,10 @@
  * after posts.
  */
 import type { Message } from './types'
-import type { ILogger } from './logger'
+import { loggerToken, type ILogger } from './logger'
 import { Token, token } from '../ioc'
+
+type OnQueueEmptyType = (() => void) | null
 
 /**
  * Contract for message queues used by the {@link MessageBus}.
@@ -39,11 +41,14 @@ export interface IMessageQueue {
      * Reset the queue to its initial state.
      */
     shutDown(): void
+    setOnQueueEmpty(onQueueEmpty: OnQueueEmptyType): void
 }
 
 const logName = 'MessageQueue'
 export const messageQueueToken = token<IMessageQueue>(logName)
-export const messageQueueDependencies: Token<unknown>[] = []
+export const messageQueueDependencies: Token<unknown>[] = [
+    loggerToken
+]
 /**
  * Default implementation of {@link IMessageQueue} maintaining an in-memory
  * FIFO queue of messages.
@@ -53,16 +58,12 @@ export class MessageQueue implements IMessageQueue {
     private emptyingQueue = false
     private emptyQueueAfterPost = 0
     private handler: ((message: Message) => void | Promise<void>) | null = null
-    private readonly onQueueEmpty: () => void
-    private readonly logger: ILogger
+    private onQueueEmpty: OnQueueEmptyType = null
 
     /**
      * Create a new message queue.
-     * @param onQueueEmpty - Callback invoked after the queue has been fully drained.
      */
-    constructor(onQueueEmpty: () => void, logger: ILogger) {
-        this.onQueueEmpty = onQueueEmpty
-        this.logger = logger
+    constructor(private logger: ILogger) {
     }
 
     /**
@@ -131,10 +132,12 @@ export class MessageQueue implements IMessageQueue {
         if (this.queue.length > 0) {
             return this.emptyQueue()
         }
-        try {
-            this.onQueueEmpty()
-        } catch (err) {
-            this.logger.warn(logName, 'Error handling empty queue: {0}', err)
+        if (this.onQueueEmpty) {
+            try {
+                this.onQueueEmpty()
+            } catch (err) {
+                this.logger.warn(logName, 'Error handling empty queue: {0}', err)
+            }
         }
     }
 
@@ -145,6 +148,10 @@ export class MessageQueue implements IMessageQueue {
         this.queue = []
         this.emptyingQueue = false
         this.emptyQueueAfterPost = 0
+    }
+
+    public setOnQueueEmpty(onQueueEmpty: OnQueueEmptyType): void {
+        this.onQueueEmpty = onQueueEmpty
     }
 }
 
