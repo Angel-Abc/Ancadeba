@@ -83,12 +83,13 @@ export class Container implements IContainer {
    *   is detected.
    */
   resolve<T>(t: Token<T>): T {
-    if (this.singletons.has(t)) return this.singletons.get(t) as T
-
-    const p = this.providers.get(t) ?? this.parent?.getProvider(t)
-    if (!p) {
+    const provider = this.providers.get(t) as Provider<T> | undefined
+    if (!provider) {
+      if (this.parent) return this.parent.resolve(t)
       throw new Error(this.logger.error(logName, 'No provider for {0}', describeToken(t)))
     }
+
+    if (this.singletons.has(t)) return this.singletons.get(t) as T
 
     if (this.resolving.includes(t)) {
       const path = [...this.resolving, t].map(describeToken).join(' -> ')
@@ -97,18 +98,14 @@ export class Container implements IContainer {
 
     this.resolving.push(t)
     try {
-      const instance = this.instantiate(p)
-      const scope = (p as {scope?: Scope}).scope ?? 'singleton'
-      const isValueFunction = 'useValue' in p && isFunction((p as {useValue: T}).useValue)
+      const instance = this.instantiate(provider)
+      const scope = (provider as {scope?: Scope}).scope ?? 'singleton'
+      const isValueFunction = 'useValue' in provider && isFunction((provider as {useValue: T}).useValue)
       if (scope === 'singleton' && !isValueFunction) this.singletons.set(t, instance)
       return instance as T
     } finally {
       this.resolving.pop()
     }
-  }
-
-  private getProvider<T>(t: Token<T>): Provider<T> | undefined {
-    return (this.providers.get(t) ?? this.parent?.getProvider(t)) as Provider<T> | undefined
   }
 
   /**
