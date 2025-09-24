@@ -1,6 +1,7 @@
 import { Container } from '@angelabc/utils/ioc'
 import { GameEngine, gameEngineDependencies, gameEngineToken } from '../../core/gameEngine'
-import { GameStateProvider, gameStateProviderDependencies, gameStateProviderToken } from '../../core/gameState'
+import { EngineInitializer, engineInitializerDependencies, engineInitializerToken } from '../../core/initializers/engineInitializer'
+import { ProvidersInitializer, providersInitializerDependencies, providersInitializerToken } from '../../core/initializers/providersInitializer'
 
 export class CoreBuilder {
     public register(container: Container): void {
@@ -10,9 +11,14 @@ export class CoreBuilder {
             deps: gameEngineDependencies
         })
         container.register({
-            token: gameStateProviderToken,
-            useClass: GameStateProvider,
-            deps: gameStateProviderDependencies
+            token: engineInitializerToken,
+            useClass: EngineInitializer,
+            deps: engineInitializerDependencies
+        })
+        container.register({
+            token: providersInitializerToken,
+            useClass: ProvidersInitializer,
+            deps: providersInitializerDependencies
         })
     }
 }
