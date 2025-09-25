@@ -1,11 +1,13 @@
 import { Token, token } from '@angelabc/utils/ioc'
 import { GameState } from '../core/gameState'
 import { IMessageBus, messageBusToken } from '@angelabc/utils/utils/messageBus'
+import type { CleanUp } from '@angelabc/utils/utils/types'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START, MESSAGE_ENGINE_STATE_CHANGED } from '../core/messages'
 
 export interface IGameStateProvider {
     get GameState(): GameState
     initialize(): void
+    dispose(): void
 }
 
 const logName = 'GameStateProvider'
@@ -13,11 +15,17 @@ export const gameStateProviderToken = token<IGameStateProvider>(logName)
 export const gameStateProviderDependencies: Token<unknown>[] = [
     messageBusToken
 ]
-export class GameStateProvider {
+export class GameStateProvider implements IGameStateProvider {
     private gameState: GameState = GameState.init
+    private cleanUps: CleanUp[] = []
     constructor(
         private messageBus: IMessageBus
     ) {
+    }
+
+    private releaseListeners(): void {
+        this.cleanUps.forEach(cleanUp => cleanUp())
+        this.cleanUps = []
     }
 
     private set GameState(value: GameState) {
@@ -35,11 +43,18 @@ export class GameStateProvider {
     }
 
     public initialize(): void {
-        this.messageBus.registerMessageListener(MESSAGE_ENGINE_LOADING,
-            () => { this.GameState = GameState.loading }
-        )
-        this.messageBus.registerMessageListener(MESSAGE_ENGINE_START,
-            () => { this.GameState = GameState.running }
-        )
+        this.releaseListeners()
+        this.cleanUps = [
+            this.messageBus.registerMessageListener(MESSAGE_ENGINE_LOADING,
+                () => { this.GameState = GameState.loading }
+            ),
+            this.messageBus.registerMessageListener(MESSAGE_ENGINE_START,
+                () => { this.GameState = GameState.running }
+            )
+        ]
+    }
+
+    public dispose(): void {
+        this.releaseListeners()
     }
 }
