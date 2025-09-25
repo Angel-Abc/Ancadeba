@@ -1,7 +1,6 @@
 import { Token, token } from '@angelabc/utils/ioc'
 import { GameState } from '../core/gameState'
-import { IMessageBus, messageBusToken } from '@angelabc/utils/utils/messageBus'
-import type { CleanUp } from '@angelabc/utils/utils/types'
+import { IMessageBus, messageBusToken, type CleanUp } from '@angelabc/utils/utils'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START, MESSAGE_ENGINE_STATE_CHANGED } from '../core/messages'
 
 export interface IGameStateProvider {

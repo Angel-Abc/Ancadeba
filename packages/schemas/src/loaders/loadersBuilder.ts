@@ -1,5 +1,5 @@
 import { Container } from '@angelabc/utils/ioc'
-import { GameLoader, gameLoaderDependencies, gameLoaderToken } from '../../loaders/gameLoader'
+import { GameLoader, gameLoaderDependencies, gameLoaderToken } from './gameLoader'
 
 export class LoadersBuilder {
     public register(container: Container): void {

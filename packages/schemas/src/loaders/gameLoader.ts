@@ -1,7 +1,6 @@
 import { Token, token } from '@angelabc/utils/ioc'
-import { loadJsonResource } from '@angelabc/utils/utils/loadJsonResource'
-import { Game, gameSchema } from '@angelabc/schemas/game'
-import { ILogger, loggerToken } from '@angelabc/utils/utils'
+import { Game, gameSchema } from '@angelabc/schemas/schemas'
+import { ILogger, loggerToken, loadJsonResource } from '@angelabc/utils/utils'
 
 export interface IGameLoader {
     loadGameData(): Promise<void>

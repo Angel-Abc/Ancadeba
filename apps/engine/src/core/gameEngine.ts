@@ -1,9 +1,8 @@
 import { Token, token } from '@angelabc/utils/ioc'
-import { ILogger, loggerToken } from '@angelabc/utils/utils'
-import { IMessageBus, messageBusToken } from '@angelabc/utils/utils/messageBus'
+import { ILogger, loggerToken, IMessageBus, messageBusToken } from '@angelabc/utils/utils'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from './messages'
 import { engineInitializerToken, IEngineInitializer } from './initializers/engineInitializer'
-import { gameLoaderToken, IGameLoader } from '../loaders/gameLoader'
+import { gameLoaderToken, IGameLoader } from '@angelabc/schemas/loaders'
 
 export interface IGameEngine {
     start(): Promise<void>

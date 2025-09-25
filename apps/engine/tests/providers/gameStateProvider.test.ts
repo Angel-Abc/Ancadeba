@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { IMessageBus } from '@angelabc/utils/utils/messageBus'
-import type { CleanUp, Message } from '@angelabc/utils/utils/types'
+import type { IMessageBus, CleanUp, Message } from '@angelabc/utils/utils'
 import { GameStateProvider } from '../../src/providers/gameStateProvider'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../src/core/messages'
 

@@ -2,7 +2,7 @@ import { Container } from '@angelabc/utils/ioc'
 import { ILogger, UtilsBuilder } from '@angelabc/utils/utils'
 import { CoreBuilder } from './containers/coreBuilder'
 import { ProvidersBuilder } from './containers/providersBuilder'
-import { LoadersBuilder } from './containers/loadersBuilder'
+import { LoadersBuilder } from '@angelabc/schemas/loaders'
 
 export interface IContainerBuilder {
     build(): Container
