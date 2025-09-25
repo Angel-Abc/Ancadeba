@@ -6,7 +6,7 @@ import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START, MESSAGE_ENGINE_STATE_CHAN
 
 export interface IGameStateProvider {
     get GameState(): GameState
-    initialize(): void
+    initialize(): void | Promise<void>
     dispose(): void
 }
 

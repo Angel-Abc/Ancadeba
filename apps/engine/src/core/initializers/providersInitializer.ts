@@ -2,7 +2,7 @@ import { Token, token } from '@angelabc/utils/ioc'
 import { gameStateProviderToken, IGameStateProvider } from '../../providers/gameStateProvider'
 
 export interface IProvidersInitializer {
-    initialize(): void
+    initialize(): Promise<void>
 }
 
 const logName = 'ProvidersInitializers'
@@ -15,7 +15,7 @@ export class ProvidersInitializer implements IProvidersInitializer {
         private gameStateProvider: IGameStateProvider
     ) { }
 
-    public initialize(): void {
-        this.gameStateProvider.initialize()
+    public async initialize(): Promise<void> {
+        await this.gameStateProvider.initialize()
     }
 }
