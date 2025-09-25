@@ -7,7 +7,7 @@ const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 export default defineConfig({
     test: {
         environment: 'node',
-        include: ['src/**/__tests__/**/*.test.ts']
+        include: ['tests/**/*.test.ts']
     },
     resolve: {
         alias: {
@@ -15,3 +15,4 @@ export default defineConfig({
         }
     }
 })
+

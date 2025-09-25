@@ -3,9 +3,9 @@ import type { Mock } from 'vitest'
 import type { ILogger } from '@angelabc/utils/utils'
 import type { IMessageBus } from '@angelabc/utils/utils/messageBus'
 import type { Message } from '@angelabc/utils/utils/types'
-import { GameEngine } from '../gameEngine'
-import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../messages'
-import type { IEngineInitializer } from '../initializers/engineInitializer'
+import { GameEngine } from '../../src/core/gameEngine'
+import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../src/core/messages'
+import type { IEngineInitializer } from '../../src/core/initializers/engineInitializer'
 
 const createLogger = (): ILogger => ({
     debug: vi.fn(() => ''),
@@ -83,3 +83,4 @@ describe('GameEngine', () => {
         })
     })
 })
+

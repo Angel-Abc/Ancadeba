@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { IMessageBus } from '@angelabc/utils/utils/messageBus'
 import type { CleanUp, Message } from '@angelabc/utils/utils/types'
-import { GameStateProvider } from '../gameStateProvider'
-import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../core/messages'
+import { GameStateProvider } from '../../src/providers/gameStateProvider'
+import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../src/core/messages'
 
 interface TestBusContext {
     messageBus: IMessageBus
@@ -78,3 +78,4 @@ describe('GameStateProvider', () => {
         expect(cleanUps[1]).toHaveBeenCalledTimes(1)
     })
 })
+
