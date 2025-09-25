@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ILogger } from '../logger'
-import type { Message } from '../types'
-import { MessageQueue } from '../messageQueue'
+import type { ILogger } from '../../src/utils/logger'
+import type { Message } from '../../src/utils/types'
+import { MessageQueue } from '../../src/utils/messageQueue'
 
 class TestLogger implements ILogger {
     public warnings: Array<{ category: string, message: string, args: unknown[] }> = []
@@ -90,4 +90,5 @@ describe('MessageQueue', () => {
         expect(internals.queue.length).toBe(0)
     })
 })
+
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { Container } from '../container'
-import { token } from '../token'
-import type { ILogger } from '../../utils/logger'
+import { Container } from '../../src/ioc/container'
+import { token } from '../../src/ioc/token'
+import type { ILogger } from '../../src/utils/logger'
 
 class TestLogger implements ILogger {
     public debug(_category: string, message: string, ..._args: unknown[]): string {
@@ -65,3 +65,4 @@ describe('Container', () => {
         expect(factoryCalls).toBe(2)
     })
 })
+
