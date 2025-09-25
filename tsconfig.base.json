@@ -16,6 +16,9 @@
     "paths": {
       "@angelabc/utils/*": [
         "packages/utils/src/*"
+      ],
+      "@angelabc/schemas/*": [
+        "packages/schemas/src/*"
       ]
     }
   }

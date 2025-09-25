@@ -1,5 +1,5 @@
 {
-    "name": "@angelabc/utils",
+    "name": "@angelabc/schemas",
     "version": "0.1.0",
     "type": "module",
     "main": "./dist/index.js",
@@ -11,17 +11,13 @@
         "dev": "tsc -w -p tsconfig.json",
         "build": "tsc -b tsconfig.json",
         "typecheck": "tsc -p tsconfig.json",
-        "lint": "eslint --ext .ts src",
-        "test": "vitest run"
+        "lint": "eslint --ext .ts src"
     },
-    "peerDependencies": {
-        "react": "^18.2.0 || ^19.0.0"
+    "dependencies": {
+        "zod": "^4.1.11"
     },
     "devDependencies": {
         "@types/node": "^24.5.2",
-        "@types/react": "^19.1.13",
-        "react": "^19.1.1",
-        "typescript": "^5.9.2",
-        "vitest": "^3.2.4"
+        "typescript": "^5.9.2"
     }
 }
