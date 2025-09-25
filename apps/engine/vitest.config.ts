@@ -11,7 +11,8 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@angelabc/utils': resolve(workspaceRoot, 'packages/utils/src')
+            '@angelabc/utils': resolve(workspaceRoot, 'packages/utils/src'),
+            '@angelabc/schemas': resolve(workspaceRoot, 'packages/schemas/src')
         }
     }
 })

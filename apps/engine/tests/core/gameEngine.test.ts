@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+﻿import { describe, expect, it, vi } from 'vitest'
 import type { Mock } from 'vitest'
 import type { ILogger, IMessageBus, Message } from '@angelabc/utils/utils'
+import type { IGameLoader } from '@angelabc/schemas/loaders'
 import { GameEngine } from '../../src/core/gameEngine'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../src/core/messages'
 import type { IEngineInitializer } from '../../src/core/initializers/engineInitializer'
@@ -28,6 +29,17 @@ const createMessageBus = (): { messageBus: IMessageBus, postMessage: Mock<[Messa
     return { messageBus, postMessage }
 }
 
+const createGameLoader = (): { gameLoader: IGameLoader, loadGameData: Mock<[], Promise<void>> } => {
+    const loadGameData = vi.fn(async () => {}) as Mock<[], Promise<void>>
+
+    return {
+        gameLoader: {
+            loadGameData: loadGameData as unknown as IGameLoader['loadGameData']
+        },
+        loadGameData
+    }
+}
+
 describe('GameEngine', () => {
     it('awaits asynchronous engine initializer before broadcasting ENGINE-START', async () => {
         let resolveInitializer: () => void = () => {}
@@ -39,12 +51,14 @@ describe('GameEngine', () => {
 
         const logger = createLogger()
         const { messageBus, postMessage } = createMessageBus()
-        const engine = new GameEngine(logger, messageBus, initializer)
+        const { gameLoader, loadGameData } = createGameLoader()
+        const engine = new GameEngine(logger, messageBus, initializer, gameLoader)
 
         const startPromise = engine.start()
 
         expect(initializer.initialize).toHaveBeenCalledTimes(1)
         expect(postMessage).not.toHaveBeenCalled()
+        expect(loadGameData).not.toHaveBeenCalled()
 
         resolveInitializer()
         await startPromise
@@ -53,6 +67,7 @@ describe('GameEngine', () => {
             message: MESSAGE_ENGINE_LOADING,
             payload: null
         })
+        expect(loadGameData).toHaveBeenCalledTimes(1)
         expect(postMessage).toHaveBeenNthCalledWith(2, {
             message: MESSAGE_ENGINE_START,
             payload: null
@@ -66,11 +81,13 @@ describe('GameEngine', () => {
 
         const logger = createLogger()
         const { messageBus, postMessage } = createMessageBus()
-        const engine = new GameEngine(logger, messageBus, initializer)
+        const { gameLoader, loadGameData } = createGameLoader()
+        const engine = new GameEngine(logger, messageBus, initializer, gameLoader)
 
         await engine.start()
 
         expect(initializer.initialize).toHaveBeenCalledTimes(1)
+        expect(loadGameData).toHaveBeenCalledTimes(1)
         expect(postMessage).toHaveBeenNthCalledWith(1, {
             message: MESSAGE_ENGINE_LOADING,
             payload: null
@@ -81,4 +98,3 @@ describe('GameEngine', () => {
         })
     })
 })
-
