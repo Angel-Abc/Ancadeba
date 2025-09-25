@@ -25,7 +25,7 @@ export class GameEngine implements IGameEngine {
 
     public async start(): Promise<void> {
         this.logger.debug(logName, 'Starting game engine')
-        this.engineInitializer.initialize()
+        await this.engineInitializer.initialize()
         this.messageBus.postMessage({
             message: MESSAGE_ENGINE_LOADING,
             payload: null

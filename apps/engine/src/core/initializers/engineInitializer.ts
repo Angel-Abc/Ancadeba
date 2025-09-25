@@ -2,7 +2,7 @@ import { Token, token } from '@angelabc/utils/ioc'
 import { IProvidersInitializer, providersInitializerToken } from './providersInitializer'
 
 export interface IEngineInitializer {
-    initialize(): void
+    initialize(): Promise<void>
 }
 
 const logName = 'engineInitializer'
@@ -15,7 +15,7 @@ export class EngineInitializer implements IEngineInitializer {
         private providersInitializer: IProvidersInitializer
     ) { }
 
-    public initialize(): void {
-        this.providersInitializer.initialize()
+    public async initialize(): Promise<void> {
+        await this.providersInitializer.initialize()
     }
 }
