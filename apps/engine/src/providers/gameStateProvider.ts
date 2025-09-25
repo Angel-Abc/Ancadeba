@@ -16,7 +16,7 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
     messageBusToken
 ]
 export class GameStateProvider implements IGameStateProvider {
-    private gameState: GameState = GameState.init
+    private gameState: GameState = 'init'
     private cleanUps: CleanUp[] = []
     constructor(
         private messageBus: IMessageBus
@@ -29,7 +29,7 @@ export class GameStateProvider implements IGameStateProvider {
     }
 
     private set GameState(value: GameState) {
-        if (value !== this.gameState){
+        if (value !== this.gameState) {
             this.gameState = value
             this.messageBus.postMessage({
                 message: MESSAGE_ENGINE_STATE_CHANGED,
@@ -46,10 +46,10 @@ export class GameStateProvider implements IGameStateProvider {
         this.releaseListeners()
         this.cleanUps = [
             this.messageBus.registerMessageListener(MESSAGE_ENGINE_LOADING,
-                () => { this.GameState = GameState.loading }
+                () => { this.GameState = 'loading' }
             ),
             this.messageBus.registerMessageListener(MESSAGE_ENGINE_START,
-                () => { this.GameState = GameState.running }
+                () => { this.GameState = 'running' }
             )
         ]
     }

@@ -1,15 +1,24 @@
 import { Token, token } from '@angelabc/utils/ioc'
+import { loadJsonResource } from '@angelabc/utils/utils/loadJsonResource'
+import { Game, gameSchema } from '@angelabc/schemas/game'
+import { ILogger, loggerToken } from '@angelabc/utils/utils'
 
 export interface IGameLoader {
-    loadGameData(): void
+    loadGameData(): Promise<void>
 }
 
 const logName = 'GameLoader'
 export const gameLoaderToken = token<IGameLoader>(logName)
-export const gameLoaderDependencies: Token<unknown>[] = []
+export const gameLoaderDependencies: Token<unknown>[] = [
+    loggerToken
+]
 export class GameLoader implements IGameLoader {
-    constructor() { }
-    public loadGameData(): void {
+    constructor(
+        private logger: ILogger
+    ) { }
 
+    public async loadGameData(): Promise<void> {
+        const gameMetaData = await loadJsonResource<Game>('/data/game.json', gameSchema, this.logger)
+        this.logger.debug(logName, 'Loaded game meta data {0}', gameMetaData)
     }
 }

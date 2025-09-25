@@ -138,6 +138,9 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.5.2)(tsx@4.20.5)
+      zod:
+        specifier: ^4.1.11
+        version: 4.1.11
 
 packages:
 

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App'
+import App from './app/App'
 import { ContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger } from '@angelabc/utils/utils'
 import { Container, IocProvider } from '@angelabc/utils/ioc'
