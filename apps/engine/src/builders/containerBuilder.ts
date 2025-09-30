@@ -2,7 +2,8 @@ import { Container } from '@angelabc/utils/ioc'
 import { ILogger, UtilsBuilder } from '@angelabc/utils/utils'
 import { CoreBuilder } from './containers/coreBuilder'
 import { ProvidersBuilder } from './containers/providersBuilder'
-import { LoadersBuilder } from '@angelabc/schemas/loaders'
+import { SchemasBuilder } from '@angelabc/schemas/loaders'
+import { LoadersBuilder } from './containers/loadersBuilder'
 
 export interface IContainerBuilder {
     build(): Container
@@ -18,6 +19,7 @@ export class ContainerBuilder implements IContainerBuilder {
         new UtilsBuilder().register(this.logger, result)
         new CoreBuilder().register(result)
         new ProvidersBuilder().register(result)
+        new SchemasBuilder().register(result)
         new LoadersBuilder().register(result)
         return result
     }

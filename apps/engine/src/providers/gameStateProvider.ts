@@ -5,6 +5,9 @@ import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START, MESSAGE_ENGINE_STATE_CHAN
 
 export interface IGameStateProvider {
     get GameState(): GameState
+}
+
+export interface IGameStateProviderInternal extends IGameStateProvider {
     initialize(): void | Promise<void>
     dispose(): void
 }
@@ -14,7 +17,7 @@ export const gameStateProviderToken = token<IGameStateProvider>(logName)
 export const gameStateProviderDependencies: Token<unknown>[] = [
     messageBusToken
 ]
-export class GameStateProvider implements IGameStateProvider {
+export class GameStateProvider implements IGameStateProviderInternal {
     private gameState: GameState = 'init'
     private cleanUps: CleanUp[] = []
     constructor(

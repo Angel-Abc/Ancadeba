@@ -2,7 +2,7 @@ import { Token, token } from '@angelabc/utils/ioc'
 import { ILogger, loggerToken, IMessageBus, messageBusToken } from '@angelabc/utils/utils'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from './messages'
 import { engineInitializerToken, IEngineInitializer } from './initializers/engineInitializer'
-import { gameLoaderToken, IGameLoader } from '@angelabc/schemas/loaders'
+import { gameDataProviderToken, IGameDataProviderInternal } from '../providers/gameDataProvider'
 
 export interface IGameEngine {
     start(): Promise<void>
@@ -14,7 +14,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
     loggerToken,
     messageBusToken,
     engineInitializerToken,
-    gameLoaderToken
+    gameDataProviderToken
 ]
 
 export class GameEngine implements IGameEngine {
@@ -22,7 +22,7 @@ export class GameEngine implements IGameEngine {
         private logger: ILogger,
         private messageBus: IMessageBus,
         private engineInitializer: IEngineInitializer,
-        private gameLoader: IGameLoader
+        private gameDataProvider: IGameDataProviderInternal
     ) { }
 
     public async start(): Promise<void> {
@@ -32,7 +32,7 @@ export class GameEngine implements IGameEngine {
             message: MESSAGE_ENGINE_LOADING,
             payload: null
         })
-        await this.gameLoader.loadGameData()
+        await this.gameDataProvider.load()
         this.messageBus.postMessage({
             message: MESSAGE_ENGINE_START,
             payload: null

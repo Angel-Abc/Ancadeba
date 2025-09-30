@@ -1,2 +1,2 @@
-export * from './gameLoader'
-export * from './loadersBuilder'
+export * from './jsonDataLoader'
+export * from './schemasBuilder'
