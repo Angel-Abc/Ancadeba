@@ -1,7 +1,9 @@
 ﻿import { describe, expect, it, vi } from 'vitest'
 import type { Mock } from 'vitest'
 import type { ILogger, IMessageBus, Message } from '@angelabc/utils/utils'
-import type { IGameLoader } from '@angelabc/schemas/loaders'
+import type { GameData } from '../../src/loaders/data/gameData'
+import type { IGameDataLoader } from '../../src/loaders/gameDataLoader'
+import { GameDataProvider } from '../../src/providers/gameDataProvider'
 import { GameEngine } from '../../src/core/gameEngine'
 import { MESSAGE_ENGINE_LOADING, MESSAGE_ENGINE_START } from '../../src/core/messages'
 import type { IEngineInitializer } from '../../src/core/initializers/engineInitializer'
@@ -29,15 +31,14 @@ const createMessageBus = (): { messageBus: IMessageBus, postMessage: Mock<[Messa
     return { messageBus, postMessage }
 }
 
-const createGameLoader = (): { gameLoader: IGameLoader, loadGameData: Mock<[], Promise<void>> } => {
-    const loadGameData = vi.fn(async () => {}) as Mock<[], Promise<void>>
-
-    return {
-        gameLoader: {
-            loadGameData: loadGameData as unknown as IGameLoader['loadGameData']
-        },
-        loadGameData
+const createGameDataProvider = (): { gameDataProvider: GameDataProvider, loadGameData: Mock<[], Promise<GameData>> } => {
+    const loadGameData = vi.fn(async () => ({ name: 'test-game' })) as Mock<[], Promise<GameData>>
+    const gameDataLoader: IGameDataLoader = {
+        loadGameData: loadGameData as unknown as IGameDataLoader['loadGameData']
     }
+    const gameDataProvider = new GameDataProvider(gameDataLoader)
+
+    return { gameDataProvider, loadGameData }
 }
 
 describe('GameEngine', () => {
@@ -51,8 +52,8 @@ describe('GameEngine', () => {
 
         const logger = createLogger()
         const { messageBus, postMessage } = createMessageBus()
-        const { gameLoader, loadGameData } = createGameLoader()
-        const engine = new GameEngine(logger, messageBus, initializer, gameLoader)
+        const { gameDataProvider, loadGameData } = createGameDataProvider()
+        const engine = new GameEngine(logger, messageBus, initializer, gameDataProvider)
 
         const startPromise = engine.start()
 
@@ -81,8 +82,8 @@ describe('GameEngine', () => {
 
         const logger = createLogger()
         const { messageBus, postMessage } = createMessageBus()
-        const { gameLoader, loadGameData } = createGameLoader()
-        const engine = new GameEngine(logger, messageBus, initializer, gameLoader)
+        const { gameDataProvider, loadGameData } = createGameDataProvider()
+        const engine = new GameEngine(logger, messageBus, initializer, gameDataProvider)
 
         await engine.start()
 
