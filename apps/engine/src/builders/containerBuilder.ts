@@ -19,7 +19,7 @@ export class ContainerBuilder implements IContainerBuilder {
         new UtilsBuilder().register(this.logger, result, document)
         new CoreBuilder().register(result)
         new ProvidersBuilder().register(result)
-        new SchemasBuilder().register(result)
+        new SchemasBuilder().register(result, '/data')
         new LoadersBuilder().register(result)
         return result
     }

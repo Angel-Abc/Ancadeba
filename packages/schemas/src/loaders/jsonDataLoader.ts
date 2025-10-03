@@ -6,6 +6,11 @@ export interface IJsonDataLoader {
     loadJsonData(): Promise<JsonData>
 }
 
+export interface IJsonDataLoaderConfiguration {
+    rootPath: string
+}
+export const jsonDataLoaderConfigurationToken = token<IJsonDataLoaderConfiguration>('JsonDataLoaderConfiguration')
+
 export type JsonData = {
     meta: Game
 }
@@ -13,16 +18,18 @@ export type JsonData = {
 const logName = 'JsonDataLoader'
 export const jsonDataLoaderToken = token<IJsonDataLoader>(logName)
 export const jsonDataLoaderDependencies: Token<unknown>[] = [
-    loggerToken
+    loggerToken,
+    jsonDataLoaderConfigurationToken
 ]
 export class JsonDataLoader implements IJsonDataLoader {
     constructor(
-        private logger: ILogger
+        private logger: ILogger,
+        private config: IJsonDataLoaderConfiguration
     ) { }
 
     public async loadJsonData(): Promise<JsonData> {
         const result = {
-            meta: await loadJsonResource<Game>('/data/game.json', gameSchema, this.logger)
+            meta: await loadJsonResource<Game>(`${this.config.rootPath}/game.json`, gameSchema, this.logger)
         }
         this.logger.debug(logName, 'Loaded game data {0}', result)
         return result
