@@ -16,7 +16,7 @@ export class ContainerBuilder implements IContainerBuilder {
 
     public build(): Container {
         const result = new Container(this.logger)
-        new UtilsBuilder().register(this.logger, result)
+        new UtilsBuilder().register(this.logger, result, document)
         new CoreBuilder().register(result)
         new ProvidersBuilder().register(result)
         new SchemasBuilder().register(result)
