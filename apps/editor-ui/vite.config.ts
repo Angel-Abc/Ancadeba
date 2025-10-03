@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 type Tsconfig = {
@@ -39,10 +39,18 @@ const loadTsconfigAliases = (): Record<string, string> => {
 
 const alias = loadTsconfigAliases()
 
-export default defineConfig({
-  envDir: repoRoot,
-  plugins: [react()],
-  resolve: {
-    alias
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, repoRoot, '')
+  const editorServerPort = env.VITE_EDITOR_SERVER_PORT ?? env.PORT ?? '3001'
+
+  return {
+    envDir: repoRoot,
+    plugins: [react()],
+    resolve: {
+      alias
+    },
+    define: {
+      'import.meta.env.VITE_EDITOR_SERVER_PORT': JSON.stringify(editorServerPort)
+    }
   }
 })

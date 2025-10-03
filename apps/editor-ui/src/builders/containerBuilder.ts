@@ -10,13 +10,14 @@ export interface IContainerBuilder {
 
 export class ContainerBuilder implements IContainerBuilder {
   constructor(
-    private logger: ILogger
+    private logger: ILogger,
+    private schemasBaseUrl: string
   ) { }
 
   public build(): Container {
     const container = new Container(this.logger)
     new UtilsBuilder().register(this.logger, container, document)
-    new SchemasBuilder().register(container, 'http://localhost:3001')
+    new SchemasBuilder().register(container, this.schemasBaseUrl)
     new ProvidersBuilder().register(container)
     new CoreBuilder().register(container)
     return container

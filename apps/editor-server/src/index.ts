@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { type RequestHandler } from 'express'
 import rateLimit from 'express-rate-limit'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -35,6 +35,59 @@ const readPositiveInteger = (
   }
 
   return parsed
+}
+
+const readAllowedOrigins = (value: string | undefined): string[] => {
+  if (!value) {
+    return ['http://localhost:5173']
+  }
+
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0)
+}
+
+const allowedOrigins = readAllowedOrigins(process.env.EDITOR_UI_ORIGINS)
+const allowAnyOrigin = allowedOrigins.includes('*')
+const allowedOriginSet = new Set(allowAnyOrigin ? [] : allowedOrigins)
+
+const corsMiddleware: RequestHandler = (req, res, next) => {
+  const requestOrigin = req.headers.origin
+
+  if (!requestOrigin) {
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(204)
+      return
+    }
+
+    next()
+    return
+  }
+
+  const originAllowed = allowAnyOrigin || allowedOriginSet.has(requestOrigin)
+
+  if (!originAllowed) {
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(403)
+      return
+    }
+
+    next()
+    return
+  }
+
+  res.header('Access-Control-Allow-Origin', allowAnyOrigin ? '*' : requestOrigin)
+  res.header('Vary', 'Origin')
+  res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204)
+    return
+  }
+
+  next()
 }
 
 const limiterWindowMs = readPositiveInteger(
@@ -74,6 +127,7 @@ if (!fs.existsSync(baseDir) || !fs.statSync(baseDir).isDirectory()) {
   process.exit(1)
 }
 
+app.use(corsMiddleware)
 app.use(rateLimiter)
 
 // Serve only JSON files from configured directory

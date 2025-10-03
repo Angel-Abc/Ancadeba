@@ -5,9 +5,11 @@ import { ContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger } from '@angelabc/utils/utils'
 import { Container, IocProvider } from '@angelabc/utils/ioc'
 import { editorApplicationToken, IEditorApplication } from './core/editorApplication'
+import { resolveEditorServerBaseUrl } from './config/editorServerConfig'
 
 const containerBuilder = new ContainerBuilder(
-  new ConsoleLogger()
+  new ConsoleLogger(),
+  resolveEditorServerBaseUrl()
 )
 const container: Container = containerBuilder.build()
 
