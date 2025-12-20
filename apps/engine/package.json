@@ -1,0 +1,25 @@
+{
+  "name": "@ancadeba/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node ../../scripts/copy-game-resources.mjs",
+    "typecheck": "tsc -b --noEmit",
+    "clean": "rm -rf dist node_modules/.vite",
+    "copy-resources": "node ../../scripts/copy-game-resources.mjs"
+  },
+  "dependencies": {
+    "@ancadeba/schemas": "workspace:*",
+    "@ancadeba/utils": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "vite": "^7.1.4",
+    "@vitejs/plugin-react": "^5.0.0"
+  }
+}
