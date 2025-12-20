@@ -1,0 +1,24 @@
+{
+  "folders": [{ "path": ".", "name": "ancadeba" }],
+  "settings": {
+    "files.readonlyInclude": {
+      "**/docs/**": true
+    },
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "cSpell.words": ["ancadeba"],
+    "prettier.singleQuote": true,
+    "prettier.semi": false
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "markdownlint.markdownlint",
+      "streetsidesoftware.code-spell-checker"
+    ]
+  }
+}
