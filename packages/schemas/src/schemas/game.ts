@@ -7,4 +7,4 @@ export const gameSchema = BaseSchema.extend({
   version: z.string(),
 })
 
-export type GameSchemaType = typeof gameSchema
+export type Game = z.infer<typeof gameSchema>

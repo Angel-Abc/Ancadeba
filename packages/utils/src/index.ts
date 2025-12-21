@@ -3,6 +3,7 @@ export * from './checks/typeChecks'
 export * from './ioc/types'
 export * from './ioc/token'
 export * from './ioc/container'
+export * from './json/loadJsonResource'
 
 /**
  * Asserts that a value is never reached.
