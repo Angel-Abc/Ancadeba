@@ -1,11 +1,11 @@
-import express from 'express'
+import express, { type Application } from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 
 import { invariant } from '@ancadeba/utils'
 import { LevelSchema } from '@ancadeba/schemas'
 
-const app = express()
+const app: Application = express()
 app.use(express.json())
 
 /**
