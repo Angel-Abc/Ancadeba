@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { invariant, isDefined, assertNever } from '../index'
+import { invariant, isDefined, assertNever } from '../../index'
 
-describe('utils', () => {
+describe('helpers', () => {
   describe('invariant', () => {
     it('does not throw when condition is true', () => {
       // Arrange
