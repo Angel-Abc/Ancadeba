@@ -1,5 +1,6 @@
 export * from './logger/types'
 export * from './logger/console'
+export * from './messages/bus'
 export * from './checks/typeChecks'
 export * from './ioc/types'
 export * from './ioc/token'

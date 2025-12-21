@@ -1,5 +1,5 @@
 import { Token, token } from '../ioc/token'
-import { ILogger } from '../logger/types'
+import { ILogger, loggerToken } from '../logger/types'
 
 export type EventPayload = unknown
 
@@ -13,7 +13,7 @@ export interface IMessageBus {
 
 const logName = 'utils/messages/Bus'
 export const messageBusToken = token<IMessageBus>(logName)
-export const messageBusDependencies: Token<unknown>[] = []
+export const messageBusDependencies: Token<unknown>[] = [loggerToken]
 export class MessageBus implements IMessageBus {
   private readonly subscribers: Map<
     string,
