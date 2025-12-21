@@ -8,7 +8,8 @@
     "build": "vite build && node ../../scripts/copy-game-resources.mjs",
     "typecheck": "tsc -b --noEmit",
     "clean": "rm -rf dist node_modules/.vite",
-    "copy-resources": "node ../../scripts/copy-game-resources.mjs"
+    "copy-resources": "node ../../scripts/copy-game-resources.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ancadeba/schemas": "workspace:*",

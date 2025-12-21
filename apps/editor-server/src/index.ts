@@ -54,8 +54,12 @@ app.get('/api/levels', (_req, res) => {
   res.json(levels)
 })
 
-const port = Number(process.env.PORT ?? 3001)
-app.listen(port, () => {
-  console.log(`Editor server listening on port ${port}`)
-  console.log(`Game resources: ${GAME_RESOURCES_DIR}`)
-})
+export { app }
+
+if (process.env.NODE_ENV !== 'test') {
+  const port = Number(process.env.PORT ?? 3001)
+  app.listen(port, () => {
+    console.log(`Editor server listening on port ${port}`)
+    console.log(`Game resources: ${GAME_RESOURCES_DIR}`)
+  })
+}
