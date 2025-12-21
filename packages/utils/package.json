@@ -16,5 +16,8 @@
     "typecheck": "tsc -b --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
   }
 }

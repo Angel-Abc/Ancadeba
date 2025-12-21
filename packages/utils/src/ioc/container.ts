@@ -3,7 +3,7 @@ import { ILogger } from '../logger/types'
 import { describeToken, Token } from './token'
 import { IContainer, Provider, Scope } from './types'
 
-const logName: string = 'ioc/container'
+const logName: string = 'utils/ioc/container'
 
 export class Container implements IContainer {
   private providers = new Map<Token<unknown>, Provider<unknown>>()

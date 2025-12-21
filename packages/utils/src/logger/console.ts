@@ -77,4 +77,7 @@ export class ConsoleLogger implements ILogger {
   error(category: string, message: string, ...args: unknown[]): string {
     return logMessage(LogLevel.error, category, message, ...args)
   }
+  fatal(category: string, message: string, ...args: unknown[]): never {
+    throw new Error(logMessage(LogLevel.error, category, message, ...args))
+  }
 }

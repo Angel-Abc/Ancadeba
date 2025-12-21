@@ -1,14 +1,15 @@
 import { token } from '../ioc/token'
 
-const logName = 'logger/types'
+const logName = 'utils/logger/types'
+export const loggerToken = token<ILogger>(logName)
 
 export interface ILogger {
   debug(category: string, message: string, ...args: unknown[]): string
   info(category: string, message: string, ...args: unknown[]): string
   warn(category: string, message: string, ...args: unknown[]): string
   error(category: string, message: string, ...args: unknown[]): string
+  fatal(category: string, message: string, ...args: unknown[]): never
 }
-export const loggerToken = token<ILogger>(logName)
 
 export const LogLevel = {
   debug: 0,
