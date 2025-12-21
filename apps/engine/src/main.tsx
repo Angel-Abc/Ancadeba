@@ -1,9 +1,9 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { EngineApp } from './EngineApp'
 import { ContainerBuilder } from './builders/containerBuilder'
 import { ConsoleLogger } from '@ancadeba/utils'
 import { IocProvider } from '@ancadeba/ui'
+import { App } from './App/App'
 
 const resourcesDataPath = import.meta.env.DEV
   ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`
@@ -26,7 +26,7 @@ const root = createRoot(rootContainer)
 root.render(
   <React.StrictMode>
     <IocProvider container={container}>
-      <EngineApp />
+      <App />
     </IocProvider>
   </React.StrictMode>
 )
