@@ -1,13 +1,8 @@
 import express, { type Application } from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
-import z from 'zod'
 import { invariant } from '@ancadeba/utils'
-import { gameSchema } from '@ancadeba/schemas'
-
-export const categorySchemaValidators: Record<string, any> = {
-  game: (json: string) => gameSchema.parse(json),
-}
+import { loadJsonResource } from './loader'
 
 const app: Application = express()
 app.use(express.json())
@@ -30,13 +25,17 @@ app.use((req, _res, next) => {
   next()
 })
 
+app.get('/api/game', (_req, res) => {
+  var resourcePath = `${GAME_RESOURCES_DIR}/game.json`
+  const result = loadJsonResource(resourcePath, 'game')
+  res.json(result)
+})
+
 app.get('/api/:category/:resource', (req, res) => {
   const { category, resource } = req.params
   const resourcePath = `${GAME_RESOURCES_DIR}/${category}/${resource}.json`
-  const jsonFile = fs.readFileSync(resourcePath, 'utf-8')
-  const object: any = JSON.parse(jsonFile)
-  z.parse(categorySchemaValidators[category], object)
-  res.json(object)
+  const result = loadJsonResource(resourcePath, category)
+  res.json(result)
 })
 
 if (process.env.NODE_ENV !== 'test') {
