@@ -17,4 +17,5 @@ export const LogLevel = {
   warning: 2,
   error: 3,
 } as const
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel]

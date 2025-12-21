@@ -1,4 +1,4 @@
-import { Token, token } from '../ioc/token'
+import { token } from '../ioc/token'
 
 export interface IDomHelper {
   setTitle(title: string): void
