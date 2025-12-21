@@ -91,6 +91,9 @@ importers:
       '@ancadeba/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
+      '@ancadeba/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@ancadeba/utils':
         specifier: workspace:*
         version: link:../../packages/utils
