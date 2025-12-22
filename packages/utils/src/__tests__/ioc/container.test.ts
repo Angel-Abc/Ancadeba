@@ -39,6 +39,28 @@ describe('ioc/container', () => {
     expect(first).not.toBe(second)
   })
 
+  it('registers multiple providers with registerAll', () => {
+    // Arrange
+    class ServiceA {}
+    class ServiceB {}
+    const tokenA = token<ServiceA>('test/service/register-all/a')
+    const tokenB = token<ServiceB>('test/service/register-all/b')
+    const container = new Container(createLogger())
+
+    container.registerAll([
+      { token: tokenA, useClass: ServiceA },
+      { token: tokenB, useClass: ServiceB },
+    ])
+
+    // Act
+    const resolvedA = container.resolve(tokenA)
+    const resolvedB = container.resolve(tokenB)
+
+    // Assert
+    expect(resolvedA).toBeInstanceOf(ServiceA)
+    expect(resolvedB).toBeInstanceOf(ServiceB)
+  })
+
   it('throws on circular dependencies', () => {
     // Arrange
     class ServiceA {}

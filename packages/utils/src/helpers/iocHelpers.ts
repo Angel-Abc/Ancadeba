@@ -12,17 +12,19 @@ export function registerServices(
   logger: ILogger,
   document: Document
 ): void {
-  container.register({
-    token: loggerToken,
-    useValue: logger,
-  })
-  container.register({
-    token: messageBusToken,
-    useClass: MessageBus,
-    deps: messageBusDependencies,
-  })
-  container.register({
-    token: domHelperToken,
-    useFactory: () => new DomHelper(document),
-  })
+  container.registerAll([
+    {
+      token: loggerToken,
+      useValue: logger,
+    },
+    {
+      token: messageBusToken,
+      useClass: MessageBus,
+      deps: messageBusDependencies,
+    },
+    {
+      token: domHelperToken,
+      useFactory: () => new DomHelper(document),
+    },
+  ])
 }
