@@ -10,6 +10,7 @@ describe('json/loadJsonResource', () => {
   })
 
   it('loads and parses JSON with the provided schema', async () => {
+    // Arrange
     const logger = createLogger()
     const url = 'https://example.test/resource.json'
     const schema = z.object({ name: z.string() })
@@ -19,13 +20,16 @@ describe('json/loadJsonResource', () => {
     }))
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch)
 
+    // Act
     const result = await loadJsonResource(url, schema, logger)
 
+    // Assert
     expect(result).toEqual({ name: 'Test Resource' })
     expect(fetchMock).toHaveBeenCalledWith(url)
   })
 
   it('logs and throws when the schema validation fails', async () => {
+    // Arrange
     const logger = createSpyLogger()
     const url = 'https://example.test/invalid.json'
     const schema = z.object({ name: z.string() })
@@ -35,12 +39,16 @@ describe('json/loadJsonResource', () => {
     }))
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch)
 
-    await expect(loadJsonResource(url, schema, logger)).rejects.toThrow('fatal')
+    // Act
+    const loadPromise = loadJsonResource(url, schema, logger)
 
+    // Assert
+    await expect(loadPromise).rejects.toThrow('fatal')
     expect(logger.fatal).toHaveBeenCalled()
   })
 
   it('logs and throws when the fetch fails', async () => {
+    // Arrange
     const logger = createSpyLogger()
     const url = 'https://example.test/failed.json'
     const schema = z.object({ name: z.string() })
@@ -50,12 +58,16 @@ describe('json/loadJsonResource', () => {
     })
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch)
 
-    await expect(loadJsonResource(url, schema, logger)).rejects.toThrow('fatal')
+    // Act
+    const loadPromise = loadJsonResource(url, schema, logger)
 
+    // Assert
+    await expect(loadPromise).rejects.toThrow('fatal')
     expect(logger.fatal).toHaveBeenCalled()
   })
 
   it('logs and throws when parsing JSON fails', async () => {
+    // Arrange
     const logger = createSpyLogger()
     const url = 'https://example.test/parse-error.json'
     const schema = z.object({ name: z.string() })
@@ -67,8 +79,11 @@ describe('json/loadJsonResource', () => {
     }))
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch)
 
-    await expect(loadJsonResource(url, schema, logger)).rejects.toThrow('fatal')
+    // Act
+    const loadPromise = loadJsonResource(url, schema, logger)
 
+    // Assert
+    await expect(loadPromise).rejects.toThrow('fatal')
     expect(logger.fatal).toHaveBeenCalled()
   })
 })

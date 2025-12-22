@@ -8,7 +8,7 @@ describe('GET /api/levels', () => {
   let tempDir: string
 
   beforeEach(() => {
-    // Arrange: create temporary game-resources directory
+    // Arrange
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'game-resources-'))
 
     const levelsDir = path.join(tempDir, 'levels')
@@ -41,9 +41,10 @@ describe('GET /api/levels', () => {
   })
 
   it('returns all levels', async () => {
-    // Act
+    // Arrange
     const { app } = await import('../index')
 
+    // Act
     const response = await request(app).get('/api/levels')
 
     // Assert

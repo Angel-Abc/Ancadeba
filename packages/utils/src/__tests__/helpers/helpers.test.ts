@@ -7,18 +7,22 @@ describe('helpers', () => {
       // Arrange
       const condition = true
 
-      // Act / Assert
-      expect(() => invariant(condition, 'should not throw')).not.toThrow()
+      // Act
+      const checkInvariant = () => invariant(condition, 'should not throw')
+
+      // Assert
+      expect(checkInvariant).not.toThrow()
     })
 
     it('throws when condition is false', () => {
       // Arrange
       const condition = false
 
-      // Act / Assert
-      expect(() => invariant(condition, 'invariant failed')).toThrow(
-        'invariant failed'
-      )
+      // Act
+      const checkInvariant = () => invariant(condition, 'invariant failed')
+
+      // Assert
+      expect(checkInvariant).toThrow('invariant failed')
     })
   })
 
@@ -40,8 +44,11 @@ describe('helpers', () => {
       // Arrange
       const value = 'unexpected' as never
 
-      // Act / Assert
-      expect(() => assertNever(value)).toThrow()
+      // Act
+      const throwError = () => assertNever(value)
+
+      // Assert
+      expect(throwError).toThrow()
     })
   })
 })

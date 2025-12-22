@@ -10,6 +10,7 @@ import { createLogger } from '../testUtils'
 
 describe('messages/bus', () => {
   it('resolves MessageBus with its dependencies', () => {
+    // Arrange
     const logger = createLogger()
     const container = new Container(logger)
 
@@ -20,12 +21,15 @@ describe('messages/bus', () => {
       deps: messageBusDependencies,
     })
 
+    // Act
     const resolved = container.resolve(messageBusToken)
 
+    // Assert
     expect(resolved).toBeInstanceOf(MessageBus)
   })
 
   it('publishes payloads to subscribers', () => {
+    // Arrange
     const logger = createLogger()
     const bus = new MessageBus(logger)
 
@@ -34,14 +38,17 @@ describe('messages/bus', () => {
       received.push(payload)
     })
 
+    // Act
     bus.publish('test:event', { id: 1 })
     unsubscribe()
     bus.publish('test:event', { id: 2 })
 
+    // Assert
     expect(received).toEqual([{ id: 1 }])
   })
 
   it('delivers payloads to multiple subscribers', () => {
+    // Arrange
     const logger = createLogger()
     const bus = new MessageBus(logger)
 
@@ -55,13 +62,16 @@ describe('messages/bus', () => {
       second.push(payload)
     })
 
+    // Act
     bus.publish('test:multi', { id: 1 })
 
+    // Assert
     expect(first).toEqual([{ id: 1 }])
     expect(second).toEqual([{ id: 1 }])
   })
 
   it('isolates payloads by event name', () => {
+    // Arrange
     const logger = createLogger()
     const bus = new MessageBus(logger)
 
@@ -75,8 +85,10 @@ describe('messages/bus', () => {
       second.push(payload)
     })
 
+    // Act
     bus.publish('test:one', { id: 1 })
 
+    // Assert
     expect(first).toEqual([{ id: 1 }])
     expect(second).toEqual([])
   })
