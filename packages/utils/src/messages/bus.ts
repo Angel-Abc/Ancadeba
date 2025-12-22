@@ -24,6 +24,10 @@ export class MessageBus implements IMessageBus {
 
   publish<Event extends string>(event: Event, payload?: EventPayload): void {
     const eventSubscribers = this.subscribers.get(event)
+    this.logger.debug(
+      logName,
+      'Publishing event: {0} to {1} subscribers`, event, eventSubscribers?.size ?? 0'
+    )
     if (eventSubscribers) {
       for (const callback of eventSubscribers) {
         callback(payload)
