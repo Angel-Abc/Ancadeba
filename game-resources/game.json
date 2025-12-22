@@ -5,5 +5,9 @@
   "version": "1.0.0",
   "description": "Ancadeba Game Resources",
   "createdAt": "2024-06-01T12:00:00Z",
-  "updatedAt": "2024-06-15T12:00:00Z"
+  "updatedAt": "2024-06-15T12:00:00Z",
+  "initialState": {
+    "scene": "start-screen"
+  },
+  "scenes": ["start-screen", "navigate-world", "battle"]
 }

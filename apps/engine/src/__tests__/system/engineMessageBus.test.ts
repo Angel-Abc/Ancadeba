@@ -72,4 +72,20 @@ describe('system/engineMessageBus', () => {
     // Assert
     expect(messageBus.subscribe).toHaveBeenCalledWith('RAW/EVENT', handler)
   })
+
+  it('returns the unsubscribe function from the underlying bus', () => {
+    // Arrange
+    const unsubscribe = vi.fn()
+    const messageBus: IMessageBus = {
+      publish: vi.fn(),
+      subscribe: vi.fn(() => unsubscribe),
+    }
+    const bus = new EngineMessageBus(messageBus)
+
+    // Act
+    const result = bus.subscribe(CORE_MESSAGES.GAME_ENGINE_STARTED, vi.fn())
+
+    // Assert
+    expect(result).toBe(unsubscribe)
+  })
 })

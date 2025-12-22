@@ -5,6 +5,10 @@ export const gameSchema = BaseSchema.extend({
   title: z.string(),
   description: z.string(),
   version: z.string(),
+  initialState: z.object({
+    scene: z.string(),
+  }),
+  scenes: z.array(z.string()),
 })
 
 export type Game = z.infer<typeof gameSchema>

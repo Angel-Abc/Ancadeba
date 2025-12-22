@@ -12,7 +12,7 @@ export async function loadJsonResource<T>(
 
   let response: Response
   try {
-    response = await fetch(url)
+    response = await fetch(url, { cache: 'no-cache' })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.fatal(
