@@ -20,6 +20,11 @@ import {
   gameStateStorageDependencies,
   gameStateStorageToken,
 } from '../gameState.ts/storage'
+import {
+  ResourceDataProvider,
+  resourceDataProviderDependencies,
+  resourceDataProviderToken,
+} from '../resourceData/provider'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -48,6 +53,12 @@ export function registerServices(container: Container): void {
       token: gameStateStorageToken,
       useClass: GameStateStorage,
       deps: gameStateStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: resourceDataProviderToken,
+      useClass: ResourceDataProvider,
+      deps: resourceDataProviderDependencies,
       scope: 'singleton',
     },
   ])
