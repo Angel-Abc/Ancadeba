@@ -5,6 +5,7 @@ import { IocProvider } from '@ancadeba/ui'
 import { StartupContainer } from './App/StartupContainer'
 import { gameEngineToken, IGameEngine } from './core/gameEngine'
 import { ContainerBuilder } from './builders/containerBuilder'
+import './styling/engine.css'
 
 const resourcesDataPath = import.meta.env.DEV
   ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`

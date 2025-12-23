@@ -1,0 +1,12 @@
+@import './reset.css';
+@import './variables.css';
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-size: var(--ge-font-size);
+  font-family: var(--ge-font-family);
+  color: var(--ge-font-color);
+  background-color: var(--ge-background-color);
+}
