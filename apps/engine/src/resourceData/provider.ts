@@ -1,5 +1,5 @@
-import { IJsonConfiguration, jsonConfigurationToken } from '@ancadeba/schemas'
 import { Token, token } from '@ancadeba/utils'
+import { IResourceDataStorage, resourceDataStorageToken } from './storage'
 
 export interface IResourceDataProvider {
   get assetsUrl(): string
@@ -8,11 +8,11 @@ export interface IResourceDataProvider {
 const logName = 'engine/resourceData/provider'
 export const resourceDataProviderToken = token<IResourceDataProvider>(logName)
 export const resourceDataProviderDependencies: Token<unknown>[] = [
-  jsonConfigurationToken,
+  resourceDataStorageToken,
 ]
 export class ResourceDataProvider implements IResourceDataProvider {
-  constructor(private readonly jsonConfiguration: IJsonConfiguration) {}
+  constructor(private readonly resourceDataStorage: IResourceDataStorage) {}
   get assetsUrl(): string {
-    return `${this.jsonConfiguration.rootPath}/assets`
+    return `${this.resourceDataStorage.rootPath}/assets`
   }
 }

@@ -25,6 +25,11 @@ import {
   resourceDataProviderDependencies,
   resourceDataProviderToken,
 } from '../resourceData/provider'
+import {
+  ResourceDataStorage,
+  resourceDataStorageDependencies,
+  resourceDataStorageToken,
+} from '../resourceData/storage'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -59,6 +64,11 @@ export function registerServices(container: Container): void {
       token: resourceDataProviderToken,
       useClass: ResourceDataProvider,
       deps: resourceDataProviderDependencies,
+    },
+    {
+      token: resourceDataStorageToken,
+      useClass: ResourceDataStorage,
+      deps: resourceDataStorageDependencies,
       scope: 'singleton',
     },
   ])
