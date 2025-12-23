@@ -2,7 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConsoleLogger } from '@ancadeba/utils'
 import { IocProvider } from '@ancadeba/ui'
-import { App } from './App/App'
+import { StartupContainer } from './App/StartupContainer'
 import { gameEngineToken, IGameEngine } from './core/gameEngine'
 import { ContainerBuilder } from './builders/containerBuilder'
 
@@ -41,7 +41,7 @@ const Root = () => {
   return (
     <React.StrictMode>
       <IocProvider container={container}>
-        <App />
+        <StartupContainer />
       </IocProvider>
     </React.StrictMode>
   )
