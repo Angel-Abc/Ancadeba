@@ -6,6 +6,10 @@ import {
 import { CORE_MESSAGES } from '../messages/core'
 import { IUIReadySignal, uiReadySignalToken } from '../system/uiReadySignal'
 import { gameDataLoaderToken, IGameDataLoader } from '@ancadeba/schemas'
+import {
+  gameStateStorageToken,
+  IGameStateStorage,
+} from '../gameState.ts/storage'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -18,18 +22,24 @@ export const gameEngineDependencies: Token<unknown>[] = [
   engineMessageBusToken,
   uiReadySignalToken,
   gameDataLoaderToken,
+  gameStateStorageToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
     private readonly uiReadySignal: IUIReadySignal,
-    private readonly gameDataLoader: IGameDataLoader
+    private readonly gameDataLoader: IGameDataLoader,
+    private readonly gameStateStorage: IGameStateStorage
   ) {}
 
   async start(): Promise<void> {
     const gameData = await this.gameDataLoader.loadGameData()
     this.logger.info(logName, 'loaded game data: {0}', gameData)
+    this.gameStateStorage.state = {
+      title: gameData.meta.title,
+      ...gameData.meta.initialState,
+    }
 
     // Wait for UI to be ready
     await this.uiReadySignal.ready

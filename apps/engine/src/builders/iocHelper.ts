@@ -10,6 +10,16 @@ import {
   engineMessageBusToken,
 } from '../system/engineMessageBus'
 import { UIReadySignal, uiReadySignalToken } from '../system/uiReadySignal'
+import {
+  GameStateProvider,
+  gameStateProviderDependencies,
+  gameStateProviderToken,
+} from '../gameState.ts/provider'
+import {
+  GameStateStorage,
+  gameStateStorageDependencies,
+  gameStateStorageToken,
+} from '../gameState.ts/storage'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -27,6 +37,17 @@ export function registerServices(container: Container): void {
     {
       token: uiReadySignalToken,
       useClass: UIReadySignal,
+      scope: 'singleton',
+    },
+    {
+      token: gameStateProviderToken,
+      useClass: GameStateProvider,
+      deps: gameStateProviderDependencies,
+    },
+    {
+      token: gameStateStorageToken,
+      useClass: GameStateStorage,
+      deps: gameStateStorageDependencies,
       scope: 'singleton',
     },
   ])
