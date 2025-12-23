@@ -1,0 +1,61 @@
+{
+  "id": "start-screen",
+  "name": "start screen scene",
+  "createdAt": "2024-06-01T12:00:00Z",
+  "updatedAt": "2024-06-15T12:00:00Z",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 20,
+      "columns": 20
+    }
+  },
+  "components": [
+    {
+      "type": "background",
+      "color": "#000000",
+      "image": "assets/images/start-screen-bg.png",
+      "location": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 20,
+        "height": 20
+      },
+      "visible": true
+    },
+    {
+      "type": "menu",
+      "options": [
+        {
+          "label": "Start Game",
+          "action": "startGame"
+        },
+        {
+          "label": "Settings",
+          "action": "openSettings"
+        },
+        {
+          "label": "Exit",
+          "action": "exitGame"
+        }
+      ],
+      "location": {
+        "x": 7,
+        "y": 7
+      },
+      "size": {
+        "width": 6,
+        "height": 9
+      },
+      "visible": true
+    }
+  ],
+  "initialState": {
+    "settings": {
+      "volume": 70,
+      "difficulty": "normal"
+    }
+  }
+}

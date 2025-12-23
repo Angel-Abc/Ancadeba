@@ -9,5 +9,5 @@
   "initialState": {
     "scene": "start-screen"
   },
-  "scenes": ["start-screen", "navigate-world", "battle"]
+  "scenes": ["start-screen"]
 }

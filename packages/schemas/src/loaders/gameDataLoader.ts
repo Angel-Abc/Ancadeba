@@ -8,6 +8,8 @@ import {
 import { GameData } from './types'
 import { IJsonConfiguration, jsonConfigurationToken } from './configuration'
 import { Game, gameSchema } from '../schemas/game'
+import { Scene, sceneSchema } from '../schemas/scene'
+import { ZodType } from 'zod'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
@@ -26,14 +28,38 @@ export class GameDataLoader implements IGameDataLoader {
   ) {}
 
   async loadGameData(): Promise<GameData> {
-    const result = {
-      meta: await loadJsonResource<Game>(
-        `${this.config.rootPath}/game.json`,
-        gameSchema,
+    const game = await loadJsonResource<Game>(
+      `${this.config.rootPath}/game.json`,
+      gameSchema,
+      this.logger
+    )
+    const [scenes] = await Promise.all([
+      this.loadNamedResources<Scene>(
+        game.scenes,
+        `${this.config.rootPath}/scenes`,
+        sceneSchema,
         this.logger
       ),
+    ])
+
+    const result = {
+      meta: game,
+      scenes: scenes,
     }
     this.logger.debug(logName, 'Loaded game data: {0}', result)
     return result
+  }
+
+  async loadNamedResources<T>(
+    names: readonly string[],
+    basePath: string,
+    schema: ZodType<T>,
+    logger: ILogger
+  ): Promise<T[]> {
+    return Promise.all(
+      names.map((name) =>
+        loadJsonResource<T>(`${basePath}/${name}.json`, schema, logger)
+      )
+    )
   }
 }
