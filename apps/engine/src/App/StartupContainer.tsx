@@ -37,8 +37,7 @@ export function StartupContainer() {
     })
   }, [engineMessageBus])
 
-  // TODO: replace direct state access with a typed selector/read model once schema is defined
-  const title = isStarted ? (gameStateProvider.state.title as string) : undefined
+  const title = gameStateProvider.state.title
 
   useEffect(() => {
     if (!isStarted || !title) return

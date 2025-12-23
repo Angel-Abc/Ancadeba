@@ -36,9 +36,11 @@ export class GameEngine implements IGameEngine {
   async start(): Promise<void> {
     const gameData = await this.gameDataLoader.loadGameData()
     this.logger.info(logName, 'loaded game data: {0}', gameData)
+    const { scene: initialScene, ...initialState } = gameData.meta.initialState
     this.gameStateStorage.state = {
       title: gameData.meta.title,
-      ...gameData.meta.initialState,
+      activeScene: initialScene,
+      ...initialState,
     }
 
     // Wait for UI to be ready

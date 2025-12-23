@@ -6,6 +6,7 @@ import { GameEngine } from '../../core/gameEngine'
 import { UIReadySignal } from '../../system/uiReadySignal'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import type { IGameStateStorage } from '../../gameState.ts/storage'
+import type { GameState } from '../../gameState.ts/types'
 
 describe('core/gameEngine', () => {
   it('initializes game state before publishing the start message', async () => {
@@ -26,15 +27,18 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    let storedState: Record<string, unknown> = {}
+    let storedState: GameState = {
+      activeScene: '',
+      title: '',
+    }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
-      set state(value: Record<string, unknown>) {
+      set state(value: GameState) {
         storedState = value
       },
-      get state(): Record<string, unknown> {
+      get state(): GameState {
         return storedState
       },
     }
@@ -105,7 +109,7 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Test Game',
-      scene: 'intro',
+      activeScene: 'intro',
     })
     expect(messageBus.publish).not.toHaveBeenCalled()
 
@@ -139,15 +143,18 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    let storedState: Record<string, unknown> = {}
+    let storedState: GameState = {
+      activeScene: '',
+      title: '',
+    }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
-      set state(value: Record<string, unknown>) {
+      set state(value: GameState) {
         storedState = value
       },
-      get state(): Record<string, unknown> {
+      get state(): GameState {
         return storedState
       },
     }
@@ -219,7 +226,7 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Ready First',
-      scene: 'intro',
+      activeScene: 'intro',
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(
@@ -246,15 +253,18 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    let storedState: Record<string, unknown> = {}
+    let storedState: GameState = {
+      activeScene: '',
+      title: '',
+    }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
-      set state(value: Record<string, unknown>) {
+      set state(value: GameState) {
         storedState = value
       },
-      get state(): Record<string, unknown> {
+      get state(): GameState {
         return storedState
       },
     }
@@ -326,7 +336,7 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Already Ready',
-      scene: 'intro',
+      activeScene: 'intro',
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(

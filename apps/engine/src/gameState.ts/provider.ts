@@ -1,8 +1,9 @@
 import { Token, token } from '@ancadeba/utils'
 import { gameStateStorageToken, IGameStateStorage } from './storage'
+import { GameState } from './types'
 
 export interface IGameStateProvider {
-  get state(): Record<string, unknown>
+  get state(): GameState
 }
 
 const logName = 'engine/gameState/provider'
@@ -13,7 +14,7 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
 export class GameStateProvider implements IGameStateProvider {
   constructor(private readonly gameStateStorage: IGameStateStorage) {}
 
-  get state(): Record<string, unknown> {
+  get state(): GameState {
     // TODO: return a readonly proxy (?)
     return this.gameStateStorage.state
   }
