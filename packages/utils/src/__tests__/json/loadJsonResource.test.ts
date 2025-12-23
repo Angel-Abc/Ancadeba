@@ -25,7 +25,7 @@ describe('json/loadJsonResource', () => {
 
     // Assert
     expect(result).toEqual({ name: 'Test Resource' })
-    expect(fetchMock).toHaveBeenCalledWith(url)
+    expect(fetchMock).toHaveBeenCalledWith(url, { cache: 'no-cache' })
   })
 
   it('logs and throws when the schema validation fails', async () => {
