@@ -20,7 +20,12 @@ export function Scene() {
 
   switch (activeScene.screen.type) {
     case 'grid': {
-      return <GridScreen screen={activeScene.screen} />
+      return (
+        <GridScreen
+          screen={activeScene.screen}
+          components={activeScene.components}
+        />
+      )
     }
     default:
       return <div>Unknown Scene Screen Type: {activeScene.screen.type}</div>

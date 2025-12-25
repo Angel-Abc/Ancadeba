@@ -1,4 +1,4 @@
-import { Scene } from './Components/Scene'
+import { Scene } from './Controls/Scene'
 
 export interface AppProps {
   isStarted: boolean

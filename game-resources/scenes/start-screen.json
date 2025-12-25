@@ -14,7 +14,7 @@
     {
       "type": "background",
       "color": "#000000",
-      "image": "assets/images/start-screen-bg.png",
+      "image": "/images/start-screen-bg.png",
       "location": {
         "x": 0,
         "y": 0

@@ -75,5 +75,7 @@ export const sceneSchema = BaseSchema.extend({
 
 export type Scene = z.infer<typeof sceneSchema>
 export type Screen = z.infer<typeof screenSchema>
-export type Component = z.infer<typeof componentSchema>
 export type GridScreen = z.infer<typeof gridScreenSchema>
+export type Component = z.infer<typeof componentSchema>
+export type BackgroundComponent = z.infer<typeof backgroundComponentSchema>
+export type MenuComponent = z.infer<typeof menuComponentSchema>
