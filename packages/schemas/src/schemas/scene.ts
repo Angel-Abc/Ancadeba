@@ -15,7 +15,7 @@ const sizeSchema = z.object({
 
 /* ---------- Screen Schema ---------- */
 
-const gridScreenSchema = z.object({
+export const gridScreenSchema = z.object({
   type: z.literal('grid'),
   grid: z.object({
     rows: z.number().int().positive(),
@@ -74,3 +74,6 @@ export const sceneSchema = BaseSchema.extend({
 /* ---------- Inferred Type (optional) ---------- */
 
 export type Scene = z.infer<typeof sceneSchema>
+export type Screen = z.infer<typeof screenSchema>
+export type Component = z.infer<typeof componentSchema>
+export type GridScreen = z.infer<typeof gridScreenSchema>

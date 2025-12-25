@@ -10,6 +10,10 @@ import {
   gameStateStorageToken,
   IGameStateStorage,
 } from '../gameState.ts/storage'
+import {
+  IResourceDataStorage,
+  resourceDataStorageToken,
+} from '../resourceData/storage'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -23,6 +27,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   uiReadySignalToken,
   gameDataLoaderToken,
   gameStateStorageToken,
+  resourceDataStorageToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
@@ -30,7 +35,8 @@ export class GameEngine implements IGameEngine {
     private readonly messageBus: IEngineMessageBus,
     private readonly uiReadySignal: IUIReadySignal,
     private readonly gameDataLoader: IGameDataLoader,
-    private readonly gameStateStorage: IGameStateStorage
+    private readonly gameStateStorage: IGameStateStorage,
+    private readonly resourceDataStorage: IResourceDataStorage
   ) {}
 
   async start(): Promise<void> {
@@ -42,6 +48,9 @@ export class GameEngine implements IGameEngine {
       activeScene: initialScene,
       ...initialState,
     }
+    gameData.scenes.forEach((scene) => {
+      this.resourceDataStorage.addSceneData(scene.id, scene)
+    })
 
     // Wait for UI to be ready
     await this.uiReadySignal.ready

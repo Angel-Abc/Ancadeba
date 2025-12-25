@@ -1,10 +1,11 @@
+import { Scene } from './Components/Scene'
+
 export interface AppProps {
   isStarted: boolean
-  title?: string
 }
 
-export function App({ isStarted, title }: AppProps) {
+export function App({ isStarted }: AppProps) {
   if (!isStarted) return <div>loading</div>
 
-  return <div>loaded {title}</div>
+  return <Scene />
 }

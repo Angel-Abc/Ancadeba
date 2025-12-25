@@ -44,5 +44,5 @@ export function StartupContainer() {
     domHelper.setTitle(title)
   }, [domHelper, isStarted, title])
 
-  return <App isStarted={isStarted} title={title} />
+  return <App isStarted={isStarted} />
 }

@@ -10,3 +10,8 @@ body {
   color: var(--ge-font-color);
   background-color: var(--ge-background-color);
 }
+
+#root {
+  width: 100%;
+  height: 100%;
+}
