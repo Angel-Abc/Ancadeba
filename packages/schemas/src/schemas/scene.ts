@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { BaseSchema } from './base'
+import { actionSchema } from './action'
 
 /* ---------- Shared Schemas ---------- */
 
@@ -38,7 +39,7 @@ const backgroundComponentSchema = z.object({
 
 const menuOptionSchema = z.object({
   label: z.string(),
-  action: z.string(),
+  action: actionSchema,
 })
 
 const menuComponentSchema = z.object({

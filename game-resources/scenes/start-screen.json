@@ -30,15 +30,22 @@
       "options": [
         {
           "label": "Start Game",
-          "action": "startGame"
+          "action": {
+            "type": "switch-scene",
+            "targetSceneId": "navigate"
+          }
         },
         {
           "label": "Settings",
-          "action": "openSettings"
+          "action": {
+            "type": "open-settings"
+          }
         },
         {
           "label": "Exit",
-          "action": "exitGame"
+          "action": {
+            "type": "exit-game"
+          }
         }
       ],
       "location": {

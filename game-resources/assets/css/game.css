@@ -9,3 +9,15 @@
   background-repeat: no-repeat;
   background-size: contain;
 }
+
+.menu-component {
+  gap: 1rem;
+
+  & button {
+    color: white;
+    padding: 0.5rem 1rem;
+    background-color: var(--sg-color-light-brown-70);
+    border-radius: 0.5rem;
+    border-color: var(--ge-background-color);
+  }
+}

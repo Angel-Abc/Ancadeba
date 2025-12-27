@@ -1,6 +1,7 @@
 export * from './schemas/base'
 export * from './schemas/game'
 export * from './schemas/scene'
+export * from './schemas/action'
 export * from './loaders/configuration'
 export * from './loaders/gameDataLoader'
 export * from './loaders/types'
