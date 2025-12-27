@@ -9,6 +9,7 @@ export const gameSchema = BaseSchema.extend({
     scene: z.string(),
   }),
   scenes: z.array(z.string()),
+  styling: z.array(z.string()).optional(),
 })
 
 export type Game = z.infer<typeof gameSchema>

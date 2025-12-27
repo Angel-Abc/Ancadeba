@@ -7,4 +7,14 @@
   --ge-font-size: calc(0.02 * var(--ge-min-root-size));
   --ge-font-family: 'Arial', sans-serif;
   --ge-font-color: oklch(0.819 0.1135 65.12);
+
+  --ge-grid-width: 100;
+  --ge-grid-height: 100;
+
+  --ge-grid-item-x: 1;
+  --ge-grid-item-y: 1;
+  --ge-grid-item-width: 10;
+  --ge-grid-item-height: 10;
+
+  --ge-background-image: '';
 }

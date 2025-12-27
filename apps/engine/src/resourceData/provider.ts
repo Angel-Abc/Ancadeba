@@ -5,6 +5,7 @@ import { Scene } from '@ancadeba/schemas'
 export interface IResourceDataProvider {
   get assetsUrl(): string
   getSceneData(sceneId: string): Scene
+  getCssFilePaths(): string[]
 }
 
 const logName = 'engine/resourceData/provider'
@@ -19,5 +20,10 @@ export class ResourceDataProvider implements IResourceDataProvider {
   }
   getSceneData(sceneId: string): Scene {
     return this.resourceDataStorage.getSceneData(sceneId)
+  }
+  getCssFilePaths(): string[] {
+    return this.resourceDataStorage
+      .getCssFileNames()
+      .map((fileName) => `${this.assetsUrl}/css/${fileName}`)
   }
 }

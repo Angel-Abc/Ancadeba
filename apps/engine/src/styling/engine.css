@@ -15,3 +15,25 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.grid-screen {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(var(--ge-grid-width), 1fr);
+  grid-template-rows: repeat(var(--ge-grid-height), 1fr);
+}
+
+.grid-item {
+  grid-column: var(--ge-grid-item-x) / span var(--ge-grid-item-width);
+  grid-row: var(--ge-grid-item-y) / span var(--ge-grid-item-height);
+}
+
+.background-component {
+  width: 100%;
+  height: 100%;
+  background-image: var(--ge-background-image);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}

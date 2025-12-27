@@ -51,6 +51,9 @@ export class GameEngine implements IGameEngine {
     gameData.scenes.forEach((scene) => {
       this.resourceDataStorage.addSceneData(scene.id, scene)
     })
+    gameData.meta.styling?.forEach((fileName) => {
+      this.resourceDataStorage.addCssFileName(fileName)
+    })
 
     // Wait for UI to be ready
     await this.uiReadySignal.ready

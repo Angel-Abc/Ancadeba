@@ -1,2 +1,4 @@
 export * from './ioc/IocProvider'
-export * from './helpers/cssHelpers'
+export { CSSCustomProperties } from './helpers/cssHelper'
+export * from './helpers/domHelper'
+export * from './helpers/iocHelper'

@@ -6,6 +6,7 @@ import {
 } from '@ancadeba/utils'
 import { registerServices as registerSchemasServices } from '@ancadeba/schemas'
 import { registerServices } from './iocHelper'
+import { registerServices as registerUiServices } from '@ancadeba/ui'
 
 export interface IContainerBuilder {
   build(): IContainer
@@ -19,7 +20,8 @@ export class ContainerBuilder implements IContainerBuilder {
 
   build(): IContainer {
     const container = new Container(this.logger)
-    registerUtilsServices(container, this.logger, document)
+    registerUtilsServices(container, this.logger)
+    registerUiServices(container, document)
     registerSchemasServices(container, this.resourcesDataPath)
     registerServices(container)
     return container

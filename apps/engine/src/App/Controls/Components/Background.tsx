@@ -13,7 +13,7 @@ export function BackgroundComponent({ component }: BackgroundComponentProps) {
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )
-  const imageUrl = `${resourceDataProvider.assetsUrl}${component.image}`
+  const imageUrl = `url('${resourceDataProvider.assetsUrl}${component.image}')`
   const style: CSSCustomProperties = {
     '--ge-background-color': component.color,
     '--ge-background-image': imageUrl,

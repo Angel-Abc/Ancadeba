@@ -1,4 +1,4 @@
-import { useService } from '@ancadeba/ui'
+import { domHelperToken, IDomHelper, useService } from '@ancadeba/ui'
 import { useEffect, useRef, useState } from 'react'
 import {
   engineMessageBusToken,
@@ -11,15 +11,22 @@ import {
   gameStateProviderToken,
   IGameStateProvider,
 } from '../gameState.ts/provider'
-import { domHelperToken, IDomHelper } from '@ancadeba/utils'
 import { App } from './App'
+import {
+  IResourceDataProvider,
+  resourceDataProviderToken,
+} from '../resourceData/provider'
 
 export function StartupContainer() {
   const engineMessageBus = useService<IEngineMessageBus>(engineMessageBusToken)
   const uiReadySignal = useService<IUIReadySignal>(uiReadySignalToken)
+  const resourceDataProvider = useService<IResourceDataProvider>(
+    resourceDataProviderToken
+  )
   const gameStateProvider = useService<IGameStateProvider>(
     gameStateProviderToken
   )
+
   const domHelper = useService<IDomHelper>(domHelperToken)
   const signalRef = useRef(false)
   const [isStarted, setIsStarted] = useState<boolean>(false)
@@ -38,11 +45,13 @@ export function StartupContainer() {
   }, [engineMessageBus])
 
   const title = gameStateProvider.state.title
+  const cssFilePaths = resourceDataProvider.getCssFilePaths()
 
   useEffect(() => {
     if (!isStarted || !title) return
     domHelper.setTitle(title)
-  }, [domHelper, isStarted, title])
+    cssFilePaths.forEach((path) => domHelper.addCssFile(path))
+  }, [domHelper, isStarted, title, cssFilePaths])
 
   return <App isStarted={isStarted} />
 }

@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   Container,
-  DomHelper,
   MessageBus,
-  domHelperToken,
   loggerToken,
   messageBusToken,
 } from '../../index'
@@ -18,16 +16,13 @@ describe('helpers/iocHelpers', () => {
     const container = new Container(logger)
 
     // Act
-    registerServices(container, logger, document)
+    registerServices(container, logger)
 
     const resolvedBus = container.resolve(messageBusToken)
-    const resolvedDomHelper = container.resolve(domHelperToken)
     const resolvedLogger = container.resolve(loggerToken)
-    resolvedDomHelper.setTitle('Test')
 
     // Assert
     expect(resolvedBus).toBeInstanceOf(MessageBus)
-    expect(resolvedDomHelper).toBeInstanceOf(DomHelper)
     expect(resolvedLogger).toBe(logger)
     expect(document.title).toBe('Test')
   })
@@ -35,13 +30,12 @@ describe('helpers/iocHelpers', () => {
   it('throws when registering services twice', () => {
     // Arrange
     const logger = createLogger()
-    const document = { title: '' } as Document
     const container = new Container(logger)
 
-    registerServices(container, logger, document)
+    registerServices(container, logger)
 
     // Act
-    const registerDuplicate = () => registerServices(container, logger, document)
+    const registerDuplicate = () => registerServices(container, logger)
 
     // Assert
     expect(registerDuplicate).toThrow()

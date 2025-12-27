@@ -26,7 +26,7 @@ export function GridScreen({ screen, components }: GridScreenProps) {
         }
         const key = `component-${component.type}-${index}`
         return (
-          <div key={key} style={componentStyle}>
+          <div key={key} style={componentStyle} className="grid-item">
             <Component component={component} />
           </div>
         )

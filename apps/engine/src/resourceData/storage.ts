@@ -9,6 +9,8 @@ export interface IResourceDataStorage {
   get rootPath(): string
   addSceneData(sceneId: string, data: Scene): void
   getSceneData(sceneId: string): Scene
+  addCssFileName(fileName: string): void
+  getCssFileNames(): string[]
 }
 
 const logName = 'engine/resourceData/storage'
@@ -19,6 +21,7 @@ export const resourceDataStorageDependencies: Token<unknown>[] = [
 ]
 export class ResourceDataStorage implements IResourceDataStorage {
   private scenes: Map<string, Scene> = new Map()
+  private cssFileNames: string[] = []
 
   constructor(
     private readonly logger: ILogger,
@@ -39,5 +42,13 @@ export class ResourceDataStorage implements IResourceDataStorage {
       this.logger.fatal(logName, 'No scene data for id: {0}', sceneId)
     }
     return scene
+  }
+
+  addCssFileName(fileName: string): void {
+    this.cssFileNames.push(fileName)
+  }
+
+  getCssFileNames(): string[] {
+    return this.cssFileNames
   }
 }

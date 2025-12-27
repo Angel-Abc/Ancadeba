@@ -9,5 +9,6 @@
   "initialState": {
     "scene": "start-screen"
   },
-  "scenes": ["start-screen"]
+  "scenes": ["start-screen"],
+  "styling": ["game.css"]
 }

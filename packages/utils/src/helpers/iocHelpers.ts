@@ -5,13 +5,8 @@ import {
   messageBusDependencies,
   messageBusToken,
 } from '../messages/bus'
-import { DomHelper, domHelperToken } from './domHelper'
 
-export function registerServices(
-  container: Container,
-  logger: ILogger,
-  document: Document
-): void {
+export function registerServices(container: Container, logger: ILogger): void {
   container.registerAll([
     {
       token: loggerToken,
@@ -21,10 +16,6 @@ export function registerServices(
       token: messageBusToken,
       useClass: MessageBus,
       deps: messageBusDependencies,
-    },
-    {
-      token: domHelperToken,
-      useFactory: () => new DomHelper(document),
     },
   ])
 }
