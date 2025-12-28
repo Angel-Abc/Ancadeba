@@ -5,6 +5,11 @@ import {
   gameEngineToken,
 } from '../core/gameEngine'
 import {
+  ActionExecutor,
+  actionExecutorDependencies,
+  actionExecutorToken,
+} from '../core/actionExecutor'
+import {
   EngineMessageBus,
   engineMessageBusDependencies,
   engineMessageBusToken,
@@ -37,6 +42,11 @@ export function registerServices(container: Container): void {
       token: gameEngineToken,
       useClass: GameEngine,
       deps: gameEngineDependencies,
+    },
+    {
+      token: actionExecutorToken,
+      useClass: ActionExecutor,
+      deps: actionExecutorDependencies,
     },
     {
       token: engineMessageBusToken,

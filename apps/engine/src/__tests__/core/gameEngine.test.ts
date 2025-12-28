@@ -3,10 +3,12 @@ import type { ILogger } from '@ancadeba/utils'
 import type { IGameDataLoader } from '@ancadeba/schemas'
 import { CORE_MESSAGES } from '../../messages/core'
 import { GameEngine } from '../../core/gameEngine'
+import type { IActionExecutor } from '../../core/actionExecutor'
 import { UIReadySignal } from '../../system/uiReadySignal'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import type { IGameStateStorage } from '../../gameState.ts/storage'
 import type { GameState } from '../../gameState.ts/types'
+import type { IResourceDataStorage } from '../../resourceData/storage'
 
 describe('core/gameEngine', () => {
   it('initializes game state before publishing the start message', async () => {
@@ -27,6 +29,9 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
+    const actionExecutor: IActionExecutor = {
+      start: vi.fn(),
+    }
     let storedState: GameState = {
       activeScene: '',
       title: '',
@@ -41,6 +46,13 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+    }
+    const resourceDataStorage: IResourceDataStorage = {
+      rootPath: '/resources',
+      addSceneData: vi.fn(),
+      getSceneData: vi.fn(),
+      addCssFileName: vi.fn(),
+      getCssFileNames: vi.fn(() => []),
     }
     let resolveGameData: ((value: {
       meta: {
@@ -80,7 +92,9 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage
+      gameStateStorage,
+      resourceDataStorage,
+      actionExecutor
     )
 
     // Act
@@ -123,6 +137,7 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
+    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
   })
 
   it('waits for game data even if UI is ready first', async () => {
@@ -143,6 +158,9 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
+    const actionExecutor: IActionExecutor = {
+      start: vi.fn(),
+    }
     let storedState: GameState = {
       activeScene: '',
       title: '',
@@ -157,6 +175,13 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+    }
+    const resourceDataStorage: IResourceDataStorage = {
+      rootPath: '/resources',
+      addSceneData: vi.fn(),
+      getSceneData: vi.fn(),
+      addCssFileName: vi.fn(),
+      getCssFileNames: vi.fn(() => []),
     }
     let resolveGameData: ((value: {
       meta: {
@@ -196,7 +221,9 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage
+      gameStateStorage,
+      resourceDataStorage,
+      actionExecutor
     )
 
     // Act
@@ -233,6 +260,7 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
+    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
   })
 
   it('waits for game data if UI was ready before start', async () => {
@@ -253,6 +281,9 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
+    const actionExecutor: IActionExecutor = {
+      start: vi.fn(),
+    }
     let storedState: GameState = {
       activeScene: '',
       title: '',
@@ -267,6 +298,13 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+    }
+    const resourceDataStorage: IResourceDataStorage = {
+      rootPath: '/resources',
+      addSceneData: vi.fn(),
+      getSceneData: vi.fn(),
+      addCssFileName: vi.fn(),
+      getCssFileNames: vi.fn(() => []),
     }
     let resolveGameData: ((value: {
       meta: {
@@ -306,7 +344,9 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage
+      gameStateStorage,
+      resourceDataStorage,
+      actionExecutor
     )
 
     // Act
@@ -343,5 +383,6 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
+    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
   })
 })

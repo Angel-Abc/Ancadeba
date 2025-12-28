@@ -14,6 +14,10 @@ import {
   IResourceDataStorage,
   resourceDataStorageToken,
 } from '../resourceData/storage'
+import {
+  IActionExecutor,
+  actionExecutorToken,
+} from './actionExecutor'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -28,6 +32,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   gameDataLoaderToken,
   gameStateStorageToken,
   resourceDataStorageToken,
+  actionExecutorToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
@@ -36,7 +41,8 @@ export class GameEngine implements IGameEngine {
     private readonly uiReadySignal: IUIReadySignal,
     private readonly gameDataLoader: IGameDataLoader,
     private readonly gameStateStorage: IGameStateStorage,
-    private readonly resourceDataStorage: IResourceDataStorage
+    private readonly resourceDataStorage: IResourceDataStorage,
+    private readonly actionExecutor: IActionExecutor
   ) {}
 
   async start(): Promise<void> {
@@ -57,6 +63,7 @@ export class GameEngine implements IGameEngine {
 
     // Wait for UI to be ready
     await this.uiReadySignal.ready
+    this.actionExecutor.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)
   }
 }

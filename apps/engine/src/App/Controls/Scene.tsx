@@ -8,14 +8,38 @@ import {
   IGameStateProvider,
 } from '../../gameState.ts/provider'
 import { GridScreen } from './GridScreen'
+import {
+  engineMessageBusToken,
+  IEngineMessageBus,
+} from '../../system/engineMessageBus'
+import { CORE_MESSAGES } from '../../messages/core'
+import { useEffect, useMemo, useState } from 'react'
+import { Scene as SceneData } from '@ancadeba/schemas'
 
 export function Scene() {
-  var resourceDataProvider = useService<IResourceDataProvider>(
+  const gameStateProvider = useService<IGameStateProvider>(
+    gameStateProviderToken
+  )
+  const [activeSceneId, setActiveSceneId] = useState<string>(
+    gameStateProvider.state.activeScene
+  )
+  const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )
-  var gameStateProvider = useService<IGameStateProvider>(gameStateProviderToken)
-  var activeScene = resourceDataProvider.getSceneData(
-    gameStateProvider.state.activeScene
+  const engineMessageBus = useService<IEngineMessageBus>(engineMessageBusToken)
+
+  useEffect(() => {
+    return engineMessageBus.subscribe(
+      CORE_MESSAGES.SCENE_CHANGED,
+      (payload) => {
+        setActiveSceneId(payload.sceneId)
+      }
+    )
+  }, [engineMessageBus])
+
+  const activeScene = useMemo<SceneData>(
+    () => resourceDataProvider.getSceneData(activeSceneId),
+    [activeSceneId, resourceDataProvider]
   )
 
   switch (activeScene.screen.type) {
