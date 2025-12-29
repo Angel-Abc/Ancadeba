@@ -124,6 +124,7 @@ describe('core/gameEngine', () => {
     expect(gameStateStorage.state).toEqual({
       title: 'Test Game',
       activeScene: 'intro',
+      flags: {},
     })
     expect(messageBus.publish).not.toHaveBeenCalled()
 
@@ -254,6 +255,7 @@ describe('core/gameEngine', () => {
     expect(gameStateStorage.state).toEqual({
       title: 'Ready First',
       activeScene: 'intro',
+      flags: {},
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(
@@ -377,6 +379,7 @@ describe('core/gameEngine', () => {
     expect(gameStateStorage.state).toEqual({
       title: 'Already Ready',
       activeScene: 'intro',
+      flags: {},
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(
