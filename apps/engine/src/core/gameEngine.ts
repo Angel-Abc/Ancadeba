@@ -14,10 +14,7 @@ import {
   IResourceDataStorage,
   resourceDataStorageToken,
 } from '../resourceData/storage'
-import {
-  IActionExecutor,
-  actionExecutorToken,
-} from './actionExecutor'
+import { IActionExecutor, actionExecutorToken } from './actionExecutor'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -52,6 +49,7 @@ export class GameEngine implements IGameEngine {
     this.gameStateStorage.state = {
       title: gameData.meta.title,
       activeScene: initialScene,
+      flags: {},
       ...initialState,
     }
     gameData.scenes.forEach((scene) => {

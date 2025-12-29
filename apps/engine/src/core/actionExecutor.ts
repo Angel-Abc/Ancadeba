@@ -39,6 +39,7 @@ export class ActionExecutor implements IActionExecutor {
     switch (action.type) {
       case 'switch-scene':
         // TODO: Move scene switching logic to SceneManager
+        // switching scene is most of the time a push on the scene stack
         this.gameStateStorage.update({ activeScene: action.targetSceneId })
         this.messageBus.publish(CORE_MESSAGES.SCENE_CHANGED, {
           sceneId: action.targetSceneId,

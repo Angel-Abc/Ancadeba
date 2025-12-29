@@ -4,6 +4,8 @@ import { GameState } from './types'
 
 export interface IGameStateProvider {
   get state(): GameState
+  getFlag(flagName: string): boolean | undefined
+  setFlag(flagName: string, value: boolean): void
 }
 
 const logName = 'engine/gameState/provider'
@@ -17,5 +19,18 @@ export class GameStateProvider implements IGameStateProvider {
   get state(): GameState {
     // TODO: return a readonly proxy (?)
     return this.gameStateStorage.state
+  }
+
+  getFlag(flagName: string): boolean | undefined {
+    return this.gameStateStorage.state.flags[flagName]
+  }
+
+  setFlag(flagName: string, value: boolean): void {
+    this.gameStateStorage.update({
+      flags: {
+        ...this.gameStateStorage.state.flags,
+        [flagName]: value,
+      },
+    })
   }
 }

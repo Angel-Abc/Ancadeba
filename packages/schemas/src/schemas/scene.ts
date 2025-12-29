@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { BaseSchema } from './base'
 import { actionSchema } from './action'
+import { conditionSchema } from './conditions'
 
 /* ---------- Shared Schemas ---------- */
 
@@ -39,7 +40,8 @@ const backgroundComponentSchema = z.object({
 
 const menuOptionSchema = z.object({
   label: z.string(),
-  action: actionSchema,
+  actions: z.array(actionSchema).min(1),
+  condition: conditionSchema.optional(),
 })
 
 const menuComponentSchema = z.object({
@@ -55,21 +57,11 @@ const componentSchema = z.discriminatedUnion('type', [
   menuComponentSchema,
 ])
 
-/* ---------- Initial State Schema ---------- */
-
-const initialStateSchema = z.object({
-  settings: z.object({
-    volume: z.number().int().min(0).max(100),
-    difficulty: z.enum(['easy', 'normal', 'hard']),
-  }),
-})
-
 /* ---------- Root Schema ---------- */
 
 export const sceneSchema = BaseSchema.extend({
   screen: screenSchema,
   components: z.array(componentSchema),
-  initialState: initialStateSchema,
 })
 
 /* ---------- Inferred Type (optional) ---------- */

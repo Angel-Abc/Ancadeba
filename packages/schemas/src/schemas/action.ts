@@ -6,10 +6,15 @@ export const actionSchema = z.discriminatedUnion('type', [
     targetSceneId: z.string(),
   }),
   z.object({
-    type: z.literal('open-settings'),
+    type: z.literal('exit-game'),
   }),
   z.object({
-    type: z.literal('exit-game'),
+    type: z.literal('set-flag'),
+    name: z.string(),
+    value: z.boolean(),
+  }),
+  z.object({
+    type: z.literal('back'),
   }),
 ])
 

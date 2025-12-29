@@ -35,6 +35,11 @@ import {
   resourceDataStorageDependencies,
   resourceDataStorageToken,
 } from '../resourceData/storage'
+import {
+  ConditionResolver,
+  conditionResolverDependencies,
+  conditionResolverToken,
+} from '../core/conditionResolver'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -80,6 +85,11 @@ export function registerServices(container: Container): void {
       useClass: ResourceDataStorage,
       deps: resourceDataStorageDependencies,
       scope: 'singleton',
+    },
+    {
+      token: conditionResolverToken,
+      useClass: ConditionResolver,
+      deps: conditionResolverDependencies,
     },
   ])
 }

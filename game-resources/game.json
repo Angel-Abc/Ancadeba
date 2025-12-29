@@ -7,7 +7,10 @@
   "createdAt": "2024-06-01T12:00:00Z",
   "updatedAt": "2024-06-15T12:00:00Z",
   "initialState": {
-    "scene": "start-screen"
+    "scene": "start-screen",
+    "flags": {
+      "isGameStarted": false
+    }
   },
   "scenes": ["start-screen"],
   "styling": ["game.css"]

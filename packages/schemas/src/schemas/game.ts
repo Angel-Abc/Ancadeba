@@ -7,6 +7,7 @@ export const gameSchema = BaseSchema.extend({
   version: z.string(),
   initialState: z.object({
     scene: z.string(),
+    flags: z.record(z.string(), z.boolean()).optional(),
   }),
   scenes: z.array(z.string()),
   styling: z.array(z.string()).optional(),

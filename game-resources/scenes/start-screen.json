@@ -30,22 +30,52 @@
       "options": [
         {
           "label": "Start Game",
-          "action": {
-            "type": "switch-scene",
-            "targetSceneId": "navigate"
-          }
+          "condition": {
+            "type": "flag",
+            "name": "isGameStarted",
+            "value": false
+          },
+          "actions": [
+            {
+              "type": "set-flag",
+              "name": "isGameStarted",
+              "value": true
+            },
+            {
+              "type": "switch-scene",
+              "targetSceneId": "navigate"
+            }
+          ]
+        },
+        {
+          "label": "Resume",
+          "condition": {
+            "type": "flag",
+            "name": "isGameStarted",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "back"
+            }
+          ]
         },
         {
           "label": "Settings",
-          "action": {
-            "type": "open-settings"
-          }
+          "actions": [
+            {
+              "type": "switch-scene",
+              "targetSceneId": "settings"
+            }
+          ]
         },
         {
           "label": "Exit",
-          "action": {
-            "type": "exit-game"
-          }
+          "actions": [
+            {
+              "type": "exit-game"
+            }
+          ]
         }
       ],
       "location": {
@@ -58,11 +88,5 @@
       },
       "visible": true
     }
-  ],
-  "initialState": {
-    "settings": {
-      "volume": 70,
-      "difficulty": "normal"
-    }
-  }
+  ]
 }
