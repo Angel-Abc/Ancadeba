@@ -1,14 +1,17 @@
+import { createElement } from 'react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { EditorApp } from '../EditorApp'
 
-describe('editor-ui dummy test', () => {
-  it('passes for now', () => {
+describe('editor-ui', () => {
+  it('renders EditorApp without crashing', () => {
     // Arrange
-    const value = true
+    const element = createElement(EditorApp)
 
     // Act
-    const result = value
+    const { container } = render(element)
 
     // Assert
-    expect(result).toBe(true)
+    expect(container).toBeInTheDocument()
   })
 })

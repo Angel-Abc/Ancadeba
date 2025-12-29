@@ -20,3 +20,4 @@ Before marking any code task as complete, ensure the following commands are run 
 
 - pnpm lint
 - pnpm build
+- pnpm test
