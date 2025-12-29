@@ -6,6 +6,9 @@ export interface IGameStateStorage {
 
   set state(value: GameState)
   get state(): GameState
+
+  getFlag(flagName: string): boolean | undefined
+  setFlag(flagName: string, value: boolean): void
 }
 
 const logName = 'engine/gameState/storage'
@@ -30,5 +33,18 @@ export class GameStateStorage implements IGameStateStorage {
 
   get state(): GameState {
     return this.gameState
+  }
+
+  getFlag(flagName: string): boolean | undefined {
+    return this.gameState.flags[flagName]
+  }
+
+  setFlag(flagName: string, value: boolean): void {
+    this.update({
+      flags: {
+        ...this.gameState.flags,
+        [flagName]: value,
+      },
+    })
   }
 }

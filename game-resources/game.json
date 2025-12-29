@@ -12,6 +12,6 @@
       "isGameStarted": false
     }
   },
-  "scenes": ["start-screen"],
+  "scenes": ["start-screen", "settings", "navigate"],
   "styling": ["game.css"]
 }

@@ -22,15 +22,10 @@ export class GameStateProvider implements IGameStateProvider {
   }
 
   getFlag(flagName: string): boolean | undefined {
-    return this.gameStateStorage.state.flags[flagName]
+    return this.gameStateStorage.getFlag(flagName)
   }
 
   setFlag(flagName: string, value: boolean): void {
-    this.gameStateStorage.update({
-      flags: {
-        ...this.gameStateStorage.state.flags,
-        [flagName]: value,
-      },
-    })
+    this.gameStateStorage.setFlag(flagName, value)
   }
 }

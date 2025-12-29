@@ -30,21 +30,27 @@
       "options": [
         {
           "label": "Volume up",
-          "action": {
-            "type": "volume-up"
-          }
+          "actions": [
+            {
+              "type": "volume-up"
+            }
+          ]
         },
         {
           "label": "Volume down",
-          "action": {
-            "type": "Volume-down"
-          }
+          "actions": [
+            {
+              "type": "volume-down"
+            }
+          ]
         },
         {
           "label": "back",
-          "action": {
-            "type": "back"
-          }
+          "actions": [
+            {
+              "type": "back"
+            }
+          ]
         }
       ],
       "location": {

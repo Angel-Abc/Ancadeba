@@ -45,9 +45,30 @@ export class ActionExecutor implements IActionExecutor {
           sceneId: action.targetSceneId,
         })
         return
-      default:
-        this.logger.warn(logName, `Unknown action type: ${action.type}`)
+      case 'exit-game':
+        // TODO: exit game. reload the browser tab for now
+        window.location.reload()
         return
+      case 'set-flag':
+        this.gameStateStorage.setFlag(action.name, action.value)
+        return
+      case 'back':
+        // TODO: implement scene stack and go back to previous scene
+        return
+      case 'volume-up':
+        // TODO: implement volume control
+        return
+      case 'volume-down':
+        // TODO: implement volume control
+        return
+      default: {
+        const exhaustiveCheck: never = action
+        this.logger.warn(
+          logName,
+          `Unknown action type: ${(exhaustiveCheck as Action).type}`
+        )
+        return
+      }
     }
   }
 }
