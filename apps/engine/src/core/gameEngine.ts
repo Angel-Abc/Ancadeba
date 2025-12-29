@@ -50,6 +50,7 @@ export class GameEngine implements IGameEngine {
       title: gameData.meta.title,
       activeScene: initialScene,
       flags: {},
+      sceneStack: [initialScene],
       ...initialState,
     }
     gameData.scenes.forEach((scene) => {

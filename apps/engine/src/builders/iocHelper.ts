@@ -40,6 +40,11 @@ import {
   conditionResolverDependencies,
   conditionResolverToken,
 } from '../core/conditionResolver'
+import {
+  BrowserAdapter,
+  browserAdapterDependencies,
+  browserAdapterToken,
+} from '../system/browserAdapter'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -90,6 +95,11 @@ export function registerServices(container: Container): void {
       token: conditionResolverToken,
       useClass: ConditionResolver,
       deps: conditionResolverDependencies,
+    },
+    {
+      token: browserAdapterToken,
+      useClass: BrowserAdapter,
+      deps: browserAdapterDependencies,
     },
   ])
 }

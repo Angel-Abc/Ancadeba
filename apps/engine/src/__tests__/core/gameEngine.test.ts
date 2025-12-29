@@ -35,6 +35,8 @@ describe('core/gameEngine', () => {
     let storedState: GameState = {
       activeScene: '',
       title: '',
+      flags: {},
+      sceneStack: [],
     }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
@@ -54,20 +56,22 @@ describe('core/gameEngine', () => {
       addCssFileName: vi.fn(),
       getCssFileNames: vi.fn(() => []),
     }
-    let resolveGameData: ((value: {
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }) => void) | undefined
+    let resolveGameData:
+      | ((value: {
+          meta: {
+            id: string
+            name: string
+            createdAt: string
+            updatedAt: string
+            title: string
+            description: string
+            version: string
+            initialState: { scene: string }
+            scenes: string[]
+          }
+          scenes: []
+        }) => void)
+      | undefined
     const gameDataPromise = new Promise<{
       meta: {
         id: string
@@ -125,6 +129,7 @@ describe('core/gameEngine', () => {
       title: 'Test Game',
       activeScene: 'intro',
       flags: {},
+      sceneStack: ['intro'],
     })
     expect(messageBus.publish).not.toHaveBeenCalled()
 
@@ -165,6 +170,8 @@ describe('core/gameEngine', () => {
     let storedState: GameState = {
       activeScene: '',
       title: '',
+      flags: {},
+      sceneStack: [],
     }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
@@ -184,20 +191,22 @@ describe('core/gameEngine', () => {
       addCssFileName: vi.fn(),
       getCssFileNames: vi.fn(() => []),
     }
-    let resolveGameData: ((value: {
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }) => void) | undefined
+    let resolveGameData:
+      | ((value: {
+          meta: {
+            id: string
+            name: string
+            createdAt: string
+            updatedAt: string
+            title: string
+            description: string
+            version: string
+            initialState: { scene: string }
+            scenes: string[]
+          }
+          scenes: []
+        }) => void)
+      | undefined
     const gameDataPromise = new Promise<{
       meta: {
         id: string
@@ -256,6 +265,7 @@ describe('core/gameEngine', () => {
       title: 'Ready First',
       activeScene: 'intro',
       flags: {},
+      sceneStack: ['intro'],
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(
@@ -289,6 +299,8 @@ describe('core/gameEngine', () => {
     let storedState: GameState = {
       activeScene: '',
       title: '',
+      flags: {},
+      sceneStack: [],
     }
     const gameStateStorage: IGameStateStorage = {
       update: vi.fn((value) => {
@@ -308,20 +320,22 @@ describe('core/gameEngine', () => {
       addCssFileName: vi.fn(),
       getCssFileNames: vi.fn(() => []),
     }
-    let resolveGameData: ((value: {
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }) => void) | undefined
+    let resolveGameData:
+      | ((value: {
+          meta: {
+            id: string
+            name: string
+            createdAt: string
+            updatedAt: string
+            title: string
+            description: string
+            version: string
+            initialState: { scene: string }
+            scenes: string[]
+          }
+          scenes: []
+        }) => void)
+      | undefined
     const gameDataPromise = new Promise<{
       meta: {
         id: string
@@ -380,6 +394,7 @@ describe('core/gameEngine', () => {
       title: 'Already Ready',
       activeScene: 'intro',
       flags: {},
+      sceneStack: ['intro'],
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
     expect(messageBus.publish).toHaveBeenCalledWith(

@@ -19,6 +19,7 @@ export class GameStateStorage implements IGameStateStorage {
     activeScene: '',
     title: '',
     flags: {},
+    sceneStack: [],
   }
   constructor() {}
   public update(value: Partial<GameState>): void {
