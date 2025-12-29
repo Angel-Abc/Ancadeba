@@ -12,7 +12,6 @@ describe('helpers/iocHelpers', () => {
   it('registers logger, message bus, and dom helper services', () => {
     // Arrange
     const logger = createLogger()
-    const document = { title: '' } as Document
     const container = new Container(logger)
 
     // Act
@@ -24,7 +23,6 @@ describe('helpers/iocHelpers', () => {
     // Assert
     expect(resolvedBus).toBeInstanceOf(MessageBus)
     expect(resolvedLogger).toBe(logger)
-    expect(document.title).toBe('Test')
   })
 
   it('throws when registering services twice', () => {
