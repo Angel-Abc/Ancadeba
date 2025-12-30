@@ -38,7 +38,9 @@ describe('loaders/gameDataLoader', () => {
         scene: 'intro',
       },
       scenes: ['intro'],
+      styling: [],
       tileSets: ['outdoor'],
+      maps: [],
     }
     const scene = {
       id: 'scene-1',
@@ -101,6 +103,11 @@ describe('loaders/gameDataLoader', () => {
       tileSetSchema,
       logger
     )
-    expect(result).toEqual({ meta: game, scenes: [scene], tileSets: [tileSet] })
+    expect(result).toEqual({
+      meta: game,
+      scenes: [scene],
+      tileSets: [tileSet],
+      maps: [],
+    })
   })
 })

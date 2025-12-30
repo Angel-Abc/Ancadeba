@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
-import type { IGameDataLoader } from '@ancadeba/schemas'
+import type { GameData, IGameDataLoader } from '@ancadeba/schemas'
 import { CORE_MESSAGES } from '../../messages/core'
 import { GameEngine } from '../../core/gameEngine'
+import type { IGameDataInitializer } from '../../core/gameDataInitializer'
 import type { IActionExecutor } from '../../core/actionExecutor'
 import { UIReadySignal } from '../../system/uiReadySignal'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import type { IGameStateStorage } from '../../gameState.ts/storage'
 import type { GameState } from '../../gameState.ts/types'
-import type { IResourceDataStorage } from '../../resourceData/storage'
 
 describe('core/gameEngine', () => {
   it('initializes game state before publishing the start message', async () => {
@@ -49,43 +49,21 @@ describe('core/gameEngine', () => {
         return storedState
       },
     }
-    const resourceDataStorage: IResourceDataStorage = {
-      rootPath: '/resources',
-      addSceneData: vi.fn(),
-      getSceneData: vi.fn(),
-      addCssFileName: vi.fn(),
-      getCssFileNames: vi.fn(() => []),
+    const gameDataInitializer: IGameDataInitializer = {
+      initialize: vi.fn((gameData) => {
+        const { scene: initialScene, ...initialState } =
+          gameData.meta.initialState
+        gameStateStorage.state = {
+          title: gameData.meta.title,
+          activeScene: initialScene,
+          flags: {},
+          sceneStack: [initialScene],
+          ...initialState,
+        }
+      }),
     }
-    let resolveGameData:
-      | ((value: {
-          meta: {
-            id: string
-            name: string
-            createdAt: string
-            updatedAt: string
-            title: string
-            description: string
-            version: string
-            initialState: { scene: string }
-            scenes: string[]
-          }
-          scenes: []
-        }) => void)
-      | undefined
-    const gameDataPromise = new Promise<{
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }>((resolve) => {
+    let resolveGameData: ((value: GameData) => void) | undefined
+    const gameDataPromise = new Promise<GameData>((resolve) => {
       resolveGameData = resolve
     })
     const gameDataLoader: IGameDataLoader = {
@@ -96,8 +74,7 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage,
-      resourceDataStorage,
+      gameDataInitializer,
       actionExecutor
     )
 
@@ -119,8 +96,13 @@ describe('core/gameEngine', () => {
         version: '1.0.0',
         initialState: { scene: 'intro' },
         scenes: ['intro'],
+        styling: [],
+        tileSets: [],
+        maps: [],
       },
       scenes: [],
+      tileSets: [],
+      maps: [],
     })
     await Promise.resolve()
 
@@ -184,43 +166,21 @@ describe('core/gameEngine', () => {
         return storedState
       },
     }
-    const resourceDataStorage: IResourceDataStorage = {
-      rootPath: '/resources',
-      addSceneData: vi.fn(),
-      getSceneData: vi.fn(),
-      addCssFileName: vi.fn(),
-      getCssFileNames: vi.fn(() => []),
+    const gameDataInitializer: IGameDataInitializer = {
+      initialize: vi.fn((gameData) => {
+        const { scene: initialScene, ...initialState } =
+          gameData.meta.initialState
+        gameStateStorage.state = {
+          title: gameData.meta.title,
+          activeScene: initialScene,
+          flags: {},
+          sceneStack: [initialScene],
+          ...initialState,
+        }
+      }),
     }
-    let resolveGameData:
-      | ((value: {
-          meta: {
-            id: string
-            name: string
-            createdAt: string
-            updatedAt: string
-            title: string
-            description: string
-            version: string
-            initialState: { scene: string }
-            scenes: string[]
-          }
-          scenes: []
-        }) => void)
-      | undefined
-    const gameDataPromise = new Promise<{
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }>((resolve) => {
+    let resolveGameData: ((value: GameData) => void) | undefined
+    const gameDataPromise = new Promise<GameData>((resolve) => {
       resolveGameData = resolve
     })
     const gameDataLoader: IGameDataLoader = {
@@ -231,8 +191,7 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage,
-      resourceDataStorage,
+      gameDataInitializer,
       actionExecutor
     )
 
@@ -255,8 +214,13 @@ describe('core/gameEngine', () => {
         version: '1.0.0',
         initialState: { scene: 'intro' },
         scenes: ['intro'],
+        styling: [],
+        tileSets: [],
+        maps: [],
       },
       scenes: [],
+      tileSets: [],
+      maps: [],
     })
     await startPromise
 
@@ -313,43 +277,21 @@ describe('core/gameEngine', () => {
         return storedState
       },
     }
-    const resourceDataStorage: IResourceDataStorage = {
-      rootPath: '/resources',
-      addSceneData: vi.fn(),
-      getSceneData: vi.fn(),
-      addCssFileName: vi.fn(),
-      getCssFileNames: vi.fn(() => []),
+    const gameDataInitializer: IGameDataInitializer = {
+      initialize: vi.fn((gameData) => {
+        const { scene: initialScene, ...initialState } =
+          gameData.meta.initialState
+        gameStateStorage.state = {
+          title: gameData.meta.title,
+          activeScene: initialScene,
+          flags: {},
+          sceneStack: [initialScene],
+          ...initialState,
+        }
+      }),
     }
-    let resolveGameData:
-      | ((value: {
-          meta: {
-            id: string
-            name: string
-            createdAt: string
-            updatedAt: string
-            title: string
-            description: string
-            version: string
-            initialState: { scene: string }
-            scenes: string[]
-          }
-          scenes: []
-        }) => void)
-      | undefined
-    const gameDataPromise = new Promise<{
-      meta: {
-        id: string
-        name: string
-        createdAt: string
-        updatedAt: string
-        title: string
-        description: string
-        version: string
-        initialState: { scene: string }
-        scenes: string[]
-      }
-      scenes: []
-    }>((resolve) => {
+    let resolveGameData: ((value: GameData) => void) | undefined
+    const gameDataPromise = new Promise<GameData>((resolve) => {
       resolveGameData = resolve
     })
     const gameDataLoader: IGameDataLoader = {
@@ -360,8 +302,7 @@ describe('core/gameEngine', () => {
       messageBus,
       uiReadySignal,
       gameDataLoader,
-      gameStateStorage,
-      resourceDataStorage,
+      gameDataInitializer,
       actionExecutor
     )
 
@@ -384,8 +325,13 @@ describe('core/gameEngine', () => {
         version: '1.0.0',
         initialState: { scene: 'intro' },
         scenes: ['intro'],
+        styling: [],
+        tileSets: [],
+        maps: [],
       },
       scenes: [],
+      tileSets: [],
+      maps: [],
     })
     await startPromise
 

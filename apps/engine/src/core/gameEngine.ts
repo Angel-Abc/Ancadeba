@@ -7,13 +7,9 @@ import { CORE_MESSAGES } from '../messages/core'
 import { IUIReadySignal, uiReadySignalToken } from '../system/uiReadySignal'
 import { gameDataLoaderToken, IGameDataLoader } from '@ancadeba/schemas'
 import {
-  gameStateStorageToken,
-  IGameStateStorage,
-} from '../gameState.ts/storage'
-import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
-} from '../resourceData/storage'
+  gameDataInitializerToken,
+  IGameDataInitializer,
+} from './gameDataInitializer'
 import { IActionExecutor, actionExecutorToken } from './actionExecutor'
 
 export interface IGameEngine {
@@ -27,8 +23,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   engineMessageBusToken,
   uiReadySignalToken,
   gameDataLoaderToken,
-  gameStateStorageToken,
-  resourceDataStorageToken,
+  gameDataInitializerToken,
   actionExecutorToken,
 ]
 export class GameEngine implements IGameEngine {
@@ -37,36 +32,14 @@ export class GameEngine implements IGameEngine {
     private readonly messageBus: IEngineMessageBus,
     private readonly uiReadySignal: IUIReadySignal,
     private readonly gameDataLoader: IGameDataLoader,
-    private readonly gameStateStorage: IGameStateStorage,
-    private readonly resourceDataStorage: IResourceDataStorage,
+    private readonly gameDataInitializer: IGameDataInitializer,
     private readonly actionExecutor: IActionExecutor
   ) {}
 
   async start(): Promise<void> {
     const gameData = await this.gameDataLoader.loadGameData()
     this.logger.info(logName, 'loaded game data: {0}', gameData)
-    const { scene: initialScene, ...initialState } = gameData.meta.initialState
-    this.gameStateStorage.state = {
-      title: gameData.meta.title,
-      activeScene: initialScene,
-      flags: {},
-      sceneStack: [initialScene],
-      ...initialState,
-    }
-    gameData.scenes.forEach((scene) => {
-      this.resourceDataStorage.addSceneData(scene.id, scene)
-    })
-    gameData.meta.styling?.forEach((fileName) => {
-      this.resourceDataStorage.addCssFileName(fileName)
-    })
-    gameData.tileSets.forEach((tileSet) => {
-      tileSet.tiles.forEach((tile) => {
-        const tileId = `${tileSet.id}.${tile.id}`
-        this.resourceDataStorage.addTileData(tileId, tile)
-      })
-    })
-
-    this.resourceDataStorage.logResourceData()
+    this.gameDataInitializer.initialize(gameData)
     // Wait for UI to be ready
     await this.uiReadySignal.ready
     this.actionExecutor.start()

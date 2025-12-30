@@ -5,6 +5,11 @@ import {
   gameEngineToken,
 } from '../core/gameEngine'
 import {
+  GameDataInitializer,
+  gameDataInitializerDependencies,
+  gameDataInitializerToken,
+} from '../core/gameDataInitializer'
+import {
   ActionExecutor,
   actionExecutorDependencies,
   actionExecutorToken,
@@ -52,6 +57,11 @@ export function registerServices(container: Container): void {
       token: gameEngineToken,
       useClass: GameEngine,
       deps: gameEngineDependencies,
+    },
+    {
+      token: gameDataInitializerToken,
+      useClass: GameDataInitializer,
+      deps: gameDataInitializerDependencies,
     },
     {
       token: actionExecutorToken,
