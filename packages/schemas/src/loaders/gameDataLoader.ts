@@ -4,6 +4,7 @@ import {
   Token,
   token,
   loadJsonResource,
+  typedEntries,
 } from '@ancadeba/utils'
 import { GameData } from './types'
 import { IJsonConfiguration, jsonConfigurationToken } from './configuration'
@@ -91,20 +92,18 @@ export class GameDataLoader implements IGameDataLoader {
   private async loadCollections(
     definitions: ResourceCollectionDefinitions
   ): Promise<GameDataCollections> {
-    const collections = {} as Record<GameDataCollectionKey, unknown[]>
-
-    await Promise.all(
-      Object.entries(definitions).map(async ([key, definition]) => {
+    const entries = await Promise.all(
+      typedEntries(definitions).map(async ([key, definition]) => {
         const items = await this.loadNamedResources(
           definition.names,
           definition.basePath,
           definition.schema
         )
-        collections[key as GameDataCollectionKey] = items
+        return [key, items] as const
       })
     )
 
-    return collections as GameDataCollections
+    return Object.fromEntries(entries) as GameDataCollections
   }
 
   private async loadNamedResources(
