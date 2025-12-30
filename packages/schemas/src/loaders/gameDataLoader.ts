@@ -11,6 +11,7 @@ import { Game, gameSchema } from '../schemas/game'
 import { sceneSchema } from '../schemas/scene'
 import { ZodTypeAny } from 'zod'
 import { tileSetSchema } from '../schemas/tileSet'
+import { mapSchema } from '../schemas/map'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
@@ -48,6 +49,11 @@ const defaultResourceCollectionFactory: ResourceCollectionFactory = (
     names: game.tileSets,
     basePath: `${rootPath}/tileSets`,
     schema: tileSetSchema,
+  },
+  maps: {
+    names: game.maps,
+    basePath: `${rootPath}/maps`,
+    schema: mapSchema,
   },
 })
 

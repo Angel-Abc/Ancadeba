@@ -59,7 +59,14 @@ export class GameEngine implements IGameEngine {
     gameData.meta.styling?.forEach((fileName) => {
       this.resourceDataStorage.addCssFileName(fileName)
     })
+    gameData.tileSets.forEach((tileSet) => {
+      tileSet.tiles.forEach((tile) => {
+        const tileId = `${tileSet.id}.${tile.id}`
+        this.resourceDataStorage.addTileData(tileId, tile)
+      })
+    })
 
+    this.resourceDataStorage.logResourceData()
     // Wait for UI to be ready
     await this.uiReadySignal.ready
     this.actionExecutor.start()

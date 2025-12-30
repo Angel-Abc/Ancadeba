@@ -3,12 +3,16 @@ import {
   IJsonConfiguration,
   jsonConfigurationToken,
   Scene,
+  Tile,
 } from '@ancadeba/schemas'
 
 export interface IResourceDataStorage {
   get rootPath(): string
+  logResourceData(): void
   addSceneData(sceneId: string, data: Scene): void
   getSceneData(sceneId: string): Scene
+  addTileData(tileId: string, data: Tile): void
+  getTileData(tileId: string): Tile
   addCssFileName(fileName: string): void
   getCssFileNames(): string[]
 }
@@ -21,6 +25,7 @@ export const resourceDataStorageDependencies: Token<unknown>[] = [
 ]
 export class ResourceDataStorage implements IResourceDataStorage {
   private scenes: Map<string, Scene> = new Map()
+  private tiles: Map<string, Tile> = new Map()
   private cssFileNames: string[] = []
 
   constructor(
@@ -44,11 +49,37 @@ export class ResourceDataStorage implements IResourceDataStorage {
     return scene
   }
 
+  addTileData(tileId: string, data: Tile): void {
+    this.tiles.set(tileId, data)
+  }
+
+  getTileData(tileId: string): Tile {
+    const tile = this.tiles.get(tileId)
+    if (!tile) {
+      this.logger.fatal(logName, 'No tile data for id: {0}', tileId)
+    }
+    return tile
+  }
+
   addCssFileName(fileName: string): void {
     this.cssFileNames.push(fileName)
   }
 
   getCssFileNames(): string[] {
     return this.cssFileNames
+  }
+
+  logResourceData(): void {
+    this.logger.debug(
+      logName,
+      'Scenes loaded: {0}',
+      Array.from(this.scenes.keys())
+    )
+    this.logger.debug(
+      logName,
+      'Tiles loaded: {0}',
+      Array.from(this.tiles.keys())
+    )
+    this.logger.debug(logName, 'CSS files loaded: {0}', this.cssFileNames)
   }
 }

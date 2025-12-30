@@ -10,8 +10,9 @@ export const gameSchema = BaseSchema.extend({
     flags: z.record(z.string(), z.boolean()).optional(),
   }),
   scenes: z.array(z.string()),
-  styling: z.array(z.string()).optional(),
+  styling: z.array(z.string()),
   tileSets: z.array(z.string()),
+  maps: z.array(z.string()),
 })
 
 export type Game = z.infer<typeof gameSchema>

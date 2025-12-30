@@ -14,5 +14,6 @@
   },
   "scenes": ["start-screen", "settings", "navigate"],
   "styling": ["game.css"],
-  "tileSets": ["outdoor"]
+  "tileSets": ["outdoor"],
+  "maps": ["start-beach"]
 }
