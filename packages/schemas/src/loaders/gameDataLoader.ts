@@ -9,7 +9,8 @@ import { GameData } from './types'
 import { IJsonConfiguration, jsonConfigurationToken } from './configuration'
 import { Game, gameSchema } from '../schemas/game'
 import { sceneSchema } from '../schemas/scene'
-import { ZodType } from 'zod'
+import { ZodTypeAny } from 'zod'
+import { tileSetSchema } from '../schemas/tileSet'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
@@ -18,29 +19,37 @@ export interface IGameDataLoader {
 type GameDataCollections = Omit<GameData, 'meta'>
 type GameDataCollectionKey = keyof GameDataCollections
 
-type ResourceCollectionDefinition<T> = {
-  key: GameDataCollectionKey
+type ResourceCollectionDefinition = {
   names: readonly string[]
   basePath: string
-  schema: ZodType<T>
+  schema: ZodTypeAny
 }
+
+type ResourceCollectionDefinitions = Record<
+  GameDataCollectionKey,
+  ResourceCollectionDefinition
+>
 
 export type ResourceCollectionFactory = (
   game: Game,
   rootPath: string
-) => ResourceCollectionDefinition<unknown>[]
+) => ResourceCollectionDefinitions
 
 const defaultResourceCollectionFactory: ResourceCollectionFactory = (
   game,
   rootPath
-) => [
-  {
-    key: 'scenes',
+) => ({
+  scenes: {
     names: game.scenes,
     basePath: `${rootPath}/scenes`,
     schema: sceneSchema,
   },
-]
+  tileSets: {
+    names: game.tileSets,
+    basePath: `${rootPath}/tileSets`,
+    schema: tileSetSchema,
+  },
+})
 
 const logName = 'schemas/loaders/gameDataLoader'
 export const gameDataLoaderToken = token<IGameDataLoader>(logName)
@@ -74,33 +83,32 @@ export class GameDataLoader implements IGameDataLoader {
   }
 
   private async loadCollections(
-    definitions: ResourceCollectionDefinition<unknown>[]
+    definitions: ResourceCollectionDefinitions
   ): Promise<GameDataCollections> {
-    const collections = {} as GameDataCollections
+    const collections = {} as Record<GameDataCollectionKey, unknown[]>
 
     await Promise.all(
-      definitions.map(async (definition) => {
+      Object.entries(definitions).map(async ([key, definition]) => {
         const items = await this.loadNamedResources(
           definition.names,
           definition.basePath,
           definition.schema
         )
-        collections[definition.key] =
-          items as GameDataCollections[typeof definition.key]
+        collections[key as GameDataCollectionKey] = items
       })
     )
 
-    return collections
+    return collections as GameDataCollections
   }
 
-  private async loadNamedResources<T>(
+  private async loadNamedResources(
     names: readonly string[],
     basePath: string,
-    schema: ZodType<T>
-  ): Promise<T[]> {
+    schema: ZodTypeAny
+  ): Promise<unknown[]> {
     return Promise.all(
       names.map((name) =>
-        loadJsonResource<T>(`${basePath}/${name}.json`, schema, this.logger)
+        loadJsonResource(`${basePath}/${name}.json`, schema, this.logger)
       )
     )
   }

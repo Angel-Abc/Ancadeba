@@ -11,6 +11,7 @@ export const gameSchema = BaseSchema.extend({
   }),
   scenes: z.array(z.string()),
   styling: z.array(z.string()).optional(),
+  tileSets: z.array(z.string()),
 })
 
 export type Game = z.infer<typeof gameSchema>

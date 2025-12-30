@@ -3,7 +3,7 @@ import { gameStateStorageToken, IGameStateStorage } from './storage'
 import { GameState } from './types'
 
 export interface IGameStateProvider {
-  get state(): GameState
+  get state(): Readonly<GameState>
   getFlag(flagName: string): boolean | undefined
   setFlag(flagName: string, value: boolean): void
 }
@@ -16,9 +16,13 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
 export class GameStateProvider implements IGameStateProvider {
   constructor(private readonly gameStateStorage: IGameStateStorage) {}
 
-  get state(): GameState {
-    // TODO: return a readonly proxy (?)
-    return this.gameStateStorage.state
+  get state(): Readonly<GameState> {
+    const state = this.gameStateStorage.state
+    return Object.freeze({
+      ...state,
+      flags: { ...state.flags },
+      sceneStack: [...state.sceneStack],
+    })
   }
 
   getFlag(flagName: string): boolean | undefined {

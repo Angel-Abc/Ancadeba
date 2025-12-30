@@ -1,0 +1,39 @@
+{
+  "id": "outdoor",
+  "name": "Outdoor Tile Set",
+  "createdAt": "2024-06-01T12:00:00Z",
+  "updatedAt": "2024-06-15T12:00:00Z",
+  "tiles": [
+    {
+      "id": "grass",
+      "color": "lightgreen",
+      "walkable": true
+    },
+    {
+      "id": "beach",
+      "color": "yellow",
+      "walkable": true
+    },
+    {
+      "id": "dune",
+      "color": "greenyellow",
+      "walkable": true
+    },
+    {
+      "id": "road",
+      "color": "chocolate",
+      "walkable": true
+    },
+    {
+      "id": "ocean",
+      "image": "images/outdoor/waves.svg",
+      "color": "aqua",
+      "walkable": false
+    },
+    {
+      "id": "forest",
+      "color": "green",
+      "walkable": false
+    }
+  ]
+}

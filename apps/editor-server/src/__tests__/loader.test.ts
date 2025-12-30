@@ -21,6 +21,7 @@ describe('loader', () => {
         scene: 'intro',
       },
       scenes: ['intro'],
+      tileSets: ['outdoor'],
     }
     fs.writeFileSync(filePath, JSON.stringify(gameData), 'utf-8')
 

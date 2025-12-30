@@ -4,6 +4,7 @@ import { loadJsonResource } from '@ancadeba/utils'
 import { GameDataLoader } from '../../loaders/gameDataLoader'
 import { gameSchema } from '../../schemas/game'
 import { sceneSchema } from '../../schemas/scene'
+import { tileSetSchema } from '../../schemas/tileSet'
 
 vi.mock('@ancadeba/utils', async () => {
   const actual = await vi.importActual<typeof import('@ancadeba/utils')>(
@@ -37,6 +38,7 @@ describe('loaders/gameDataLoader', () => {
         scene: 'intro',
       },
       scenes: ['intro'],
+      tileSets: ['outdoor'],
     }
     const scene = {
       id: 'scene-1',
@@ -58,9 +60,24 @@ describe('loaders/gameDataLoader', () => {
         },
       },
     }
+    const tileSet = {
+      id: 'tileset-1',
+      name: 'Outdoor',
+      createdAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
+      tiles: [
+        {
+          id: 'tile-1',
+          walkable: true,
+        },
+      ],
+    }
     const loader = new GameDataLoader(logger, config)
     const mockedLoadJsonResource = vi.mocked(loadJsonResource)
-    mockedLoadJsonResource.mockResolvedValueOnce(game).mockResolvedValueOnce(scene)
+    mockedLoadJsonResource
+      .mockResolvedValueOnce(game)
+      .mockResolvedValueOnce(scene)
+      .mockResolvedValueOnce(tileSet)
 
     // Act
     const result = await loader.loadGameData()
@@ -78,6 +95,12 @@ describe('loaders/gameDataLoader', () => {
       sceneSchema,
       logger
     )
-    expect(result).toEqual({ meta: game, scenes: [scene] })
+    expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
+      3,
+      '/data/tileSets/outdoor.json',
+      tileSetSchema,
+      logger
+    )
+    expect(result).toEqual({ meta: game, scenes: [scene], tileSets: [tileSet] })
   })
 })
