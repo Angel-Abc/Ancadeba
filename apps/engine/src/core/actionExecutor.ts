@@ -1,5 +1,11 @@
 import { Action } from '@ancadeba/schemas'
-import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
+import {
+  assertNever,
+  ILogger,
+  loggerToken,
+  Token,
+  token,
+} from '@ancadeba/utils'
 import {
   IGameStateStorage,
   gameStateStorageToken,
@@ -9,10 +15,7 @@ import {
   engineMessageBusToken,
   IEngineMessageBus,
 } from '../system/engineMessageBus'
-import {
-  browserAdapterToken,
-  IBrowserAdapter,
-} from '../system/browserAdapter'
+import { browserAdapterToken, IBrowserAdapter } from '../system/browserAdapter'
 
 export interface IActionExecutor {
   start(): void
@@ -86,12 +89,12 @@ export class ActionExecutor implements IActionExecutor {
         // TODO: implement volume control
         return
       default: {
-        const exhaustiveCheck: never = action
         this.logger.warn(
           logName,
-          `Unknown action type: ${(exhaustiveCheck as Action).type}`
+          'Unknown action type: {0}',
+          (action as Action).type
         )
-        return
+        return assertNever(action)
       }
     }
   }

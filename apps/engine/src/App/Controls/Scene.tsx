@@ -15,8 +15,11 @@ import {
 import { CORE_MESSAGES } from '../../messages/core'
 import { useEffect, useMemo, useState } from 'react'
 import { Scene as SceneData } from '@ancadeba/schemas'
+import { assertNever, ILogger, loggerToken } from '@ancadeba/utils'
 
 export function Scene() {
+  const logName = 'App.Controls.Scene'
+  const logger = useService<ILogger>(loggerToken)
   const gameStateProvider = useService<IGameStateProvider>(
     gameStateProviderToken
   )
@@ -51,7 +54,13 @@ export function Scene() {
         />
       )
     }
-    default:
-      return <div>Unknown Scene Screen Type: {activeScene.screen.type}</div>
+    default: {
+      logger.warn(
+        logName,
+        'Unknown screen type: {0}',
+        (activeScene as SceneData).screen.type
+      )
+      return assertNever(activeScene.screen.type)
+    }
   }
 }
