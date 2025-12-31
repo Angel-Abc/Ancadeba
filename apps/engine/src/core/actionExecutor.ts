@@ -7,9 +7,9 @@ import {
   token,
 } from '@ancadeba/utils'
 import {
-  IGameStateStorage,
-  gameStateStorageToken,
-} from '../gameState.ts/storage'
+  gameStateManagerToken,
+  IGameStateManager,
+} from '../gameState.ts/manager'
 import { CORE_MESSAGES } from '../messages/core'
 import {
   engineMessageBusToken,
@@ -26,7 +26,7 @@ export const actionExecutorToken = token<IActionExecutor>(logName)
 export const actionExecutorDependencies: Token<unknown>[] = [
   loggerToken,
   engineMessageBusToken,
-  gameStateStorageToken,
+  gameStateManagerToken,
   browserAdapterToken,
 ]
 
@@ -34,7 +34,7 @@ export class ActionExecutor implements IActionExecutor {
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
-    private readonly gameStateStorage: IGameStateStorage,
+    private readonly gameStateManager: IGameStateManager,
     private readonly browserAdapter: IBrowserAdapter
   ) {}
 
@@ -47,39 +47,17 @@ export class ActionExecutor implements IActionExecutor {
   private execute(action: Action): void {
     switch (action.type) {
       case 'switch-scene':
-        // TODO: Move scene switching logic to SceneManager
-        // switching scene is most of the time a push on the scene stack
-        this.gameStateStorage.update({ activeScene: action.targetSceneId })
-        this.gameStateStorage.update({
-          sceneStack: [
-            ...this.gameStateStorage.state.sceneStack,
-            action.targetSceneId,
-          ],
-        })
-        this.messageBus.publish(CORE_MESSAGES.SCENE_CHANGED, {
-          sceneId: action.targetSceneId,
-        })
+        this.gameStateManager.switchScene(action.targetSceneId)
         return
       case 'exit-game':
         // TODO: exit game. reload the browser tab for now
         this.browserAdapter.reload()
         return
       case 'set-flag':
-        this.gameStateStorage.setFlag(action.name, action.value)
+        this.gameStateManager.setFlag(action.name, action.value)
         return
       case 'back': {
-        const sceneStack = this.gameStateStorage.state.sceneStack
-        if (sceneStack.length <= 1) {
-          this.logger.warn(logName, 'Cannot go back, scene stack is empty')
-          return
-        }
-        const newSceneStack = sceneStack.slice(0, -1)
-        const previousSceneId = newSceneStack[newSceneStack.length - 1]
-        this.gameStateStorage.update({ sceneStack: newSceneStack })
-        this.gameStateStorage.update({ activeScene: previousSceneId })
-        this.messageBus.publish(CORE_MESSAGES.SCENE_CHANGED, {
-          sceneId: previousSceneId!,
-        })
+        this.gameStateManager.goBack()
         return
       }
       case 'volume-up':

@@ -5,6 +5,7 @@ import {
   Scene,
   Tile,
 } from '@ancadeba/schemas'
+import { MapData } from './types'
 
 export interface IResourceDataStorage {
   get rootPath(): string
@@ -15,6 +16,8 @@ export interface IResourceDataStorage {
   getTileData(tileId: string): Tile
   addCssFileName(fileName: string): void
   getCssFileNames(): string[]
+  addMapData(mapId: string, data: MapData): void
+  getMapData(mapId: string): MapData
 }
 
 const logName = 'engine/resourceData/storage'
@@ -26,6 +29,7 @@ export const resourceDataStorageDependencies: Token<unknown>[] = [
 export class ResourceDataStorage implements IResourceDataStorage {
   private scenes: Map<string, Scene> = new Map()
   private tiles: Map<string, Tile> = new Map()
+  private maps: Map<string, MapData> = new Map()
   private cssFileNames: string[] = []
 
   constructor(
@@ -69,17 +73,32 @@ export class ResourceDataStorage implements IResourceDataStorage {
     return this.cssFileNames
   }
 
+  addMapData(mapId: string, data: MapData): void {
+    this.maps.set(mapId, data)
+  }
+
+  getMapData(mapId: string): MapData {
+    const map = this.maps.get(mapId)
+    if (!map) {
+      this.logger.fatal(logName, 'No map data for id: {0}', mapId)
+    }
+    return map
+  }
+
   logResourceData(): void {
     this.logger.debug(
       logName,
       'Scenes loaded: {0}',
       Array.from(this.scenes.keys())
     )
+
     this.logger.debug(
       logName,
       'Tiles loaded: {0}',
       Array.from(this.tiles.keys())
     )
+    this.logger.debug(logName, 'Maps loaded: {0}', Array.from(this.maps.keys()))
+
     this.logger.debug(logName, 'CSS files loaded: {0}', this.cssFileNames)
   }
 }

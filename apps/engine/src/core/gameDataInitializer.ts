@@ -1,5 +1,5 @@
 import { Token, token } from '@ancadeba/utils'
-import type { GameData } from '@ancadeba/schemas'
+import type { GameData, Tile } from '@ancadeba/schemas'
 import {
   IGameStateStorage,
   gameStateStorageToken,
@@ -46,6 +46,20 @@ export class GameDataInitializer implements IGameDataInitializer {
       tileSet.tiles.forEach((tile) => {
         const tileId = `${tileSet.id}.${tile.id}`
         this.resourceDataStorage.addTileData(tileId, tile)
+      })
+    })
+    gameData.maps.forEach((map) => {
+      this.resourceDataStorage.addMapData(map.id, {
+        id: map.id,
+        width: map.width,
+        height: map.height,
+        tiles: new Map<string, Tile>(
+          map.tiles.map((tile) => [
+            tile.key,
+            this.resourceDataStorage.getTileData(tile.tile),
+          ])
+        ),
+        squares: map.map.map((row) => row.split(',')),
       })
     })
 

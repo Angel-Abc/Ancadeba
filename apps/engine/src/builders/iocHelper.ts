@@ -26,6 +26,11 @@ import {
   gameStateProviderToken,
 } from '../gameState.ts/provider'
 import {
+  GameStateManager,
+  gameStateManagerDependencies,
+  gameStateManagerToken,
+} from '../gameState.ts/manager'
+import {
   GameStateStorage,
   gameStateStorageDependencies,
   gameStateStorageToken,
@@ -83,6 +88,11 @@ export function registerServices(container: Container): void {
       token: gameStateProviderToken,
       useClass: GameStateProvider,
       deps: gameStateProviderDependencies,
+    },
+    {
+      token: gameStateManagerToken,
+      useClass: GameStateManager,
+      deps: gameStateManagerDependencies,
     },
     {
       token: gameStateStorageToken,

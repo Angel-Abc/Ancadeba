@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
-import type { IGameStateStorage } from '../../gameState.ts/storage'
+import type { IGameStateManager } from '../../gameState.ts/manager'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import type { IBrowserAdapter } from '../../system/browserAdapter'
 import { CORE_MESSAGES } from '../../messages/core'
 import { ActionExecutor } from '../../core/actionExecutor'
 
 describe('core/actionExecutor', () => {
-  it('updates state and publishes scene changes on switch-scene', () => {
+  it('delegates switch-scene to the game state manager', () => {
     // Arrange
     const logger: ILogger = {
       debug: vi.fn(() => ''),
@@ -18,19 +18,9 @@ describe('core/actionExecutor', () => {
         throw new Error('fatal')
       }),
     }
-    const update = vi.fn()
-    const gameStateStorage: IGameStateStorage = {
-      update,
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: '',
-          title: '',
-          flags: {},
-          sceneStack: [],
-        }
-      },
-      getFlag: vi.fn(),
+    const gameStateManager: IGameStateManager = {
+      switchScene: vi.fn(),
+      goBack: vi.fn(),
       setFlag: vi.fn(),
     }
     let subscribedHandler:
@@ -53,7 +43,7 @@ describe('core/actionExecutor', () => {
     const executor = new ActionExecutor(
       logger,
       messageBus,
-      gameStateStorage,
+      gameStateManager,
       browserAdapter
     )
 
@@ -75,15 +65,10 @@ describe('core/actionExecutor', () => {
     })
 
     // Assert
-    expect(update).toHaveBeenCalledWith({ activeScene: 'scene-1' })
-    expect(update).toHaveBeenCalledWith({ sceneStack: ['scene-1'] })
-    expect(messageBus.publish).toHaveBeenCalledWith(
-      CORE_MESSAGES.SCENE_CHANGED,
-      { sceneId: 'scene-1' }
-    )
+    expect(gameStateManager.switchScene).toHaveBeenCalledWith('scene-1')
   })
 
-  it('sets flags on set-flag actions', () => {
+  it('delegates set-flag to the game state manager', () => {
     // Arrange
     const logger: ILogger = {
       debug: vi.fn(() => ''),
@@ -94,20 +79,10 @@ describe('core/actionExecutor', () => {
         throw new Error('fatal')
       }),
     }
-    const setFlag = vi.fn()
-    const gameStateStorage: IGameStateStorage = {
-      update: vi.fn(),
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: '',
-          title: '',
-          flags: {},
-          sceneStack: [],
-        }
-      },
-      getFlag: vi.fn(),
-      setFlag,
+    const gameStateManager: IGameStateManager = {
+      switchScene: vi.fn(),
+      goBack: vi.fn(),
+      setFlag: vi.fn(),
     }
     let subscribedHandler:
       | ((payload: { action: { type: 'set-flag'; name: string; value: boolean } }) => void)
@@ -129,7 +104,7 @@ describe('core/actionExecutor', () => {
     const executor = new ActionExecutor(
       logger,
       messageBus,
-      gameStateStorage,
+      gameStateManager,
       browserAdapter
     )
 
@@ -151,7 +126,7 @@ describe('core/actionExecutor', () => {
     })
 
     // Assert
-    expect(setFlag).toHaveBeenCalledWith('flag-1', true)
+    expect(gameStateManager.setFlag).toHaveBeenCalledWith('flag-1', true)
   })
 
   it('reloads the page on exit-game actions', () => {
@@ -165,18 +140,9 @@ describe('core/actionExecutor', () => {
         throw new Error('fatal')
       }),
     }
-    const gameStateStorage: IGameStateStorage = {
-      update: vi.fn(),
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: '',
-          title: '',
-          flags: {},
-          sceneStack: [],
-        }
-      },
-      getFlag: vi.fn(),
+    const gameStateManager: IGameStateManager = {
+      switchScene: vi.fn(),
+      goBack: vi.fn(),
       setFlag: vi.fn(),
     }
     let subscribedHandler:
@@ -200,7 +166,7 @@ describe('core/actionExecutor', () => {
     const executor = new ActionExecutor(
       logger,
       messageBus,
-      gameStateStorage,
+      gameStateManager,
       browserAdapter
     )
 
@@ -223,7 +189,7 @@ describe('core/actionExecutor', () => {
     expect(reload).toHaveBeenCalledTimes(1)
   })
 
-  it('logs a warning when back is called with a single scene', () => {
+  it('delegates back to the game state manager', () => {
     // Arrange
     const logger: ILogger = {
       debug: vi.fn(() => ''),
@@ -234,19 +200,9 @@ describe('core/actionExecutor', () => {
         throw new Error('fatal')
       }),
     }
-    const update = vi.fn()
-    const gameStateStorage: IGameStateStorage = {
-      update,
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: 'scene-1',
-          title: '',
-          flags: {},
-          sceneStack: ['scene-1'],
-        }
-      },
-      getFlag: vi.fn(),
+    const gameStateManager: IGameStateManager = {
+      switchScene: vi.fn(),
+      goBack: vi.fn(),
       setFlag: vi.fn(),
     }
     let subscribedHandler:
@@ -269,7 +225,7 @@ describe('core/actionExecutor', () => {
     const executor = new ActionExecutor(
       logger,
       messageBus,
-      gameStateStorage,
+      gameStateManager,
       browserAdapter
     )
 
@@ -289,87 +245,7 @@ describe('core/actionExecutor', () => {
     subscribedHandler({ action: { type: 'back' } })
 
     // Assert
-    expect(logger.warn).toHaveBeenCalledWith(
-      'engine/core/ActionExecutor',
-      'Cannot go back, scene stack is empty'
-    )
-    expect(update).not.toHaveBeenCalled()
-  })
-
-  it('updates state and publishes a scene change when going back', () => {
-    // Arrange
-    const logger: ILogger = {
-      debug: vi.fn(() => ''),
-      info: vi.fn(() => ''),
-      warn: vi.fn(() => ''),
-      error: vi.fn(() => ''),
-      fatal: vi.fn(() => {
-        throw new Error('fatal')
-      }),
-    }
-    const update = vi.fn()
-    const gameStateStorage: IGameStateStorage = {
-      update,
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: 'scene-3',
-          title: '',
-          flags: {},
-          sceneStack: ['scene-1', 'scene-2', 'scene-3'],
-        }
-      },
-      getFlag: vi.fn(),
-      setFlag: vi.fn(),
-    }
-    let subscribedHandler:
-      | ((payload: { action: { type: 'back' } }) => void)
-      | undefined
-    const messageBus: IEngineMessageBus = {
-      publish: vi.fn(),
-      publishRaw: vi.fn(),
-      subscribe: vi.fn((message, handler) => {
-        if (message === CORE_MESSAGES.EXECUTE_ACTION) {
-          subscribedHandler = handler
-        }
-        return () => undefined
-      }),
-      subscribeRaw: vi.fn(() => () => undefined),
-    }
-    const browserAdapter: IBrowserAdapter = {
-      reload: vi.fn(),
-    }
-    const executor = new ActionExecutor(
-      logger,
-      messageBus,
-      gameStateStorage,
-      browserAdapter
-    )
-
-    // Act
-    executor.start()
-
-    // Assert
-    expect(messageBus.subscribe).toHaveBeenCalledWith(
-      CORE_MESSAGES.EXECUTE_ACTION,
-      expect.any(Function)
-    )
-    expect(subscribedHandler).toBeDefined()
-
-    if (!subscribedHandler) throw new Error('Expected a subscribed handler')
-
-    // Act
-    subscribedHandler({ action: { type: 'back' } })
-
-    // Assert
-    expect(update).toHaveBeenCalledWith({
-      sceneStack: ['scene-1', 'scene-2'],
-    })
-    expect(update).toHaveBeenCalledWith({ activeScene: 'scene-2' })
-    expect(messageBus.publish).toHaveBeenCalledWith(
-      CORE_MESSAGES.SCENE_CHANGED,
-      { sceneId: 'scene-2' }
-    )
+    expect(gameStateManager.goBack).toHaveBeenCalledTimes(1)
   })
 
   it('logs a warning for unknown actions', () => {
@@ -383,18 +259,9 @@ describe('core/actionExecutor', () => {
         throw new Error('fatal')
       }),
     }
-    const gameStateStorage: IGameStateStorage = {
-      update: vi.fn(),
-      set state(_value) {},
-      get state() {
-        return {
-          activeScene: '',
-          title: '',
-          flags: {},
-          sceneStack: [],
-        }
-      },
-      getFlag: vi.fn(),
+    const gameStateManager: IGameStateManager = {
+      switchScene: vi.fn(),
+      goBack: vi.fn(),
       setFlag: vi.fn(),
     }
     let subscribedHandler:
@@ -417,7 +284,7 @@ describe('core/actionExecutor', () => {
     const executor = new ActionExecutor(
       logger,
       messageBus,
-      gameStateStorage,
+      gameStateManager,
       browserAdapter
     )
     const actionType = 'unknown-action'

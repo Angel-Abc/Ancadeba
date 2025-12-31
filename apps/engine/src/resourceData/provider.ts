@@ -1,11 +1,13 @@
 import { Token, token } from '@ancadeba/utils'
 import { IResourceDataStorage, resourceDataStorageToken } from './storage'
 import { Scene } from '@ancadeba/schemas'
+import { MapData } from './types'
 
 export interface IResourceDataProvider {
   get assetsUrl(): string
   getSceneData(sceneId: string): Scene
   getCssFilePaths(): string[]
+  getMapData(mapId: string): MapData
 }
 
 const logName = 'engine/resourceData/provider'
@@ -25,5 +27,8 @@ export class ResourceDataProvider implements IResourceDataProvider {
     return this.resourceDataStorage
       .getCssFileNames()
       .map((fileName) => `${this.assetsUrl}/css/${fileName}`)
+  }
+  getMapData(mapId: string): MapData {
+    return this.resourceDataStorage.getMapData(mapId)
   }
 }

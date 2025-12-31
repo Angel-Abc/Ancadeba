@@ -1,2 +1,9 @@
-// TODO: resource data provider should also provide access to all the loaded game data objects
-// items, like scenes, should be easy to request by id
+import { Tile } from '@ancadeba/schemas'
+
+export interface MapData {
+  id: string
+  width: number
+  height: number
+  tiles: Map<string, Tile>
+  squares: string[][]
+}
