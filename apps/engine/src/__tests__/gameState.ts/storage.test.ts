@@ -13,7 +13,8 @@ describe('gameState/storage', () => {
     // Assert
     expect(storage.state).toEqual({
       title: 'Original Title',
-      activeScene: 'scene-2',
+      activeSceneId: 'scene-2',
+      activeMapId: null,
       flags: {},
       sceneStack: [],
     })

@@ -34,6 +34,7 @@ describe('core/gameEngine', () => {
     }
     let storedState: GameState = {
       activeSceneId: '',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: [],
@@ -48,6 +49,12 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+      get activeSceneId(): string {
+        return storedState.activeSceneId
+      },
+      get activeMapId(): string | null {
+        return storedState.activeMapId
+      },
     }
     const gameDataInitializer: IGameDataInitializer = {
       initialize: vi.fn((gameData) => {
@@ -56,6 +63,7 @@ describe('core/gameEngine', () => {
         gameStateStorage.state = {
           title: gameData.meta.title,
           activeSceneId: initialScene,
+          activeMapId: gameData.meta.initialState.map || null,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,
@@ -88,7 +96,6 @@ describe('core/gameEngine', () => {
     resolveGameData?.({
       meta: {
         id: 'game-1',
-        name: 'Test Game',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Test Game',
@@ -109,7 +116,8 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Test Game',
-      activeScene: 'intro',
+      activeSceneId: 'intro',
+      activeMapId: null,
       flags: {},
       sceneStack: ['intro'],
     })
@@ -151,6 +159,7 @@ describe('core/gameEngine', () => {
     }
     let storedState: GameState = {
       activeSceneId: '',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: [],
@@ -165,6 +174,12 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+      get activeSceneId(): string {
+        return storedState.activeSceneId
+      },
+      get activeMapId(): string | null {
+        return storedState.activeMapId
+      },
     }
     const gameDataInitializer: IGameDataInitializer = {
       initialize: vi.fn((gameData) => {
@@ -173,6 +188,7 @@ describe('core/gameEngine', () => {
         gameStateStorage.state = {
           title: gameData.meta.title,
           activeSceneId: initialScene,
+          activeMapId: gameData.meta.initialState.map || null,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,
@@ -206,7 +222,6 @@ describe('core/gameEngine', () => {
     resolveGameData?.({
       meta: {
         id: 'game-2',
-        name: 'Ready First',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Ready First',
@@ -227,7 +242,8 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Ready First',
-      activeScene: 'intro',
+      activeSceneId: 'intro',
+      activeMapId: null,
       flags: {},
       sceneStack: ['intro'],
     })
@@ -262,6 +278,7 @@ describe('core/gameEngine', () => {
     }
     let storedState: GameState = {
       activeSceneId: '',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: [],
@@ -276,6 +293,12 @@ describe('core/gameEngine', () => {
       get state(): GameState {
         return storedState
       },
+      get activeSceneId(): string {
+        return storedState.activeSceneId
+      },
+      get activeMapId(): string | null {
+        return storedState.activeMapId
+      },
     }
     const gameDataInitializer: IGameDataInitializer = {
       initialize: vi.fn((gameData) => {
@@ -284,6 +307,7 @@ describe('core/gameEngine', () => {
         gameStateStorage.state = {
           title: gameData.meta.title,
           activeSceneId: initialScene,
+          activeMapId: gameData.meta.initialState.map || null,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,
@@ -317,7 +341,6 @@ describe('core/gameEngine', () => {
     resolveGameData?.({
       meta: {
         id: 'game-3',
-        name: 'Already Ready',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Already Ready',
@@ -338,7 +361,8 @@ describe('core/gameEngine', () => {
     // Assert
     expect(gameStateStorage.state).toEqual({
       title: 'Already Ready',
-      activeScene: 'intro',
+      activeSceneId: 'intro',
+      activeMapId: null,
       flags: {},
       sceneStack: ['intro'],
     })

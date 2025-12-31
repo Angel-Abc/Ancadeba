@@ -30,6 +30,7 @@ describe('gameState/manager', () => {
     const storage = new GameStateStorage()
     storage.state = {
       activeSceneId: 'scene-1',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: ['scene-1'],
@@ -41,7 +42,8 @@ describe('gameState/manager', () => {
 
     // Assert
     expect(storage.state).toEqual({
-      activeScene: 'scene-2',
+      activeSceneId: 'scene-2',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: ['scene-1', 'scene-2'],
@@ -59,6 +61,7 @@ describe('gameState/manager', () => {
     const storage = new GameStateStorage()
     storage.state = {
       activeSceneId: 'scene-1',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: ['scene-1'],
@@ -85,6 +88,7 @@ describe('gameState/manager', () => {
     const storage = new GameStateStorage()
     storage.state = {
       activeSceneId: 'scene-3',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: ['scene-1', 'scene-2', 'scene-3'],
@@ -96,7 +100,8 @@ describe('gameState/manager', () => {
 
     // Assert
     expect(storage.state).toEqual({
-      activeScene: 'scene-2',
+      activeSceneId: 'scene-2',
+      activeMapId: null,
       title: '',
       flags: {},
       sceneStack: ['scene-1', 'scene-2'],
