@@ -6,7 +6,6 @@ describe('BaseSchema', () => {
     // Arrange
     const validBase = {
       id: 'base-1',
-      name: 'Base Object',
       createdAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
     }
@@ -22,7 +21,6 @@ describe('BaseSchema', () => {
     // Arrange
     const invalidBase = {
       id: 12345, // Invalid type
-      name: 'Base Object',
       createdAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
     }
@@ -37,8 +35,7 @@ describe('BaseSchema', () => {
   it('rejects missing required fields', () => {
     // Arrange
     const invalidBase = {
-      id: 'base-1',
-      // name is missing
+      // id is missing
       createdAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
     }
@@ -54,7 +51,6 @@ describe('BaseSchema', () => {
     // Arrange
     const invalidBase = {
       id: 'base-1',
-      name: 'Base Object',
       createdAt: 'invalid-datetime', // Invalid format
       updatedAt: '2025-01-01T00:00:00Z',
     }
