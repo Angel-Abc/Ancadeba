@@ -1,9 +1,10 @@
 import { Token, token } from '@ancadeba/utils'
 import { gameStateStorageToken, IGameStateStorage } from './storage'
-import { GameState } from './types'
 
 export interface IGameStateProvider {
-  get state(): Readonly<GameState>
+  get activeSceneId(): string
+  get activeMapId(): string | null
+  get gameTitle(): string
   getFlag(flagName: string): boolean | undefined
   setFlag(flagName: string, value: boolean): void
 }
@@ -16,20 +17,23 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
 export class GameStateProvider implements IGameStateProvider {
   constructor(private readonly gameStateStorage: IGameStateStorage) {}
 
-  get state(): Readonly<GameState> {
-    const state = this.gameStateStorage.state
-    return Object.freeze({
-      ...state,
-      flags: { ...state.flags },
-      sceneStack: [...state.sceneStack],
-    })
-  }
-
   getFlag(flagName: string): boolean | undefined {
     return this.gameStateStorage.getFlag(flagName)
   }
 
   setFlag(flagName: string, value: boolean): void {
     this.gameStateStorage.setFlag(flagName, value)
+  }
+
+  get activeSceneId(): string {
+    return this.gameStateStorage.activeSceneId
+  }
+
+  get activeMapId(): string | null {
+    return this.gameStateStorage.activeMapId
+  }
+
+  get gameTitle(): string {
+    return this.gameStateStorage.state.title
   }
 }

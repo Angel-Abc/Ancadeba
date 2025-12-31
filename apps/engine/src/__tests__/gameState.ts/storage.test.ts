@@ -7,8 +7,8 @@ describe('gameState/storage', () => {
     const storage = new GameStateStorage()
 
     // Act
-    storage.update({ title: 'Original Title', activeScene: 'scene-1' })
-    storage.update({ activeScene: 'scene-2' })
+    storage.update({ title: 'Original Title', activeSceneId: 'scene-1' })
+    storage.update({ activeSceneId: 'scene-2' })
 
     // Assert
     expect(storage.state).toEqual({

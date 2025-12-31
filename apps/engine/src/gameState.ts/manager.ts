@@ -4,10 +4,7 @@ import {
   engineMessageBusToken,
   IEngineMessageBus,
 } from '../system/engineMessageBus'
-import {
-  gameStateStorageToken,
-  IGameStateStorage,
-} from './storage'
+import { gameStateStorageToken, IGameStateStorage } from './storage'
 
 export interface IGameStateManager {
   switchScene(sceneId: string): void
@@ -33,7 +30,7 @@ export class GameStateManager implements IGameStateManager {
   switchScene(sceneId: string): void {
     const sceneStack = this.gameStateStorage.state.sceneStack
     this.gameStateStorage.update({
-      activeScene: sceneId,
+      activeSceneId: sceneId,
       sceneStack: [...sceneStack, sceneId],
     })
     this.messageBus.publish(CORE_MESSAGES.SCENE_CHANGED, { sceneId })
@@ -52,7 +49,7 @@ export class GameStateManager implements IGameStateManager {
       return
     }
     this.gameStateStorage.update({
-      activeScene: previousSceneId,
+      activeSceneId: previousSceneId,
       sceneStack: newSceneStack,
     })
     this.messageBus.publish(CORE_MESSAGES.SCENE_CHANGED, {

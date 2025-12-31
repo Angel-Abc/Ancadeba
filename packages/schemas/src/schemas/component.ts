@@ -37,6 +37,7 @@ const menuComponentSchema = baseComponentSchema.extend({
 
 const squaresMapComponentSchema = baseComponentSchema.extend({
   type: z.literal('squares-map'),
+  viewport: sizeSchema,
 })
 
 export const componentSchema = z.discriminatedUnion('type', [

@@ -29,7 +29,7 @@ describe('gameState/manager', () => {
     const messageBus = createMessageBus()
     const storage = new GameStateStorage()
     storage.state = {
-      activeScene: 'scene-1',
+      activeSceneId: 'scene-1',
       title: '',
       flags: {},
       sceneStack: ['scene-1'],
@@ -58,7 +58,7 @@ describe('gameState/manager', () => {
     const messageBus = createMessageBus()
     const storage = new GameStateStorage()
     storage.state = {
-      activeScene: 'scene-1',
+      activeSceneId: 'scene-1',
       title: '',
       flags: {},
       sceneStack: ['scene-1'],
@@ -84,7 +84,7 @@ describe('gameState/manager', () => {
     const messageBus = createMessageBus()
     const storage = new GameStateStorage()
     storage.state = {
-      activeScene: 'scene-3',
+      activeSceneId: 'scene-3',
       title: '',
       flags: {},
       sceneStack: ['scene-1', 'scene-2', 'scene-3'],

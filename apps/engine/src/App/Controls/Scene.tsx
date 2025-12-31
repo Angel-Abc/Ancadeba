@@ -24,7 +24,7 @@ export function Scene() {
     gameStateProviderToken
   )
   const [activeSceneId, setActiveSceneId] = useState<string>(
-    gameStateProvider.state.activeScene
+    gameStateProvider.activeSceneId
   )
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken

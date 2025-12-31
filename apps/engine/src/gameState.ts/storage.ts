@@ -6,6 +6,8 @@ export interface IGameStateStorage {
 
   set state(value: GameState)
   get state(): GameState
+  get activeSceneId(): string
+  get activeMapId(): string | null
 
   getFlag(flagName: string): boolean | undefined
   setFlag(flagName: string, value: boolean): void
@@ -16,7 +18,8 @@ export const gameStateStorageToken = token<IGameStateStorage>(logName)
 export const gameStateStorageDependencies: Token<unknown>[] = []
 export class GameStateStorage implements IGameStateStorage {
   private gameState: GameState = {
-    activeScene: '',
+    activeSceneId: '',
+    activeMapId: null,
     title: '',
     flags: {},
     sceneStack: [],
@@ -47,5 +50,13 @@ export class GameStateStorage implements IGameStateStorage {
         [flagName]: value,
       },
     })
+  }
+
+  get activeSceneId(): string {
+    return this.gameState.activeSceneId
+  }
+
+  get activeMapId(): string | null {
+    return this.gameState.activeMapId
   }
 }

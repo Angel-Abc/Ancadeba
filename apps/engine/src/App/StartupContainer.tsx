@@ -44,7 +44,7 @@ export function StartupContainer() {
     })
   }, [engineMessageBus])
 
-  const title = gameStateProvider.state.title
+  const title = gameStateProvider.gameTitle
   const cssFilePaths = resourceDataProvider.getCssFilePaths()
 
   useEffect(() => {

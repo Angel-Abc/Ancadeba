@@ -33,7 +33,7 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
     }
     let storedState: GameState = {
-      activeScene: '',
+      activeSceneId: '',
       title: '',
       flags: {},
       sceneStack: [],
@@ -55,7 +55,7 @@ describe('core/gameEngine', () => {
           gameData.meta.initialState
         gameStateStorage.state = {
           title: gameData.meta.title,
-          activeScene: initialScene,
+          activeSceneId: initialScene,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,
@@ -150,7 +150,7 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
     }
     let storedState: GameState = {
-      activeScene: '',
+      activeSceneId: '',
       title: '',
       flags: {},
       sceneStack: [],
@@ -172,7 +172,7 @@ describe('core/gameEngine', () => {
           gameData.meta.initialState
         gameStateStorage.state = {
           title: gameData.meta.title,
-          activeScene: initialScene,
+          activeSceneId: initialScene,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,
@@ -261,7 +261,7 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
     }
     let storedState: GameState = {
-      activeScene: '',
+      activeSceneId: '',
       title: '',
       flags: {},
       sceneStack: [],
@@ -283,7 +283,7 @@ describe('core/gameEngine', () => {
           gameData.meta.initialState
         gameStateStorage.state = {
           title: gameData.meta.title,
-          activeScene: initialScene,
+          activeSceneId: initialScene,
           flags: {},
           sceneStack: [initialScene],
           ...initialState,

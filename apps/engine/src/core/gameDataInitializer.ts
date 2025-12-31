@@ -30,7 +30,8 @@ export class GameDataInitializer implements IGameDataInitializer {
     const { scene: initialScene, ...initialState } = gameData.meta.initialState
     this.gameStateStorage.state = {
       title: gameData.meta.title,
-      activeScene: initialScene,
+      activeSceneId: initialScene,
+      activeMapId: gameData.meta.initialState.map || null,
       flags: {},
       sceneStack: [initialScene],
       ...initialState,

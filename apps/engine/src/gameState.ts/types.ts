@@ -1,6 +1,7 @@
 export interface GameState extends Record<string, unknown> {
   title: string
-  activeScene: string
+  activeSceneId: string
+  activeMapId: string | null
   flags: Record<string, boolean>
   sceneStack: string[]
 }
