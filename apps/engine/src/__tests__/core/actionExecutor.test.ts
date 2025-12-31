@@ -435,12 +435,16 @@ describe('core/actionExecutor', () => {
     if (!subscribedHandler) throw new Error('Expected a subscribed handler')
 
     // Act
-    subscribedHandler({ action: { type: actionType } })
+    const invokeAction = () => {
+      subscribedHandler({ action: { type: actionType } })
+    }
 
     // Assert
+    expect(invokeAction).toThrowError('Unhandled case')
     expect(logger.warn).toHaveBeenCalledWith(
       'engine/core/ActionExecutor',
-      `Unknown action type: ${actionType}`
+      'Unknown action type: {0}',
+      actionType
     )
   })
 })
