@@ -12,10 +12,16 @@ const sizeSchema = z.object({
   height: z.number().int().positive(),
 })
 
+const borderSchema = z.object({
+  width: z.number().int().nonnegative(),
+  padding: z.number().int().nonnegative(),
+})
+
 const baseComponentSchema = z.object({
   location: locationSchema,
   size: sizeSchema,
   visible: z.boolean(),
+  border: borderSchema,
 })
 
 const backgroundComponentSchema = baseComponentSchema.extend({

@@ -25,8 +25,34 @@ body {
 }
 
 .grid-item {
+  --border-width: calc(var(--ge-grid-item-border-width) * var(--ge-unit-size));
+  --padding-size: calc(
+    var(--ge-grid-item-border-padding) * var(--ge-unit-size)
+  );
+  --border-radius: calc(var(--border-width) + var(--padding-size));
+  --ge-grid-item-outer-width: calc(
+    100vw / var(--ge-grid-width) * var(--ge-grid-item-width)
+  );
+  --ge-grid-item-outer-height: calc(
+    100vh / var(--ge-grid-height) * var(--ge-grid-item-height)
+  );
+  --ge-grid-item-client-width: calc(
+    var(--ge-grid-item-outer-width) - 2 * var(--padding-size) - 2 *
+      var(--border-width)
+  );
+  --ge-grid-item-client-height: calc(
+    var(--ge-grid-item-outer-height) - 2 * var(--padding-size) - 2 *
+      var(--border-width)
+  );
+
   grid-column: var(--ge-grid-item-x) / span var(--ge-grid-item-width);
   grid-row: var(--ge-grid-item-y) / span var(--ge-grid-item-height);
+  display: grid;
+  border-style: solid;
+  border-width: var(--border-width);
+  border-radius: var(--border-radius);
+  border-color: var(--ge-component-border-color);
+  padding: var(--padding-size);
 }
 
 .background-component {
@@ -42,10 +68,68 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  height: 100%;
 
   & button {
     flex: 1;
     cursor: pointer;
     font-size: 125%;
+  }
+}
+
+.squares-map-component {
+  --max-tile-width: calc(
+    var(--ge-grid-item-client-width) / var(--ge-squares-map-viewport-width)
+  );
+  --max-tile-height: calc(
+    var(--ge-grid-item-client-height) / var(--ge-squares-map-viewport-height)
+  );
+  --tile-outer-size: min(var(--max-tile-width), var(--max-tile-height));
+  --tile-spacing: calc(var(--ge-unit-size) * 2);
+  --tile-inner-size: calc(var(--tile-outer-size) - 2 * var(--tile-spacing));
+  --viewport-width: calc(
+    var(--tile-outer-size) * var(--ge-squares-map-viewport-width)
+  );
+  --viewport-height: calc(
+    var(--tile-outer-size) * var(--ge-squares-map-viewport-height)
+  );
+
+  width: var(--ge-grid-item-client-width);
+  height: var(--ge-grid-item-client-height);
+
+  & .viewport {
+    position: relative;
+    overflow: hidden;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    margin: auto auto auto auto;
+
+    & .area {
+      position: absolute;
+      background-color: #333;
+      display: grid;
+      grid-template-columns: repeat(var(--ge-map-width), 1fr);
+      grid-template-rows: repeat(var(--ge-map-height), 1fr);
+      width: calc(var(--ge-map-width) * var(--tile-outer-size));
+      height: calc(var(--ge-map-height) * var(--tile-outer-size));
+      left: calc(var(--ge-map-position-x) * var(--tile-outer-size) * -1);
+      top: calc(var(--ge-map-position-y) * var(--tile-outer-size) * -1);
+
+      & > div {
+        width: var(--tile-inner-size);
+        height: var(--tile-inner-size);
+        margin: var(--tile-spacing);
+        position: relative;
+        border-radius: calc(var(--tile-inner-size) * 0.2);
+        background-color: var(--ge-map-tile-color);
+
+        & img {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
   }
 }

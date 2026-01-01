@@ -23,6 +23,8 @@ export function GridScreen({ screen, components }: GridScreenProps) {
           '--ge-grid-item-y': (component.location.y + 1).toString(),
           '--ge-grid-item-width': component.size.width.toString(),
           '--ge-grid-item-height': component.size.height.toString(),
+          '--ge-grid-item-border-width': component.border.width.toString(),
+          '--ge-grid-item-border-padding': component.border.padding.toString(),
         }
         const key = `component-${component.type}-${index}`
         return (

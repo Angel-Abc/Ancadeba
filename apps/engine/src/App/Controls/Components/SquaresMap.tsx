@@ -34,11 +34,21 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
     return <div>No active map</div>
   }
 
+  const deltaX = Math.floor(component.viewport.width / 2)
+  const deltaY = Math.floor(component.viewport.height / 2)
+
+  const position = {
+    x: 10,
+    y: 10,
+  }
+
   const style: CSSCustomProperties = {
     '--ge-squares-map-viewport-width': `${component.viewport.width}`,
     '--ge-squares-map-viewport-height': `${component.viewport.height}`,
     '--ge-map-width': `${mapData.width}`,
     '--ge-map-height': `${mapData.height}`,
+    '--ge-map-position-x': (position.x - deltaX).toString(),
+    '--ge-map-position-y': (position.y - deltaY).toString(),
   }
 
   return (
@@ -49,7 +59,20 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
             return row.map((squareId, colIndex) => {
               const tile = mapData.tiles.get(squareId)
               const key = `${squareId}-${rowIndex}-${colIndex}`
-              return <div key={key}>TODO: {tile ? tile.id : 'empty'}</div>
+              if (tile === undefined) {
+                return <div key={key} className="empty-tile" />
+              }
+              const tileStyle: CSSCustomProperties = {
+                '--ge-map-tile-color': tile.color || 'transparent',
+              }
+              const imageUrl = tile.image
+                ? `${resourceDataProvider.assetsUrl}/${tile.image}`
+                : ''
+              return (
+                <div key={key} style={tileStyle}>
+                  {tile.image && <img src={imageUrl} />}
+                </div>
+              )
             })
           })}
         </div>
