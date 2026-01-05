@@ -97,6 +97,8 @@ body {
 
   width: var(--ge-grid-item-client-width);
   height: var(--ge-grid-item-client-height);
+  display: grid;
+  place-items: center;
 
   & .viewport {
     position: relative;
@@ -107,7 +109,6 @@ body {
 
     & .area {
       position: absolute;
-      background-color: #333;
       display: grid;
       grid-template-columns: repeat(var(--ge-map-width), 1fr);
       grid-template-rows: repeat(var(--ge-map-height), 1fr);

@@ -51,6 +51,7 @@ export function Scene() {
         <GridScreen
           screen={activeScene.screen}
           components={activeScene.components}
+          sceneId={activeScene.id}
         />
       )
     }

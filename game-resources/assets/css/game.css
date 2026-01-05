@@ -1,7 +1,5 @@
 :root {
-  --ge-background-color: oklch(32.208% 0.06034 78.284);
-  --sg-color-light-brown: oklch(0.66 0.0529 65.37);
-  --sg-color-light-brown-70: oklch(0.66 0.0529 65.37 / 70%);
+  --ge-background-color: #000000;
 }
 
 .background-component {
@@ -11,13 +9,24 @@
 }
 
 .menu-component {
-  gap: 1rem;
-
   & button {
-    color: white;
-    padding: 0.5rem 1rem;
-    background-color: var(--sg-color-light-brown-70);
-    border-radius: 0.5rem;
-    border-color: var(--ge-background-color);
+    border: 0;
+    border-radius: calc(var(--ge-unit-size) * 8);
+    background-color: #3030c0;
+    color: #c0c0f0;
+  }
+}
+
+.grid-item {
+  --ge-component-border-color: #606060;
+  background: linear-gradient(to bottom right, #404040, #101010);
+}
+
+.scene-start-screen {
+  & .grid-item {
+    background: none;
+    background-color: oklch(32.208% 0.06034 78.284);
+    padding: 0;
+    border: none;
   }
 }

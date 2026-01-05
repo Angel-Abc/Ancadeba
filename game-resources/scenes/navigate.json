@@ -26,8 +26,8 @@
       },
       "visible": true,
       "border": {
-        "width": 0,
-        "padding": 2
+        "width": 4,
+        "padding": 8
       }
     }
   ]

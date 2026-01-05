@@ -8,15 +8,16 @@ import { Component } from './Component'
 interface GridScreenProps {
   screen: GridScreenData
   components: ComponentData[]
+  sceneId: string
 }
 
-export function GridScreen({ screen, components }: GridScreenProps) {
+export function GridScreen({ screen, components, sceneId }: GridScreenProps) {
   const style: CSSCustomProperties = {
     '--ge-grid-width': screen.grid.columns.toString(),
     '--ge-grid-height': screen.grid.rows.toString(),
   }
   return (
-    <div style={style} className="grid-screen">
+    <div style={style} className={`grid-screen scene-${sceneId}`}>
       {components.map((component, index) => {
         const componentStyle: CSSCustomProperties = {
           '--ge-grid-item-x': (component.location.x + 1).toString(),
@@ -28,7 +29,11 @@ export function GridScreen({ screen, components }: GridScreenProps) {
         }
         const key = `component-${component.type}-${index}`
         return (
-          <div key={key} style={componentStyle} className="grid-item">
+          <div
+            key={key}
+            style={componentStyle}
+            className={`grid-item grid-item-${component.type}`}
+          >
             <Component component={component} />
           </div>
         )
