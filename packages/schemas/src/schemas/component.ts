@@ -12,15 +12,18 @@ const sizeSchema = z.object({
   height: z.number().int().positive(),
 })
 
-const borderSchema = z.object({
-  width: z.number().int().nonnegative(),
-  padding: z.number().int().nonnegative(),
-})
+const borderSchema = z
+  .object({
+    width: z.number().int().nonnegative().default(0),
+    padding: z.number().int().nonnegative().default(0),
+    margin: z.number().int().nonnegative().default(0),
+  })
+  .default({ width: 0, padding: 0, margin: 0 })
 
 const baseComponentSchema = z.object({
   location: locationSchema,
   size: sizeSchema,
-  visible: z.boolean(),
+  visible: z.boolean().default(true),
   border: borderSchema,
 })
 

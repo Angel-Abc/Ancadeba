@@ -19,6 +19,7 @@
   --ge-grid-item-height: 10;
   --ge-grid-item-border-width: 0;
   --ge-grid-item-border-padding: 0;
+  --ge-grid-item-border-margin: 0;
 
   --ge-background-image: '';
 }

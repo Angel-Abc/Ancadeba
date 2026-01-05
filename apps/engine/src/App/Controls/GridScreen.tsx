@@ -26,6 +26,7 @@ export function GridScreen({ screen, components, sceneId }: GridScreenProps) {
           '--ge-grid-item-height': component.size.height.toString(),
           '--ge-grid-item-border-width': component.border.width.toString(),
           '--ge-grid-item-border-padding': component.border.padding.toString(),
+          '--ge-grid-item-border-margin': component.border.margin.toString(),
         }
         const key = `component-${component.type}-${index}`
         return (

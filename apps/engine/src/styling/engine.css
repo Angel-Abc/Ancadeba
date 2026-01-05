@@ -29,6 +29,7 @@ body {
   --padding-size: calc(
     var(--ge-grid-item-border-padding) * var(--ge-unit-size)
   );
+  --margin-size: calc(var(--ge-grid-item-border-margin) * var(--ge-unit-size));
   --border-radius: calc(var(--border-width) + var(--padding-size));
   --ge-grid-item-outer-width: calc(
     100vw / var(--ge-grid-width) * var(--ge-grid-item-width)
@@ -38,11 +39,11 @@ body {
   );
   --ge-grid-item-client-width: calc(
     var(--ge-grid-item-outer-width) - 2 * var(--padding-size) - 2 *
-      var(--border-width)
+      var(--border-width) - 2 * var(--margin-size)
   );
   --ge-grid-item-client-height: calc(
     var(--ge-grid-item-outer-height) - 2 * var(--padding-size) - 2 *
-      var(--border-width)
+      var(--border-width) - 2 * var(--margin-size)
   );
 
   grid-column: var(--ge-grid-item-x) / span var(--ge-grid-item-width);
@@ -53,6 +54,7 @@ body {
   border-radius: var(--border-radius);
   border-color: var(--ge-component-border-color);
   padding: var(--padding-size);
+  margin: var(--margin-size);
 }
 
 .background-component {

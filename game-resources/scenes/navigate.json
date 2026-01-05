@@ -24,10 +24,10 @@
         "width": 9,
         "height": 9
       },
-      "visible": true,
       "border": {
         "width": 4,
-        "padding": 8
+        "padding": 8,
+        "margin": 4
       }
     }
   ]
