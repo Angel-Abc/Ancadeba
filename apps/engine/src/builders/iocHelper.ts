@@ -1,4 +1,4 @@
-import { Container } from '@ancadeba/utils'
+import { Container, loggerToken } from '@ancadeba/utils'
 import {
   GameEngine,
   gameEngineDependencies,
@@ -9,11 +9,7 @@ import {
   gameDataInitializerDependencies,
   gameDataInitializerToken,
 } from '../core/gameDataInitializer'
-import {
-  ActionExecutor,
-  actionExecutorDependencies,
-  actionExecutorToken,
-} from '../core/actionExecutor'
+import { ActionExecutor, actionExecutorToken } from '../core/actionExecutor'
 import {
   EngineMessageBus,
   engineMessageBusDependencies,
@@ -60,6 +56,12 @@ import {
   componentRegistryToken,
 } from '../App/Controls/componentRegistry'
 import { registerComponents } from '../App/Controls/registerComponents'
+import { SwitchSceneActionHandler } from '../core/actionHandlers/SwitchSceneActionHandler'
+import { ExitGameActionHandler } from '../core/actionHandlers/ExitGameActionHandler'
+import { SetFlagActionHandler } from '../core/actionHandlers/SetFlagActionHandler'
+import { BackActionHandler } from '../core/actionHandlers/BackActionHandler'
+import { VolumeActionHandler } from '../core/actionHandlers/VolumeActionHandler'
+import { IActionHandler } from '../core/actionHandlers/types'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -75,8 +77,22 @@ export function registerServices(container: Container): void {
     },
     {
       token: actionExecutorToken,
-      useClass: ActionExecutor,
-      deps: actionExecutorDependencies,
+      useFactory: (container) => {
+        const logger = container.resolve(loggerToken)
+        const messageBus = container.resolve(engineMessageBusToken)
+        const gameStateManager = container.resolve(gameStateManagerToken)
+        const browserAdapter = container.resolve(browserAdapterToken)
+
+        const handlers: IActionHandler[] = [
+          new SwitchSceneActionHandler(gameStateManager),
+          new ExitGameActionHandler(browserAdapter),
+          new SetFlagActionHandler(gameStateManager),
+          new BackActionHandler(gameStateManager),
+          new VolumeActionHandler(),
+        ]
+
+        return new ActionExecutor(logger, messageBus, handlers)
+      },
     },
     {
       token: engineMessageBusToken,
