@@ -39,6 +39,26 @@ const menuOptionSchema = z.object({
   condition: conditionSchema.optional(),
 })
 
+const inventoryComponentSchema = baseComponentSchema.extend({
+  type: z.literal('inventory'),
+})
+
+const appearanceComponentSchema = baseComponentSchema.extend({
+  type: z.literal('appearance'),
+})
+
+const textLogComponentSchema = baseComponentSchema.extend({
+  type: z.literal('text-log'),
+})
+
+const inputBarComponentSchema = baseComponentSchema.extend({
+  type: z.literal('input-bar'),
+})
+
+const characterSheetComponentSchema = baseComponentSchema.extend({
+  type: z.literal('character-sheet'),
+})
+
 const menuComponentSchema = baseComponentSchema.extend({
   type: z.literal('menu'),
   options: z.array(menuOptionSchema).min(1),
@@ -53,9 +73,21 @@ export const componentSchema = z.discriminatedUnion('type', [
   backgroundComponentSchema,
   menuComponentSchema,
   squaresMapComponentSchema,
+  inventoryComponentSchema,
+  appearanceComponentSchema,
+  characterSheetComponentSchema,
+  textLogComponentSchema,
+  inputBarComponentSchema,
 ])
 
 export type Component = z.infer<typeof componentSchema>
 export type BackgroundComponent = z.infer<typeof backgroundComponentSchema>
 export type MenuComponent = z.infer<typeof menuComponentSchema>
 export type SquaresMapComponent = z.infer<typeof squaresMapComponentSchema>
+export type InventoryComponent = z.infer<typeof inventoryComponentSchema>
+export type AppearanceComponent = z.infer<typeof appearanceComponentSchema>
+export type CharacterSheetComponent = z.infer<
+  typeof characterSheetComponentSchema
+>
+export type TextLogComponent = z.infer<typeof textLogComponentSchema>
+export type InputBarComponent = z.infer<typeof inputBarComponentSchema>
