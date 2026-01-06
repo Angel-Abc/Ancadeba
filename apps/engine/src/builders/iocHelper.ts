@@ -55,6 +55,11 @@ import {
   browserAdapterDependencies,
   browserAdapterToken,
 } from '../system/browserAdapter'
+import {
+  ComponentRegistry,
+  componentRegistryToken,
+} from '../App/Controls/componentRegistry'
+import { registerComponents } from '../App/Controls/registerComponents'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -120,6 +125,15 @@ export function registerServices(container: Container): void {
       token: browserAdapterToken,
       useClass: BrowserAdapter,
       deps: browserAdapterDependencies,
+    },
+    {
+      token: componentRegistryToken,
+      useFactory: () => {
+        const registry = new ComponentRegistry()
+        registerComponents(registry)
+        return registry
+      },
+      scope: 'singleton',
     },
   ])
 }
