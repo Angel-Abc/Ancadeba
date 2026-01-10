@@ -1,5 +1,6 @@
 import { DefaultSettings } from '@ancadeba/schemas'
 import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
+import { IStorageAdapter, storageAdapterToken } from '../system/storageAdapter'
 import { Settings } from './types'
 
 export interface ISettingsStorage {
@@ -11,15 +12,37 @@ export interface ISettingsStorage {
 }
 
 const logName = 'engine/core/settings/storage'
+const STORAGE_KEY = 'ancadeba-settings'
 export const settingsStorageToken = token<ISettingsStorage>(logName)
-export const settingsStorageDependencies: Token<unknown>[] = [loggerToken]
+export const settingsStorageDependencies: Token<unknown>[] = [
+  loggerToken,
+  storageAdapterToken,
+]
 export class SettingsStorage implements ISettingsStorage {
   private settings: Settings
-  constructor(private logger: ILogger) {
-    // TODO load settings from persistent storage or initialize with nulls when not in storage
-    this.settings = {
-      language: null,
-      volume: null,
+  constructor(
+    private logger: ILogger,
+    private storageAdapter: IStorageAdapter
+  ) {
+    const storedData = this.storageAdapter.getItem(STORAGE_KEY)
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData) as Settings
+        this.settings = {
+          language: parsed.language ?? null,
+          volume: parsed.volume ?? null,
+        }
+      } catch {
+        this.settings = {
+          language: null,
+          volume: null,
+        }
+      }
+    } else {
+      this.settings = {
+        language: null,
+        volume: null,
+      }
     }
   }
 
@@ -30,7 +53,7 @@ export class SettingsStorage implements ISettingsStorage {
   }
 
   updateStorage(): void {
-    // TODO persist settings to storage
+    this.storageAdapter.setItem(STORAGE_KEY, JSON.stringify(this.settings))
   }
 
   get language(): string {

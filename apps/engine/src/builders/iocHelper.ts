@@ -52,6 +52,11 @@ import {
   browserAdapterToken,
 } from '../system/browserAdapter'
 import {
+  StorageAdapter,
+  storageAdapterDependencies,
+  storageAdapterToken,
+} from '../system/storageAdapter'
+import {
   ComponentRegistry,
   componentRegistryToken,
 } from '../App/Controls/componentRegistry'
@@ -236,6 +241,11 @@ export function registerServices(container: Container): void {
       token: browserAdapterToken,
       useClass: BrowserAdapter,
       deps: browserAdapterDependencies,
+    },
+    {
+      token: storageAdapterToken,
+      useClass: StorageAdapter,
+      deps: storageAdapterDependencies,
     },
     {
       token: componentRegistryToken,
