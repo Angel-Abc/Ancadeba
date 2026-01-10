@@ -1,19 +1,20 @@
 import { Action } from '@ancadeba/schemas'
 import { Token, token } from '@ancadeba/utils'
 import {
-  browserAdapterToken,
-  IBrowserAdapter,
-} from '../../system/browserAdapter'
+  engineMessageBusToken,
+  IEngineMessageBus,
+} from '../../system/engineMessageBus'
+import { CORE_MESSAGES } from '../../messages/core'
 import { IActionHandler } from './types'
 
 const logName = 'engine/core/actionHandlers/ExitGameActionHandler'
 export const exitGameActionHandlerToken = token<IActionHandler>(logName)
 export const exitGameActionHandlerDependencies: Token<unknown>[] = [
-  browserAdapterToken,
+  engineMessageBusToken,
 ]
 
 export class ExitGameActionHandler implements IActionHandler {
-  constructor(private readonly browserAdapter: IBrowserAdapter) {}
+  constructor(private readonly messageBus: IEngineMessageBus) {}
 
   canHandle(action: Action): boolean {
     return action.type === 'exit-game'
@@ -21,8 +22,7 @@ export class ExitGameActionHandler implements IActionHandler {
 
   handle(action: Action): void {
     if (action.type === 'exit-game') {
-      // TODO: exit game. reload the browser tab for now
-      this.browserAdapter.reload()
+      this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STOPPED, undefined)
     }
   }
 }

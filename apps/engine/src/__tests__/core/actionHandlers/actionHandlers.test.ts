@@ -5,7 +5,8 @@ import { SetFlagActionHandler } from '../../../core/actionHandlers/SetFlagAction
 import { BackActionHandler } from '../../../core/actionHandlers/BackActionHandler'
 import { VolumeActionHandler } from '../../../core/actionHandlers/VolumeActionHandler'
 import type { IGameStateManager } from '../../../gameState.ts/manager'
-import type { IBrowserAdapter } from '../../../system/browserAdapter'
+import type { IEngineMessageBus } from '../../../system/engineMessageBus'
+import { CORE_MESSAGES } from '../../../messages/core'
 import type { ISettingsStorage } from '../../../settings/storage'
 
 describe('core/actionHandlers', () => {
@@ -51,10 +52,13 @@ describe('core/actionHandlers', () => {
   describe('ExitGameActionHandler', () => {
     it('handles exit-game actions', () => {
       // Arrange
-      const browserAdapter: IBrowserAdapter = {
-        reload: vi.fn(),
+      const messageBus: IEngineMessageBus = {
+        publish: vi.fn(),
+        publishRaw: vi.fn(),
+        subscribe: vi.fn(() => () => undefined),
+        subscribeRaw: vi.fn(() => () => undefined),
       }
-      const handler = new ExitGameActionHandler(browserAdapter)
+      const handler = new ExitGameActionHandler(messageBus)
 
       // Act
       const canHandle = handler.canHandle({ type: 'exit-game' })
@@ -62,7 +66,11 @@ describe('core/actionHandlers', () => {
 
       // Assert
       expect(canHandle).toBe(true)
-      expect(browserAdapter.reload).toHaveBeenCalledTimes(1)
+      expect(messageBus.publish).toHaveBeenCalledTimes(1)
+      expect(messageBus.publish).toHaveBeenCalledWith(
+        CORE_MESSAGES.GAME_ENGINE_STOPPED,
+        undefined
+      )
     })
   })
 
