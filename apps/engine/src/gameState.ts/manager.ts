@@ -4,7 +4,12 @@ import {
   engineMessageBusToken,
   IEngineMessageBus,
 } from '../system/engineMessageBus'
-import { gameStateStorageToken, IGameStateStorage } from './storage'
+import {
+  gameStateStorageToken,
+  IFlagStorage,
+  IGameStateMutator,
+  IGameStateReader,
+} from './storage'
 
 export interface IGameStateManager {
   switchScene(sceneId: string): void
@@ -24,7 +29,9 @@ export class GameStateManager implements IGameStateManager {
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
-    private readonly gameStateStorage: IGameStateStorage
+    private readonly gameStateStorage: IGameStateReader &
+      IGameStateMutator &
+      IFlagStorage
   ) {}
 
   switchScene(sceneId: string): void {

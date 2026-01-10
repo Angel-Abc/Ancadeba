@@ -1,8 +1,8 @@
 import { Token, token, typedEntries } from '@ancadeba/utils'
 import type { GameData, Tile } from '@ancadeba/schemas'
 import {
-  IGameStateStorage,
   gameStateStorageToken,
+  IGameStateMutator,
 } from '../gameState.ts/storage'
 import {
   IResourceDataStorage,
@@ -26,7 +26,7 @@ export const gameDataInitializerDependencies: Token<unknown>[] = [
 
 export class GameDataInitializer implements IGameDataInitializer {
   constructor(
-    private readonly gameStateStorage: IGameStateStorage,
+    private readonly gameStateStorage: IGameStateMutator,
     private readonly resourceDataStorage: IResourceDataStorage,
     private readonly settingsStorage: ISettingsStorage,
     private readonly languageStorage: ILanguageStorage

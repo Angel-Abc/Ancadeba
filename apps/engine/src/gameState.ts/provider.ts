@@ -1,5 +1,9 @@
 import { Token, token } from '@ancadeba/utils'
-import { gameStateStorageToken, IGameStateStorage } from './storage'
+import {
+  gameStateStorageToken,
+  IGameStateReader,
+  IFlagStorage,
+} from './storage'
 
 export interface IGameStateProvider {
   get activeSceneId(): string
@@ -15,7 +19,9 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
   gameStateStorageToken,
 ]
 export class GameStateProvider implements IGameStateProvider {
-  constructor(private readonly gameStateStorage: IGameStateStorage) {}
+  constructor(
+    private readonly gameStateStorage: IGameStateReader & IFlagStorage
+  ) {}
 
   getFlag(flagName: string): boolean | undefined {
     return this.gameStateStorage.getFlag(flagName)

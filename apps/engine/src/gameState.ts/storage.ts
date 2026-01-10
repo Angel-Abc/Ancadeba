@@ -1,20 +1,35 @@
 import { Token, token } from '@ancadeba/utils'
 import { GameState } from './types'
 
-export interface IGameStateStorage {
-  update(value: Partial<GameState>): void
-
-  set state(value: GameState)
+export interface IGameStateReader {
   get state(): GameState
   get activeSceneId(): string
   get activeMapId(): string | null
+}
 
+export interface IGameStateMutator {
+  update(value: Partial<GameState>): void
+  set state(value: GameState)
+}
+
+export interface IFlagStorage {
   getFlag(flagName: string): boolean | undefined
   setFlag(flagName: string, value: boolean): void
 }
 
+// Combined interface for internal implementation only
+interface IGameStateStorage
+  extends IGameStateReader,
+    IGameStateMutator,
+    IFlagStorage {}
+
 const logName = 'engine/gameState/storage'
 export const gameStateStorageToken = token<IGameStateStorage>(logName)
+export const gameStateReaderToken = token<IGameStateReader>(logName + '/reader')
+export const gameStateMutatorToken = token<IGameStateMutator>(
+  logName + '/mutator'
+)
+export const flagStorageToken = token<IFlagStorage>(logName + '/flags')
 export const gameStateStorageDependencies: Token<unknown>[] = []
 export class GameStateStorage implements IGameStateStorage {
   private gameState: GameState = {

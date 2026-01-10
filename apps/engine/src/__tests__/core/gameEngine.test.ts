@@ -7,7 +7,10 @@ import type { IGameDataInitializer } from '../../core/gameDataInitializer'
 import type { IActionExecutor } from '../../core/actionExecutor'
 import { UIReadySignal } from '../../system/uiReadySignal'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
-import type { IGameStateStorage } from '../../gameState.ts/storage'
+import type {
+  IGameStateReader,
+  IGameStateMutator,
+} from '../../gameState.ts/storage'
 import type { GameState } from '../../gameState.ts/types'
 
 describe('core/gameEngine', () => {
@@ -39,7 +42,7 @@ describe('core/gameEngine', () => {
       flags: {},
       sceneStack: [],
     }
-    const gameStateStorage: IGameStateStorage = {
+    const gameStateStorage: IGameStateReader & IGameStateMutator = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
@@ -164,7 +167,7 @@ describe('core/gameEngine', () => {
       flags: {},
       sceneStack: [],
     }
-    const gameStateStorage: IGameStateStorage = {
+    const gameStateStorage: IGameStateReader & IGameStateMutator = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
@@ -283,7 +286,7 @@ describe('core/gameEngine', () => {
       flags: {},
       sceneStack: [],
     }
-    const gameStateStorage: IGameStateStorage = {
+    const gameStateStorage: IGameStateReader & IGameStateMutator = {
       update: vi.fn((value) => {
         storedState = { ...storedState, ...value }
       }),
