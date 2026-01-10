@@ -1,29 +1,17 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { TileSet, Tile } from '@ancadeba/schemas'
-import type { IResourceDataStorage } from '../../../resourceData/storage'
+import type { ITileDataStorage } from '../../../resourceData/storage'
 import { TileDataInitializer } from '../../../core/initializers/tileDataInitializer'
 
 describe('core/initializers/tileDataInitializer', () => {
-  const createMockResourceDataStorage = (): IResourceDataStorage => ({
-    get rootPath() {
-      return '/resources'
-    },
-    logResourceData: vi.fn(),
-    addSceneData: vi.fn(),
-    getSceneData: vi.fn(),
+  const createMockTileDataStorage = (): ITileDataStorage => ({
     addTileData: vi.fn(),
     getTileData: vi.fn(),
-    addCssFileName: vi.fn(),
-    getCssFileNames: vi.fn(() => []),
-    addMapData: vi.fn(),
-    getMapData: vi.fn(),
-    getLanguageFileNames: vi.fn(() => []),
-    setLanguageFileNames: vi.fn(),
   })
 
   it('processes empty array without errors', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
 
     // Act
@@ -35,7 +23,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('adds single tile with correct composite ID', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const tile: Tile = {
       id: 'grass',
@@ -56,7 +44,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('adds multiple tiles from single tileset', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const tile1: Tile = {
       id: 'grass',
@@ -99,7 +87,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('processes multiple tilesets', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const outdoorTile: Tile = {
       id: 'grass',
@@ -137,7 +125,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('generates correct composite tile IDs for each tile', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const tile1: Tile = {
       id: 'tile-1',
@@ -166,7 +154,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('handles tileset with no tiles', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const emptyTileSet: TileSet = {
       id: 'empty',
@@ -182,7 +170,7 @@ describe('core/initializers/tileDataInitializer', () => {
 
   it('processes mixed tilesets with varying tile counts', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const storage = createMockTileDataStorage()
     const initializer = new TileDataInitializer(storage)
     const tile1: Tile = { id: 'tile1', walkable: true }
     const tile2: Tile = { id: 'tile2', walkable: false }

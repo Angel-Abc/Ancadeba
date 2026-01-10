@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { IResourceDataStorage } from '../../resourceData/storage'
+import type { IVirtualKeyStorage } from '../../resourceData/storage'
 import { VirtualKeyMapper } from '../../system/virtualKeyMapper'
 
 describe('system/virtualKeyMapper', () => {
@@ -21,10 +21,11 @@ describe('system/virtualKeyMapper', () => {
         virtualKey: 'VK_SHIFT_Q',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualKeyStorage: IVirtualKeyStorage = {
       getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
-    const mapper = new VirtualKeyMapper(resourceDataStorage)
+      setVirtualKeys: vi.fn(),
+    }
+    const mapper = new VirtualKeyMapper(virtualKeyStorage)
     const event = { code: 'Space', shift: false, ctrl: false, alt: false }
 
     // Act
@@ -51,10 +52,11 @@ describe('system/virtualKeyMapper', () => {
         virtualKey: 'VK_ACTION',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualKeyStorage: IVirtualKeyStorage = {
       getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
-    const mapper = new VirtualKeyMapper(resourceDataStorage)
+      setVirtualKeys: vi.fn(),
+    }
+    const mapper = new VirtualKeyMapper(virtualKeyStorage)
     const event = { code: 'Enter', shift: false, ctrl: false, alt: false }
 
     // Act
@@ -75,10 +77,11 @@ describe('system/virtualKeyMapper', () => {
         virtualKey: 'VK_CTRL_SHIFT_S',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualKeyStorage: IVirtualKeyStorage = {
       getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
-    const mapper = new VirtualKeyMapper(resourceDataStorage)
+      setVirtualKeys: vi.fn(),
+    }
+    const mapper = new VirtualKeyMapper(virtualKeyStorage)
     const event = { code: 'KeyS', shift: true, ctrl: true, alt: false }
 
     // Act
@@ -105,10 +108,11 @@ describe('system/virtualKeyMapper', () => {
         virtualKey: 'VK_SHIFT_S',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualKeyStorage: IVirtualKeyStorage = {
       getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
-    const mapper = new VirtualKeyMapper(resourceDataStorage)
+      setVirtualKeys: vi.fn(),
+    }
+    const mapper = new VirtualKeyMapper(virtualKeyStorage)
     const event = { code: 'KeyS', shift: false, ctrl: false, alt: false }
 
     // Act

@@ -57,7 +57,7 @@ export interface IResourceDataLogger {
   logResourceData(): void
 }
 
-export interface IResourceDataStorage
+interface IResourceDataStorage
   extends IResourceRootPath,
     ISceneDataStorage,
     ITileDataStorage,

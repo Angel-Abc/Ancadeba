@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { IResourceDataStorage } from '../../resourceData/storage'
+import type { IVirtualInputStorage } from '../../resourceData/storage'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import { VirtualInputService } from '../../system/virtualInputService'
 import { UI_MESSAGES } from '../../messages/ui'
@@ -8,16 +8,17 @@ describe('system/virtualInputService', () => {
   it('start calls messageBus.subscribe() for VIRTUAL_KEY_PRESSED', () => {
     // Arrange
     const mockSubscribe = vi.fn().mockReturnValue(() => {})
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualInputStorage: IVirtualInputStorage = {
       getVirtualInputs: vi.fn().mockReturnValue([]),
-    } as unknown as IResourceDataStorage
+      setVirtualInputs: vi.fn(),
+    }
     const messageBus: IEngineMessageBus = {
       publish: vi.fn(),
       publishRaw: vi.fn(),
       subscribe: mockSubscribe,
       subscribeRaw: vi.fn(),
     }
-    const service = new VirtualInputService(resourceDataStorage, messageBus)
+    const service = new VirtualInputService(virtualInputStorage, messageBus)
 
     // Act
     service.start()
@@ -44,9 +45,10 @@ describe('system/virtualInputService', () => {
         label: 'Space',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualInputStorage: IVirtualInputStorage = {
       getVirtualInputs: vi.fn().mockReturnValue(virtualInputs),
-    } as unknown as IResourceDataStorage
+      setVirtualInputs: vi.fn(),
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -54,7 +56,7 @@ describe('system/virtualInputService', () => {
       subscribe: mockSubscribe,
       subscribeRaw: vi.fn(),
     }
-    const service = new VirtualInputService(resourceDataStorage, messageBus)
+    const service = new VirtualInputService(virtualInputStorage, messageBus)
 
     // Act
     service.start()
@@ -84,9 +86,10 @@ describe('system/virtualInputService', () => {
         label: 'W',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualInputStorage: IVirtualInputStorage = {
       getVirtualInputs: vi.fn().mockReturnValue(virtualInputs),
-    } as unknown as IResourceDataStorage
+      setVirtualInputs: vi.fn(),
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -94,7 +97,7 @@ describe('system/virtualInputService', () => {
       subscribe: mockSubscribe,
       subscribeRaw: vi.fn(),
     }
-    const service = new VirtualInputService(resourceDataStorage, messageBus)
+    const service = new VirtualInputService(virtualInputStorage, messageBus)
 
     // Act
     service.start()
@@ -124,9 +127,10 @@ describe('system/virtualInputService', () => {
         label: 'Space',
       },
     ]
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualInputStorage: IVirtualInputStorage = {
       getVirtualInputs: vi.fn().mockReturnValue(virtualInputs),
-    } as unknown as IResourceDataStorage
+      setVirtualInputs: vi.fn(),
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -134,7 +138,7 @@ describe('system/virtualInputService', () => {
       subscribe: mockSubscribe,
       subscribeRaw: vi.fn(),
     }
-    const service = new VirtualInputService(resourceDataStorage, messageBus)
+    const service = new VirtualInputService(virtualInputStorage, messageBus)
 
     // Act
     service.start()
@@ -148,16 +152,17 @@ describe('system/virtualInputService', () => {
     // Arrange
     const mockUnsubscribe = vi.fn()
     const mockSubscribe = vi.fn().mockReturnValue(mockUnsubscribe)
-    const resourceDataStorage: IResourceDataStorage = {
+    const virtualInputStorage: IVirtualInputStorage = {
       getVirtualInputs: vi.fn().mockReturnValue([]),
-    } as unknown as IResourceDataStorage
+      setVirtualInputs: vi.fn(),
+    }
     const messageBus: IEngineMessageBus = {
       publish: vi.fn(),
       publishRaw: vi.fn(),
       subscribe: mockSubscribe,
       subscribeRaw: vi.fn(),
     }
-    const service = new VirtualInputService(resourceDataStorage, messageBus)
+    const service = new VirtualInputService(virtualInputStorage, messageBus)
 
     // Act
     service.start()

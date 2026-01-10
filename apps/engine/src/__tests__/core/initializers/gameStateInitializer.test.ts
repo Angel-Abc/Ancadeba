@@ -3,7 +3,7 @@ import type { GameData } from '@ancadeba/schemas'
 import type { IGameStateMutator } from '../../../gameState.ts/storage'
 import type { ISettingsStorage } from '../../../settings/storage'
 import type { ILanguageStorage } from '../../../language/storage'
-import type { IResourceDataStorage } from '../../../resourceData/storage'
+import type { ILanguageFileStorage } from '../../../resourceData/storage'
 import { GameStateInitializer } from '../../../core/initializers/gameStateInitializer'
 
 describe('core/initializers/gameStateInitializer', () => {
@@ -33,19 +33,7 @@ describe('core/initializers/gameStateInitializer', () => {
     getTranslation: vi.fn(),
   })
 
-  const createMockResourceDataStorage = (): IResourceDataStorage => ({
-    get rootPath() {
-      return '/resources'
-    },
-    logResourceData: vi.fn(),
-    addSceneData: vi.fn(),
-    getSceneData: vi.fn(),
-    addTileData: vi.fn(),
-    getTileData: vi.fn(),
-    addCssFileName: vi.fn(),
-    getCssFileNames: vi.fn(() => []),
-    addMapData: vi.fn(),
-    getMapData: vi.fn(),
+  const createMockLanguageFileStorage = (): ILanguageFileStorage => ({
     getLanguageFileNames: vi.fn(() => []),
     setLanguageFileNames: vi.fn(),
   })
@@ -77,12 +65,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
 
@@ -102,12 +90,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     gameData.meta.initialState.map = 'start-map'
@@ -131,12 +119,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
 
@@ -152,12 +140,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     gameData.meta.initialState.scene = 'main-menu'
@@ -174,12 +162,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
 
@@ -195,12 +183,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     gameData.meta.languages = {
@@ -212,12 +200,12 @@ describe('core/initializers/gameStateInitializer', () => {
     await initializer.initializeGameState(gameData)
 
     // Assert
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledTimes(2)
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledTimes(2)
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'en',
       ['system.json', 'game.json']
     )
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'es',
       ['system.json']
     )
@@ -228,12 +216,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     gameData.meta.defaultSettings.language = 'fr'
@@ -251,12 +239,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     gameData.meta.languages = {
@@ -269,16 +257,16 @@ describe('core/initializers/gameStateInitializer', () => {
     await initializer.initializeGameState(gameData)
 
     // Assert
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledTimes(3)
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledTimes(3)
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'en',
       ['en-system.json']
     )
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'es',
       ['es-system.json']
     )
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'fr',
       ['fr-system.json']
     )
@@ -289,12 +277,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData: GameData = {
       meta: {
@@ -333,11 +321,11 @@ describe('core/initializers/gameStateInitializer', () => {
       sceneStack: ['start-menu'],
       map: 'world-map',
     })
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'en',
       ['system.json', 'ui.json']
     )
-    expect(resourceDataStorage.setLanguageFileNames).toHaveBeenCalledWith(
+    expect(languageFileStorage.setLanguageFileNames).toHaveBeenCalledWith(
       'de',
       ['system.json']
     )
@@ -349,12 +337,12 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameStateMutator = createMockGameStateMutator()
     const settingsStorage = createMockSettingsStorage()
     const languageStorage = createMockLanguageStorage()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const languageFileStorage = createMockLanguageFileStorage()
     const initializer = new GameStateInitializer(
       gameStateMutator,
       settingsStorage,
       languageStorage,
-      resourceDataStorage
+      languageFileStorage
     )
     const gameData = createMinimalGameData()
     // Add extra properties to initialState that should be spread
