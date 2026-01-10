@@ -6,6 +6,7 @@ import { BackActionHandler } from '../../../core/actionHandlers/BackActionHandle
 import { VolumeActionHandler } from '../../../core/actionHandlers/VolumeActionHandler'
 import type { IGameStateManager } from '../../../gameState.ts/manager'
 import type { IBrowserAdapter } from '../../../system/browserAdapter'
+import type { ISettingsStorage } from '../../../settings/storage'
 
 describe('core/actionHandlers', () => {
   describe('SwitchSceneActionHandler', () => {
@@ -112,16 +113,81 @@ describe('core/actionHandlers', () => {
   describe('VolumeActionHandler', () => {
     it('handles volume-up and volume-down actions', () => {
       // Arrange
-      const handler = new VolumeActionHandler()
+      const settingsStorage = {
+        volume: 0.5,
+      }
+      const handler = new VolumeActionHandler(
+        settingsStorage as ISettingsStorage
+      )
 
       // Act & Assert
       expect(handler.canHandle({ type: 'volume-up' })).toBe(true)
       expect(handler.canHandle({ type: 'volume-down' })).toBe(true)
       expect(handler.canHandle({ type: 'back' })).toBe(false)
+    })
 
-      // Act - should not throw
+    it('increases volume by 0.1 when handling volume-up', () => {
+      // Arrange
+      const settingsStorage = {
+        volume: 0.5,
+      }
+      const handler = new VolumeActionHandler(
+        settingsStorage as ISettingsStorage
+      )
+
+      // Act
       handler.handle({ type: 'volume-up' })
+
+      // Assert
+      expect(settingsStorage.volume).toBe(0.6)
+    })
+
+    it('decreases volume by 0.1 when handling volume-down', () => {
+      // Arrange
+      const settingsStorage = {
+        volume: 0.5,
+      }
+      const handler = new VolumeActionHandler(
+        settingsStorage as ISettingsStorage
+      )
+
+      // Act
       handler.handle({ type: 'volume-down' })
+
+      // Assert
+      expect(settingsStorage.volume).toBe(0.4)
+    })
+
+    it('caps volume at 1.0 when handling volume-up', () => {
+      // Arrange
+      const settingsStorage = {
+        volume: 0.95,
+      }
+      const handler = new VolumeActionHandler(
+        settingsStorage as ISettingsStorage
+      )
+
+      // Act
+      handler.handle({ type: 'volume-up' })
+
+      // Assert
+      expect(settingsStorage.volume).toBe(1.0)
+    })
+
+    it('caps volume at 0.0 when handling volume-down', () => {
+      // Arrange
+      const settingsStorage = {
+        volume: 0.05,
+      }
+      const handler = new VolumeActionHandler(
+        settingsStorage as ISettingsStorage
+      )
+
+      // Act
+      handler.handle({ type: 'volume-down' })
+
+      // Assert
+      expect(settingsStorage.volume).toBe(0.0)
     })
   })
 })
