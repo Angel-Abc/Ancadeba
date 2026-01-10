@@ -24,6 +24,16 @@ describe('loader', () => {
       styling: [],
       tileSets: ['outdoor'],
       maps: [],
+      languages: {
+        en: {
+          name: 'English',
+          files: ['system.json'],
+        },
+      },
+      defaultSettings: {
+        language: 'en',
+        volume: 0.8,
+      },
     }
     fs.writeFileSync(filePath, JSON.stringify(gameData), 'utf-8')
 

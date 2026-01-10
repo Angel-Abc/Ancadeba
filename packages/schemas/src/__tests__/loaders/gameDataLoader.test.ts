@@ -41,6 +41,16 @@ describe('loaders/gameDataLoader', () => {
       styling: [],
       tileSets: ['outdoor'],
       maps: [],
+      languages: {
+        en: {
+          name: 'English',
+          files: ['system.json'],
+        },
+      },
+      defaultSettings: {
+        language: 'en',
+        volume: 0.8,
+      },
     }
     const scene = {
       id: 'scene-1',
@@ -105,6 +115,15 @@ describe('loaders/gameDataLoader', () => {
     )
     expect(result).toEqual({
       meta: game,
+      languages: new Map([
+        [
+          'en',
+          {
+            name: 'English',
+            files: ['system.json'],
+          },
+        ],
+      ]),
       scenes: [scene],
       tileSets: [tileSet],
       maps: [],
