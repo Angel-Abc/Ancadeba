@@ -43,19 +43,42 @@ import {
   resourceDataProviderToken,
 } from '../resourceData/provider'
 import {
-  ResourceDataStorage,
-  resourceDataStorageDependencies,
-  resourceDataStorageToken,
+  SceneDataStorage,
+  sceneDataStorageDependencies,
   sceneDataStorageToken,
+} from '../resourceData/SceneDataStorage'
+import {
+  TileDataStorage,
+  tileDataStorageDependencies,
   tileDataStorageToken,
+} from '../resourceData/TileDataStorage'
+import {
+  MapDataStorage,
+  mapDataStorageDependencies,
   mapDataStorageToken,
+} from '../resourceData/MapDataStorage'
+import {
+  AssetFileStorage,
+  assetFileStorageDependencies,
   cssFileStorageToken,
   languageFileStorageToken,
+} from '../resourceData/AssetFileStorage'
+import {
+  VirtualInputConfigStorage,
+  virtualInputConfigStorageDependencies,
   virtualKeyStorageToken,
   virtualInputStorageToken,
-  resourceDataLoggerToken,
+} from '../resourceData/VirtualInputConfigStorage'
+import {
+  ResourceRootPathProvider,
+  resourceRootPathProviderDependencies,
   resourceRootPathToken,
-} from '../resourceData/storage'
+} from '../resourceData/ResourceRootPathProvider'
+import {
+  ResourceDataLogger,
+  resourceDataLoggerDependencies,
+  resourceDataLoggerToken,
+} from '../resourceData/ResourceDataLogger'
 import {
   ConditionResolver,
   conditionResolverToken,
@@ -261,54 +284,55 @@ export function registerServices(container: Container): void {
       deps: resourceDataProviderDependencies,
     },
     {
-      token: resourceDataStorageToken,
-      useClass: ResourceDataStorage,
-      deps: resourceDataStorageDependencies,
-      scope: 'singleton',
-    },
-    {
       token: sceneDataStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: SceneDataStorage,
+      deps: sceneDataStorageDependencies,
       scope: 'singleton',
     },
     {
       token: tileDataStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: TileDataStorage,
+      deps: tileDataStorageDependencies,
       scope: 'singleton',
     },
     {
       token: mapDataStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: MapDataStorage,
+      deps: mapDataStorageDependencies,
       scope: 'singleton',
     },
     {
       token: cssFileStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: AssetFileStorage,
+      deps: assetFileStorageDependencies,
       scope: 'singleton',
     },
     {
       token: languageFileStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useFactory: (container) => container.resolve(cssFileStorageToken),
       scope: 'singleton',
     },
     {
       token: virtualKeyStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: VirtualInputConfigStorage,
+      deps: virtualInputConfigStorageDependencies,
       scope: 'singleton',
     },
     {
       token: virtualInputStorageToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
-      scope: 'singleton',
-    },
-    {
-      token: resourceDataLoggerToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useFactory: (container) => container.resolve(virtualKeyStorageToken),
       scope: 'singleton',
     },
     {
       token: resourceRootPathToken,
-      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      useClass: ResourceRootPathProvider,
+      deps: resourceRootPathProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: resourceDataLoggerToken,
+      useClass: ResourceDataLogger,
+      deps: resourceDataLoggerDependencies,
       scope: 'singleton',
     },
     {
