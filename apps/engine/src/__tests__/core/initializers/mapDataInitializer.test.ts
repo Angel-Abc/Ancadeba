@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Map as MapData, Tile } from '@ancadeba/schemas'
-import type { IResourceDataStorage } from '../../../resourceData/storage'
+import type {
+  IMapDataStorage,
+  ITileDataStorage,
+} from '../../../resourceData/storage'
 import { MapDataInitializer } from '../../../core/initializers/mapDataInitializer'
 
 describe('core/initializers/mapDataInitializer', () => {
@@ -10,39 +13,34 @@ describe('core/initializers/mapDataInitializer', () => {
     isObstacle: false,
   })
 
-  const createMockResourceDataStorage = (): IResourceDataStorage => ({
-    get rootPath() {
-      return '/resources'
-    },
-    logResourceData: vi.fn(),
-    addSceneData: vi.fn(),
-    getSceneData: vi.fn(),
-    addTileData: vi.fn(),
-    getTileData: vi.fn((tileId: string) => createMockTile(tileId)),
-    addCssFileName: vi.fn(),
-    getCssFileNames: vi.fn(() => []),
+  const createMockMapDataStorage = (): IMapDataStorage => ({
     addMapData: vi.fn(),
     getMapData: vi.fn(),
-    getLanguageFileNames: vi.fn(() => []),
-    setLanguageFileNames: vi.fn(),
+  })
+
+  const createMockTileDataStorage = (): ITileDataStorage => ({
+    addTileData: vi.fn(),
+    getTileData: vi.fn((tileId: string) => createMockTile(tileId)),
   })
 
   it('processes empty array without errors', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
 
     // Act
     initializer.initializeMaps([])
 
     // Assert
-    expect(storage.addMapData).not.toHaveBeenCalled()
+    expect(mapDataStorage.addMapData).not.toHaveBeenCalled()
   })
 
   it('adds single map with correct ID and dimensions', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
       width: 3,
@@ -55,8 +53,9 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    expect(storage.addMapData).toHaveBeenCalledTimes(1)
-    const [id, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    expect(mapDataStorage.addMapData).toHaveBeenCalledTimes(1)
+    const [id, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(id).toBe('test-map')
     expect(transformedMap.id).toBe('test-map')
     expect(transformedMap.width).toBe(3)
@@ -65,8 +64,9 @@ describe('core/initializers/mapDataInitializer', () => {
 
   it('processes multiple maps', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const map1: MapData = {
       id: 'map-1',
       width: 2,
@@ -93,16 +93,17 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([map1, map2, map3])
 
     // Assert
-    expect(storage.addMapData).toHaveBeenCalledTimes(3)
-    expect(vi.mocked(storage.addMapData).mock.calls[0][0]).toBe('map-1')
-    expect(vi.mocked(storage.addMapData).mock.calls[1][0]).toBe('map-2')
-    expect(vi.mocked(storage.addMapData).mock.calls[2][0]).toBe('map-3')
+    expect(mapDataStorage.addMapData).toHaveBeenCalledTimes(3)
+    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[0][0]).toBe('map-1')
+    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[1][0]).toBe('map-2')
+    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[2][0]).toBe('map-3')
   })
 
   it('transforms tiles into Map structure with getTileData lookups', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
       width: 2,
@@ -118,10 +119,11 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    expect(storage.getTileData).toHaveBeenCalledTimes(2)
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.grass')
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.sand')
-    const [, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    expect(tileDataStorage.getTileData).toHaveBeenCalledTimes(2)
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.grass')
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.sand')
+    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(transformedMap.tiles).toBeInstanceOf(Map)
     expect(transformedMap.tiles.size).toBe(2)
     expect(transformedMap.tiles.get('g')).toEqual(
@@ -134,8 +136,9 @@ describe('core/initializers/mapDataInitializer', () => {
 
   it('parses squares from CSV strings correctly', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
       width: 3,
@@ -148,7 +151,8 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(transformedMap.squares).toEqual([
       ['g', 'g', 'g'],
       ['g', 'g', 'g'],
@@ -157,8 +161,9 @@ describe('core/initializers/mapDataInitializer', () => {
 
   it('handles map with multiple tile references', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'complex-map',
       width: 4,
@@ -176,12 +181,13 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    expect(storage.getTileData).toHaveBeenCalledTimes(4)
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.grass')
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.sand')
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.water')
-    expect(storage.getTileData).toHaveBeenCalledWith('outdoor.rock')
-    const [, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    expect(tileDataStorage.getTileData).toHaveBeenCalledTimes(4)
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.grass')
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.sand')
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.water')
+    expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.rock')
+    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(transformedMap.tiles.size).toBe(4)
     expect(transformedMap.squares).toEqual([
       ['g', 'g', 's', 's'],
@@ -192,8 +198,9 @@ describe('core/initializers/mapDataInitializer', () => {
 
   it('integrates all map properties correctly', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
-    const initializer = new MapDataInitializer(storage)
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'integration-map',
       width: 2,
@@ -209,7 +216,8 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [id, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    const [id, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(id).toBe('integration-map')
     expect(transformedMap).toEqual({
       id: 'integration-map',
@@ -228,14 +236,15 @@ describe('core/initializers/mapDataInitializer', () => {
 
   it('preserves tile data references from storage', () => {
     // Arrange
-    const storage = createMockResourceDataStorage()
+    const mapDataStorage = createMockMapDataStorage()
+    const tileDataStorage = createMockTileDataStorage()
     const customTile: Tile = {
       id: 'custom.tile',
       image: 'custom-tile.png',
       isObstacle: true,
     }
-    vi.mocked(storage.getTileData).mockReturnValue(customTile)
-    const initializer = new MapDataInitializer(storage)
+    vi.mocked(tileDataStorage.getTileData).mockReturnValue(customTile)
+    const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'ref-map',
       width: 1,
@@ -248,7 +257,8 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [, transformedMap] = vi.mocked(storage.addMapData).mock.calls[0]
+    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
+      .calls[0]
     expect(transformedMap.tiles.get('c')).toBe(customTile)
     expect(transformedMap.tiles.get('c')?.isObstacle).toBe(true)
   })

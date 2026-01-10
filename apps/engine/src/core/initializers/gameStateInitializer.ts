@@ -7,8 +7,8 @@ import {
 import { ISettingsStorage, settingsStorageToken } from '../../settings/storage'
 import { ILanguageStorage, languageStorageToken } from '../../language/storage'
 import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
+  ILanguageFileStorage,
+  languageFileStorageToken,
 } from '../../resourceData/storage'
 
 export interface IGameStateInitializer {
@@ -21,7 +21,7 @@ export const gameStateInitializerDependencies: Token<unknown>[] = [
   gameStateStorageToken,
   settingsStorageToken,
   languageStorageToken,
-  resourceDataStorageToken,
+  languageFileStorageToken,
 ]
 
 export class GameStateInitializer implements IGameStateInitializer {
@@ -29,7 +29,7 @@ export class GameStateInitializer implements IGameStateInitializer {
     private readonly gameStateStorage: IGameStateMutator,
     private readonly settingsStorage: ISettingsStorage,
     private readonly languageStorage: ILanguageStorage,
-    private readonly resourceDataStorage: IResourceDataStorage
+    private readonly languageFileStorage: ILanguageFileStorage
   ) {}
 
   async initializeGameState(gameData: GameData): Promise<void> {
@@ -47,7 +47,7 @@ export class GameStateInitializer implements IGameStateInitializer {
     }
 
     typedEntries(gameData.meta.languages).forEach(([key, language]) => {
-      this.resourceDataStorage.setLanguageFileNames(key, language.files)
+      this.languageFileStorage.setLanguageFileNames(key, language.files)
     })
 
     await this.languageStorage.setLanguage(

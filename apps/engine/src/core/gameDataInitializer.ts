@@ -1,8 +1,12 @@
 import { Token, token } from '@ancadeba/utils'
 import type { GameData } from '@ancadeba/schemas'
 import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
+  IVirtualKeyStorage,
+  virtualKeyStorageToken,
+  IVirtualInputStorage,
+  virtualInputStorageToken,
+  IResourceDataLogger,
+  resourceDataLoggerToken,
 } from '../resourceData/storage'
 import {
   IGameStateInitializer,
@@ -32,7 +36,9 @@ export const gameDataInitializerDependencies: Token<unknown>[] = [
   sceneDataInitializerToken,
   tileDataInitializerToken,
   mapDataInitializerToken,
-  resourceDataStorageToken,
+  virtualKeyStorageToken,
+  virtualInputStorageToken,
+  resourceDataLoggerToken,
 ]
 
 export class GameDataInitializer implements IGameDataInitializer {
@@ -41,7 +47,9 @@ export class GameDataInitializer implements IGameDataInitializer {
     private readonly sceneDataInitializer: ISceneDataInitializer,
     private readonly tileDataInitializer: ITileDataInitializer,
     private readonly mapDataInitializer: IMapDataInitializer,
-    private readonly resourceDataStorage: IResourceDataStorage
+    private readonly virtualKeyStorage: IVirtualKeyStorage,
+    private readonly virtualInputStorage: IVirtualInputStorage,
+    private readonly resourceDataLogger: IResourceDataLogger
   ) {}
 
   async initialize(gameData: GameData): Promise<void> {
@@ -50,9 +58,9 @@ export class GameDataInitializer implements IGameDataInitializer {
     this.sceneDataInitializer.initializeStyling(gameData.meta.styling)
     this.tileDataInitializer.initializeTiles(gameData.tileSets)
     this.mapDataInitializer.initializeMaps(gameData.maps)
-    this.resourceDataStorage.setVirtualKeys(gameData.virtualKeys.mappings)
-    this.resourceDataStorage.setVirtualInputs(gameData.virtualInputs.mappings)
+    this.virtualKeyStorage.setVirtualKeys(gameData.virtualKeys.mappings)
+    this.virtualInputStorage.setVirtualInputs(gameData.virtualInputs.mappings)
 
-    this.resourceDataStorage.logResourceData()
+    this.resourceDataLogger.logResourceData()
   }
 }

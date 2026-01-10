@@ -5,10 +5,7 @@ import {
   keyboardListenerToken,
 } from '@ancadeba/utils'
 import { UI_MESSAGES } from '../messages/ui'
-import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
-} from '../resourceData/storage'
+import { IVirtualKeyMapper, virtualKeyMapperToken } from './virtualKeyMapper'
 import { IEngineMessageBus, engineMessageBusToken } from './engineMessageBus'
 
 export interface IKeyboardInputService {
@@ -21,7 +18,7 @@ export const keyboardInputServiceToken = token<IKeyboardInputService>(logName)
 
 export const keyboardInputServiceDependencies: Token<unknown>[] = [
   keyboardListenerToken,
-  resourceDataStorageToken,
+  virtualKeyMapperToken,
   engineMessageBusToken,
 ]
 
@@ -30,20 +27,13 @@ export class KeyboardInputService implements IKeyboardInputService {
 
   constructor(
     private readonly keyboardListener: IKeyboardListener,
-    private readonly resourceDataStorage: IResourceDataStorage,
+    private readonly virtualKeyMapper: IVirtualKeyMapper,
     private readonly messageBus: IEngineMessageBus
   ) {}
 
   start(): void {
     this.unsubscribe = this.keyboardListener.listen((event) => {
-      const virtualKeys = this.resourceDataStorage.getVirtualKeys()
-      const mapping = virtualKeys.find(
-        (m) =>
-          m.code === event.code &&
-          m.shift === event.shift &&
-          m.ctrl === event.ctrl &&
-          m.alt === event.alt
-      )
+      const mapping = this.virtualKeyMapper.findMapping(event)
 
       if (mapping) {
         this.messageBus.publish(UI_MESSAGES.VIRTUAL_KEY_PRESSED, {

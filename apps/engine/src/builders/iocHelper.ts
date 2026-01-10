@@ -46,6 +46,15 @@ import {
   ResourceDataStorage,
   resourceDataStorageDependencies,
   resourceDataStorageToken,
+  sceneDataStorageToken,
+  tileDataStorageToken,
+  mapDataStorageToken,
+  cssFileStorageToken,
+  languageFileStorageToken,
+  virtualKeyStorageToken,
+  virtualInputStorageToken,
+  resourceDataLoggerToken,
+  resourceRootPathToken,
 } from '../resourceData/storage'
 import {
   ConditionResolver,
@@ -138,6 +147,11 @@ import {
   keyboardInputServiceDependencies,
   keyboardInputServiceToken,
 } from '../system/keyboardInputService'
+import {
+  VirtualKeyMapper,
+  virtualKeyMapperDependencies,
+  virtualKeyMapperToken,
+} from '../system/virtualKeyMapper'
 import {
   VirtualInputService,
   virtualInputServiceDependencies,
@@ -249,6 +263,51 @@ export function registerServices(container: Container): void {
       scope: 'singleton',
     },
     {
+      token: sceneDataStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: tileDataStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: mapDataStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: cssFileStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: languageFileStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: virtualKeyStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: virtualInputStorageToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: resourceDataLoggerToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: resourceRootPathToken,
+      useFactory: (container) => container.resolve(resourceDataStorageToken),
+      scope: 'singleton',
+    },
+    {
       token: conditionResolverToken,
       useClass: ConditionResolver,
       deps: conditionResolverDependencies,
@@ -304,6 +363,11 @@ export function registerServices(container: Container): void {
       useClass: KeyboardListener,
       deps: keyboardListenerDependencies,
       scope: 'singleton',
+    },
+    {
+      token: virtualKeyMapperToken,
+      useClass: VirtualKeyMapper,
+      deps: virtualKeyMapperDependencies,
     },
     {
       token: keyboardInputServiceToken,

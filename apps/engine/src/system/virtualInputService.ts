@@ -1,8 +1,8 @@
 import { Token, token } from '@ancadeba/utils'
 import { UI_MESSAGES } from '../messages/ui'
 import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
+  IVirtualInputStorage,
+  virtualInputStorageToken,
 } from '../resourceData/storage'
 import { IEngineMessageBus, engineMessageBusToken } from './engineMessageBus'
 
@@ -15,7 +15,7 @@ const logName = 'engine/system/virtualInputService'
 export const virtualInputServiceToken = token<IVirtualInputService>(logName)
 
 export const virtualInputServiceDependencies: Token<unknown>[] = [
-  resourceDataStorageToken,
+  virtualInputStorageToken,
   engineMessageBusToken,
 ]
 
@@ -23,7 +23,7 @@ export class VirtualInputService implements IVirtualInputService {
   private unsubscribe?: () => void
 
   constructor(
-    private readonly resourceDataStorage: IResourceDataStorage,
+    private readonly virtualInputStorage: IVirtualInputStorage,
     private readonly messageBus: IEngineMessageBus
   ) {}
 
@@ -31,7 +31,7 @@ export class VirtualInputService implements IVirtualInputService {
     this.unsubscribe = this.messageBus.subscribe(
       UI_MESSAGES.VIRTUAL_KEY_PRESSED,
       (payload) => {
-        const virtualInputs = this.resourceDataStorage.getVirtualInputs()
+        const virtualInputs = this.virtualInputStorage.getVirtualInputs()
         const mapping = virtualInputs.find((m) =>
           m.virtualKeys.includes(payload.virtualKey)
         )

@@ -1,5 +1,16 @@
 import { Token, token } from '@ancadeba/utils'
-import { IResourceDataStorage, resourceDataStorageToken } from './storage'
+import {
+  IResourceRootPath,
+  resourceRootPathToken,
+  ISceneDataStorage,
+  sceneDataStorageToken,
+  ICssFileStorage,
+  cssFileStorageToken,
+  IMapDataStorage,
+  mapDataStorageToken,
+  ILanguageFileStorage,
+  languageFileStorageToken,
+} from './storage'
 import { Scene } from '@ancadeba/schemas'
 import { MapData } from './types'
 
@@ -14,30 +25,39 @@ export interface IResourceDataProvider {
 const logName = 'engine/resourceData/provider'
 export const resourceDataProviderToken = token<IResourceDataProvider>(logName)
 export const resourceDataProviderDependencies: Token<unknown>[] = [
-  resourceDataStorageToken,
+  resourceRootPathToken,
+  sceneDataStorageToken,
+  cssFileStorageToken,
+  mapDataStorageToken,
+  languageFileStorageToken,
 ]
 export class ResourceDataProvider implements IResourceDataProvider {
-  constructor(private readonly resourceDataStorage: IResourceDataStorage) {}
+  constructor(
+    private readonly resourceRootPath: IResourceRootPath,
+    private readonly sceneDataStorage: ISceneDataStorage,
+    private readonly cssFileStorage: ICssFileStorage,
+    private readonly mapDataStorage: IMapDataStorage,
+    private readonly languageFileStorage: ILanguageFileStorage
+  ) {}
   get assetsUrl(): string {
-    return `${this.resourceDataStorage.rootPath}/assets`
+    return `${this.resourceRootPath.rootPath}/assets`
   }
   getSceneData(sceneId: string): Scene {
-    return this.resourceDataStorage.getSceneData(sceneId)
+    return this.sceneDataStorage.getSceneData(sceneId)
   }
   getCssFilePaths(): string[] {
-    return this.resourceDataStorage
+    return this.cssFileStorage
       .getCssFileNames()
       .map((fileName) => `${this.assetsUrl}/css/${fileName}`)
   }
   getMapData(mapId: string): MapData {
-    return this.resourceDataStorage.getMapData(mapId)
+    return this.mapDataStorage.getMapData(mapId)
   }
   getLanguageFilePaths(language: string): string[] {
-    return this.resourceDataStorage
+    return this.languageFileStorage
       .getLanguageFileNames(language)
       .map(
-        (fileName) =>
-          `${this.resourceDataStorage.rootPath}/languages/${fileName}`
+        (fileName) => `${this.resourceRootPath.rootPath}/languages/${fileName}`
       )
   }
 }

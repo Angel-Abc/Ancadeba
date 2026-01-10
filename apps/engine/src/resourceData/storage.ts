@@ -6,52 +6,98 @@ import {
   Tile,
 } from '@ancadeba/schemas'
 import { MapData } from './types'
+import { VirtualKeyMapping } from '../system/virtualKeyMapper'
 
-export interface IResourceDataStorage {
+export interface VirtualInputMapping {
+  virtualKeys: string[]
+  virtualInput: string
+  label: string
+}
+
+export interface IResourceRootPath {
   get rootPath(): string
-  logResourceData(): void
+}
+
+export interface ISceneDataStorage {
   addSceneData(sceneId: string, data: Scene): void
   getSceneData(sceneId: string): Scene
+}
+
+export interface ITileDataStorage {
   addTileData(tileId: string, data: Tile): void
   getTileData(tileId: string): Tile
-  addCssFileName(fileName: string): void
-  getCssFileNames(): string[]
+}
+
+export interface IMapDataStorage {
   addMapData(mapId: string, data: MapData): void
   getMapData(mapId: string): MapData
+}
+
+export interface ICssFileStorage {
+  addCssFileName(fileName: string): void
+  getCssFileNames(): string[]
+}
+
+export interface ILanguageFileStorage {
   getLanguageFileNames(language: string): string[]
   setLanguageFileNames(language: string, fileNames: string[]): void
-  setVirtualKeys(
-    virtualKeys: {
-      code: string
-      shift: boolean
-      ctrl: boolean
-      alt: boolean
-      virtualKey: string
-    }[]
-  ): void
-  getVirtualKeys(): {
-    code: string
-    shift: boolean
-    ctrl: boolean
-    alt: boolean
-    virtualKey: string
-  }[]
-  setVirtualInputs(
-    virtualInputs: {
-      virtualKeys: string[]
-      virtualInput: string
-      label: string
-    }[]
-  ): void
-  getVirtualInputs(): {
-    virtualKeys: string[]
-    virtualInput: string
-    label: string
-  }[]
 }
+
+export interface IVirtualKeyStorage {
+  setVirtualKeys(virtualKeys: VirtualKeyMapping[]): void
+  getVirtualKeys(): VirtualKeyMapping[]
+}
+
+export interface IVirtualInputStorage {
+  setVirtualInputs(virtualInputs: VirtualInputMapping[]): void
+  getVirtualInputs(): VirtualInputMapping[]
+}
+
+export interface IResourceDataLogger {
+  logResourceData(): void
+}
+
+export interface IResourceDataStorage
+  extends IResourceRootPath,
+    ISceneDataStorage,
+    ITileDataStorage,
+    IMapDataStorage,
+    ICssFileStorage,
+    ILanguageFileStorage,
+    IVirtualKeyStorage,
+    IVirtualInputStorage,
+    IResourceDataLogger {}
 
 const logName = 'engine/resourceData/storage'
 export const resourceDataStorageToken = token<IResourceDataStorage>(logName)
+export const sceneDataStorageToken = token<ISceneDataStorage>(
+  'engine/resourceData/sceneDataStorage'
+)
+export const tileDataStorageToken = token<ITileDataStorage>(
+  'engine/resourceData/tileDataStorage'
+)
+export const mapDataStorageToken = token<IMapDataStorage>(
+  'engine/resourceData/mapDataStorage'
+)
+export const cssFileStorageToken = token<ICssFileStorage>(
+  'engine/resourceData/cssFileStorage'
+)
+export const languageFileStorageToken = token<ILanguageFileStorage>(
+  'engine/resourceData/languageFileStorage'
+)
+export const virtualKeyStorageToken = token<IVirtualKeyStorage>(
+  'engine/resourceData/virtualKeyStorage'
+)
+export const virtualInputStorageToken = token<IVirtualInputStorage>(
+  'engine/resourceData/virtualInputStorage'
+)
+export const resourceDataLoggerToken = token<IResourceDataLogger>(
+  'engine/resourceData/resourceDataLogger'
+)
+export const resourceRootPathToken = token<IResourceRootPath>(
+  'engine/resourceData/resourceRootPath'
+)
+
 export const resourceDataStorageDependencies: Token<unknown>[] = [
   loggerToken,
   jsonConfigurationToken,
@@ -62,18 +108,8 @@ export class ResourceDataStorage implements IResourceDataStorage {
   private maps: Map<string, MapData> = new Map()
   private languageFiles: Map<string, string[]> = new Map()
   private cssFileNames: string[] = []
-  private virtualKeys: {
-    code: string
-    shift: boolean
-    ctrl: boolean
-    alt: boolean
-    virtualKey: string
-  }[] = []
-  private virtualInputs: {
-    virtualKeys: string[]
-    virtualInput: string
-    label: string
-  }[] = []
+  private virtualKeys: VirtualKeyMapping[] = []
+  private virtualInputs: VirtualInputMapping[] = []
 
   constructor(
     private readonly logger: ILogger,
@@ -160,43 +196,19 @@ export class ResourceDataStorage implements IResourceDataStorage {
     this.languageFiles.set(language, fileNames)
   }
 
-  setVirtualKeys(
-    virtualKeys: {
-      code: string
-      shift: boolean
-      ctrl: boolean
-      alt: boolean
-      virtualKey: string
-    }[]
-  ): void {
+  setVirtualKeys(virtualKeys: VirtualKeyMapping[]): void {
     this.virtualKeys = virtualKeys
   }
 
-  getVirtualKeys(): {
-    code: string
-    shift: boolean
-    ctrl: boolean
-    alt: boolean
-    virtualKey: string
-  }[] {
+  getVirtualKeys(): VirtualKeyMapping[] {
     return this.virtualKeys
   }
 
-  setVirtualInputs(
-    virtualInputs: {
-      virtualKeys: string[]
-      virtualInput: string
-      label: string
-    }[]
-  ): void {
+  setVirtualInputs(virtualInputs: VirtualInputMapping[]): void {
     this.virtualInputs = virtualInputs
   }
 
-  getVirtualInputs(): {
-    virtualKeys: string[]
-    virtualInput: string
-    label: string
-  }[] {
+  getVirtualInputs(): VirtualInputMapping[] {
     return this.virtualInputs
   }
 }

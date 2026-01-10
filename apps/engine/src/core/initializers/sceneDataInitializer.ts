@@ -1,8 +1,10 @@
 import { Token, token } from '@ancadeba/utils'
 import type { Scene } from '@ancadeba/schemas'
 import {
-  IResourceDataStorage,
-  resourceDataStorageToken,
+  ISceneDataStorage,
+  sceneDataStorageToken,
+  ICssFileStorage,
+  cssFileStorageToken,
 } from '../../resourceData/storage'
 
 export interface ISceneDataInitializer {
@@ -13,21 +15,25 @@ export interface ISceneDataInitializer {
 const logName = 'engine/core/initializers/sceneDataInitializer'
 export const sceneDataInitializerToken = token<ISceneDataInitializer>(logName)
 export const sceneDataInitializerDependencies: Token<unknown>[] = [
-  resourceDataStorageToken,
+  sceneDataStorageToken,
+  cssFileStorageToken,
 ]
 
 export class SceneDataInitializer implements ISceneDataInitializer {
-  constructor(private readonly resourceDataStorage: IResourceDataStorage) {}
+  constructor(
+    private readonly sceneDataStorage: ISceneDataStorage,
+    private readonly cssFileStorage: ICssFileStorage
+  ) {}
 
   initializeScenes(scenes: Scene[]): void {
     scenes.forEach((scene) => {
-      this.resourceDataStorage.addSceneData(scene.id, scene)
+      this.sceneDataStorage.addSceneData(scene.id, scene)
     })
   }
 
   initializeStyling(cssFileNames: string[] | undefined): void {
     cssFileNames?.forEach((fileName) => {
-      this.resourceDataStorage.addCssFileName(fileName)
+      this.cssFileStorage.addCssFileName(fileName)
     })
   }
 }

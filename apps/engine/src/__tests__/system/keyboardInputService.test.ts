@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { IKeyboardListener } from '@ancadeba/utils'
-import type { IResourceDataStorage } from '../../resourceData/storage'
+import type { IVirtualKeyMapper } from '../../system/virtualKeyMapper'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import { KeyboardInputService } from '../../system/keyboardInputService'
 import { UI_MESSAGES } from '../../messages/ui'
@@ -13,9 +13,9 @@ describe('system/keyboardInputService', () => {
       listen: mockListen,
       start: vi.fn(),
     }
-    const resourceDataStorage: IResourceDataStorage = {
-      getVirtualKeys: vi.fn().mockReturnValue([]),
-    } as unknown as IResourceDataStorage
+    const virtualKeyMapper: IVirtualKeyMapper = {
+      findMapping: vi.fn().mockReturnValue(undefined),
+    }
     const messageBus: IEngineMessageBus = {
       publish: vi.fn(),
       publishRaw: vi.fn(),
@@ -24,7 +24,7 @@ describe('system/keyboardInputService', () => {
     }
     const service = new KeyboardInputService(
       keyboardListener,
-      resourceDataStorage,
+      virtualKeyMapper,
       messageBus
     )
 
@@ -53,18 +53,16 @@ describe('system/keyboardInputService', () => {
       listen: mockListen,
       start: vi.fn(),
     }
-    const virtualKeys = [
-      {
-        code: 'Space',
-        shift: false,
-        ctrl: false,
-        alt: false,
-        virtualKey: 'VK_ACTION',
-      },
-    ]
-    const resourceDataStorage: IResourceDataStorage = {
-      getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
+    const mockFindMapping = vi.fn().mockReturnValue({
+      code: 'Space',
+      shift: false,
+      ctrl: false,
+      alt: false,
+      virtualKey: 'VK_ACTION',
+    })
+    const virtualKeyMapper: IVirtualKeyMapper = {
+      findMapping: mockFindMapping,
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -74,7 +72,7 @@ describe('system/keyboardInputService', () => {
     }
     const service = new KeyboardInputService(
       keyboardListener,
-      resourceDataStorage,
+      virtualKeyMapper,
       messageBus
     )
 
@@ -106,25 +104,16 @@ describe('system/keyboardInputService', () => {
       listen: mockListen,
       start: vi.fn(),
     }
-    const virtualKeys = [
-      {
-        code: 'KeyQ',
-        shift: false,
-        ctrl: false,
-        alt: false,
-        virtualKey: 'VK_Q',
-      },
-      {
-        code: 'KeyQ',
-        shift: true,
-        ctrl: false,
-        alt: false,
-        virtualKey: 'VK_SHIFT_Q',
-      },
-    ]
-    const resourceDataStorage: IResourceDataStorage = {
-      getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
+    const mockFindMapping = vi.fn().mockReturnValue({
+      code: 'KeyQ',
+      shift: true,
+      ctrl: false,
+      alt: false,
+      virtualKey: 'VK_SHIFT_Q',
+    })
+    const virtualKeyMapper: IVirtualKeyMapper = {
+      findMapping: mockFindMapping,
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -134,7 +123,7 @@ describe('system/keyboardInputService', () => {
     }
     const service = new KeyboardInputService(
       keyboardListener,
-      resourceDataStorage,
+      virtualKeyMapper,
       messageBus
     )
 
@@ -166,18 +155,10 @@ describe('system/keyboardInputService', () => {
       listen: mockListen,
       start: vi.fn(),
     }
-    const virtualKeys = [
-      {
-        code: 'Space',
-        shift: false,
-        ctrl: false,
-        alt: false,
-        virtualKey: 'VK_ACTION',
-      },
-    ]
-    const resourceDataStorage: IResourceDataStorage = {
-      getVirtualKeys: vi.fn().mockReturnValue(virtualKeys),
-    } as unknown as IResourceDataStorage
+    const mockFindMapping = vi.fn().mockReturnValue(undefined)
+    const virtualKeyMapper: IVirtualKeyMapper = {
+      findMapping: mockFindMapping,
+    }
     const mockPublish = vi.fn()
     const messageBus: IEngineMessageBus = {
       publish: mockPublish,
@@ -187,7 +168,7 @@ describe('system/keyboardInputService', () => {
     }
     const service = new KeyboardInputService(
       keyboardListener,
-      resourceDataStorage,
+      virtualKeyMapper,
       messageBus
     )
 
@@ -207,9 +188,9 @@ describe('system/keyboardInputService', () => {
       listen: mockListen,
       start: vi.fn(),
     }
-    const resourceDataStorage: IResourceDataStorage = {
-      getVirtualKeys: vi.fn().mockReturnValue([]),
-    } as unknown as IResourceDataStorage
+    const virtualKeyMapper: IVirtualKeyMapper = {
+      findMapping: vi.fn().mockReturnValue(undefined),
+    }
     const messageBus: IEngineMessageBus = {
       publish: vi.fn(),
       publishRaw: vi.fn(),
@@ -218,7 +199,7 @@ describe('system/keyboardInputService', () => {
     }
     const service = new KeyboardInputService(
       keyboardListener,
-      resourceDataStorage,
+      virtualKeyMapper,
       messageBus
     )
 

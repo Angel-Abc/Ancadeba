@@ -4,7 +4,11 @@ import type { IGameStateInitializer } from '../../core/initializers/gameStateIni
 import type { ISceneDataInitializer } from '../../core/initializers/sceneDataInitializer'
 import type { ITileDataInitializer } from '../../core/initializers/tileDataInitializer'
 import type { IMapDataInitializer } from '../../core/initializers/mapDataInitializer'
-import type { IResourceDataStorage } from '../../resourceData/storage'
+import type {
+  IVirtualKeyStorage,
+  IVirtualInputStorage,
+  IResourceDataLogger,
+} from '../../resourceData/storage'
 import { GameDataInitializer } from '../../core/gameDataInitializer'
 
 describe('core/gameDataInitializer', () => {
@@ -25,25 +29,18 @@ describe('core/gameDataInitializer', () => {
     initializeMaps: vi.fn(),
   })
 
-  const createMockResourceDataStorage = (): IResourceDataStorage => ({
-    get rootPath() {
-      return '/resources'
-    },
-    logResourceData: vi.fn(),
-    addSceneData: vi.fn(),
-    getSceneData: vi.fn(),
-    addTileData: vi.fn(),
-    getTileData: vi.fn(),
-    addCssFileName: vi.fn(),
-    getCssFileNames: vi.fn(() => []),
-    addMapData: vi.fn(),
-    getMapData: vi.fn(),
-    getLanguageFileNames: vi.fn(() => []),
-    setLanguageFileNames: vi.fn(),
+  const createMockVirtualKeyStorage = (): IVirtualKeyStorage => ({
     setVirtualKeys: vi.fn(),
     getVirtualKeys: vi.fn(() => []),
+  })
+
+  const createMockVirtualInputStorage = (): IVirtualInputStorage => ({
     setVirtualInputs: vi.fn(),
     getVirtualInputs: vi.fn(() => []),
+  })
+
+  const createMockResourceDataLogger = (): IResourceDataLogger => ({
+    logResourceData: vi.fn(),
   })
 
   const createMinimalGameData = (): GameData => ({
@@ -86,13 +83,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
 
@@ -112,13 +113,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
     gameData.scenes = [
@@ -142,13 +147,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
     gameData.meta.styling = ['theme.css', 'layout.css']
@@ -170,13 +179,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
     gameData.tileSets = [
@@ -200,13 +213,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
     gameData.maps = [
@@ -224,19 +241,23 @@ describe('core/gameDataInitializer', () => {
     )
   })
 
-  it('calls resourceDataStorage.logResourceData after all initialization', async () => {
+  it('calls resourceDataLogger.logResourceData after all initialization', async () => {
     // Arrange
     const gameStateInitializer = createMockGameStateInitializer()
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
 
@@ -244,7 +265,7 @@ describe('core/gameDataInitializer', () => {
     await initializer.initialize(gameData)
 
     // Assert
-    expect(resourceDataStorage.logResourceData).toHaveBeenCalledTimes(1)
+    expect(resourceDataLogger.logResourceData).toHaveBeenCalledTimes(1)
   })
 
   it('initializes in correct order with gameState before others', async () => {
@@ -271,8 +292,10 @@ describe('core/gameDataInitializer', () => {
     vi.mocked(mapDataInitializer.initializeMaps).mockImplementation(() => {
       callOrder.push('maps')
     })
-    const resourceDataStorage = createMockResourceDataStorage()
-    vi.mocked(resourceDataStorage.logResourceData).mockImplementation(() => {
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
+    vi.mocked(resourceDataLogger.logResourceData).mockImplementation(() => {
       callOrder.push('logResourceData')
     })
     const initializer = new GameDataInitializer(
@@ -280,7 +303,9 @@ describe('core/gameDataInitializer', () => {
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
 
@@ -311,13 +336,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData = createMinimalGameData()
 
@@ -335,13 +364,17 @@ describe('core/gameDataInitializer', () => {
     const sceneDataInitializer = createMockSceneDataInitializer()
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
-    const resourceDataStorage = createMockResourceDataStorage()
+    const virtualKeyStorage = createMockVirtualKeyStorage()
+    const virtualInputStorage = createMockVirtualInputStorage()
+    const resourceDataLogger = createMockResourceDataLogger()
     const initializer = new GameDataInitializer(
       gameStateInitializer,
       sceneDataInitializer,
       tileDataInitializer,
       mapDataInitializer,
-      resourceDataStorage
+      virtualKeyStorage,
+      virtualInputStorage,
+      resourceDataLogger
     )
     const gameData: GameData = {
       meta: {
@@ -399,6 +432,6 @@ describe('core/gameDataInitializer', () => {
     expect(mapDataInitializer.initializeMaps).toHaveBeenCalledWith(
       gameData.maps
     )
-    expect(resourceDataStorage.logResourceData).toHaveBeenCalled()
+    expect(resourceDataLogger.logResourceData).toHaveBeenCalled()
   })
 })
