@@ -102,6 +102,26 @@ import {
   languageStorageDependencies,
   languageStorageToken,
 } from '../language/storage'
+import {
+  GameStateInitializer,
+  gameStateInitializerDependencies,
+  gameStateInitializerToken,
+} from '../core/initializers/gameStateInitializer'
+import {
+  SceneDataInitializer,
+  sceneDataInitializerDependencies,
+  sceneDataInitializerToken,
+} from '../core/initializers/sceneDataInitializer'
+import {
+  TileDataInitializer,
+  tileDataInitializerDependencies,
+  tileDataInitializerToken,
+} from '../core/initializers/tileDataInitializer'
+import {
+  MapDataInitializer,
+  mapDataInitializerDependencies,
+  mapDataInitializerToken,
+} from '../core/initializers/mapDataInitializer'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -114,6 +134,26 @@ export function registerServices(container: Container): void {
       token: gameDataInitializerToken,
       useClass: GameDataInitializer,
       deps: gameDataInitializerDependencies,
+    },
+    {
+      token: gameStateInitializerToken,
+      useClass: GameStateInitializer,
+      deps: gameStateInitializerDependencies,
+    },
+    {
+      token: sceneDataInitializerToken,
+      useClass: SceneDataInitializer,
+      deps: sceneDataInitializerDependencies,
+    },
+    {
+      token: tileDataInitializerToken,
+      useClass: TileDataInitializer,
+      deps: tileDataInitializerDependencies,
+    },
+    {
+      token: mapDataInitializerToken,
+      useClass: MapDataInitializer,
+      deps: mapDataInitializerDependencies,
     },
     {
       token: actionHandlerToken,
