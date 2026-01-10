@@ -39,7 +39,7 @@ export class GameEngine implements IGameEngine {
   async start(): Promise<void> {
     const gameData = await this.gameDataLoader.loadGameData()
     this.logger.info(logName, 'loaded game data: {0}', gameData)
-    this.gameDataInitializer.initialize(gameData)
+    await this.gameDataInitializer.initialize(gameData)
     // Wait for UI to be ready
     await this.uiReadySignal.ready
     this.actionExecutor.start()

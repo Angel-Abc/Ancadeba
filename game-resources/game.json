@@ -12,8 +12,18 @@
       "isGameStarted": false
     }
   },
+  "defaultSettings": {
+    "language": "en",
+    "volume": 0.8
+  },
   "scenes": ["start-screen", "settings", "navigate"],
   "styling": ["game.css"],
   "tileSets": ["outdoor"],
-  "maps": ["start-beach"]
+  "maps": ["start-beach"],
+  "languages": {
+    "en": {
+      "name": "English",
+      "files": ["en/system.json", "en/start-beach.json", "en/tiles.json"]
+    }
+  }
 }

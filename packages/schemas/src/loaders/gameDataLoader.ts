@@ -5,6 +5,7 @@ import {
   token,
   loadJsonResource,
   typedEntries,
+  typedKeys,
 } from '@ancadeba/utils'
 import { GameData } from './types'
 import { IJsonConfiguration, jsonConfigurationToken } from './configuration'
@@ -13,12 +14,14 @@ import { sceneSchema } from '../schemas/scene'
 import { ZodTypeAny } from 'zod'
 import { tileSetSchema } from '../schemas/tileSet'
 import { mapSchema } from '../schemas/map'
+import { Language, languageSchema } from '../schemas/language'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
+  loadLanguageData(languageFilePaths: string[]): Promise<Map<string, string>>
 }
 
-type GameDataCollections = Omit<GameData, 'meta'>
+type GameDataCollections = Omit<GameData, 'meta' | 'languages'>
 type GameDataCollectionKey = keyof GameDataCollections
 
 type ResourceCollectionDefinition = {
@@ -81,12 +84,42 @@ export class GameDataLoader implements IGameDataLoader {
       this.resourceCollectionFactory(game, this.config.rootPath)
     )
 
-    const result = {
+    const languages = new Map<string, { name: string; files: string[] }>()
+    for (const langKey of typedKeys(game.languages)) {
+      const langDef = game.languages[langKey]
+      if (!langDef) continue
+      languages.set(langKey, { name: langDef.name, files: langDef.files })
+    }
+
+    const result: GameData = {
       meta: game,
+      languages: languages,
       ...collections,
     }
     this.logger.debug(logName, 'Loaded game data: {0}', result)
     return result
+  }
+
+  async loadLanguageData(
+    languageFilePaths: string[]
+  ): Promise<Map<string, string>> {
+    const translations = new Map<string, string>()
+
+    await Promise.all(
+      languageFilePaths.map(async (filePath) => {
+        const fileTranslations = await loadJsonResource<Language>(
+          filePath,
+          languageSchema,
+          this.logger
+        )
+        for (const [key, value] of Object.entries(
+          fileTranslations.translations
+        )) {
+          translations.set(key, value)
+        }
+      })
+    )
+    return translations
   }
 
   private async loadCollections(

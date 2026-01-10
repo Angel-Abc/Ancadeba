@@ -8,6 +8,7 @@ export interface IResourceDataProvider {
   getSceneData(sceneId: string): Scene
   getCssFilePaths(): string[]
   getMapData(mapId: string): MapData
+  getLanguageFilePaths(language: string): string[]
 }
 
 const logName = 'engine/resourceData/provider'
@@ -30,5 +31,13 @@ export class ResourceDataProvider implements IResourceDataProvider {
   }
   getMapData(mapId: string): MapData {
     return this.resourceDataStorage.getMapData(mapId)
+  }
+  getLanguageFilePaths(language: string): string[] {
+    return this.resourceDataStorage
+      .getLanguageFileNames(language)
+      .map(
+        (fileName) =>
+          `${this.resourceDataStorage.rootPath}/languages/${fileName}`
+      )
   }
 }

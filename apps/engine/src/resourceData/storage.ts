@@ -18,6 +18,8 @@ export interface IResourceDataStorage {
   getCssFileNames(): string[]
   addMapData(mapId: string, data: MapData): void
   getMapData(mapId: string): MapData
+  getLanguageFileNames(language: string): string[]
+  setLanguageFileNames(language: string, fileNames: string[]): void
 }
 
 const logName = 'engine/resourceData/storage'
@@ -30,6 +32,7 @@ export class ResourceDataStorage implements IResourceDataStorage {
   private scenes: Map<string, Scene> = new Map()
   private tiles: Map<string, Tile> = new Map()
   private maps: Map<string, MapData> = new Map()
+  private languageFiles: Map<string, string[]> = new Map()
   private cssFileNames: string[] = []
 
   constructor(
@@ -100,5 +103,20 @@ export class ResourceDataStorage implements IResourceDataStorage {
     this.logger.debug(logName, 'Maps loaded: {0}', Array.from(this.maps.keys()))
 
     this.logger.debug(logName, 'CSS files loaded: {0}', this.cssFileNames)
+  }
+
+  getLanguageFileNames(language: string): string[] {
+    if (!this.languageFiles.has(language)) {
+      this.logger.fatal(
+        logName,
+        'No language files for language: {0}',
+        language
+      )
+    }
+    return this.languageFiles.get(language)!
+  }
+
+  setLanguageFileNames(language: string, fileNames: string[]): void {
+    this.languageFiles.set(language, fileNames)
   }
 }

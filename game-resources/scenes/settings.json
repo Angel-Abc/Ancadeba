@@ -27,7 +27,7 @@
       "type": "menu",
       "options": [
         {
-          "label": "Volume up",
+          "label": "settings.volume-up",
           "actions": [
             {
               "type": "volume-up"
@@ -35,7 +35,7 @@
           ]
         },
         {
-          "label": "Volume down",
+          "label": "settings.volume-down",
           "actions": [
             {
               "type": "volume-down"
@@ -43,7 +43,7 @@
           ]
         },
         {
-          "label": "back",
+          "label": "system.back",
           "actions": [
             {
               "type": "back"

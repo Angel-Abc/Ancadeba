@@ -6,6 +6,10 @@ import {
   conditionResolverToken,
   IConditionResolver,
 } from '../../../core/conditionResolver'
+import {
+  ILanguageProvider,
+  languageProviderToken,
+} from '../../../language/provider'
 
 interface MenuComponentProps {
   component: MenuComponentData
@@ -13,6 +17,7 @@ interface MenuComponentProps {
 
 export function MenuComponent({ component }: MenuComponentProps) {
   const messageBus = useService<IMessageBus>(messageBusToken)
+  const languageProvider = useService<ILanguageProvider>(languageProviderToken)
   const conditionResolver = useService<IConditionResolver>(
     conditionResolverToken
   )
@@ -43,7 +48,7 @@ export function MenuComponent({ component }: MenuComponentProps) {
           key={option.label}
           onClick={() => onClickButton(option.actions)}
         >
-          {option.label}
+          {languageProvider.getTranslation(option.label)}
         </button>
       ))}
     </div>

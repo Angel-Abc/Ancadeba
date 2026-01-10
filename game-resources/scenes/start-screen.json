@@ -27,7 +27,7 @@
       "type": "menu",
       "options": [
         {
-          "label": "Start Game",
+          "label": "start-screen.start-new-game",
           "condition": {
             "type": "flag",
             "name": "isGameStarted",
@@ -46,7 +46,7 @@
           ]
         },
         {
-          "label": "Resume",
+          "label": "start-screen.continue-game",
           "condition": {
             "type": "flag",
             "name": "isGameStarted",
@@ -59,7 +59,7 @@
           ]
         },
         {
-          "label": "Settings",
+          "label": "start-screen.settings",
           "actions": [
             {
               "type": "switch-scene",
@@ -68,7 +68,7 @@
           ]
         },
         {
-          "label": "Exit",
+          "label": "start-screen.exit-game",
           "actions": [
             {
               "type": "exit-game"

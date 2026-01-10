@@ -1,0 +1,12 @@
+{
+  "language": "en",
+  "translations": {
+    "start-screen.start-new-game": "Start New Game",
+    "start-screen.continue-game": "Continue Game",
+    "start-screen.settings": "Settings",
+    "start-screen.exit-game": "Exit Game",
+    "settings.volume-up": "Volume Up",
+    "settings.volume-down": "Volume Down",
+    "system.back": "Back"
+  }
+}

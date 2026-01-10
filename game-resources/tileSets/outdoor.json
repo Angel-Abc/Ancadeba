@@ -5,32 +5,38 @@
   "tiles": [
     {
       "id": "grass",
+      "description": "tile.outdoor.grass",
       "color": "lightgreen",
       "walkable": true
     },
     {
       "id": "beach",
+      "description": "tile.outdoor.beach",
       "color": "yellow",
       "walkable": true
     },
     {
       "id": "dune",
+      "description": "tile.outdoor.dune",
       "color": "greenyellow",
       "walkable": true
     },
     {
       "id": "road",
+      "description": "tile.outdoor.road",
       "color": "chocolate",
       "walkable": true
     },
     {
       "id": "ocean",
+      "description": "tile.outdoor.ocean",
       "image": "images/outdoor/waves.svg",
       "color": "aqua",
       "walkable": false
     },
     {
       "id": "forest",
+      "description": "tile.outdoor.forest",
       "color": "green",
       "walkable": false
     }

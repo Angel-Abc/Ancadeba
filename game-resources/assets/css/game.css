@@ -12,8 +12,12 @@
   & button {
     border: 0;
     border-radius: calc(var(--ge-unit-size) * 8);
-    background-color: #3030c0;
+    background: linear-gradient(to bottom right, #2020b0, #4040d0);
     color: #c0c0f0;
+  }
+  & button:hover {
+    background: linear-gradient(to bottom right, #3030d0, #5050f0);
+    color: #e0e0ff;
   }
 }
 

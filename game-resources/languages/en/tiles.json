@@ -1,0 +1,11 @@
+{
+  "language": "en",
+  "translations": {
+    "tile.outdoor.grass": "Grass",
+    "tile.outdoor.beach": "Beach",
+    "tile.outdoor.dune": "Dune",
+    "tile.outdoor.road": "Road",
+    "tile.outdoor.ocean": "Ocean",
+    "tile.outdoor.forest": "Forest"
+  }
+}

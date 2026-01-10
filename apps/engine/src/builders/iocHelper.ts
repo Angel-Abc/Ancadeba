@@ -62,6 +62,31 @@ import { SetFlagActionHandler } from '../core/actionHandlers/SetFlagActionHandle
 import { BackActionHandler } from '../core/actionHandlers/BackActionHandler'
 import { VolumeActionHandler } from '../core/actionHandlers/VolumeActionHandler'
 import { IActionHandler } from '../core/actionHandlers/types'
+import {
+  SettingsStorage,
+  settingsStorageDependencies,
+  settingsStorageToken,
+} from '../settings/storage'
+import {
+  SettingsProvider,
+  settingsProviderDependencies,
+  settingsProviderToken,
+} from '../settings/provider'
+import {
+  LanguageLoader,
+  languageLoaderDependencies,
+  languageLoaderToken,
+} from '../language/loader'
+import {
+  LanguageProvider,
+  languageProviderDependencies,
+  languageProviderToken,
+} from '../language/provider'
+import {
+  LanguageStorage,
+  languageStorageDependencies,
+  languageStorageToken,
+} from '../language/storage'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -149,6 +174,33 @@ export function registerServices(container: Container): void {
         registerComponents(registry)
         return registry
       },
+      scope: 'singleton',
+    },
+    {
+      token: settingsStorageToken,
+      useClass: SettingsStorage,
+      deps: settingsStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: settingsProviderToken,
+      useClass: SettingsProvider,
+      deps: settingsProviderDependencies,
+    },
+    {
+      token: languageLoaderToken,
+      useClass: LanguageLoader,
+      deps: languageLoaderDependencies,
+    },
+    {
+      token: languageProviderToken,
+      useClass: LanguageProvider,
+      deps: languageProviderDependencies,
+    },
+    {
+      token: languageStorageToken,
+      useClass: LanguageStorage,
+      deps: languageStorageDependencies,
       scope: 'singleton',
     },
   ])
