@@ -23,9 +23,6 @@ describe('gameState/provider', () => {
         return mockState.activeMapId
       },
       getFlag: vi.fn((flagName: string) => mockState.flags[flagName]),
-      setFlag: vi.fn((flagName: string, value: boolean) => {
-        mockState.flags[flagName] = value
-      }),
     }
   }
 
@@ -111,35 +108,6 @@ describe('gameState/provider', () => {
 
     // Assert
     expect(flagValue).toBeUndefined()
-  })
-
-  it('delegates setFlag to storage', () => {
-    // Arrange
-    const storage = createMockGameStateStorage()
-    const provider = new GameStateProvider(storage)
-
-    // Act
-    provider.setFlag('test-flag', true)
-
-    // Assert
-    expect(storage.setFlag).toHaveBeenCalledWith('test-flag', true)
-  })
-
-  it('handles multiple flag operations', () => {
-    // Arrange
-    const storage = createMockGameStateStorage()
-    const provider = new GameStateProvider(storage)
-
-    // Act
-    provider.setFlag('flag1', true)
-    provider.setFlag('flag2', false)
-    provider.setFlag('flag3', true)
-
-    // Assert
-    expect(storage.setFlag).toHaveBeenCalledTimes(3)
-    expect(storage.setFlag).toHaveBeenNthCalledWith(1, 'flag1', true)
-    expect(storage.setFlag).toHaveBeenNthCalledWith(2, 'flag2', false)
-    expect(storage.setFlag).toHaveBeenNthCalledWith(3, 'flag3', true)
   })
 
   it('reflects changes in storage state', () => {

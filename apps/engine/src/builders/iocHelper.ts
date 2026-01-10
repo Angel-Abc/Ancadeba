@@ -58,9 +58,13 @@ import {
 } from '../resourceData/storage'
 import {
   ConditionResolver,
-  conditionResolverDependencies,
   conditionResolverToken,
 } from '../core/conditionResolver'
+import { conditionEvaluatorToken } from '../core/conditionEvaluators/types'
+import {
+  FlagConditionEvaluator,
+  flagConditionEvaluatorDependencies,
+} from '../core/conditionEvaluators/FlagConditionEvaluator'
 import {
   BrowserAdapter,
   browserAdapterDependencies,
@@ -308,9 +312,17 @@ export function registerServices(container: Container): void {
       scope: 'singleton',
     },
     {
+      token: conditionEvaluatorToken,
+      useClass: FlagConditionEvaluator,
+      deps: flagConditionEvaluatorDependencies,
+    },
+    {
       token: conditionResolverToken,
-      useClass: ConditionResolver,
-      deps: conditionResolverDependencies,
+      useFactory: (container) => {
+        const logger = container.resolve(loggerToken)
+        const evaluators = container.resolveAll(conditionEvaluatorToken)
+        return new ConditionResolver(logger, evaluators)
+      },
     },
     {
       token: browserAdapterToken,

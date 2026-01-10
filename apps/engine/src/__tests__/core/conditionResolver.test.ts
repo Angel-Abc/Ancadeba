@@ -3,6 +3,7 @@ import type { ILogger } from '@ancadeba/utils'
 import type { Condition } from '@ancadeba/schemas'
 import type { IGameStateProvider } from '../../gameState.ts/provider'
 import { ConditionResolver } from '../../core/conditionResolver'
+import { FlagConditionEvaluator } from '../../core/conditionEvaluators/FlagConditionEvaluator'
 
 describe('core/conditionResolver', () => {
   const createMockLogger = (): ILogger => ({
@@ -26,7 +27,6 @@ describe('core/conditionResolver', () => {
       return 'Test Game'
     },
     getFlag: vi.fn(),
-    setFlag: vi.fn(),
   })
 
   it('returns true when flag matches expected value true', () => {
@@ -34,7 +34,8 @@ describe('core/conditionResolver', () => {
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
     vi.mocked(gameStateProvider.getFlag).mockReturnValue(true)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
     const condition: Condition = {
       type: 'flag',
       name: 'test-flag',
@@ -54,7 +55,8 @@ describe('core/conditionResolver', () => {
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
     vi.mocked(gameStateProvider.getFlag).mockReturnValue(false)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
     const condition: Condition = {
       type: 'flag',
       name: 'test-flag',
@@ -74,7 +76,8 @@ describe('core/conditionResolver', () => {
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
     vi.mocked(gameStateProvider.getFlag).mockReturnValue(false)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
     const condition: Condition = {
       type: 'flag',
       name: 'test-flag',
@@ -93,7 +96,8 @@ describe('core/conditionResolver', () => {
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
     vi.mocked(gameStateProvider.getFlag).mockReturnValue(undefined)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
     const condition: Condition = {
       type: 'flag',
       name: 'undefined-flag',
@@ -106,7 +110,7 @@ describe('core/conditionResolver', () => {
     // Assert
     expect(result).toBe(false)
     expect(logger.warn).toHaveBeenCalledWith(
-      'engine/core/ConditionResolver',
+      'engine/core/conditionEvaluators/FlagConditionEvaluator',
       'Flag "{0}" is not defined',
       'undefined-flag'
     )
@@ -116,7 +120,8 @@ describe('core/conditionResolver', () => {
     // Arrange
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
     const condition = {
       type: 'unknown',
     } as unknown as Condition
@@ -128,7 +133,7 @@ describe('core/conditionResolver', () => {
     expect(result).toBe(false)
     expect(logger.warn).toHaveBeenCalledWith(
       'engine/core/ConditionResolver',
-      'Unknown condition type: {0}',
+      'No evaluator for condition type: {0}',
       'unknown'
     )
   })
@@ -141,7 +146,8 @@ describe('core/conditionResolver', () => {
       .mockReturnValueOnce(true)
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
 
     const condition1: Condition = { type: 'flag', name: 'flag1', value: true }
     const condition2: Condition = { type: 'flag', name: 'flag2', value: true }
@@ -165,7 +171,8 @@ describe('core/conditionResolver', () => {
     vi.mocked(gameStateProvider.getFlag).mockImplementation((name) => {
       return name === 'enabled-flag'
     })
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
 
     const enabledCondition: Condition = {
       type: 'flag',
@@ -192,7 +199,8 @@ describe('core/conditionResolver', () => {
     const logger = createMockLogger()
     const gameStateProvider = createMockGameStateProvider()
     vi.mocked(gameStateProvider.getFlag).mockReturnValue(true)
-    const resolver = new ConditionResolver(logger, gameStateProvider)
+    const evaluators = [new FlagConditionEvaluator(logger, gameStateProvider)]
+    const resolver = new ConditionResolver(logger, evaluators)
 
     const trueCondition: Condition = {
       type: 'flag',

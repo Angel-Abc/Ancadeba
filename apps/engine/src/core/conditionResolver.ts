@@ -1,9 +1,6 @@
 import { Condition } from '@ancadeba/schemas'
-import { ILogger, loggerToken, token } from '@ancadeba/utils'
-import {
-  gameStateProviderToken,
-  IGameStateProvider,
-} from '../gameState.ts/provider'
+import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
+import { IConditionEvaluator } from './conditionEvaluators/types'
 
 export interface IConditionResolver {
   evaluateCondition(condition: Condition): boolean
@@ -11,28 +8,24 @@ export interface IConditionResolver {
 
 const logName = 'engine/core/ConditionResolver'
 export const conditionResolverToken = token<IConditionResolver>(logName)
-export const conditionResolverDependencies = [
-  loggerToken,
-  gameStateProviderToken,
-]
+export const conditionResolverDependencies: Token<unknown>[] = [loggerToken]
+
 export class ConditionResolver implements IConditionResolver {
   constructor(
     private readonly logger: ILogger,
-    private readonly gameStateProvider: IGameStateProvider
+    private readonly evaluators: IConditionEvaluator[]
   ) {}
+
   evaluateCondition(condition: Condition): boolean {
-    switch (condition.type) {
-      case 'flag': {
-        const flagValue = this.gameStateProvider.getFlag(condition.name)
-        if (flagValue === undefined) {
-          this.logger.warn(logName, 'Flag "{0}" is not defined', condition.name)
-          return false
-        }
-        return flagValue === condition.value
-      }
-      default:
-        this.logger.warn(logName, 'Unknown condition type: {0}', condition.type)
-        return false
+    const evaluator = this.evaluators.find((e) => e.canEvaluate(condition))
+    if (!evaluator) {
+      this.logger.warn(
+        logName,
+        'No evaluator for condition type: {0}',
+        condition.type
+      )
+      return false
     }
+    return evaluator.evaluate(condition)
   }
 }
