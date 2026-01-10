@@ -80,6 +80,10 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardListener = {
+      start: vi.fn(),
+      listen: vi.fn(() => () => {}),
+    }
     const keyboardInputService = {
       start: vi.fn(),
       stop: vi.fn(),
@@ -95,6 +99,7 @@ describe('core/gameEngine', () => {
       gameDataLoader,
       gameDataInitializer,
       actionExecutor,
+      keyboardListener,
       keyboardInputService,
       virtualInputService
     )
@@ -227,6 +232,10 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardListener = {
+      start: vi.fn(),
+      listen: vi.fn(() => () => {}),
+    }
     const keyboardInputService = {
       start: vi.fn(),
       stop: vi.fn(),
@@ -242,6 +251,7 @@ describe('core/gameEngine', () => {
       gameDataLoader,
       gameDataInitializer,
       actionExecutor,
+      keyboardListener,
       keyboardInputService,
       virtualInputService
     )
@@ -368,6 +378,10 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardListener = {
+      start: vi.fn(),
+      listen: vi.fn(() => () => {}),
+    }
     const keyboardInputService = {
       start: vi.fn(),
       stop: vi.fn(),
@@ -383,6 +397,7 @@ describe('core/gameEngine', () => {
       gameDataLoader,
       gameDataInitializer,
       actionExecutor,
+      keyboardListener,
       keyboardInputService,
       virtualInputService
     )

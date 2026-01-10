@@ -1,4 +1,11 @@
-import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
+import {
+  IKeyboardListener,
+  ILogger,
+  keyboardListenerToken,
+  loggerToken,
+  Token,
+  token,
+} from '@ancadeba/utils'
 import {
   engineMessageBusToken,
   IEngineMessageBus,
@@ -33,6 +40,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   gameDataLoaderToken,
   gameDataInitializerToken,
   actionExecutorToken,
+  keyboardListenerToken,
   keyboardInputServiceToken,
   virtualInputServiceToken,
 ]
@@ -44,6 +52,7 @@ export class GameEngine implements IGameEngine {
     private readonly gameDataLoader: IGameDataLoader,
     private readonly gameDataInitializer: IGameDataInitializer,
     private readonly actionExecutor: IActionExecutor,
+    private readonly keyboardListener: IKeyboardListener,
     private readonly keyboardInputService: IKeyboardInputService,
     private readonly virtualInputService: IVirtualInputService
   ) {}
@@ -55,6 +64,7 @@ export class GameEngine implements IGameEngine {
     // Wait for UI to be ready
     await this.uiReadySignal.ready
     this.actionExecutor.start()
+    this.keyboardListener.start()
     this.keyboardInputService.start()
     this.virtualInputService.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)

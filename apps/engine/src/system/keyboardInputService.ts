@@ -51,8 +51,6 @@ export class KeyboardInputService implements IKeyboardInputService {
         })
       }
     })
-
-    this.keyboardListener.start()
   }
 
   stop(): void {

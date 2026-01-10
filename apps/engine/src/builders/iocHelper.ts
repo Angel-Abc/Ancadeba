@@ -1,4 +1,10 @@
-import { Container, loggerToken } from '@ancadeba/utils'
+import {
+  Container,
+  KeyboardListener,
+  keyboardListenerDependencies,
+  keyboardListenerToken,
+  loggerToken,
+} from '@ancadeba/utils'
 import {
   GameEngine,
   gameEngineDependencies,
@@ -291,6 +297,12 @@ export function registerServices(container: Container): void {
       token: languageStorageToken,
       useClass: LanguageStorage,
       deps: languageStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: keyboardListenerToken,
+      useClass: KeyboardListener,
+      deps: keyboardListenerDependencies,
       scope: 'singleton',
     },
     {

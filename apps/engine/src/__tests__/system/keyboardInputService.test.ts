@@ -6,13 +6,12 @@ import { KeyboardInputService } from '../../system/keyboardInputService'
 import { UI_MESSAGES } from '../../messages/ui'
 
 describe('system/keyboardInputService', () => {
-  it('start calls keyboardListener.listen() and keyboardListener.start()', () => {
+  it('start calls keyboardListener.listen()', () => {
     // Arrange
     const mockListen = vi.fn().mockReturnValue(() => {})
-    const mockStart = vi.fn()
     const keyboardListener: IKeyboardListener = {
       listen: mockListen,
-      start: mockStart,
+      start: vi.fn(),
     }
     const resourceDataStorage: IResourceDataStorage = {
       getVirtualKeys: vi.fn().mockReturnValue([]),
@@ -34,7 +33,6 @@ describe('system/keyboardInputService', () => {
 
     // Assert
     expect(mockListen).toHaveBeenCalledTimes(1)
-    expect(mockStart).toHaveBeenCalledTimes(1)
   })
 
   it('keyboard event matching virtual key publishes correct message', () => {
