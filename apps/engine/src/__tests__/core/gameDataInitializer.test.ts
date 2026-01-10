@@ -40,6 +40,10 @@ describe('core/gameDataInitializer', () => {
     getMapData: vi.fn(),
     getLanguageFileNames: vi.fn(() => []),
     setLanguageFileNames: vi.fn(),
+    setVirtualKeys: vi.fn(),
+    getVirtualKeys: vi.fn(() => []),
+    setVirtualInputs: vi.fn(),
+    getVirtualInputs: vi.fn(() => []),
   })
 
   const createMinimalGameData = (): GameData => ({
@@ -62,6 +66,18 @@ describe('core/gameDataInitializer', () => {
     scenes: [],
     maps: [],
     tileSets: [],
+    virtualKeys: {
+      id: 'virtual-keys',
+      createdAt: '2026-01-10T00:00:00Z',
+      updatedAt: '2026-01-10T00:00:00Z',
+      mappings: [],
+    },
+    virtualInputs: {
+      id: 'virtual-inputs',
+      createdAt: '2026-01-10T00:00:00Z',
+      updatedAt: '2026-01-10T00:00:00Z',
+      mappings: [],
+    },
   })
 
   it('calls gameStateInitializer.initializeGameState with gameData', async () => {
@@ -349,6 +365,18 @@ describe('core/gameDataInitializer', () => {
       ],
       tileSets: [{ id: 'outdoor', tiles: [] }],
       maps: [{ id: 'world', width: 10, height: 10, tiles: [], map: [] }],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
     }
 
     // Act

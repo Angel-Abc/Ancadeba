@@ -1,0 +1,42 @@
+{
+  "id": "virtual-inputs",
+  "createdAt": "2026-01-10T00:00:00Z",
+  "updatedAt": "2026-01-10T00:00:00Z",
+  "mappings": [
+    {
+      "virtualKeys": ["VK_W", "VK_SHIFT_W", "VK_UP"],
+      "virtualInput": "VI_UP",
+      "label": "W"
+    },
+    {
+      "virtualKeys": ["VK_A", "VK_SHIFT_A", "VK_LEFT"],
+      "virtualInput": "VI_LEFT",
+      "label": "A"
+    },
+    {
+      "virtualKeys": ["VK_S", "VK_SHIFT_S", "VK_DOWN"],
+      "virtualInput": "VI_DOWN",
+      "label": "S"
+    },
+    {
+      "virtualKeys": ["VK_D", "VK_SHIFT_D", "VK_RIGHT"],
+      "virtualInput": "VI_RIGHT",
+      "label": "D"
+    },
+    {
+      "virtualKeys": ["VK_ACTION"],
+      "virtualInput": "VI_ACTION",
+      "label": "Space"
+    },
+    {
+      "virtualKeys": ["VK_CONFIRM"],
+      "virtualInput": "VI_CONFIRM",
+      "label": "Enter"
+    },
+    {
+      "virtualKeys": ["VK_CANCEL"],
+      "virtualInput": "VI_CANCEL",
+      "label": "Esc"
+    }
+  ]
+}

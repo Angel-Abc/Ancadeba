@@ -11,6 +11,14 @@ import {
   IGameDataInitializer,
 } from './gameDataInitializer'
 import { IActionExecutor, actionExecutorToken } from './actionExecutor'
+import {
+  IKeyboardInputService,
+  keyboardInputServiceToken,
+} from '../system/keyboardInputService'
+import {
+  IVirtualInputService,
+  virtualInputServiceToken,
+} from '../system/virtualInputService'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -25,6 +33,8 @@ export const gameEngineDependencies: Token<unknown>[] = [
   gameDataLoaderToken,
   gameDataInitializerToken,
   actionExecutorToken,
+  keyboardInputServiceToken,
+  virtualInputServiceToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
@@ -33,7 +43,9 @@ export class GameEngine implements IGameEngine {
     private readonly uiReadySignal: IUIReadySignal,
     private readonly gameDataLoader: IGameDataLoader,
     private readonly gameDataInitializer: IGameDataInitializer,
-    private readonly actionExecutor: IActionExecutor
+    private readonly actionExecutor: IActionExecutor,
+    private readonly keyboardInputService: IKeyboardInputService,
+    private readonly virtualInputService: IVirtualInputService
   ) {}
 
   async start(): Promise<void> {
@@ -43,6 +55,8 @@ export class GameEngine implements IGameEngine {
     // Wait for UI to be ready
     await this.uiReadySignal.ready
     this.actionExecutor.start()
+    this.keyboardInputService.start()
+    this.virtualInputService.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)
   }
 }

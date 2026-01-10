@@ -16,13 +16,17 @@ import { tileSetSchema } from '../schemas/tileSet'
 import { mapSchema } from '../schemas/map'
 import { Language, languageSchema } from '../schemas/language'
 import { VirtualKeys, virtualKeysSchema } from '../schemas/virtualKeys'
+import { VirtualInputs, virtualInputsSchema } from '../schemas/virtualInputs'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
   loadLanguageData(languageFilePaths: string[]): Promise<Map<string, string>>
 }
 
-type GameDataCollections = Omit<GameData, 'meta' | 'languages' | 'virtualKeys'>
+type GameDataCollections = Omit<
+  GameData,
+  'meta' | 'languages' | 'virtualKeys' | 'virtualInputs'
+>
 type GameDataCollectionKey = keyof GameDataCollections
 
 type ResourceCollectionDefinition = {
@@ -98,11 +102,18 @@ export class GameDataLoader implements IGameDataLoader {
       this.logger
     )
 
+    const virtualInputs = await loadJsonResource<VirtualInputs>(
+      `${this.config.rootPath}/input/${game.virtualInputs}.json`,
+      virtualInputsSchema,
+      this.logger
+    )
+
     const result: GameData = {
       meta: game,
       languages: languages,
       ...collections,
       virtualKeys: virtualKeys,
+      virtualInputs: virtualInputs,
     }
     this.logger.debug(logName, 'Loaded game data: {0}', result)
     return result

@@ -50,6 +50,8 @@ export class GameDataInitializer implements IGameDataInitializer {
     this.sceneDataInitializer.initializeStyling(gameData.meta.styling)
     this.tileDataInitializer.initializeTiles(gameData.tileSets)
     this.mapDataInitializer.initializeMaps(gameData.maps)
+    this.resourceDataStorage.setVirtualKeys(gameData.virtualKeys.mappings)
+    this.resourceDataStorage.setVirtualInputs(gameData.virtualInputs.mappings)
 
     this.resourceDataStorage.logResourceData()
   }

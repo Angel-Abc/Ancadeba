@@ -42,6 +42,7 @@ describe('loaders/gameDataLoader', () => {
       tileSets: ['outdoor'],
       maps: [],
       virtualKeys: 'virtual-keys',
+      virtualInputs: 'virtual-inputs',
       languages: {
         en: {
           name: 'English',
@@ -99,6 +100,18 @@ describe('loaders/gameDataLoader', () => {
         },
       ],
     }
+    const virtualInputs = {
+      id: 'virtual-inputs',
+      createdAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
+      mappings: [
+        {
+          virtualKeys: ['VK_ACTION'],
+          virtualInput: 'VI_ACTION',
+          label: 'Space',
+        },
+      ],
+    }
     const loader = new GameDataLoader(logger, config)
     const mockedLoadJsonResource = vi.mocked(loadJsonResource)
     mockedLoadJsonResource
@@ -106,6 +119,7 @@ describe('loaders/gameDataLoader', () => {
       .mockResolvedValueOnce(scene)
       .mockResolvedValueOnce(tileSet)
       .mockResolvedValueOnce(virtualKeys)
+      .mockResolvedValueOnce(virtualInputs)
 
     // Act
     const result = await loader.loadGameData()
@@ -135,6 +149,12 @@ describe('loaders/gameDataLoader', () => {
       expect.anything(),
       logger
     )
+    expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
+      5,
+      '/data/input/virtual-inputs.json',
+      expect.anything(),
+      logger
+    )
     expect(result).toEqual({
       meta: game,
       languages: new Map([
@@ -150,6 +170,7 @@ describe('loaders/gameDataLoader', () => {
       tileSets: [tileSet],
       maps: [],
       virtualKeys: virtualKeys,
+      virtualInputs: virtualInputs,
     })
   })
 })

@@ -25,11 +25,25 @@
       "virtualKey": "VK_W"
     },
     {
+      "code": "KeyW",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_W"
+    },
+    {
       "code": "KeyA",
       "shift": false,
       "ctrl": false,
       "alt": false,
       "virtualKey": "VK_A"
+    },
+    {
+      "code": "KeyA",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_A"
     },
     {
       "code": "KeyS",
@@ -39,11 +53,25 @@
       "virtualKey": "VK_S"
     },
     {
+      "code": "KeyS",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_S"
+    },
+    {
       "code": "KeyD",
       "shift": false,
       "ctrl": false,
       "alt": false,
       "virtualKey": "VK_D"
+    },
+    {
+      "code": "KeyD",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_D"
     },
     {
       "code": "Space",
@@ -65,6 +93,34 @@
       "ctrl": false,
       "alt": false,
       "virtualKey": "VK_CANCEL"
+    },
+    {
+      "code": "ArrowUp",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_UP"
+    },
+    {
+      "code": "ArrowDown",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_DOWN"
+    },
+    {
+      "code": "ArrowLeft",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_LEFT"
+    },
+    {
+      "code": "ArrowRight",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_RIGHT"
     }
   ]
 }

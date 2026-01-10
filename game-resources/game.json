@@ -21,6 +21,7 @@
   "tileSets": ["outdoor"],
   "maps": ["start-beach"],
   "virtualKeys": "virtual-keys",
+  "virtualInputs": "virtual-inputs",
   "languages": {
     "en": {
       "name": "English",

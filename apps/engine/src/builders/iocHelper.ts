@@ -127,6 +127,16 @@ import {
   mapDataInitializerDependencies,
   mapDataInitializerToken,
 } from '../core/initializers/mapDataInitializer'
+import {
+  KeyboardInputService,
+  keyboardInputServiceDependencies,
+  keyboardInputServiceToken,
+} from '../system/keyboardInputService'
+import {
+  VirtualInputService,
+  virtualInputServiceDependencies,
+  virtualInputServiceToken,
+} from '../system/virtualInputService'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -281,6 +291,18 @@ export function registerServices(container: Container): void {
       token: languageStorageToken,
       useClass: LanguageStorage,
       deps: languageStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: keyboardInputServiceToken,
+      useClass: KeyboardInputService,
+      deps: keyboardInputServiceDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: virtualInputServiceToken,
+      useClass: VirtualInputService,
+      deps: virtualInputServiceDependencies,
       scope: 'singleton',
     },
   ])

@@ -20,6 +20,34 @@ export interface IResourceDataStorage {
   getMapData(mapId: string): MapData
   getLanguageFileNames(language: string): string[]
   setLanguageFileNames(language: string, fileNames: string[]): void
+  setVirtualKeys(
+    virtualKeys: {
+      code: string
+      shift: boolean
+      ctrl: boolean
+      alt: boolean
+      virtualKey: string
+    }[]
+  ): void
+  getVirtualKeys(): {
+    code: string
+    shift: boolean
+    ctrl: boolean
+    alt: boolean
+    virtualKey: string
+  }[]
+  setVirtualInputs(
+    virtualInputs: {
+      virtualKeys: string[]
+      virtualInput: string
+      label: string
+    }[]
+  ): void
+  getVirtualInputs(): {
+    virtualKeys: string[]
+    virtualInput: string
+    label: string
+  }[]
 }
 
 const logName = 'engine/resourceData/storage'
@@ -34,6 +62,18 @@ export class ResourceDataStorage implements IResourceDataStorage {
   private maps: Map<string, MapData> = new Map()
   private languageFiles: Map<string, string[]> = new Map()
   private cssFileNames: string[] = []
+  private virtualKeys: {
+    code: string
+    shift: boolean
+    ctrl: boolean
+    alt: boolean
+    virtualKey: string
+  }[] = []
+  private virtualInputs: {
+    virtualKeys: string[]
+    virtualInput: string
+    label: string
+  }[] = []
 
   constructor(
     private readonly logger: ILogger,
@@ -118,5 +158,45 @@ export class ResourceDataStorage implements IResourceDataStorage {
 
   setLanguageFileNames(language: string, fileNames: string[]): void {
     this.languageFiles.set(language, fileNames)
+  }
+
+  setVirtualKeys(
+    virtualKeys: {
+      code: string
+      shift: boolean
+      ctrl: boolean
+      alt: boolean
+      virtualKey: string
+    }[]
+  ): void {
+    this.virtualKeys = virtualKeys
+  }
+
+  getVirtualKeys(): {
+    code: string
+    shift: boolean
+    ctrl: boolean
+    alt: boolean
+    virtualKey: string
+  }[] {
+    return this.virtualKeys
+  }
+
+  setVirtualInputs(
+    virtualInputs: {
+      virtualKeys: string[]
+      virtualInput: string
+      label: string
+    }[]
+  ): void {
+    this.virtualInputs = virtualInputs
+  }
+
+  getVirtualInputs(): {
+    virtualKeys: string[]
+    virtualInput: string
+    label: string
+  }[] {
+    return this.virtualInputs
   }
 }

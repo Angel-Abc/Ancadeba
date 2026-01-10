@@ -80,13 +80,23 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
+    const virtualInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor
+      actionExecutor,
+      keyboardInputService,
+      virtualInputService
     )
 
     // Act
@@ -113,6 +123,18 @@ describe('core/gameEngine', () => {
       scenes: [],
       tileSets: [],
       maps: [],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
     })
     await Promise.resolve()
 
@@ -205,13 +227,23 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
+    const virtualInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor
+      actionExecutor,
+      keyboardInputService,
+      virtualInputService
     )
 
     // Act
@@ -239,6 +271,18 @@ describe('core/gameEngine', () => {
       scenes: [],
       tileSets: [],
       maps: [],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
     })
     await startPromise
 
@@ -324,13 +368,23 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
+    const keyboardInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
+    const virtualInputService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor
+      actionExecutor,
+      keyboardInputService,
+      virtualInputService
     )
 
     // Act
@@ -358,6 +412,18 @@ describe('core/gameEngine', () => {
       scenes: [],
       tileSets: [],
       maps: [],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: '2026-01-10T00:00:00Z',
+        updatedAt: '2026-01-10T00:00:00Z',
+        mappings: [],
+      },
     })
     await startPromise
 
