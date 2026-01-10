@@ -6,6 +6,11 @@ import {
   IEngineMessageBus,
 } from '../system/engineMessageBus'
 import { IActionHandler } from './actionHandlers/types'
+import { backActionHandlerToken } from './actionHandlers/BackActionHandler'
+import { exitGameActionHandlerToken } from './actionHandlers/ExitGameActionHandler'
+import { setFlagActionHandlerToken } from './actionHandlers/SetFlagActionHandler'
+import { switchSceneActionHandlerToken } from './actionHandlers/SwitchSceneActionHandler'
+import { volumeActionHandlerToken } from './actionHandlers/VolumeActionHandler'
 
 export interface IActionExecutor {
   start(): void
@@ -16,14 +21,33 @@ export const actionExecutorToken = token<IActionExecutor>(logName)
 export const actionExecutorDependencies: Token<unknown>[] = [
   loggerToken,
   engineMessageBusToken,
+  switchSceneActionHandlerToken,
+  exitGameActionHandlerToken,
+  setFlagActionHandlerToken,
+  backActionHandlerToken,
+  volumeActionHandlerToken,
 ]
 
 export class ActionExecutor implements IActionExecutor {
+  private readonly handlers: IActionHandler[]
+
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
-    private readonly handlers: IActionHandler[]
-  ) {}
+    switchSceneHandler: IActionHandler,
+    exitGameHandler: IActionHandler,
+    setFlagHandler: IActionHandler,
+    backHandler: IActionHandler,
+    volumeHandler: IActionHandler
+  ) {
+    this.handlers = [
+      switchSceneHandler,
+      exitGameHandler,
+      setFlagHandler,
+      backHandler,
+      volumeHandler,
+    ]
+  }
 
   start(): void {
     this.messageBus.subscribe(CORE_MESSAGES.EXECUTE_ACTION, (payload) => {

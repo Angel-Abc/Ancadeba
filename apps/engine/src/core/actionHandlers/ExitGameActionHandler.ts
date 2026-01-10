@@ -1,6 +1,16 @@
 import { Action } from '@ancadeba/schemas'
-import { IBrowserAdapter } from '../../system/browserAdapter'
+import { Token, token } from '@ancadeba/utils'
+import {
+  browserAdapterToken,
+  IBrowserAdapter,
+} from '../../system/browserAdapter'
 import { IActionHandler } from './types'
+
+const logName = 'engine/core/actionHandlers/ExitGameActionHandler'
+export const exitGameActionHandlerToken = token<IActionHandler>(logName)
+export const exitGameActionHandlerDependencies: Token<unknown>[] = [
+  browserAdapterToken,
+]
 
 export class ExitGameActionHandler implements IActionHandler {
   constructor(private readonly browserAdapter: IBrowserAdapter) {}

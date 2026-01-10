@@ -1,5 +1,10 @@
 import { Action } from '@ancadeba/schemas'
+import { Token, token } from '@ancadeba/utils'
 import { IActionHandler } from './types'
+
+const logName = 'engine/core/actionHandlers/VolumeActionHandler'
+export const volumeActionHandlerToken = token<IActionHandler>(logName)
+export const volumeActionHandlerDependencies: Token<unknown>[] = []
 
 export class VolumeActionHandler implements IActionHandler {
   canHandle(action: Action): boolean {

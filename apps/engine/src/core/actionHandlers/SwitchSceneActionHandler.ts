@@ -1,6 +1,16 @@
 import { Action } from '@ancadeba/schemas'
-import { IGameStateManager } from '../../gameState.ts/manager'
+import { Token, token } from '@ancadeba/utils'
+import {
+  gameStateManagerToken,
+  IGameStateManager,
+} from '../../gameState.ts/manager'
 import { IActionHandler } from './types'
+
+const logName = 'engine/core/actionHandlers/SwitchSceneActionHandler'
+export const switchSceneActionHandlerToken = token<IActionHandler>(logName)
+export const switchSceneActionHandlerDependencies: Token<unknown>[] = [
+  gameStateManagerToken,
+]
 
 export class SwitchSceneActionHandler implements IActionHandler {
   constructor(private readonly gameStateManager: IGameStateManager) {}

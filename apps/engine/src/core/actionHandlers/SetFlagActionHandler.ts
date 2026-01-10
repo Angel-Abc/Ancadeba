@@ -1,6 +1,16 @@
 import { Action } from '@ancadeba/schemas'
-import { IGameStateManager } from '../../gameState.ts/manager'
+import { Token, token } from '@ancadeba/utils'
+import {
+  gameStateManagerToken,
+  IGameStateManager,
+} from '../../gameState.ts/manager'
 import { IActionHandler } from './types'
+
+const logName = 'engine/core/actionHandlers/SetFlagActionHandler'
+export const setFlagActionHandlerToken = token<IActionHandler>(logName)
+export const setFlagActionHandlerDependencies: Token<unknown>[] = [
+  gameStateManagerToken,
+]
 
 export class SetFlagActionHandler implements IActionHandler {
   constructor(private readonly gameStateManager: IGameStateManager) {}

@@ -34,7 +34,15 @@ describe('core/actionExecutor', () => {
       canHandle: vi.fn((action: Action) => action.type === 'switch-scene'),
       handle: vi.fn(),
     }
-    const executor = new ActionExecutor(logger, messageBus, [mockHandler])
+    const executor = new ActionExecutor(
+      logger,
+      messageBus,
+      mockHandler,
+      mockHandler,
+      mockHandler,
+      mockHandler,
+      mockHandler
+    )
 
     // Act
     executor.start()
@@ -88,7 +96,15 @@ describe('core/actionExecutor', () => {
       canHandle: vi.fn(() => false),
       handle: vi.fn(),
     }
-    const executor = new ActionExecutor(logger, messageBus, [mockHandler])
+    const executor = new ActionExecutor(
+      logger,
+      messageBus,
+      mockHandler,
+      mockHandler,
+      mockHandler,
+      mockHandler,
+      mockHandler
+    )
 
     // Act
     executor.start()
