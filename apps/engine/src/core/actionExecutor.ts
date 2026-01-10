@@ -1,16 +1,8 @@
 import { Action } from '@ancadeba/schemas'
-import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
+import { ILogger, token } from '@ancadeba/utils'
 import { CORE_MESSAGES } from '../messages/core'
-import {
-  engineMessageBusToken,
-  IEngineMessageBus,
-} from '../system/engineMessageBus'
+import { IEngineMessageBus } from '../system/engineMessageBus'
 import { IActionHandler } from './actionHandlers/types'
-import { backActionHandlerToken } from './actionHandlers/BackActionHandler'
-import { exitGameActionHandlerToken } from './actionHandlers/ExitGameActionHandler'
-import { setFlagActionHandlerToken } from './actionHandlers/SetFlagActionHandler'
-import { switchSceneActionHandlerToken } from './actionHandlers/SwitchSceneActionHandler'
-import { volumeActionHandlerToken } from './actionHandlers/VolumeActionHandler'
 
 export interface IActionExecutor {
   start(): void
@@ -18,15 +10,6 @@ export interface IActionExecutor {
 
 const logName = 'engine/core/ActionExecutor'
 export const actionExecutorToken = token<IActionExecutor>(logName)
-export const actionExecutorDependencies: Token<unknown>[] = [
-  loggerToken,
-  engineMessageBusToken,
-  switchSceneActionHandlerToken,
-  exitGameActionHandlerToken,
-  setFlagActionHandlerToken,
-  backActionHandlerToken,
-  volumeActionHandlerToken,
-]
 
 export class ActionExecutor implements IActionExecutor {
   private readonly handlers: IActionHandler[]
@@ -34,19 +17,9 @@ export class ActionExecutor implements IActionExecutor {
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
-    switchSceneHandler: IActionHandler,
-    exitGameHandler: IActionHandler,
-    setFlagHandler: IActionHandler,
-    backHandler: IActionHandler,
-    volumeHandler: IActionHandler
+    handlers: IActionHandler[]
   ) {
-    this.handlers = [
-      switchSceneHandler,
-      exitGameHandler,
-      setFlagHandler,
-      backHandler,
-      volumeHandler,
-    ]
+    this.handlers = handlers
   }
 
   start(): void {

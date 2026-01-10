@@ -1,4 +1,4 @@
-import { Container } from '@ancadeba/utils'
+import { Container, loggerToken } from '@ancadeba/utils'
 import {
   GameEngine,
   gameEngineDependencies,
@@ -9,11 +9,7 @@ import {
   gameDataInitializerDependencies,
   gameDataInitializerToken,
 } from '../core/gameDataInitializer'
-import {
-  ActionExecutor,
-  actionExecutorToken,
-  actionExecutorDependencies,
-} from '../core/actionExecutor'
+import { ActionExecutor, actionExecutorToken } from '../core/actionExecutor'
 import {
   EngineMessageBus,
   engineMessageBusDependencies,
@@ -60,29 +56,25 @@ import {
   componentRegistryToken,
 } from '../App/Controls/componentRegistry'
 import { registerComponents } from '../App/Controls/registerComponents'
+import { actionHandlerToken } from '../core/actionHandlers/types'
 import {
   SwitchSceneActionHandler,
-  switchSceneActionHandlerToken,
   switchSceneActionHandlerDependencies,
 } from '../core/actionHandlers/SwitchSceneActionHandler'
 import {
   ExitGameActionHandler,
-  exitGameActionHandlerToken,
   exitGameActionHandlerDependencies,
 } from '../core/actionHandlers/ExitGameActionHandler'
 import {
   SetFlagActionHandler,
-  setFlagActionHandlerToken,
   setFlagActionHandlerDependencies,
 } from '../core/actionHandlers/SetFlagActionHandler'
 import {
   BackActionHandler,
-  backActionHandlerToken,
   backActionHandlerDependencies,
 } from '../core/actionHandlers/BackActionHandler'
 import {
   VolumeActionHandler,
-  volumeActionHandlerToken,
   volumeActionHandlerDependencies,
 } from '../core/actionHandlers/VolumeActionHandler'
 import {
@@ -124,34 +116,38 @@ export function registerServices(container: Container): void {
       deps: gameDataInitializerDependencies,
     },
     {
-      token: switchSceneActionHandlerToken,
+      token: actionHandlerToken,
       useClass: SwitchSceneActionHandler,
       deps: switchSceneActionHandlerDependencies,
     },
     {
-      token: exitGameActionHandlerToken,
+      token: actionHandlerToken,
       useClass: ExitGameActionHandler,
       deps: exitGameActionHandlerDependencies,
     },
     {
-      token: setFlagActionHandlerToken,
+      token: actionHandlerToken,
       useClass: SetFlagActionHandler,
       deps: setFlagActionHandlerDependencies,
     },
     {
-      token: backActionHandlerToken,
+      token: actionHandlerToken,
       useClass: BackActionHandler,
       deps: backActionHandlerDependencies,
     },
     {
-      token: volumeActionHandlerToken,
+      token: actionHandlerToken,
       useClass: VolumeActionHandler,
       deps: volumeActionHandlerDependencies,
     },
     {
       token: actionExecutorToken,
-      useClass: ActionExecutor,
-      deps: actionExecutorDependencies,
+      useFactory: (container) => {
+        const logger = container.resolve(loggerToken)
+        const messageBus = container.resolve(engineMessageBusToken)
+        const handlers = container.resolveAll(actionHandlerToken)
+        return new ActionExecutor(logger, messageBus, handlers)
+      },
     },
     {
       token: engineMessageBusToken,

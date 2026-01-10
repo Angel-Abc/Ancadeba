@@ -153,7 +153,7 @@ describe('ioc/container', () => {
     expect(hasService).toBe(true)
   })
 
-  it('throws when registering a duplicate provider', () => {
+  it('allows registering duplicate providers', () => {
     // Arrange
     class Service {}
     const serviceToken = token<Service>('test/service/duplicate')
@@ -166,7 +166,7 @@ describe('ioc/container', () => {
       container.register({ token: serviceToken, useClass: Service })
 
     // Assert
-    expect(registerDuplicate).toThrow()
+    expect(registerDuplicate).not.toThrow()
   })
 
   it('throws when resolving an unknown token', () => {
@@ -180,5 +180,105 @@ describe('ioc/container', () => {
 
     // Assert
     expect(resolveMissing).toThrow()
+  })
+
+  it('allows multiple registrations for the same token', () => {
+    // Arrange
+    interface IService {
+      name: string
+    }
+    class ServiceA implements IService {
+      name = 'A'
+    }
+    class ServiceB implements IService {
+      name = 'B'
+    }
+    class ServiceC implements IService {
+      name = 'C'
+    }
+    const serviceToken = token<IService>('test/service/multiple')
+    const container = new Container(createLogger())
+
+    // Act
+    container.register({ token: serviceToken, useClass: ServiceA })
+    container.register({ token: serviceToken, useClass: ServiceB })
+    container.register({ token: serviceToken, useClass: ServiceC })
+
+    // Assert - resolve returns first registration
+    const resolved = container.resolve(serviceToken)
+    expect(resolved.name).toBe('A')
+  })
+
+  it('resolves all instances with resolveAll', () => {
+    // Arrange
+    interface IService {
+      name: string
+    }
+    class ServiceA implements IService {
+      name = 'A'
+    }
+    class ServiceB implements IService {
+      name = 'B'
+    }
+    class ServiceC implements IService {
+      name = 'C'
+    }
+    const serviceToken = token<IService>('test/service/resolve-all')
+    const container = new Container(createLogger())
+
+    container.register({ token: serviceToken, useClass: ServiceA })
+    container.register({ token: serviceToken, useClass: ServiceB })
+    container.register({ token: serviceToken, useClass: ServiceC })
+
+    // Act
+    const resolved = container.resolveAll(serviceToken)
+
+    // Assert
+    expect(resolved).toHaveLength(3)
+    expect(resolved[0]?.name).toBe('A')
+    expect(resolved[1]?.name).toBe('B')
+    expect(resolved[2]?.name).toBe('C')
+  })
+
+  it('resolves all instances from parent containers with resolveAll', () => {
+    // Arrange
+    interface IService {
+      name: string
+    }
+    class ServiceA implements IService {
+      name = 'A'
+    }
+    class ServiceB implements IService {
+      name = 'B'
+    }
+    const serviceToken = token<IService>('test/service/resolve-all-parent')
+    const parent = new Container(createLogger())
+    const child = parent.createChild()
+
+    parent.register({ token: serviceToken, useClass: ServiceA })
+    child.register({ token: serviceToken, useClass: ServiceB })
+
+    // Act
+    const resolved = child.resolveAll(serviceToken)
+
+    // Assert
+    expect(resolved).toHaveLength(2)
+    expect(resolved[0]?.name).toBe('B')
+    expect(resolved[1]?.name).toBe('A')
+  })
+
+  it('returns empty array for resolveAll with no registrations', () => {
+    // Arrange
+    interface IService {
+      name: string
+    }
+    const serviceToken = token<IService>('test/service/resolve-all-empty')
+    const container = new Container(createLogger())
+
+    // Act
+    const resolved = container.resolveAll(serviceToken)
+
+    // Assert
+    expect(resolved).toEqual([])
   })
 })

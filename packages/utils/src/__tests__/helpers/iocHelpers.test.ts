@@ -25,7 +25,7 @@ describe('helpers/iocHelpers', () => {
     expect(resolvedLogger).toBe(logger)
   })
 
-  it('throws when registering services twice', () => {
+  it('allows registering services multiple times', () => {
     // Arrange
     const logger = createLogger()
     const container = new Container(logger)
@@ -33,9 +33,9 @@ describe('helpers/iocHelpers', () => {
     registerServices(container, logger)
 
     // Act
-    const registerDuplicate = () => registerServices(container, logger)
+    const registerAgain = () => registerServices(container, logger)
 
     // Assert
-    expect(registerDuplicate).toThrow()
+    expect(registerAgain).not.toThrow()
   })
 })
