@@ -1,6 +1,7 @@
 import { Token, token } from '@ancadeba/utils'
 import {
-  gameStateStorageToken,
+  gameStateReaderToken,
+  flagStorageToken,
   IGameStateReader,
   IFlagStorage,
 } from './storage'
@@ -15,7 +16,8 @@ export interface IGameStateProvider {
 const logName = 'engine/gameState/provider'
 export const gameStateProviderToken = token<IGameStateProvider>(logName)
 export const gameStateProviderDependencies: Token<unknown>[] = [
-  gameStateStorageToken,
+  gameStateReaderToken,
+  flagStorageToken,
 ]
 export class GameStateProvider implements IGameStateProvider {
   constructor(

@@ -1,7 +1,7 @@
 import { Token, token, typedEntries } from '@ancadeba/utils'
 import type { GameData } from '@ancadeba/schemas'
 import {
-  gameStateStorageToken,
+  gameStateMutatorToken,
   IGameStateMutator,
 } from '../../gameState.ts/storage'
 import { ISettingsStorage, settingsStorageToken } from '../../settings/storage'
@@ -18,7 +18,7 @@ export interface IGameStateInitializer {
 const logName = 'engine/core/initializers/gameStateInitializer'
 export const gameStateInitializerToken = token<IGameStateInitializer>(logName)
 export const gameStateInitializerDependencies: Token<unknown>[] = [
-  gameStateStorageToken,
+  gameStateMutatorToken,
   settingsStorageToken,
   languageStorageToken,
   languageFileStorageToken,

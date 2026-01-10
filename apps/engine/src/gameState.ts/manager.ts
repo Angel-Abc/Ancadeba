@@ -5,7 +5,9 @@ import {
   IEngineMessageBus,
 } from '../system/engineMessageBus'
 import {
-  gameStateStorageToken,
+  gameStateReaderToken,
+  gameStateMutatorToken,
+  flagStorageToken,
   IFlagStorage,
   IGameStateMutator,
   IGameStateReader,
@@ -22,7 +24,9 @@ export const gameStateManagerToken = token<IGameStateManager>(logName)
 export const gameStateManagerDependencies: Token<unknown>[] = [
   loggerToken,
   engineMessageBusToken,
-  gameStateStorageToken,
+  gameStateReaderToken,
+  gameStateMutatorToken,
+  flagStorageToken,
 ]
 
 export class GameStateManager implements IGameStateManager {
