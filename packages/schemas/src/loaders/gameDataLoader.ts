@@ -15,13 +15,14 @@ import { ZodTypeAny } from 'zod'
 import { tileSetSchema } from '../schemas/tileSet'
 import { mapSchema } from '../schemas/map'
 import { Language, languageSchema } from '../schemas/language'
+import { VirtualKeys, virtualKeysSchema } from '../schemas/virtualKeys'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
   loadLanguageData(languageFilePaths: string[]): Promise<Map<string, string>>
 }
 
-type GameDataCollections = Omit<GameData, 'meta' | 'languages'>
+type GameDataCollections = Omit<GameData, 'meta' | 'languages' | 'virtualKeys'>
 type GameDataCollectionKey = keyof GameDataCollections
 
 type ResourceCollectionDefinition = {
@@ -91,10 +92,17 @@ export class GameDataLoader implements IGameDataLoader {
       languages.set(langKey, { name: langDef.name, files: langDef.files })
     }
 
+    const virtualKeys = await loadJsonResource<VirtualKeys>(
+      `${this.config.rootPath}/input/${game.virtualKeys}.json`,
+      virtualKeysSchema,
+      this.logger
+    )
+
     const result: GameData = {
       meta: game,
       languages: languages,
       ...collections,
+      virtualKeys: virtualKeys,
     }
     this.logger.debug(logName, 'Loaded game data: {0}', result)
     return result

@@ -24,6 +24,7 @@ describe('loader', () => {
       styling: [],
       tileSets: ['outdoor'],
       maps: [],
+      virtualKeys: 'virtual-keys',
       languages: {
         en: {
           name: 'English',

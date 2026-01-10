@@ -1,0 +1,70 @@
+{
+  "id": "virtual-keys",
+  "createdAt": "2026-01-10T00:00:00Z",
+  "updatedAt": "2026-01-10T00:00:00Z",
+  "mappings": [
+    {
+      "code": "KeyQ",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_Q"
+    },
+    {
+      "code": "KeyQ",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_Q"
+    },
+    {
+      "code": "KeyW",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_W"
+    },
+    {
+      "code": "KeyA",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_A"
+    },
+    {
+      "code": "KeyS",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_S"
+    },
+    {
+      "code": "KeyD",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_D"
+    },
+    {
+      "code": "Space",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_ACTION"
+    },
+    {
+      "code": "Enter",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_CONFIRM"
+    },
+    {
+      "code": "Escape",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_CANCEL"
+    }
+  ]
+}

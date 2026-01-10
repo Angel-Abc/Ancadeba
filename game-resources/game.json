@@ -20,6 +20,7 @@
   "styling": ["game.css"],
   "tileSets": ["outdoor"],
   "maps": ["start-beach"],
+  "virtualKeys": "virtual-keys",
   "languages": {
     "en": {
       "name": "English",

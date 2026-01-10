@@ -41,6 +41,7 @@ describe('loaders/gameDataLoader', () => {
       styling: [],
       tileSets: ['outdoor'],
       maps: [],
+      virtualKeys: 'virtual-keys',
       languages: {
         en: {
           name: 'English',
@@ -84,12 +85,27 @@ describe('loaders/gameDataLoader', () => {
         },
       ],
     }
+    const virtualKeys = {
+      id: 'virtual-keys',
+      createdAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
+      mappings: [
+        {
+          code: 'Space',
+          shift: false,
+          ctrl: false,
+          alt: false,
+          virtualKey: 'VK_ACTION',
+        },
+      ],
+    }
     const loader = new GameDataLoader(logger, config)
     const mockedLoadJsonResource = vi.mocked(loadJsonResource)
     mockedLoadJsonResource
       .mockResolvedValueOnce(game)
       .mockResolvedValueOnce(scene)
       .mockResolvedValueOnce(tileSet)
+      .mockResolvedValueOnce(virtualKeys)
 
     // Act
     const result = await loader.loadGameData()
@@ -113,6 +129,12 @@ describe('loaders/gameDataLoader', () => {
       tileSetSchema,
       logger
     )
+    expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
+      4,
+      '/data/input/virtual-keys.json',
+      expect.anything(),
+      logger
+    )
     expect(result).toEqual({
       meta: game,
       languages: new Map([
@@ -127,6 +149,7 @@ describe('loaders/gameDataLoader', () => {
       scenes: [scene],
       tileSets: [tileSet],
       maps: [],
+      virtualKeys: virtualKeys,
     })
   })
 })

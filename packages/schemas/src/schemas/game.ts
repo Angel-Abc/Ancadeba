@@ -19,6 +19,7 @@ export const gameSchema = BaseSchema.extend({
   styling: z.array(z.string()),
   tileSets: z.array(z.string()),
   maps: z.array(z.string()),
+  virtualKeys: z.string(),
   languages: z.record(
     z.string(),
     z.object({
