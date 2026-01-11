@@ -32,6 +32,62 @@
       "virtualKey": "VK_SHIFT_W"
     },
     {
+      "code": "KeyE",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_E"
+    },
+    {
+      "code": "KeyE",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_E"
+    },
+    {
+      "code": "KeyR",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_R"
+    },
+    {
+      "code": "KeyR",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_R"
+    },
+    {
+      "code": "KeyT",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_T"
+    },
+    {
+      "code": "KeyT",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_T"
+    },
+    {
+      "code": "KeyY",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_Y"
+    },
+    {
+      "code": "KeyY",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_Y"
+    },
+    {
       "code": "KeyA",
       "shift": false,
       "ctrl": false,
@@ -72,6 +128,146 @@
       "ctrl": false,
       "alt": false,
       "virtualKey": "VK_SHIFT_D"
+    },
+    {
+      "code": "KeyF",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_F"
+    },
+    {
+      "code": "KeyF",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_F"
+    },
+    {
+      "code": "KeyG",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_G"
+    },
+    {
+      "code": "KeyG",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_G"
+    },
+    {
+      "code": "KeyH",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_H"
+    },
+    {
+      "code": "KeyH",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_H"
+    },
+    {
+      "code": "KeyZ",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_Z"
+    },
+    {
+      "code": "KeyZ",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_Z"
+    },
+    {
+      "code": "KeyX",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_X"
+    },
+    {
+      "code": "KeyX",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_X"
+    },
+    {
+      "code": "KeyC",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_C"
+    },
+    {
+      "code": "KeyC",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_C"
+    },
+    {
+      "code": "KeyV",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_V"
+    },
+    {
+      "code": "KeyV",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_V"
+    },
+    {
+      "code": "KeyB",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_B"
+    },
+    {
+      "code": "KeyB",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_B"
+    },
+    {
+      "code": "KeyN",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_N"
+    },
+    {
+      "code": "KeyN",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_N"
+    },
+    {
+      "code": "KeyM",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_M"
+    },
+    {
+      "code": "KeyM",
+      "shift": true,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_SHIFT_M"
     },
     {
       "code": "Space",
@@ -121,6 +317,48 @@
       "ctrl": false,
       "alt": false,
       "virtualKey": "VK_RIGHT"
+    },
+    {
+      "code": "Digit1",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_1"
+    },
+    {
+      "code": "Digit2",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_2"
+    },
+    {
+      "code": "Digit3",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_3"
+    },
+    {
+      "code": "Digit4",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_4"
+    },
+    {
+      "code": "Digit5",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_5"
+    },
+    {
+      "code": "Digit6",
+      "shift": false,
+      "ctrl": false,
+      "alt": false,
+      "virtualKey": "VK_6"
     }
   ]
 }

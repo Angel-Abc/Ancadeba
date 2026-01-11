@@ -1,5 +1,6 @@
 import z from 'zod'
 import { BaseSchema } from './base'
+import { inputRangeSchema } from './inputRange'
 
 export const defaultSettingsSchema = z.object({
   language: z.string(),
@@ -21,6 +22,7 @@ export const gameSchema = BaseSchema.extend({
   maps: z.array(z.string()),
   virtualKeys: z.string(),
   virtualInputs: z.string(),
+  inputRanges: inputRangeSchema.optional(),
   languages: z.record(
     z.string(),
     z.object({

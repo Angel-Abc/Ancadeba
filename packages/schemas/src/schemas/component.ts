@@ -20,11 +20,19 @@ const borderSchema = z
   })
   .default({ width: 0, padding: 0, margin: 0 })
 
+export const inputRuleSchema = z.object({
+  virtualInput: z.string().optional(),
+  enabled: conditionSchema.optional(),
+  visible: conditionSchema.optional(),
+  caption: z.string().optional(),
+})
+
 const baseComponentSchema = z.object({
   location: locationSchema,
   size: sizeSchema,
   visible: z.boolean().default(true),
   border: borderSchema,
+  inputRules: z.array(inputRuleSchema).optional(),
 })
 
 const backgroundComponentSchema = baseComponentSchema.extend({
@@ -91,3 +99,4 @@ export type CharacterSheetComponent = z.infer<
 >
 export type TextLogComponent = z.infer<typeof textLogComponentSchema>
 export type InputBarComponent = z.infer<typeof inputBarComponentSchema>
+export type InputRule = z.infer<typeof inputRuleSchema>

@@ -4,9 +4,64 @@
   "updatedAt": "2026-01-10T00:00:00Z",
   "mappings": [
     {
+      "virtualKeys": ["VK_1"],
+      "virtualInput": "VI_1",
+      "label": "1"
+    },
+    {
+      "virtualKeys": ["VK_2"],
+      "virtualInput": "VI_2",
+      "label": "2"
+    },
+    {
+      "virtualKeys": ["VK_3"],
+      "virtualInput": "VI_3",
+      "label": "3"
+    },
+    {
+      "virtualKeys": ["VK_4"],
+      "virtualInput": "VI_4",
+      "label": "4"
+    },
+    {
+      "virtualKeys": ["VK_5"],
+      "virtualInput": "VI_5",
+      "label": "5"
+    },
+    {
+      "virtualKeys": ["VK_6"],
+      "virtualInput": "VI_6",
+      "label": "6"
+    },
+    {
+      "virtualKeys": ["VK_Q", "VK_SHIFT_Q"],
+      "virtualInput": "VI_Q",
+      "label": "Q"
+    },
+    {
       "virtualKeys": ["VK_W", "VK_SHIFT_W", "VK_UP"],
       "virtualInput": "VI_UP",
       "label": "W"
+    },
+    {
+      "virtualKeys": ["VK_E", "VK_SHIFT_E"],
+      "virtualInput": "VI_E",
+      "label": "E"
+    },
+    {
+      "virtualKeys": ["VK_R", "VK_SHIFT_R"],
+      "virtualInput": "VI_R",
+      "label": "R"
+    },
+    {
+      "virtualKeys": ["VK_T", "VK_SHIFT_T"],
+      "virtualInput": "VI_T",
+      "label": "T"
+    },
+    {
+      "virtualKeys": ["VK_Y", "VK_SHIFT_Y"],
+      "virtualInput": "VI_Y",
+      "label": "Y"
     },
     {
       "virtualKeys": ["VK_A", "VK_SHIFT_A", "VK_LEFT"],
@@ -22,6 +77,51 @@
       "virtualKeys": ["VK_D", "VK_SHIFT_D", "VK_RIGHT"],
       "virtualInput": "VI_RIGHT",
       "label": "D"
+    },
+    {
+      "virtualKeys": ["VK_F", "VK_SHIFT_F"],
+      "virtualInput": "VI_F",
+      "label": "F"
+    },
+    {
+      "virtualKeys": ["VK_G", "VK_SHIFT_G"],
+      "virtualInput": "VI_G",
+      "label": "G"
+    },
+    {
+      "virtualKeys": ["VK_H", "VK_SHIFT_H"],
+      "virtualInput": "VI_H",
+      "label": "H"
+    },
+    {
+      "virtualKeys": ["VK_Z", "VK_SHIFT_Z"],
+      "virtualInput": "VI_Z",
+      "label": "Z"
+    },
+    {
+      "virtualKeys": ["VK_X", "VK_SHIFT_X"],
+      "virtualInput": "VI_X",
+      "label": "X"
+    },
+    {
+      "virtualKeys": ["VK_C", "VK_SHIFT_C"],
+      "virtualInput": "VI_C",
+      "label": "C"
+    },
+    {
+      "virtualKeys": ["VK_V", "VK_SHIFT_V"],
+      "virtualInput": "VI_V",
+      "label": "V"
+    },
+    {
+      "virtualKeys": ["VK_B", "VK_SHIFT_B"],
+      "virtualInput": "VI_B",
+      "label": "B"
+    },
+    {
+      "virtualKeys": ["VK_N", "VK_SHIFT_N"],
+      "virtualInput": "VI_N",
+      "label": "N"
     },
     {
       "virtualKeys": ["VK_ACTION"],

@@ -28,7 +28,37 @@
         "width": 4,
         "padding": 8,
         "margin": 4
-      }
+      },
+      "inputRules": [
+        {
+          "virtualInput": "VI_UP",
+          "enabled": {
+            "type": "can-move-up"
+          },
+          "caption": "Move Up"
+        },
+        {
+          "virtualInput": "VI_DOWN",
+          "enabled": {
+            "type": "can-move-down"
+          },
+          "caption": "Move Down"
+        },
+        {
+          "virtualInput": "VI_LEFT",
+          "enabled": {
+            "type": "can-move-left"
+          },
+          "caption": "Move Left"
+        },
+        {
+          "virtualInput": "VI_RIGHT",
+          "enabled": {
+            "type": "can-move-right"
+          },
+          "caption": "Move Right"
+        }
+      ]
     },
     {
       "type": "inventory",

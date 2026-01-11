@@ -9,6 +9,7 @@ import {
   IResourceDataProvider,
   resourceDataProviderToken,
 } from '../../../resourceData/provider'
+import { MapTile } from './MapTile'
 
 interface SquaresMapComponentProps {
   component: SquaresMapComponentData
@@ -62,16 +63,13 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
               if (tile === undefined) {
                 return <div key={key} className="empty-tile" />
               }
-              const tileStyle: CSSCustomProperties = {
-                '--ge-map-tile-color': tile.color || 'transparent',
-              }
-              const imageUrl = tile.image
-                ? `${resourceDataProvider.assetsUrl}/${tile.image}`
-                : ''
+              // TODO: render entities on top of tiles
               return (
-                <div key={key} style={tileStyle}>
-                  {tile.image && <img src={imageUrl} />}
-                </div>
+                <MapTile
+                  key={key}
+                  tile={tile}
+                  assetsUrl={resourceDataProvider.assetsUrl}
+                />
               )
             })
           })}

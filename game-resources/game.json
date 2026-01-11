@@ -27,5 +27,111 @@
       "name": "English",
       "files": ["en/system.json", "en/start-beach.json", "en/tiles.json"]
     }
-  }
+  },
+  "inputRanges": [
+    [
+      {
+        "virtualInput": "VI_1",
+        "label": "1"
+      },
+      {
+        "virtualInput": "VI_2",
+        "label": "2"
+      },
+      {
+        "virtualInput": "VI_3",
+        "label": "3"
+      },
+      {
+        "virtualInput": "VI_4",
+        "label": "4"
+      },
+      {
+        "virtualInput": "VI_5",
+        "label": "5"
+      },
+      {
+        "virtualInput": "VI_6",
+        "label": "6"
+      }
+    ],
+    [
+      {
+        "virtualInput": "VI_Q",
+        "label": "Q"
+      },
+      {
+        "virtualInput": "VI_UP",
+        "label": "W"
+      },
+      {
+        "virtualInput": "VI_E",
+        "label": "E"
+      },
+      {
+        "virtualInput": "VI_R",
+        "label": "R"
+      },
+      {
+        "virtualInput": "VI_T",
+        "label": "T"
+      },
+      {
+        "virtualInput": "VI_Y",
+        "label": "Y"
+      }
+    ],
+    [
+      {
+        "virtualInput": "VI_LEFT",
+        "label": "A"
+      },
+      {
+        "virtualInput": "VI_DOWN",
+        "label": "S"
+      },
+      {
+        "virtualInput": "VI_RIGHT",
+        "label": "D"
+      },
+      {
+        "virtualInput": "VI_F",
+        "label": "F"
+      },
+      {
+        "virtualInput": "VI_G",
+        "label": "G"
+      },
+      {
+        "virtualInput": "VI_H",
+        "label": "H"
+      }
+    ],
+    [
+      {
+        "virtualInput": "VI_Z",
+        "label": "Z"
+      },
+      {
+        "virtualInput": "VI_X",
+        "label": "X"
+      },
+      {
+        "virtualInput": "VI_C",
+        "label": "C"
+      },
+      {
+        "virtualInput": "VI_V",
+        "label": "V"
+      },
+      {
+        "virtualInput": "VI_B",
+        "label": "B"
+      },
+      {
+        "virtualInput": "VI_N",
+        "label": "N"
+      }
+    ]
+  ]
 }
