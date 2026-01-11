@@ -136,3 +136,18 @@ body {
     }
   }
 }
+
+.input-bar-component {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* TODO: Make dynamic using variables */
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+
+  & .input-cell {
+    display: grid;
+    width: 100%;
+    height: 100%;
+  }
+}

@@ -2,23 +2,25 @@
   --ge-background-color: #000000;
 }
 
+button {
+  border: 0;
+  border-radius: calc(var(--ge-unit-size) * 4);
+  background: linear-gradient(to bottom right, #2020b0, #4040d0);
+  color: #c0c0f0;
+}
+button:hover {
+  background: linear-gradient(to bottom right, #3030d0, #5050f0);
+  color: #e0e0ff;
+}
+button:disabled {
+  background: linear-gradient(to bottom right, #101010, #202020);
+  color: #606060;
+}
+
 .background-component {
   background-position: right top;
   background-repeat: no-repeat;
   background-size: contain;
-}
-
-.menu-component {
-  & button {
-    border: 0;
-    border-radius: calc(var(--ge-unit-size) * 8);
-    background: linear-gradient(to bottom right, #2020b0, #4040d0);
-    color: #c0c0f0;
-  }
-  & button:hover {
-    background: linear-gradient(to bottom right, #3030d0, #5050f0);
-    color: #e0e0ff;
-  }
 }
 
 .grid-item {
@@ -32,5 +34,20 @@
     background-color: oklch(32.208% 0.06034 78.284);
     padding: 0;
     border: none;
+  }
+}
+
+.menu-component {
+  & button {
+    border-radius: calc(var(--ge-unit-size) * 8);
+  }
+}
+
+.input-bar-component {
+  & .input-cell {
+    padding: calc(var(--ge-unit-size) * 2);
+    & button {
+      border-radius: calc(var(--ge-unit-size) * 3);
+    }
   }
 }

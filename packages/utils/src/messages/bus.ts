@@ -26,9 +26,10 @@ export class MessageBus implements IMessageBus {
     const eventSubscribers = this.subscribers.get(event)
     this.logger.debug(
       logName,
-      'Publishing event: {0} to {1} subscribers',
+      'Publishing event: {0} to {1} subscribers: {2}',
       event,
-      eventSubscribers?.size ?? 0
+      eventSubscribers?.size ?? 0,
+      payload
     )
     if (eventSubscribers) {
       for (const callback of eventSubscribers) {
