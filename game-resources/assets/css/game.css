@@ -11,6 +11,7 @@ button {
 button:hover {
   background: linear-gradient(to bottom right, #3030d0, #5050f0);
   color: #e0e0ff;
+  cursor: pointer;
 }
 button:disabled {
   background: linear-gradient(to bottom right, #101010, #202020);
