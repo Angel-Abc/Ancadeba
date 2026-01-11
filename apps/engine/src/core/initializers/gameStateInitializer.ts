@@ -43,6 +43,7 @@ export class GameStateInitializer implements IGameStateInitializer {
       activeMapId: gameData.meta.initialState.map || null,
       flags: {},
       sceneStack: [initialScene],
+      inputRanges: gameData.meta.inputRanges,
       ...initialState,
     }
 

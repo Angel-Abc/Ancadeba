@@ -1,3 +1,4 @@
+import { InputRange } from '@ancadeba/schemas'
 import { Token, token } from '@ancadeba/utils'
 import {
   gameStateReaderToken,
@@ -10,6 +11,7 @@ export interface IGameStateProvider {
   get activeSceneId(): string
   get activeMapId(): string | null
   get gameTitle(): string
+  get inputRanges(): InputRange | undefined
   getFlag(flagName: string): boolean | undefined
 }
 
@@ -38,5 +40,9 @@ export class GameStateProvider implements IGameStateProvider {
 
   get gameTitle(): string {
     return this.gameStateStorage.state.title
+  }
+
+  get inputRanges(): InputRange | undefined {
+    return this.gameStateStorage.state.inputRanges
   }
 }
