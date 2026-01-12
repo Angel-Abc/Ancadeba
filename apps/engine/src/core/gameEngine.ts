@@ -1,11 +1,4 @@
-import {
-  IKeyboardListener,
-  ILogger,
-  keyboardListenerToken,
-  loggerToken,
-  Token,
-  token,
-} from '@ancadeba/utils'
+import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
 import {
   engineMessageBusToken,
   IEngineMessageBus,
@@ -17,19 +10,10 @@ import {
   gameDataInitializerToken,
   IGameDataInitializer,
 } from './gameDataInitializer'
-import { IActionExecutor, actionExecutorToken } from './actionExecutor'
 import {
-  IKeyboardInputService,
-  keyboardInputServiceToken,
-} from '../system/keyboardInputService'
-import {
-  IVirtualInputService,
-  virtualInputServiceToken,
-} from '../system/virtualInputService'
-import {
-  IMapPositionService,
-  mapPositionServiceToken,
-} from '../system/mapPositionService'
+  ILifecycleCoordinator,
+  lifecycleCoordinatorToken,
+} from './lifecycleCoordinator'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -44,11 +28,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   uiReadySignalToken,
   gameDataLoaderToken,
   gameDataInitializerToken,
-  actionExecutorToken,
-  keyboardListenerToken,
-  keyboardInputServiceToken,
-  virtualInputServiceToken,
-  mapPositionServiceToken,
+  lifecycleCoordinatorToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
@@ -57,11 +37,7 @@ export class GameEngine implements IGameEngine {
     private readonly uiReadySignal: IUIReadySignal,
     private readonly gameDataLoader: IGameDataLoader,
     private readonly gameDataInitializer: IGameDataInitializer,
-    private readonly actionExecutor: IActionExecutor,
-    private readonly keyboardListener: IKeyboardListener,
-    private readonly keyboardInputService: IKeyboardInputService,
-    private readonly virtualInputService: IVirtualInputService,
-    private readonly mapPositionService: IMapPositionService
+    private readonly lifecycleCoordinator: ILifecycleCoordinator
   ) {}
 
   async start(): Promise<void> {
@@ -70,18 +46,11 @@ export class GameEngine implements IGameEngine {
     await this.gameDataInitializer.initialize(gameData)
     // Wait for UI to be ready
     await this.uiReadySignal.ready
-    this.actionExecutor.start()
-    this.keyboardListener.start()
-    this.keyboardInputService.start()
-    this.virtualInputService.start()
-    this.mapPositionService.start()
+    this.lifecycleCoordinator.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)
   }
 
   stop(): void {
-    this.actionExecutor.stop()
-    this.keyboardInputService.stop()
-    this.virtualInputService.stop()
-    this.mapPositionService.stop()
+    this.lifecycleCoordinator.stop()
   }
 }

@@ -11,6 +11,10 @@ import {
   gameEngineToken,
 } from '../core/gameEngine'
 import {
+  LifecycleCoordinator,
+  lifecycleCoordinatorToken,
+} from '../core/lifecycleCoordinator'
+import {
   GameDataInitializer,
   gameDataInitializerDependencies,
   gameDataInitializerToken,
@@ -208,6 +212,25 @@ export function registerServices(container: Container): void {
       token: gameEngineToken,
       useClass: GameEngine,
       deps: gameEngineDependencies,
+    },
+    {
+      token: lifecycleCoordinatorToken,
+      useFactory: (container) => {
+        const startables = [
+          container.resolve(actionExecutorToken),
+          container.resolve(keyboardListenerToken),
+          container.resolve(keyboardInputServiceToken),
+          container.resolve(virtualInputServiceToken),
+          container.resolve(mapPositionServiceToken),
+        ]
+        const stoppables = [
+          container.resolve(actionExecutorToken),
+          container.resolve(keyboardInputServiceToken),
+          container.resolve(virtualInputServiceToken),
+          container.resolve(mapPositionServiceToken),
+        ]
+        return new LifecycleCoordinator(startables, stoppables)
+      },
     },
     {
       token: gameDataInitializerToken,
