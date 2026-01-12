@@ -13,6 +13,10 @@ import {
   gameStateInitializerToken,
 } from './initializers/gameStateInitializer'
 import {
+  IEntityInitializer,
+  entityInitializerToken,
+} from './initializers/entityInitializer'
+import {
   ISceneDataInitializer,
   sceneDataInitializerToken,
 } from './initializers/sceneDataInitializer'
@@ -33,6 +37,7 @@ const logName = 'engine/core/gameDataInitializer'
 export const gameDataInitializerToken = token<IGameDataInitializer>(logName)
 export const gameDataInitializerDependencies: Token<unknown>[] = [
   gameStateInitializerToken,
+  entityInitializerToken,
   sceneDataInitializerToken,
   tileDataInitializerToken,
   mapDataInitializerToken,
@@ -44,6 +49,7 @@ export const gameDataInitializerDependencies: Token<unknown>[] = [
 export class GameDataInitializer implements IGameDataInitializer {
   constructor(
     private readonly gameStateInitializer: IGameStateInitializer,
+    private readonly entityInitializer: IEntityInitializer,
     private readonly sceneDataInitializer: ISceneDataInitializer,
     private readonly tileDataInitializer: ITileDataInitializer,
     private readonly mapDataInitializer: IMapDataInitializer,
@@ -54,6 +60,7 @@ export class GameDataInitializer implements IGameDataInitializer {
 
   async initialize(gameData: GameData): Promise<void> {
     await this.gameStateInitializer.initializeGameState(gameData)
+    this.entityInitializer.initializeEntities(gameData)
     this.sceneDataInitializer.initializeScenes(gameData.scenes)
     this.sceneDataInitializer.initializeStyling(gameData.meta.styling)
     this.tileDataInitializer.initializeTiles(gameData.tileSets)

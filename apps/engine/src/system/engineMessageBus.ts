@@ -1,8 +1,11 @@
 import { IMessageBus, messageBusToken, Token, token } from '@ancadeba/utils'
 import { CoreMessagePayloads } from '../messages/core'
+import { EcsMessagePayloads } from '../messages/ecs'
 import { UIMessagePayloads } from '../messages/ui'
 
-export type EngineMessagePayloads = CoreMessagePayloads & UIMessagePayloads
+export type EngineMessagePayloads = CoreMessagePayloads &
+  UIMessagePayloads &
+  EcsMessagePayloads
 
 export type EngineMessage = keyof EngineMessagePayloads
 

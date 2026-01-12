@@ -15,9 +15,42 @@ import {
 } from '../../../system/engineMessageBus'
 import { CORE_MESSAGES } from '../../../messages/core'
 import { MapTile } from './MapTile'
+import { COMPONENT_KEYS, PositionComponent } from '../../../ecs/components'
+import type { EntityId, IWorld } from '../../../ecs/types'
+import { WORLD_EVENTS } from '../../../ecs/types'
+import { worldToken } from '../../../ecs/world'
 
 interface SquaresMapComponentProps {
   component: SquaresMapComponentData
+}
+
+type EntityPosition = {
+  id: EntityId
+  position: PositionComponent
+}
+
+const entityOffsets = [
+  { x: 0, y: 0 },
+  { x: -30, y: -30 },
+  { x: 30, y: -30 },
+  { x: -30, y: 30 },
+  { x: 30, y: 30 },
+]
+
+const getEntityPositions = (world: IWorld): EntityPosition[] => {
+  const entities: EntityPosition[] = []
+  const entityIds = world.getEntitiesWith(COMPONENT_KEYS.position)
+  entityIds.forEach((entityId) => {
+    const position = world.getComponent<PositionComponent>(
+      entityId,
+      COMPONENT_KEYS.position
+    )
+    if (!position) {
+      return
+    }
+    entities.push({ id: entityId, position })
+  })
+  return entities
 }
 
 export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
@@ -28,10 +61,14 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )
+  const world = useService<IWorld>(worldToken)
   const [activeMapId, setActiveMapId] = useState<string | null>(
     gameStateProvider.activeMapId
   )
   const [mapPosition, setMapPosition] = useState(gameStateProvider.mapPosition)
+  const [entityPositions, setEntityPositions] = useState<EntityPosition[]>(() =>
+    getEntityPositions(world)
+  )
 
   useEffect(() => {
     return engineMessageBus.subscribe(CORE_MESSAGES.SCENE_CHANGED, () => {
@@ -49,10 +86,72 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
     )
   }, [engineMessageBus])
 
+  useEffect(() => {
+    const updateEntities = () => {
+      setEntityPositions(getEntityPositions(world))
+    }
+    updateEntities()
+
+    const unsubscribeAdded = world.subscribe(
+      WORLD_EVENTS.COMPONENT_ADDED,
+      (payload) => {
+        if (payload.componentKey !== COMPONENT_KEYS.position) {
+          return
+        }
+        updateEntities()
+      }
+    )
+    const unsubscribeUpdated = world.subscribe(
+      WORLD_EVENTS.COMPONENT_UPDATED,
+      (payload) => {
+        if (payload.componentKey !== COMPONENT_KEYS.position) {
+          return
+        }
+        updateEntities()
+      }
+    )
+    const unsubscribeRemoved = world.subscribe(
+      WORLD_EVENTS.COMPONENT_REMOVED,
+      (payload) => {
+        if (payload.componentKey !== COMPONENT_KEYS.position) {
+          return
+        }
+        updateEntities()
+      }
+    )
+    const unsubscribeDestroyed = world.subscribe(
+      WORLD_EVENTS.ENTITY_DESTROYED,
+      () => {
+        updateEntities()
+      }
+    )
+
+    return () => {
+      unsubscribeAdded()
+      unsubscribeUpdated()
+      unsubscribeRemoved()
+      unsubscribeDestroyed()
+    }
+  }, [world])
+
   const mapData = useMemo(() => {
     if (!activeMapId) return null
     return resourceDataProvider.getMapData(activeMapId)
   }, [activeMapId, resourceDataProvider])
+
+  const entitiesByPosition = useMemo(() => {
+    const map = new Map<string, EntityPosition[]>()
+    entityPositions.forEach((entity) => {
+      const key = `${entity.position.x},${entity.position.y}`
+      const existing = map.get(key)
+      if (existing) {
+        existing.push(entity)
+        return
+      }
+      map.set(key, [entity])
+    })
+    return map
+  }, [entityPositions])
 
   if (!activeMapId || !mapData) {
     return <div>No active map</div>
@@ -84,13 +183,29 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
               if (tile === undefined) {
                 return <div key={key} className="empty-tile" />
               }
-              // TODO: render entities on top of tiles
+              const entities = entitiesByPosition.get(
+                `${colIndex},${rowIndex}`
+              )
               return (
                 <MapTile
                   key={key}
                   tile={tile}
                   assetsUrl={resourceDataProvider.assetsUrl}
-                />
+                >
+                  {entities?.map((entity, index) => {
+                    const offset = entityOffsets[index % entityOffsets.length]
+                    return (
+                      <div
+                        key={`${key}-entity-${entity.id}`}
+                        className="entity-marker"
+                        data-entity-id={entity.id}
+                        style={{
+                          transform: `translate(${offset.x}%, ${offset.y}%)`,
+                        }}
+                      />
+                    )
+                  })}
+                </MapTile>
               )
             })
           })}

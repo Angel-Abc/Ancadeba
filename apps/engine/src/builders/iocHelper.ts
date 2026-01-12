@@ -15,6 +15,11 @@ import {
   lifecycleCoordinatorToken,
 } from '../core/lifecycleCoordinator'
 import {
+  EcsCoordinator,
+  ecsCoordinatorDependencies,
+  ecsCoordinatorToken,
+} from '../core/ecsCoordinator'
+import {
   GameDataInitializer,
   gameDataInitializerDependencies,
   gameDataInitializerToken,
@@ -171,6 +176,11 @@ import {
   gameStateInitializerToken,
 } from '../core/initializers/gameStateInitializer'
 import {
+  EntityInitializer,
+  entityInitializerDependencies,
+  entityInitializerToken,
+} from '../core/initializers/entityInitializer'
+import {
   SceneDataInitializer,
   sceneDataInitializerDependencies,
   sceneDataInitializerToken,
@@ -201,10 +211,32 @@ import {
   virtualInputServiceToken,
 } from '../system/virtualInputService'
 import {
-  MapPositionService,
-  mapPositionServiceDependencies,
-  mapPositionServiceToken,
-} from '../system/mapPositionService'
+  MapPositionBridgeSystem,
+  mapPositionBridgeSystemDependencies,
+  mapPositionBridgeSystemToken,
+} from '../ecs/systems/mapPositionBridgeSystem'
+import {
+  MovementSystem,
+  movementSystemDependencies,
+  movementSystemToken,
+} from '../ecs/systems/movementSystem'
+import {
+  EcsEventBridgeSystem,
+  ecsEventBridgeSystemDependencies,
+  ecsEventBridgeSystemToken,
+} from '../ecs/systems/ecsEventBridgeSystem'
+import {
+  SystemRegistry,
+  systemRegistryToken,
+} from '../ecs/systemRegistry'
+import {
+  World,
+  worldDependencies,
+  worldToken,
+  WorldEventBus,
+  worldEventBusDependencies,
+  worldEventBusToken,
+} from '../ecs/world'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -221,13 +253,13 @@ export function registerServices(container: Container): void {
           container.resolve(keyboardListenerToken),
           container.resolve(keyboardInputServiceToken),
           container.resolve(virtualInputServiceToken),
-          container.resolve(mapPositionServiceToken),
+          container.resolve(ecsCoordinatorToken),
         ]
         const stoppables = [
           container.resolve(actionExecutorToken),
           container.resolve(keyboardInputServiceToken),
           container.resolve(virtualInputServiceToken),
-          container.resolve(mapPositionServiceToken),
+          container.resolve(ecsCoordinatorToken),
         ]
         return new LifecycleCoordinator(startables, stoppables)
       },
@@ -241,6 +273,11 @@ export function registerServices(container: Container): void {
       token: gameStateInitializerToken,
       useClass: GameStateInitializer,
       deps: gameStateInitializerDependencies,
+    },
+    {
+      token: entityInitializerToken,
+      useClass: EntityInitializer,
+      deps: entityInitializerDependencies,
     },
     {
       token: sceneDataInitializerToken,
@@ -296,6 +333,56 @@ export function registerServices(container: Container): void {
       useClass: EngineMessageBus,
       deps: engineMessageBusDependencies,
       scope: 'singleton',
+    },
+    {
+      token: worldEventBusToken,
+      useClass: WorldEventBus,
+      deps: worldEventBusDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: worldToken,
+      useClass: World,
+      deps: worldDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: systemRegistryToken,
+      useFactory: (container) => {
+        const registry = new SystemRegistry()
+        registry.register(container.resolve(ecsEventBridgeSystemToken), {
+          priority: 0,
+        })
+        registry.register(container.resolve(mapPositionBridgeSystemToken), {
+          priority: 1,
+        })
+        registry.register(container.resolve(movementSystemToken), {
+          priority: 2,
+        })
+        return registry
+      },
+      scope: 'singleton',
+    },
+    {
+      token: ecsCoordinatorToken,
+      useClass: EcsCoordinator,
+      deps: ecsCoordinatorDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: mapPositionBridgeSystemToken,
+      useClass: MapPositionBridgeSystem,
+      deps: mapPositionBridgeSystemDependencies,
+    },
+    {
+      token: movementSystemToken,
+      useClass: MovementSystem,
+      deps: movementSystemDependencies,
+    },
+    {
+      token: ecsEventBridgeSystemToken,
+      useClass: EcsEventBridgeSystem,
+      deps: ecsEventBridgeSystemDependencies,
     },
     {
       token: uiReadySignalToken,
@@ -480,12 +567,6 @@ export function registerServices(container: Container): void {
       token: virtualInputServiceToken,
       useClass: VirtualInputService,
       deps: virtualInputServiceDependencies,
-      scope: 'singleton',
-    },
-    {
-      token: mapPositionServiceToken,
-      useClass: MapPositionService,
-      deps: mapPositionServiceDependencies,
       scope: 'singleton',
     },
   ])

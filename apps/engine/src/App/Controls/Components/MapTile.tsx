@@ -1,12 +1,14 @@
 import { Tile } from '@ancadeba/schemas'
 import { CSSCustomProperties } from '@ancadeba/ui'
+import type { ReactNode } from 'react'
 
 interface MapTileProps {
   tile: Tile
   assetsUrl: string
+  children?: ReactNode
 }
 
-export function MapTile({ tile, assetsUrl }: MapTileProps) {
+export function MapTile({ tile, assetsUrl, children }: MapTileProps) {
   const tileStyle: CSSCustomProperties = {
     '--ge-map-tile-color': tile.color || 'transparent',
   }
@@ -15,6 +17,7 @@ export function MapTile({ tile, assetsUrl }: MapTileProps) {
   return (
     <div style={tileStyle}>
       {imageUrl && <img src={imageUrl} />}
+      {children}
     </div>
   )
 }

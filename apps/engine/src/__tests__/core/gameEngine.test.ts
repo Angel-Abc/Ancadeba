@@ -4,7 +4,7 @@ import type { GameData, IGameDataLoader } from '@ancadeba/schemas'
 import { CORE_MESSAGES } from '../../messages/core'
 import { GameEngine } from '../../core/gameEngine'
 import type { IGameDataInitializer } from '../../core/gameDataInitializer'
-import type { IActionExecutor } from '../../core/actionExecutor'
+import type { ILifecycleCoordinator } from '../../core/lifecycleCoordinator'
 import { UIReadySignal } from '../../system/uiReadySignal'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import type {
@@ -32,7 +32,7 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    const actionExecutor: IActionExecutor = {
+    const lifecycleCoordinator: ILifecycleCoordinator = {
       start: vi.fn(),
       stop: vi.fn(),
     }
@@ -81,33 +81,13 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
-    const keyboardListener = {
-      start: vi.fn(),
-      listen: vi.fn(() => () => {}),
-    }
-    const keyboardInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const virtualInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const mapPositionService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor,
-      keyboardListener,
-      keyboardInputService,
-      virtualInputService,
-      mapPositionService
+      lifecycleCoordinator
     )
 
     // Act
@@ -169,7 +149,7 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
-    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
+    expect(lifecycleCoordinator.start).toHaveBeenCalledTimes(1)
   })
 
   it('waits for game data even if UI is ready first', async () => {
@@ -190,7 +170,7 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    const actionExecutor: IActionExecutor = {
+    const lifecycleCoordinator: ILifecycleCoordinator = {
       start: vi.fn(),
       stop: vi.fn(),
     }
@@ -239,33 +219,13 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
-    const keyboardListener = {
-      start: vi.fn(),
-      listen: vi.fn(() => () => {}),
-    }
-    const keyboardInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const virtualInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const mapPositionService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor,
-      keyboardListener,
-      keyboardInputService,
-      virtualInputService,
-      mapPositionService
+      lifecycleCoordinator
     )
 
     // Act
@@ -321,7 +281,7 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
-    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
+    expect(lifecycleCoordinator.start).toHaveBeenCalledTimes(1)
   })
 
   it('waits for game data if UI was ready before start', async () => {
@@ -342,7 +302,7 @@ describe('core/gameEngine', () => {
       subscribeRaw: vi.fn(() => () => undefined),
     }
     const uiReadySignal = new UIReadySignal()
-    const actionExecutor: IActionExecutor = {
+    const lifecycleCoordinator: ILifecycleCoordinator = {
       start: vi.fn(),
       stop: vi.fn(),
     }
@@ -391,33 +351,13 @@ describe('core/gameEngine', () => {
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
     }
-    const keyboardListener = {
-      start: vi.fn(),
-      listen: vi.fn(() => () => {}),
-    }
-    const keyboardInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const virtualInputService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-    const mapPositionService = {
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
     const engine = new GameEngine(
       logger,
       messageBus,
       uiReadySignal,
       gameDataLoader,
       gameDataInitializer,
-      actionExecutor,
-      keyboardListener,
-      keyboardInputService,
-      virtualInputService,
-      mapPositionService
+      lifecycleCoordinator
     )
 
     // Act
@@ -473,6 +413,6 @@ describe('core/gameEngine', () => {
       CORE_MESSAGES.GAME_ENGINE_STARTED,
       undefined
     )
-    expect(actionExecutor.start).toHaveBeenCalledTimes(1)
+    expect(lifecycleCoordinator.start).toHaveBeenCalledTimes(1)
   })
 })
