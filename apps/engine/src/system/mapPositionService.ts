@@ -87,6 +87,7 @@ export class MapPositionService implements IMapPositionService {
   stop(): void {
     if (this.unsubscribe) {
       this.unsubscribe()
+      this.unsubscribe = undefined
     }
   }
 
