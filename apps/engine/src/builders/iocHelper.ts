@@ -97,6 +97,10 @@ import {
   flagConditionEvaluatorDependencies,
 } from '../core/conditionEvaluators/FlagConditionEvaluator'
 import {
+  CanMoveConditionEvaluator,
+  canMoveConditionEvaluatorDependencies,
+} from '../core/conditionEvaluators/CanMoveConditionEvaluator'
+import {
   BrowserAdapter,
   browserAdapterDependencies,
   browserAdapterToken,
@@ -362,6 +366,11 @@ export function registerServices(container: Container): void {
       token: conditionEvaluatorToken,
       useClass: FlagConditionEvaluator,
       deps: flagConditionEvaluatorDependencies,
+    },
+    {
+      token: conditionEvaluatorToken,
+      useClass: CanMoveConditionEvaluator,
+      deps: canMoveConditionEvaluatorDependencies,
     },
     {
       token: conditionResolverToken,

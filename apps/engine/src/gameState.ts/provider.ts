@@ -10,6 +10,7 @@ import {
 export interface IGameStateProvider {
   get activeSceneId(): string
   get activeMapId(): string | null
+  get mapPosition(): { x: number; y: number } | undefined
   get gameTitle(): string
   get inputRanges(): InputRange | undefined
   getFlag(flagName: string): boolean | undefined
@@ -36,6 +37,10 @@ export class GameStateProvider implements IGameStateProvider {
 
   get activeMapId(): string | null {
     return this.gameStateStorage.activeMapId
+  }
+
+  get mapPosition(): { x: number; y: number } | undefined {
+    return this.gameStateStorage.state.mapPosition
   }
 
   get gameTitle(): string {

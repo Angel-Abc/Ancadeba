@@ -7,6 +7,10 @@
     "start-screen.exit-game": "Exit Game",
     "settings.volume-up": "Volume Up",
     "settings.volume-down": "Volume Down",
-    "system.back": "Back"
+    "system.back": "Back",
+    "input.move.up": "Move Up",
+    "input.move.down": "Move Down",
+    "input.move.left": "Move Left",
+    "input.move.right": "Move Right"
   }
 }

@@ -8,6 +8,10 @@
   "initialState": {
     "scene": "start-screen",
     "map": "start-beach",
+    "mapPosition": {
+      "x": 10,
+      "y": 10
+    },
     "flags": {
       "isGameStarted": false
     }

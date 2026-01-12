@@ -1,5 +1,5 @@
 import { InputBarComponent as InputBarComponentData } from '@ancadeba/schemas'
-import { useService } from '@ancadeba/ui'
+import { CSSCustomProperties, useService } from '@ancadeba/ui'
 import { IMessageBus, messageBusToken } from '@ancadeba/utils'
 import {
   conditionResolverToken,
@@ -9,6 +9,10 @@ import {
   IInputConfigProvider,
   inputConfigProviderToken,
 } from '../../../core/inputConfigProvider'
+import {
+  ILanguageProvider,
+  languageProviderToken,
+} from '../../../language/provider'
 import { UI_MESSAGES } from '../../../messages/ui'
 
 interface InputBarComponentProps {
@@ -18,6 +22,7 @@ interface InputBarComponentProps {
 const logName = 'engine/controls/components/InputBar'
 export function InputBarComponent({ component }: InputBarComponentProps) {
   const messageBus = useService<IMessageBus>(messageBusToken)
+  const languageProvider = useService<ILanguageProvider>(languageProviderToken)
   const inputConfigProvider = useService<IInputConfigProvider>(
     inputConfigProviderToken
   )
@@ -26,8 +31,24 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
   )
   const inputRanges = inputConfigProvider.getInputRanges() ?? []
   const resolvedRules = inputConfigProvider.getResolvedInputRules()
-  const inputs: Array<Array<InputInfo | null>> = inputRanges.map((inputRow) =>
-    inputRow.map((input) => {
+  const maxColumns = Math.max(
+    1,
+    inputRanges.reduce(
+      (currentMax, row) => Math.max(currentMax, row.length),
+      0
+    )
+  )
+  const maxRows = Math.max(1, inputRanges.length)
+  const style: CSSCustomProperties = {
+    '--ge-input-bar-columns': maxColumns.toString(),
+    '--ge-input-bar-rows': maxRows.toString(),
+  }
+  const inputs: Array<Array<InputInfo | null>> = inputRanges.map((inputRow) => {
+    const paddedRow = [...inputRow]
+    for (let columnIndex = paddedRow.length; columnIndex < maxColumns; columnIndex += 1) {
+      paddedRow.push(null)
+    }
+    return paddedRow.map((input) => {
       if (!input) {
         return null
       }
@@ -52,7 +73,7 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
         visible,
       }
     })
-  )
+  })
 
   console.debug(
     logName,
@@ -61,7 +82,7 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
   )
 
   return (
-    <div className="input-bar-component">
+    <div className="input-bar-component" style={style}>
       {inputs.flatMap((inputRow, rowIndex) =>
         inputRow.map((input, inputIndex) => {
           const key = `${rowIndex}-${inputIndex}`
@@ -82,8 +103,12 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
                   })
                 }}
               >
-                <div className="input-label">{input.label}</div>
-                <div className="input-caption">{input.caption}</div>
+                <div className="input-label">
+                  {languageProvider.getTranslation(input.label)}
+                </div>
+                <div className="input-caption">
+                  {languageProvider.getTranslation(input.caption)}
+                </div>
               </button>
             </div>
           )

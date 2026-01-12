@@ -23,8 +23,14 @@ describe('core/conditionResolver', () => {
     get activeMapId() {
       return null
     },
+    get mapPosition() {
+      return undefined
+    },
     get gameTitle() {
       return 'Test Game'
+    },
+    get inputRanges() {
+      return undefined
     },
     getFlag: vi.fn(),
   })

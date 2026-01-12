@@ -14,6 +14,12 @@ export const gameSchema = BaseSchema.extend({
   initialState: z.object({
     scene: z.string(),
     map: z.string().optional(),
+    mapPosition: z
+      .object({
+        x: z.number().int(),
+        y: z.number().int(),
+      })
+      .optional(),
     flags: z.record(z.string(), z.boolean()).optional(),
   }),
   scenes: z.array(z.string()),

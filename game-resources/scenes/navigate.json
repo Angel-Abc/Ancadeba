@@ -35,28 +35,28 @@
           "enabled": {
             "type": "can-move-up"
           },
-          "caption": "Move Up"
+          "caption": "input.move.up"
         },
         {
           "virtualInput": "VI_DOWN",
           "enabled": {
             "type": "can-move-down"
           },
-          "caption": "Move Down"
+          "caption": "input.move.down"
         },
         {
           "virtualInput": "VI_LEFT",
           "enabled": {
             "type": "can-move-left"
           },
-          "caption": "Move Left"
+          "caption": "input.move.left"
         },
         {
           "virtualInput": "VI_RIGHT",
           "enabled": {
             "type": "can-move-right"
           },
-          "caption": "Move Right"
+          "caption": "input.move.right"
         }
       ]
     },

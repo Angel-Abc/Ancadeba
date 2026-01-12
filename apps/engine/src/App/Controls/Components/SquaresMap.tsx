@@ -25,6 +25,9 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
   const [activeMapId, _setActiveMapId] = useState<string | null>(
     gameStateProvider.activeMapId
   )
+  const [mapPosition, _setMapPosition] = useState(
+    gameStateProvider.mapPosition
+  )
 
   const mapData = useMemo(() => {
     if (!activeMapId) return null
@@ -34,22 +37,20 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
   if (!activeMapId || !mapData) {
     return <div>No active map</div>
   }
+  if (!mapPosition) {
+    return <div>No map position</div>
+  }
 
   const deltaX = Math.floor(component.viewport.width / 2)
   const deltaY = Math.floor(component.viewport.height / 2)
-
-  const position = {
-    x: 10,
-    y: 10,
-  }
 
   const style: CSSCustomProperties = {
     '--ge-squares-map-viewport-width': `${component.viewport.width}`,
     '--ge-squares-map-viewport-height': `${component.viewport.height}`,
     '--ge-map-width': `${mapData.width}`,
     '--ge-map-height': `${mapData.height}`,
-    '--ge-map-position-x': (position.x - deltaX).toString(),
-    '--ge-map-position-y': (position.y - deltaY).toString(),
+    '--ge-map-position-x': (mapPosition.x - deltaX).toString(),
+    '--ge-map-position-y': (mapPosition.y - deltaY).toString(),
   }
 
   return (
