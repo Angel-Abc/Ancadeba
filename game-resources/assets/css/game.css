@@ -16,6 +16,7 @@ button:hover {
 button:disabled {
   background: linear-gradient(to bottom right, #101010, #202020);
   color: #606060;
+  cursor: inherit;
 }
 
 .background-component {

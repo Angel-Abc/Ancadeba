@@ -5,7 +5,7 @@ export const inputSchema = z.object({
   label: z.string(),
 })
 
-export const inputRangeSchema = z.array(z.array(inputSchema))
+export const inputRangeSchema = z.array(z.array(inputSchema.nullable()))
 
 export type Input = z.infer<typeof inputSchema>
 export type InputRange = z.infer<typeof inputRangeSchema>

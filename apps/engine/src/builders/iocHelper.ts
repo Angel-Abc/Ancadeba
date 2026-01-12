@@ -86,6 +86,11 @@ import {
   ConditionResolver,
   conditionResolverToken,
 } from '../core/conditionResolver'
+import {
+  InputConfigProvider,
+  inputConfigProviderDependencies,
+  inputConfigProviderToken,
+} from '../core/inputConfigProvider'
 import { conditionEvaluatorToken } from '../core/conditionEvaluators/types'
 import {
   FlagConditionEvaluator,
@@ -365,6 +370,11 @@ export function registerServices(container: Container): void {
         const evaluators = container.resolveAll(conditionEvaluatorToken)
         return new ConditionResolver(logger, evaluators)
       },
+    },
+    {
+      token: inputConfigProviderToken,
+      useClass: InputConfigProvider,
+      deps: inputConfigProviderDependencies,
     },
     {
       token: browserAdapterToken,

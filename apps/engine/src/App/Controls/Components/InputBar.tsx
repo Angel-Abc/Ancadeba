@@ -1,7 +1,15 @@
-// In the future we might add a more configurable input bar panel here
-// For now, it's just a placeholder component
-
 import { InputBarComponent as InputBarComponentData } from '@ancadeba/schemas'
+import { useService } from '@ancadeba/ui'
+import { IMessageBus, messageBusToken } from '@ancadeba/utils'
+import {
+  conditionResolverToken,
+  IConditionResolver,
+} from '../../../core/conditionResolver'
+import {
+  IInputConfigProvider,
+  inputConfigProviderToken,
+} from '../../../core/inputConfigProvider'
+import { UI_MESSAGES } from '../../../messages/ui'
 
 interface InputBarComponentProps {
   component: InputBarComponentData
@@ -9,8 +17,42 @@ interface InputBarComponentProps {
 
 const logName = 'engine/controls/components/InputBar'
 export function InputBarComponent({ component }: InputBarComponentProps) {
-  // TODO: Query an input service to get the current inputs, using the component row and column counts
-  const inputs = dummyInputs
+  const messageBus = useService<IMessageBus>(messageBusToken)
+  const inputConfigProvider = useService<IInputConfigProvider>(
+    inputConfigProviderToken
+  )
+  const conditionResolver = useService<IConditionResolver>(
+    conditionResolverToken
+  )
+  const inputRanges = inputConfigProvider.getInputRanges() ?? []
+  const resolvedRules = inputConfigProvider.getResolvedInputRules()
+  const inputs: Array<Array<InputInfo | null>> = inputRanges.map((inputRow) =>
+    inputRow.map((input) => {
+      if (!input) {
+        return null
+      }
+      const rule = resolvedRules.get(input.virtualInput)
+      const visible = rule
+        ? rule.visible
+          ? conditionResolver.evaluateCondition(rule.visible)
+          : true
+        : false
+      const enabled = rule
+        ? rule.enabled
+          ? conditionResolver.evaluateCondition(rule.enabled)
+          : true
+        : false
+      const caption = rule?.caption ?? input.label
+
+      return {
+        virtualInput: input.virtualInput,
+        label: input.label,
+        caption,
+        enabled,
+        visible,
+      }
+    })
+  )
 
   console.debug(
     logName,
@@ -23,12 +65,23 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
       {inputs.flatMap((inputRow, rowIndex) =>
         inputRow.map((input, inputIndex) => {
           const key = `${rowIndex}-${inputIndex}`
-          if (input.virtualKey === '') {
+          if (!input || !input.visible) {
             return <div key={key} className="input-cell" />
           }
           return (
             <div key={key} className="input-cell">
-              <button disabled={!input.enabled}>
+              <button
+                disabled={!input.enabled}
+                onClick={() => {
+                  if (!input.enabled) {
+                    return
+                  }
+                  messageBus.publish(UI_MESSAGES.VIRTUAL_INPUT_PRESSED, {
+                    virtualInput: input.virtualInput,
+                    label: input.label,
+                  })
+                }}
+              >
                 <div className="input-label">{input.label}</div>
                 <div className="input-caption">{input.caption}</div>
               </button>
@@ -41,55 +94,9 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
 }
 
 interface InputInfo {
-  virtualKey: string
+  virtualInput: string
   label: string
   caption: string
-  enabled?: boolean
+  enabled: boolean
+  visible: boolean
 }
-
-const nullInput: InputInfo = {
-  virtualKey: '',
-  label: '',
-  caption: '',
-}
-
-const dummyInputs: InputInfo[][] = [
-  [nullInput, nullInput, nullInput, nullInput, nullInput, nullInput],
-  [
-    nullInput,
-    {
-      virtualKey: 'VI_UP',
-      label: 'W',
-      caption: 'Move Up',
-      enabled: true,
-    },
-    nullInput,
-    nullInput,
-    nullInput,
-    nullInput,
-  ],
-  [
-    {
-      virtualKey: 'VI_LEFT',
-      label: 'A',
-      caption: 'Move Left',
-      enabled: true,
-    },
-    {
-      virtualKey: 'VI_DOWN',
-      label: 'S',
-      caption: 'Move Down',
-      enabled: true,
-    },
-    {
-      virtualKey: 'VI_RIGHT',
-      label: 'D',
-      caption: 'Move Right',
-      enabled: false,
-    },
-    nullInput,
-    nullInput,
-    nullInput,
-  ],
-  [nullInput, nullInput, nullInput, nullInput, nullInput, nullInput],
-]
