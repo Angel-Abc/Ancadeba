@@ -26,6 +26,10 @@ import {
   IVirtualInputService,
   virtualInputServiceToken,
 } from '../system/virtualInputService'
+import {
+  IMapPositionService,
+  mapPositionServiceToken,
+} from '../system/mapPositionService'
 
 export interface IGameEngine {
   start(): Promise<void>
@@ -43,6 +47,7 @@ export const gameEngineDependencies: Token<unknown>[] = [
   keyboardListenerToken,
   keyboardInputServiceToken,
   virtualInputServiceToken,
+  mapPositionServiceToken,
 ]
 export class GameEngine implements IGameEngine {
   constructor(
@@ -54,7 +59,8 @@ export class GameEngine implements IGameEngine {
     private readonly actionExecutor: IActionExecutor,
     private readonly keyboardListener: IKeyboardListener,
     private readonly keyboardInputService: IKeyboardInputService,
-    private readonly virtualInputService: IVirtualInputService
+    private readonly virtualInputService: IVirtualInputService,
+    private readonly mapPositionService: IMapPositionService
   ) {}
 
   async start(): Promise<void> {
@@ -67,6 +73,7 @@ export class GameEngine implements IGameEngine {
     this.keyboardListener.start()
     this.keyboardInputService.start()
     this.virtualInputService.start()
+    this.mapPositionService.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)
   }
 }

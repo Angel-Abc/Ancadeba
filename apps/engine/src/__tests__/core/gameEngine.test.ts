@@ -92,6 +92,10 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
       stop: vi.fn(),
     }
+    const mapPositionService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
@@ -101,7 +105,8 @@ describe('core/gameEngine', () => {
       actionExecutor,
       keyboardListener,
       keyboardInputService,
-      virtualInputService
+      virtualInputService,
+      mapPositionService
     )
 
     // Act
@@ -244,6 +249,10 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
       stop: vi.fn(),
     }
+    const mapPositionService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
@@ -253,7 +262,8 @@ describe('core/gameEngine', () => {
       actionExecutor,
       keyboardListener,
       keyboardInputService,
-      virtualInputService
+      virtualInputService,
+      mapPositionService
     )
 
     // Act
@@ -390,6 +400,10 @@ describe('core/gameEngine', () => {
       start: vi.fn(),
       stop: vi.fn(),
     }
+    const mapPositionService = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
     const engine = new GameEngine(
       logger,
       messageBus,
@@ -399,7 +413,8 @@ describe('core/gameEngine', () => {
       actionExecutor,
       keyboardListener,
       keyboardInputService,
-      virtualInputService
+      virtualInputService,
+      mapPositionService
     )
 
     // Act

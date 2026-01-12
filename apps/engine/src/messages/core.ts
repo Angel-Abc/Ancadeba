@@ -5,6 +5,7 @@ export const CORE_MESSAGES = {
   GAME_ENGINE_STOPPED: 'CORE/GAME_ENGINE_STOPPED',
   EXECUTE_ACTION: 'CORE/EXECUTE_ACTION',
   SCENE_CHANGED: 'CORE/SCENE_CHANGED',
+  MAP_POSITION_CHANGED: 'CORE/MAP_POSITION_CHANGED',
 } as const
 
 export type CoreMessage = (typeof CORE_MESSAGES)[keyof typeof CORE_MESSAGES]
@@ -14,4 +15,10 @@ export type CoreMessagePayloads = {
   [CORE_MESSAGES.GAME_ENGINE_STOPPED]: undefined
   [CORE_MESSAGES.EXECUTE_ACTION]: { action: Action }
   [CORE_MESSAGES.SCENE_CHANGED]: { sceneId: string }
+  [CORE_MESSAGES.MAP_POSITION_CHANGED]: {
+    mapPosition: {
+      x: number
+      y: number
+    }
+  }
 }

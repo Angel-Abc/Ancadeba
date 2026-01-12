@@ -38,7 +38,7 @@
       "id": "forest",
       "description": "tile.outdoor.forest",
       "color": "green",
-      "walkable": false
+      "walkable": true
     }
   ]
 }

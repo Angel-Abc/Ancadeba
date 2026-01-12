@@ -83,12 +83,6 @@ export class CanMoveConditionEvaluator implements IConditionEvaluator {
       targetX >= mapData.width ||
       targetY >= mapData.height
     ) {
-      this.logger.warn(
-        logName,
-        'Target position out of bounds: {0}, {1}',
-        targetX,
-        targetY
-      )
       return false
     }
 

@@ -196,6 +196,11 @@ import {
   virtualInputServiceDependencies,
   virtualInputServiceToken,
 } from '../system/virtualInputService'
+import {
+  MapPositionService,
+  mapPositionServiceDependencies,
+  mapPositionServiceToken,
+} from '../system/mapPositionService'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -452,6 +457,12 @@ export function registerServices(container: Container): void {
       token: virtualInputServiceToken,
       useClass: VirtualInputService,
       deps: virtualInputServiceDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: mapPositionServiceToken,
+      useClass: MapPositionService,
+      deps: mapPositionServiceDependencies,
       scope: 'singleton',
     },
   ])

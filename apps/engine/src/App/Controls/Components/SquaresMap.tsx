@@ -4,11 +4,16 @@ import {
   gameStateProviderToken,
   IGameStateProvider,
 } from '../../../gameState.ts/provider'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   IResourceDataProvider,
   resourceDataProviderToken,
 } from '../../../resourceData/provider'
+import {
+  engineMessageBusToken,
+  IEngineMessageBus,
+} from '../../../system/engineMessageBus'
+import { CORE_MESSAGES } from '../../../messages/core'
 import { MapTile } from './MapTile'
 
 interface SquaresMapComponentProps {
@@ -19,15 +24,30 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
   const gameStateProvider = useService<IGameStateProvider>(
     gameStateProviderToken
   )
+  const engineMessageBus = useService<IEngineMessageBus>(engineMessageBusToken)
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )
-  const [activeMapId, _setActiveMapId] = useState<string | null>(
+  const [activeMapId, setActiveMapId] = useState<string | null>(
     gameStateProvider.activeMapId
   )
-  const [mapPosition, _setMapPosition] = useState(
-    gameStateProvider.mapPosition
-  )
+  const [mapPosition, setMapPosition] = useState(gameStateProvider.mapPosition)
+
+  useEffect(() => {
+    return engineMessageBus.subscribe(CORE_MESSAGES.SCENE_CHANGED, () => {
+      setActiveMapId(gameStateProvider.activeMapId)
+      setMapPosition(gameStateProvider.mapPosition)
+    })
+  }, [engineMessageBus, gameStateProvider])
+
+  useEffect(() => {
+    return engineMessageBus.subscribe(
+      CORE_MESSAGES.MAP_POSITION_CHANGED,
+      (payload) => {
+        setMapPosition(payload.mapPosition)
+      }
+    )
+  }, [engineMessageBus])
 
   const mapData = useMemo(() => {
     if (!activeMapId) return null

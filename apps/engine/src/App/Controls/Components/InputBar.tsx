@@ -1,6 +1,7 @@
 import { InputBarComponent as InputBarComponentData } from '@ancadeba/schemas'
 import { CSSCustomProperties, useService } from '@ancadeba/ui'
 import { IMessageBus, messageBusToken } from '@ancadeba/utils'
+import { useEffect, useState } from 'react'
 import {
   conditionResolverToken,
   IConditionResolver,
@@ -13,6 +14,11 @@ import {
   ILanguageProvider,
   languageProviderToken,
 } from '../../../language/provider'
+import {
+  engineMessageBusToken,
+  IEngineMessageBus,
+} from '../../../system/engineMessageBus'
+import { CORE_MESSAGES } from '../../../messages/core'
 import { UI_MESSAGES } from '../../../messages/ui'
 
 interface InputBarComponentProps {
@@ -22,6 +28,7 @@ interface InputBarComponentProps {
 const logName = 'engine/controls/components/InputBar'
 export function InputBarComponent({ component }: InputBarComponentProps) {
   const messageBus = useService<IMessageBus>(messageBusToken)
+  const engineMessageBus = useService<IEngineMessageBus>(engineMessageBusToken)
   const languageProvider = useService<ILanguageProvider>(languageProviderToken)
   const inputConfigProvider = useService<IInputConfigProvider>(
     inputConfigProviderToken
@@ -29,6 +36,15 @@ export function InputBarComponent({ component }: InputBarComponentProps) {
   const conditionResolver = useService<IConditionResolver>(
     conditionResolverToken
   )
+  const [, setRenderToken] = useState(0)
+  useEffect(() => {
+    return engineMessageBus.subscribe(
+      CORE_MESSAGES.MAP_POSITION_CHANGED,
+      () => {
+        setRenderToken((value) => value + 1)
+      }
+    )
+  }, [engineMessageBus])
   const inputRanges = inputConfigProvider.getInputRanges() ?? []
   const resolvedRules = inputConfigProvider.getResolvedInputRules()
   const maxColumns = Math.max(
