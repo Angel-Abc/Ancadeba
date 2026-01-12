@@ -34,6 +34,7 @@ describe('core/gameEngine', () => {
     const uiReadySignal = new UIReadySignal()
     const actionExecutor: IActionExecutor = {
       start: vi.fn(),
+      stop: vi.fn(),
     }
     let storedState: GameState = {
       activeSceneId: '',
@@ -191,6 +192,7 @@ describe('core/gameEngine', () => {
     const uiReadySignal = new UIReadySignal()
     const actionExecutor: IActionExecutor = {
       start: vi.fn(),
+      stop: vi.fn(),
     }
     let storedState: GameState = {
       activeSceneId: '',
@@ -342,6 +344,7 @@ describe('core/gameEngine', () => {
     const uiReadySignal = new UIReadySignal()
     const actionExecutor: IActionExecutor = {
       start: vi.fn(),
+      stop: vi.fn(),
     }
     let storedState: GameState = {
       activeSceneId: '',

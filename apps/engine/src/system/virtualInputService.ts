@@ -28,6 +28,7 @@ export class VirtualInputService implements IVirtualInputService {
   ) {}
 
   start(): void {
+    this.stop()
     this.unsubscribe = this.messageBus.subscribe(
       UI_MESSAGES.VIRTUAL_KEY_PRESSED,
       (payload) => {
@@ -49,6 +50,7 @@ export class VirtualInputService implements IVirtualInputService {
   stop(): void {
     if (this.unsubscribe) {
       this.unsubscribe()
+      this.unsubscribe = undefined
     }
   }
 }

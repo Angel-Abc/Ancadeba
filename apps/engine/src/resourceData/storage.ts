@@ -1,31 +1,31 @@
 // Re-export interfaces and types from individual storage files
-export type { ISceneDataStorage } from './SceneDataStorage'
-export { sceneDataStorageToken } from './SceneDataStorage'
+export type { ISceneDataStorage } from './sceneDataStorage'
+export { sceneDataStorageToken } from './sceneDataStorage'
 
-export type { ITileDataStorage } from './TileDataStorage'
-export { tileDataStorageToken } from './TileDataStorage'
+export type { ITileDataStorage } from './tileDataStorage'
+export { tileDataStorageToken } from './tileDataStorage'
 
-export type { IMapDataStorage } from './MapDataStorage'
-export { mapDataStorageToken } from './MapDataStorage'
+export type { IMapDataStorage } from './mapDataStorage'
+export { mapDataStorageToken } from './mapDataStorage'
 
-export type { ICssFileStorage, ILanguageFileStorage } from './AssetFileStorage'
+export type { ICssFileStorage, ILanguageFileStorage } from './assetFileStorage'
 export {
   cssFileStorageToken,
   languageFileStorageToken,
-} from './AssetFileStorage'
+} from './assetFileStorage'
 
 export type {
   IVirtualKeyStorage,
   IVirtualInputStorage,
   VirtualInputMapping,
-} from './VirtualInputConfigStorage'
+} from './virtualInputConfigStorage'
 export {
   virtualKeyStorageToken,
   virtualInputStorageToken,
-} from './VirtualInputConfigStorage'
+} from './virtualInputConfigStorage'
 
-export type { IResourceRootPath } from './ResourceRootPathProvider'
-export { resourceRootPathToken } from './ResourceRootPathProvider'
+export type { IResourceRootPath } from './resourceRootPathProvider'
+export { resourceRootPathToken } from './resourceRootPathProvider'
 
-export type { IResourceDataLogger } from './ResourceDataLogger'
-export { resourceDataLoggerToken } from './ResourceDataLogger'
+export type { IResourceDataLogger } from './resourceDataLogger'
+export { resourceDataLoggerToken } from './resourceDataLogger'

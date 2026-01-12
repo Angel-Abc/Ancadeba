@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
 import type { MapData } from '../../resourceData/types'
-import { MapDataStorage } from '../../resourceData/MapDataStorage'
+import { MapDataStorage } from '../../resourceData/mapDataStorage'
 
 describe('resourceData/MapDataStorage', () => {
   const createMockLogger = (): ILogger => ({

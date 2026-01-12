@@ -24,19 +24,40 @@ if (!rootContainer) {
 
 const root = createRoot(rootContainer)
 
-const startUp = async () => {
+const startUp = async (): Promise<IGameEngine | null> => {
   try {
     const engine = container.resolve<IGameEngine>(gameEngineToken)
     await engine.start()
+    return engine
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.fatal(logName, 'Failed to start the engine: {0}', message)
+    return null
   }
 }
 
 const Root = () => {
   React.useEffect(() => {
-    startUp()
+    let engine: IGameEngine | null = null
+    let isMounted = true
+    const start = async () => {
+      const resolvedEngine = await startUp()
+      if (!resolvedEngine) {
+        return
+      }
+      if (!isMounted) {
+        resolvedEngine.stop()
+        return
+      }
+      engine = resolvedEngine
+    }
+    start()
+    return () => {
+      isMounted = false
+      if (engine) {
+        engine.stop()
+      }
+    }
   }, [])
 
   return (

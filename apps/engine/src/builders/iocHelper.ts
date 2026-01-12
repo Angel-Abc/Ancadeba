@@ -49,39 +49,39 @@ import {
   SceneDataStorage,
   sceneDataStorageDependencies,
   sceneDataStorageToken,
-} from '../resourceData/SceneDataStorage'
+} from '../resourceData/sceneDataStorage'
 import {
   TileDataStorage,
   tileDataStorageDependencies,
   tileDataStorageToken,
-} from '../resourceData/TileDataStorage'
+} from '../resourceData/tileDataStorage'
 import {
   MapDataStorage,
   mapDataStorageDependencies,
   mapDataStorageToken,
-} from '../resourceData/MapDataStorage'
+} from '../resourceData/mapDataStorage'
 import {
   AssetFileStorage,
   assetFileStorageDependencies,
   cssFileStorageToken,
   languageFileStorageToken,
-} from '../resourceData/AssetFileStorage'
+} from '../resourceData/assetFileStorage'
 import {
   VirtualInputConfigStorage,
   virtualInputConfigStorageDependencies,
   virtualKeyStorageToken,
   virtualInputStorageToken,
-} from '../resourceData/VirtualInputConfigStorage'
+} from '../resourceData/virtualInputConfigStorage'
 import {
   ResourceRootPathProvider,
   resourceRootPathProviderDependencies,
   resourceRootPathToken,
-} from '../resourceData/ResourceRootPathProvider'
+} from '../resourceData/resourceRootPathProvider'
 import {
   ResourceDataLogger,
   resourceDataLoggerDependencies,
   resourceDataLoggerToken,
-} from '../resourceData/ResourceDataLogger'
+} from '../resourceData/resourceDataLogger'
 import {
   ConditionResolver,
   conditionResolverToken,

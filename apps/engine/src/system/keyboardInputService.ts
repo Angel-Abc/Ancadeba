@@ -32,6 +32,7 @@ export class KeyboardInputService implements IKeyboardInputService {
   ) {}
 
   start(): void {
+    this.stop()
     this.unsubscribe = this.keyboardListener.listen((event) => {
       const mapping = this.virtualKeyMapper.findMapping(event)
 
@@ -46,6 +47,7 @@ export class KeyboardInputService implements IKeyboardInputService {
   stop(): void {
     if (this.unsubscribe) {
       this.unsubscribe()
+      this.unsubscribe = undefined
     }
   }
 }

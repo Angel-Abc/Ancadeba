@@ -1,8 +1,8 @@
 import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
-import { ISceneDataStorage, sceneDataStorageToken } from './SceneDataStorage'
-import { ITileDataStorage, tileDataStorageToken } from './TileDataStorage'
-import { IMapDataStorage, mapDataStorageToken } from './MapDataStorage'
-import { ICssFileStorage, cssFileStorageToken } from './AssetFileStorage'
+import { ISceneDataStorage, sceneDataStorageToken } from './sceneDataStorage'
+import { ITileDataStorage, tileDataStorageToken } from './tileDataStorage'
+import { IMapDataStorage, mapDataStorageToken } from './mapDataStorage'
+import { ICssFileStorage, cssFileStorageToken } from './assetFileStorage'
 
 export interface IResourceDataLogger {
   logResourceData(): void

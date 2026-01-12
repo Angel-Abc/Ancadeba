@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
 import type { Tile } from '@ancadeba/schemas'
-import { TileDataStorage } from '../../resourceData/TileDataStorage'
+import { TileDataStorage } from '../../resourceData/tileDataStorage'
 
 describe('resourceData/TileDataStorage', () => {
   const createMockLogger = (): ILogger => ({

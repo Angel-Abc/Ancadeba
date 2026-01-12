@@ -33,6 +33,7 @@ import {
 
 export interface IGameEngine {
   start(): Promise<void>
+  stop(): void
 }
 
 const logName = 'engine/core/GameEngine'
@@ -75,5 +76,12 @@ export class GameEngine implements IGameEngine {
     this.virtualInputService.start()
     this.mapPositionService.start()
     this.messageBus.publish(CORE_MESSAGES.GAME_ENGINE_STARTED, undefined)
+  }
+
+  stop(): void {
+    this.actionExecutor.stop()
+    this.keyboardInputService.stop()
+    this.virtualInputService.stop()
+    this.mapPositionService.stop()
   }
 }

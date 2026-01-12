@@ -53,6 +53,7 @@ export class MapPositionService implements IMapPositionService {
   ) {}
 
   start(): void {
+    this.stop()
     this.unsubscribe = this.messageBus.subscribe(
       UI_MESSAGES.VIRTUAL_INPUT_PRESSED,
       (payload) => {
@@ -60,16 +61,16 @@ export class MapPositionService implements IMapPositionService {
         if (!rule) {
           return
         }
+        const currentPosition = this.gameStateReader.state.mapPosition
+        if (!currentPosition) {
+          this.logger.warn(logName, 'Map position is not defined')
+          return
+        }
         if (
           !this.conditionResolver.evaluateCondition({
             type: rule.conditionType,
           })
         ) {
-          return
-        }
-        const currentPosition = this.gameStateReader.state.mapPosition
-        if (!currentPosition) {
-          this.logger.warn(logName, 'Map position is not defined')
           return
         }
         const nextPosition = {
