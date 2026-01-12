@@ -60,7 +60,11 @@ export class MapPositionService implements IMapPositionService {
         if (!rule) {
           return
         }
-        if (!this.conditionResolver.evaluateCondition({ type: rule.conditionType })) {
+        if (
+          !this.conditionResolver.evaluateCondition({
+            type: rule.conditionType,
+          })
+        ) {
           return
         }
         const currentPosition = this.gameStateReader.state.mapPosition
@@ -88,6 +92,7 @@ export class MapPositionService implements IMapPositionService {
 
   private getMoveRule(virtualInput: string): MoveRule | null {
     // TODO: Consider loading move rules from data instead of hard-coded inputs
+    // NOTE: This will become a thing when conditions can be more complex than simple checks
     switch (virtualInput) {
       case 'VI_UP':
         return { conditionType: 'can-move-up', offset: { x: 0, y: -1 } }
