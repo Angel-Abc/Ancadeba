@@ -35,7 +35,13 @@ describe('gameState/manager', () => {
       flags: {},
       sceneStack: ['scene-1'],
     }
-    const manager = new GameStateManager(logger, messageBus, storage)
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage
+    )
 
     // Act
     manager.switchScene('scene-2')
@@ -67,7 +73,13 @@ describe('gameState/manager', () => {
       sceneStack: ['scene-1'],
     }
     const updateSpy = vi.spyOn(storage, 'update')
-    const manager = new GameStateManager(logger, messageBus, storage)
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage
+    )
 
     // Act
     manager.goBack()
@@ -93,7 +105,13 @@ describe('gameState/manager', () => {
       flags: {},
       sceneStack: ['scene-1', 'scene-2', 'scene-3'],
     }
-    const manager = new GameStateManager(logger, messageBus, storage)
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage
+    )
 
     // Act
     manager.goBack()
@@ -118,7 +136,13 @@ describe('gameState/manager', () => {
     const logger = createLogger()
     const messageBus = createMessageBus()
     const storage = new GameStateStorage()
-    const manager = new GameStateManager(logger, messageBus, storage)
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage
+    )
 
     // Act
     manager.setFlag('flag-1', true)

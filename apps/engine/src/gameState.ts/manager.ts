@@ -33,14 +33,14 @@ export class GameStateManager implements IGameStateManager {
   constructor(
     private readonly logger: ILogger,
     private readonly messageBus: IEngineMessageBus,
-    private readonly gameStateStorage: IGameStateReader &
-      IGameStateMutator &
-      IFlagStorage
+    private readonly gameStateReader: IGameStateReader,
+    private readonly gameStateMutator: IGameStateMutator,
+    private readonly flagStorage: IFlagStorage
   ) {}
 
   switchScene(sceneId: string): void {
-    const sceneStack = this.gameStateStorage.state.sceneStack
-    this.gameStateStorage.update({
+    const sceneStack = this.gameStateReader.state.sceneStack
+    this.gameStateMutator.update({
       activeSceneId: sceneId,
       sceneStack: [...sceneStack, sceneId],
     })
@@ -48,7 +48,7 @@ export class GameStateManager implements IGameStateManager {
   }
 
   goBack(): void {
-    const sceneStack = this.gameStateStorage.state.sceneStack
+    const sceneStack = this.gameStateReader.state.sceneStack
     if (sceneStack.length <= 1) {
       this.logger.warn(logName, 'Cannot go back, scene stack is empty')
       return
@@ -59,7 +59,7 @@ export class GameStateManager implements IGameStateManager {
       this.logger.warn(logName, 'Cannot go back, scene stack is empty')
       return
     }
-    this.gameStateStorage.update({
+    this.gameStateMutator.update({
       activeSceneId: previousSceneId,
       sceneStack: newSceneStack,
     })
@@ -69,6 +69,6 @@ export class GameStateManager implements IGameStateManager {
   }
 
   setFlag(flagName: string, value: boolean): void {
-    this.gameStateStorage.setFlag(flagName, value)
+    this.flagStorage.setFlag(flagName, value)
   }
 }
