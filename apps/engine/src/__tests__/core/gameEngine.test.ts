@@ -415,4 +415,48 @@ describe('core/gameEngine', () => {
     )
     expect(lifecycleCoordinator.start).toHaveBeenCalledTimes(1)
   })
+
+  it('calls lifecycleCoordinator.stop on stop', () => {
+    // Arrange
+    const logger: ILogger = {
+      debug: vi.fn(() => ''),
+      info: vi.fn(() => ''),
+      warn: vi.fn(() => ''),
+      error: vi.fn(() => ''),
+      fatal: vi.fn(() => {
+        throw new Error('fatal')
+      }),
+    }
+    const messageBus: IEngineMessageBus = {
+      publish: vi.fn(),
+      publishRaw: vi.fn(),
+      subscribe: vi.fn(() => () => undefined),
+      subscribeRaw: vi.fn(() => () => undefined),
+    }
+    const uiReadySignal = new UIReadySignal()
+    const lifecycleCoordinator: ILifecycleCoordinator = {
+      start: vi.fn(),
+      stop: vi.fn(),
+    }
+    const gameDataInitializer: IGameDataInitializer = {
+      initialize: vi.fn(),
+    }
+    const gameDataLoader: IGameDataLoader = {
+      loadGameData: vi.fn(),
+    }
+    const engine = new GameEngine(
+      logger,
+      messageBus,
+      uiReadySignal,
+      gameDataLoader,
+      gameDataInitializer,
+      lifecycleCoordinator
+    )
+
+    // Act
+    engine.stop()
+
+    // Assert
+    expect(lifecycleCoordinator.stop).toHaveBeenCalledTimes(1)
+  })
 })

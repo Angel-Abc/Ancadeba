@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
 import type { IConditionResolver } from '../../core/conditionResolver'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
+import type { IWorld } from '../../ecs/types'
 import { UI_MESSAGES } from '../../messages/ui'
 import {
   COMPONENT_KEYS,
@@ -199,6 +200,47 @@ describe('ecs/systems/movementSystem', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       'engine/ecs/systems/MovementSystem',
       'Player entity not found'
+    )
+  })
+
+  it('logs when player position is missing', () => {
+    // Arrange
+    let handler:
+      | ((payload: { virtualInput: string; label: string }) => void)
+      | undefined
+    const messageBus: IEngineMessageBus = {
+      publish: vi.fn(),
+      publishRaw: vi.fn(),
+      subscribe: vi.fn((_message, callback) => {
+        handler = callback
+        return () => undefined
+      }),
+      subscribeRaw: vi.fn(),
+    }
+    const conditionResolver: IConditionResolver = {
+      evaluateCondition: vi.fn().mockReturnValue(true),
+    }
+    const logger = createLogger()
+    const world: IWorld = {
+      createEntity: vi.fn(() => 1),
+      destroyEntity: vi.fn(),
+      hasEntity: vi.fn(() => true),
+      setComponent: vi.fn(),
+      removeComponent: vi.fn(),
+      getComponent: vi.fn().mockReturnValue(undefined),
+      getEntitiesWith: vi.fn().mockReturnValue([1]),
+      subscribe: vi.fn(() => () => undefined),
+    }
+    const system = new MovementSystem(logger, messageBus, conditionResolver, world)
+
+    // Act
+    system.start()
+    handler?.({ virtualInput: 'VI_DOWN', label: 'Down' })
+
+    // Assert
+    expect(logger.warn).toHaveBeenCalledWith(
+      'engine/ecs/systems/MovementSystem',
+      'Player position component is missing'
     )
   })
 

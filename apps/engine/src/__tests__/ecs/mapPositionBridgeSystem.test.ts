@@ -88,6 +88,74 @@ describe('ecs/systems/mapPositionBridgeSystem', () => {
     expect(position).toEqual({ x: 1, y: 2 })
   })
 
+  it('logs warning when map position is missing', () => {
+    // Arrange
+    const state = createGameState()
+    const gameStateReader = createGameStateReader(state)
+    const gameStateMutator = createGameStateMutator()
+    const messageBus: IEngineMessageBus = {
+      publish: vi.fn(),
+      publishRaw: vi.fn(),
+      subscribe: vi.fn(),
+      subscribeRaw: vi.fn(),
+    }
+    const logger = createLogger()
+    const world = new World(new WorldEventBus())
+    const system = new MapPositionBridgeSystem(
+      logger,
+      messageBus,
+      gameStateReader,
+      gameStateMutator,
+      world
+    )
+
+    // Act
+    system.start()
+
+    // Assert
+    expect(logger.warn).toHaveBeenCalledWith(
+      'engine/ecs/systems/MapPositionBridgeSystem',
+      'Map position is not defined'
+    )
+    expect(world.getEntitiesWith(COMPONENT_KEYS.player)).toEqual([])
+  })
+
+  it('sets player position when player entity exists without one', () => {
+    // Arrange
+    const state = createGameState({ mapPosition: { x: 4, y: 7 } })
+    const gameStateReader = createGameStateReader(state)
+    const gameStateMutator = createGameStateMutator()
+    const messageBus: IEngineMessageBus = {
+      publish: vi.fn(),
+      publishRaw: vi.fn(),
+      subscribe: vi.fn(),
+      subscribeRaw: vi.fn(),
+    }
+    const world = new World(new WorldEventBus())
+    const entityId = world.createEntity()
+    world.setComponent(entityId, COMPONENT_KEYS.player, createPlayerTag())
+    const system = new MapPositionBridgeSystem(
+      createLogger(),
+      messageBus,
+      gameStateReader,
+      gameStateMutator,
+      world
+    )
+
+    // Act
+    system.start()
+
+    // Assert
+    const playerEntities = world.getEntitiesWith(COMPONENT_KEYS.player)
+    expect(playerEntities).toHaveLength(1)
+    expect(playerEntities[0]).toBe(entityId)
+    const position = world.getComponent<PositionComponent>(
+      entityId,
+      COMPONENT_KEYS.position
+    )
+    expect(position).toEqual({ x: 4, y: 7 })
+  })
+
   it('updates game state and publishes when player position changes', () => {
     // Arrange
     const state = createGameState({ mapPosition: { x: 0, y: 0 } })
