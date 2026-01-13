@@ -1,0 +1,13 @@
+{
+  "id": "health-potion",
+  "name": "item.health-potion.name",
+  "description": "item.health-potion.description",
+  "type": "consumable",
+  "stackable": true,
+  "maxStack": 5,
+  "weight": 0.5,
+  "image": "items/health-potion.png",
+  "properties": {
+    "healAmount": 50
+  }
+}

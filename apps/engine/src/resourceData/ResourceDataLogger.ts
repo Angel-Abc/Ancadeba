@@ -2,6 +2,7 @@ import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
 import { ISceneDataStorage, sceneDataStorageToken } from './sceneDataStorage'
 import { ITileDataStorage, tileDataStorageToken } from './tileDataStorage'
 import { IMapDataStorage, mapDataStorageToken } from './mapDataStorage'
+import { IItemDataStorage, itemDataStorageToken } from './itemDataStorage'
 import { ICssFileStorage, cssFileStorageToken } from './assetFileStorage'
 
 export interface IResourceDataLogger {
@@ -15,6 +16,7 @@ export const resourceDataLoggerDependencies: Token<unknown>[] = [
   sceneDataStorageToken,
   tileDataStorageToken,
   mapDataStorageToken,
+  itemDataStorageToken,
   cssFileStorageToken,
 ]
 
@@ -24,6 +26,7 @@ export class ResourceDataLogger implements IResourceDataLogger {
     private readonly sceneDataStorage: ISceneDataStorage,
     private readonly tileDataStorage: ITileDataStorage,
     private readonly mapDataStorage: IMapDataStorage,
+    private readonly itemDataStorage: IItemDataStorage,
     private readonly cssFileStorage: ICssFileStorage
   ) {}
 
@@ -31,11 +34,13 @@ export class ResourceDataLogger implements IResourceDataLogger {
     const sceneIds = this.sceneDataStorage.getLoadedSceneIds()
     const tileIds = this.tileDataStorage.getLoadedTileIds()
     const mapIds = this.mapDataStorage.getLoadedMapIds()
+    const itemIds = this.itemDataStorage.getLoadedItemIds()
     const cssFiles = this.cssFileStorage.getCssFileNames()
 
     this.logger.debug(logName, 'Scenes loaded: {0}', sceneIds)
     this.logger.debug(logName, 'Tiles loaded: {0}', tileIds)
     this.logger.debug(logName, 'Maps loaded: {0}', mapIds)
+    this.logger.debug(logName, 'Items loaded: {0}', itemIds)
     this.logger.debug(logName, 'CSS files loaded: {0}', cssFiles)
   }
 }

@@ -1,0 +1,15 @@
+{
+  "language": "en",
+  "translations": {
+    "item.apple.name": "Apple",
+    "item.apple.description": "A fresh red apple. Restores a small amount of health.",
+    "item.brass-key.name": "Brass Key",
+    "item.brass-key.description": "An old brass key. It looks like it might open something nearby.",
+    "item.wooden-sword.name": "Wooden Sword",
+    "item.wooden-sword.description": "A simple wooden training sword. Better than nothing.",
+    "item.health-potion.name": "Health Potion",
+    "item.health-potion.description": "A glowing red potion that restores health.",
+    "item.old-map.name": "Old Map",
+    "item.old-map.description": "A weathered map showing the local area. Some locations are marked with an X."
+  }
+}

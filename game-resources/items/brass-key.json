@@ -1,0 +1,12 @@
+{
+  "id": "brass-key",
+  "name": "item.brass-key.name",
+  "description": "item.brass-key.description",
+  "type": "key",
+  "stackable": false,
+  "weight": 0.1,
+  "image": "items/brass-key.png",
+  "properties": {
+    "unlocks": "old-door"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "wooden-sword",
+  "name": "item.wooden-sword.name",
+  "description": "item.wooden-sword.description",
+  "type": "equipment",
+  "stackable": false,
+  "weight": 2.0,
+  "image": "items/wooden-sword.png",
+  "properties": {
+    "damage": 5,
+    "durability": 50,
+    "slot": "weapon"
+  }
+}

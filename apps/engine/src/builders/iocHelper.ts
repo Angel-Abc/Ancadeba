@@ -70,6 +70,11 @@ import {
   mapDataStorageToken,
 } from '../resourceData/mapDataStorage'
 import {
+  ItemDataStorage,
+  itemDataStorageDependencies,
+  itemDataStorageToken,
+} from '../resourceData/itemDataStorage'
+import {
   AssetFileStorage,
   assetFileStorageDependencies,
   cssFileStorageToken,
@@ -110,6 +115,10 @@ import {
   canMoveConditionEvaluatorDependencies,
 } from '../core/conditionEvaluators/CanMoveConditionEvaluator'
 import {
+  HasItemConditionEvaluator,
+  hasItemConditionEvaluatorDependencies,
+} from '../core/conditionEvaluators/HasItemConditionEvaluator'
+import {
   BrowserAdapter,
   browserAdapterDependencies,
   browserAdapterToken,
@@ -145,6 +154,19 @@ import {
   VolumeActionHandler,
   volumeActionHandlerDependencies,
 } from '../core/actionHandlers/VolumeActionHandler'
+import {
+  AddItemActionHandler,
+  addItemActionHandlerDependencies,
+} from '../core/actionHandlers/AddItemActionHandler'
+import {
+  RemoveItemActionHandler,
+  removeItemActionHandlerDependencies,
+} from '../core/actionHandlers/RemoveItemActionHandler'
+import {
+  InventoryService,
+  inventoryServiceDependencies,
+  inventoryServiceToken,
+} from '../inventory/inventoryService'
 import {
   SettingsStorage,
   settingsStorageDependencies,
@@ -196,6 +218,11 @@ import {
   mapDataInitializerToken,
 } from '../core/initializers/mapDataInitializer'
 import {
+  ItemDataInitializer,
+  itemDataInitializerDependencies,
+  itemDataInitializerToken,
+} from '../core/initializers/itemDataInitializer'
+import {
   KeyboardInputService,
   keyboardInputServiceDependencies,
   keyboardInputServiceToken,
@@ -225,10 +252,7 @@ import {
   ecsEventBridgeSystemDependencies,
   ecsEventBridgeSystemToken,
 } from '../ecs/systems/ecsEventBridgeSystem'
-import {
-  SystemRegistry,
-  systemRegistryToken,
-} from '../ecs/systemRegistry'
+import { SystemRegistry, systemRegistryToken } from '../ecs/systemRegistry'
 import {
   World,
   worldDependencies,
@@ -295,6 +319,11 @@ export function registerServices(container: Container): void {
       deps: mapDataInitializerDependencies,
     },
     {
+      token: itemDataInitializerToken,
+      useClass: ItemDataInitializer,
+      deps: itemDataInitializerDependencies,
+    },
+    {
       token: actionHandlerToken,
       useClass: SwitchSceneActionHandler,
       deps: switchSceneActionHandlerDependencies,
@@ -318,6 +347,22 @@ export function registerServices(container: Container): void {
       token: actionHandlerToken,
       useClass: VolumeActionHandler,
       deps: volumeActionHandlerDependencies,
+    },
+    {
+      token: actionHandlerToken,
+      useClass: AddItemActionHandler,
+      deps: addItemActionHandlerDependencies,
+    },
+    {
+      token: actionHandlerToken,
+      useClass: RemoveItemActionHandler,
+      deps: removeItemActionHandlerDependencies,
+    },
+    {
+      token: inventoryServiceToken,
+      useClass: InventoryService,
+      deps: inventoryServiceDependencies,
+      scope: 'singleton',
     },
     {
       token: actionExecutorToken,
@@ -444,6 +489,12 @@ export function registerServices(container: Container): void {
       scope: 'singleton',
     },
     {
+      token: itemDataStorageToken,
+      useClass: ItemDataStorage,
+      deps: itemDataStorageDependencies,
+      scope: 'singleton',
+    },
+    {
       token: cssFileStorageToken,
       useClass: AssetFileStorage,
       deps: assetFileStorageDependencies,
@@ -486,6 +537,11 @@ export function registerServices(container: Container): void {
       token: conditionEvaluatorToken,
       useClass: CanMoveConditionEvaluator,
       deps: canMoveConditionEvaluatorDependencies,
+    },
+    {
+      token: conditionEvaluatorToken,
+      useClass: HasItemConditionEvaluator,
+      deps: hasItemConditionEvaluatorDependencies,
     },
     {
       token: conditionResolverToken,

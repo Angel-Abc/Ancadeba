@@ -41,6 +41,7 @@ describe('loaders/gameDataLoader', () => {
       styling: [],
       tileSets: ['outdoor'],
       maps: [],
+      items: ['test-item'],
       virtualKeys: 'virtual-keys',
       virtualInputs: 'virtual-inputs',
       languages: {
@@ -112,12 +113,21 @@ describe('loaders/gameDataLoader', () => {
         },
       ],
     }
+    const item = {
+      id: 'test-item',
+      name: 'item.test-item.name',
+      description: 'item.test-item.description',
+      type: 'misc',
+      stackable: false,
+      weight: 1.0,
+    }
     const loader = new GameDataLoader(logger, config)
     const mockedLoadJsonResource = vi.mocked(loadJsonResource)
     mockedLoadJsonResource
       .mockResolvedValueOnce(game)
       .mockResolvedValueOnce(scene)
       .mockResolvedValueOnce(tileSet)
+      .mockResolvedValueOnce(item)
       .mockResolvedValueOnce(virtualKeys)
       .mockResolvedValueOnce(virtualInputs)
 
@@ -145,12 +155,18 @@ describe('loaders/gameDataLoader', () => {
     )
     expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
       4,
-      '/data/input/virtual-keys.json',
+      '/data/items/test-item.json',
       expect.anything(),
       logger
     )
     expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
       5,
+      '/data/input/virtual-keys.json',
+      expect.anything(),
+      logger
+    )
+    expect(mockedLoadJsonResource).toHaveBeenNthCalledWith(
+      6,
       '/data/input/virtual-inputs.json',
       expect.anything(),
       logger
@@ -169,6 +185,7 @@ describe('loaders/gameDataLoader', () => {
       scenes: [scene],
       tileSets: [tileSet],
       maps: [],
+      items: [item],
       virtualKeys: virtualKeys,
       virtualInputs: virtualInputs,
     })

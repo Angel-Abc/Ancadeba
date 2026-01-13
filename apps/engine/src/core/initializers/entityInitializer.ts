@@ -3,6 +3,7 @@ import type { GameData } from '@ancadeba/schemas'
 import {
   COMPONENT_KEYS,
   createPlayerTag,
+  createInventory,
   PositionComponent,
 } from '../../ecs/components'
 import { IWorld, worldToken } from '../../ecs/world'
@@ -31,16 +32,17 @@ export class EntityInitializer implements IEntityInitializer {
 
     const [playerEntityId] = this.world.getEntitiesWith(COMPONENT_KEYS.player)
     if (playerEntityId) {
-      this.world.setComponent(
-        playerEntityId,
-        COMPONENT_KEYS.position,
-        position
-      )
+      this.world.setComponent(playerEntityId, COMPONENT_KEYS.position, position)
       return
     }
 
     const entityId = this.world.createEntity()
     this.world.setComponent(entityId, COMPONENT_KEYS.player, createPlayerTag())
     this.world.setComponent(entityId, COMPONENT_KEYS.position, position)
+    this.world.setComponent(
+      entityId,
+      COMPONENT_KEYS.inventory,
+      createInventory()
+    )
   }
 }

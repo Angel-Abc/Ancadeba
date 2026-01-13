@@ -28,6 +28,10 @@ import {
   IMapDataInitializer,
   mapDataInitializerToken,
 } from './initializers/mapDataInitializer'
+import {
+  IItemDataInitializer,
+  itemDataInitializerToken,
+} from './initializers/itemDataInitializer'
 
 export interface IGameDataInitializer {
   initialize(gameData: GameData): Promise<void>
@@ -41,6 +45,7 @@ export const gameDataInitializerDependencies: Token<unknown>[] = [
   sceneDataInitializerToken,
   tileDataInitializerToken,
   mapDataInitializerToken,
+  itemDataInitializerToken,
   virtualKeyStorageToken,
   virtualInputStorageToken,
   resourceDataLoggerToken,
@@ -53,6 +58,7 @@ export class GameDataInitializer implements IGameDataInitializer {
     private readonly sceneDataInitializer: ISceneDataInitializer,
     private readonly tileDataInitializer: ITileDataInitializer,
     private readonly mapDataInitializer: IMapDataInitializer,
+    private readonly itemDataInitializer: IItemDataInitializer,
     private readonly virtualKeyStorage: IVirtualKeyStorage,
     private readonly virtualInputStorage: IVirtualInputStorage,
     private readonly resourceDataLogger: IResourceDataLogger
@@ -65,6 +71,7 @@ export class GameDataInitializer implements IGameDataInitializer {
     this.sceneDataInitializer.initializeStyling(gameData.meta.styling)
     this.tileDataInitializer.initializeTiles(gameData.tileSets)
     this.mapDataInitializer.initializeMaps(gameData.maps)
+    this.itemDataInitializer.initializeItems(gameData.items)
     this.virtualKeyStorage.setVirtualKeys(gameData.virtualKeys.mappings)
     this.virtualInputStorage.setVirtualInputs(gameData.virtualInputs.mappings)
 

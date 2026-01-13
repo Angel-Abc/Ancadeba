@@ -8,6 +8,9 @@ export { tileDataStorageToken } from './tileDataStorage'
 export type { IMapDataStorage } from './mapDataStorage'
 export { mapDataStorageToken } from './mapDataStorage'
 
+export type { IItemDataStorage } from './itemDataStorage'
+export { itemDataStorageToken } from './itemDataStorage'
+
 export type { ICssFileStorage, ILanguageFileStorage } from './assetFileStorage'
 export {
   cssFileStorageToken,

@@ -8,10 +8,12 @@ import {
   cssFileStorageToken,
   IMapDataStorage,
   mapDataStorageToken,
+  IItemDataStorage,
+  itemDataStorageToken,
   ILanguageFileStorage,
   languageFileStorageToken,
 } from './storage'
-import { Scene } from '@ancadeba/schemas'
+import { Scene, Item } from '@ancadeba/schemas'
 import { MapData } from './types'
 
 export interface IResourceDataProvider {
@@ -19,6 +21,7 @@ export interface IResourceDataProvider {
   getSceneData(sceneId: string): Scene
   getCssFilePaths(): string[]
   getMapData(mapId: string): MapData
+  getItemData(itemId: string): Item
   getLanguageFilePaths(language: string): string[]
 }
 
@@ -29,6 +32,7 @@ export const resourceDataProviderDependencies: Token<unknown>[] = [
   sceneDataStorageToken,
   cssFileStorageToken,
   mapDataStorageToken,
+  itemDataStorageToken,
   languageFileStorageToken,
 ]
 export class ResourceDataProvider implements IResourceDataProvider {
@@ -37,6 +41,7 @@ export class ResourceDataProvider implements IResourceDataProvider {
     private readonly sceneDataStorage: ISceneDataStorage,
     private readonly cssFileStorage: ICssFileStorage,
     private readonly mapDataStorage: IMapDataStorage,
+    private readonly itemDataStorage: IItemDataStorage,
     private readonly languageFileStorage: ILanguageFileStorage
   ) {}
   get assetsUrl(): string {
@@ -52,6 +57,9 @@ export class ResourceDataProvider implements IResourceDataProvider {
   }
   getMapData(mapId: string): MapData {
     return this.mapDataStorage.getMapData(mapId)
+  }
+  getItemData(itemId: string): Item {
+    return this.itemDataStorage.getItemData(itemId)
   }
   getLanguageFilePaths(language: string): string[] {
     return this.languageFileStorage

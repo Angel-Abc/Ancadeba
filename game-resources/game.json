@@ -24,12 +24,18 @@
   "styling": ["game.css"],
   "tileSets": ["outdoor"],
   "maps": ["start-beach"],
+  "items": ["apple", "brass-key", "wooden-sword", "health-potion", "old-map"],
   "virtualKeys": "virtual-keys",
   "virtualInputs": "virtual-inputs",
   "languages": {
     "en": {
       "name": "English",
-      "files": ["en/system.json", "en/start-beach.json", "en/tiles.json"]
+      "files": [
+        "en/system.json",
+        "en/start-beach.json",
+        "en/tiles.json",
+        "en/items.json"
+      ]
     }
   },
   "inputRanges": [

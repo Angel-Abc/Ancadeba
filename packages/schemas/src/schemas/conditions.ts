@@ -18,5 +18,14 @@ export const conditionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('can-move-right'),
   }),
+  z.object({
+    type: z.literal('has-item'),
+    itemId: z.string(),
+    quantity: z.number().int().positive().default(1),
+  }),
+  z.object({
+    type: z.literal('inventory-space'),
+    requiredSlots: z.number().int().positive(),
+  }),
 ])
 export type Condition = z.infer<typeof conditionSchema>

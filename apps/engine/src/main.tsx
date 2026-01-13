@@ -14,7 +14,7 @@ const resourcesDataPath = import.meta.env.DEV
 const logName = 'main'
 const logger = new ConsoleLogger()
 const containerBuilder = new ContainerBuilder(logger, resourcesDataPath)
-export const container = containerBuilder.build()
+const container = containerBuilder.build()
 
 const rootContainer = document.getElementById('root')
 

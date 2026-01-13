@@ -14,6 +14,7 @@ import { sceneSchema } from '../schemas/scene'
 import { ZodTypeAny } from 'zod'
 import { tileSetSchema } from '../schemas/tileSet'
 import { mapSchema } from '../schemas/map'
+import { itemSchema } from '../schemas/item'
 import { Language, languageSchema } from '../schemas/language'
 import { VirtualKeys, virtualKeysSchema } from '../schemas/virtualKeys'
 import { VirtualInputs, virtualInputsSchema } from '../schemas/virtualInputs'
@@ -63,6 +64,11 @@ const defaultResourceCollectionFactory: ResourceCollectionFactory = (
     names: game.maps,
     basePath: `${rootPath}/maps`,
     schema: mapSchema,
+  },
+  items: {
+    names: game.items,
+    basePath: `${rootPath}/items`,
+    schema: itemSchema,
   },
 })
 

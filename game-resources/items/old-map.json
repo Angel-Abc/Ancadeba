@@ -1,0 +1,12 @@
+{
+  "id": "old-map",
+  "name": "item.old-map.name",
+  "description": "item.old-map.description",
+  "type": "quest",
+  "stackable": false,
+  "weight": 0.1,
+  "image": "items/old-map.png",
+  "properties": {
+    "revealsLocations": ["hidden-cave", "treasure-spot"]
+  }
+}

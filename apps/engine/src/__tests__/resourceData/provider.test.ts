@@ -5,6 +5,7 @@ import type {
   ISceneDataStorage,
   ICssFileStorage,
   IMapDataStorage,
+  IItemDataStorage,
   ILanguageFileStorage,
 } from '../../resourceData/storage'
 import type { MapData } from '../../resourceData/types'
@@ -32,6 +33,12 @@ describe('resourceData/provider', () => {
     getMapData: vi.fn(),
   })
 
+  const createMockItemDataStorage = (): IItemDataStorage => ({
+    addItemData: vi.fn(),
+    getItemData: vi.fn(),
+    getLoadedItemIds: vi.fn(),
+  })
+
   const createMockLanguageFileStorage = (): ILanguageFileStorage => ({
     getLanguageFileNames: vi.fn(() => []),
     setLanguageFileNames: vi.fn(),
@@ -43,12 +50,14 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const provider = new ResourceDataProvider(
       resourceRootPath,
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -65,6 +74,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const mockScene: Scene = {
       id: 'test-scene',
@@ -77,6 +87,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -94,6 +105,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([
       'game.css',
@@ -104,6 +116,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -124,6 +137,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([])
     const provider = new ResourceDataProvider(
@@ -131,6 +145,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -147,6 +162,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const mockMapData: MapData = {
       id: 'test-map',
@@ -161,6 +177,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -178,6 +195,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([
       'en/system.json',
@@ -188,6 +206,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -208,6 +227,7 @@ describe('resourceData/provider', () => {
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
+    const itemDataStorage = createMockItemDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([])
     const provider = new ResourceDataProvider(
@@ -215,6 +235,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
+      itemDataStorage,
       languageFileStorage
     )
 
@@ -231,12 +252,14 @@ describe('resourceData/provider', () => {
     const sceneDataStorage1 = createMockSceneDataStorage()
     const cssFileStorage1 = createMockCssFileStorage()
     const mapDataStorage1 = createMockMapDataStorage()
+    const itemDataStorage1 = createMockItemDataStorage()
     const languageFileStorage1 = createMockLanguageFileStorage()
     const provider1 = new ResourceDataProvider(
       resourceRootPath1,
       sceneDataStorage1,
       cssFileStorage1,
       mapDataStorage1,
+      itemDataStorage1,
       languageFileStorage1
     )
 
@@ -244,17 +267,20 @@ describe('resourceData/provider', () => {
     const sceneDataStorage2 = createMockSceneDataStorage()
     const cssFileStorage2 = createMockCssFileStorage()
     const mapDataStorage2 = createMockMapDataStorage()
+    const itemDataStorage2 = createMockItemDataStorage()
     const languageFileStorage2 = createMockLanguageFileStorage()
     const resourceRootPath3 = createMockResourceRootPath('/data/resources')
     const sceneDataStorage3 = createMockSceneDataStorage()
     const cssFileStorage3 = createMockCssFileStorage()
     const mapDataStorage3 = createMockMapDataStorage()
+    const itemDataStorage3 = createMockItemDataStorage()
     const languageFileStorage3 = createMockLanguageFileStorage()
     const provider2 = new ResourceDataProvider(
       resourceRootPath2,
       sceneDataStorage2,
       cssFileStorage2,
       mapDataStorage2,
+      itemDataStorage2,
       languageFileStorage2
     )
     const provider3 = new ResourceDataProvider(
@@ -262,6 +288,7 @@ describe('resourceData/provider', () => {
       sceneDataStorage3,
       cssFileStorage3,
       mapDataStorage3,
+      itemDataStorage3,
       languageFileStorage3
     )
 

@@ -1,0 +1,13 @@
+{
+  "id": "apple",
+  "name": "item.apple.name",
+  "description": "item.apple.description",
+  "type": "consumable",
+  "stackable": true,
+  "maxStack": 10,
+  "weight": 0.2,
+  "image": "items/apple.png",
+  "properties": {
+    "healAmount": 10
+  }
+}

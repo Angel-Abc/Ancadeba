@@ -4,6 +4,7 @@ import {
   COMPONENT_KEYS,
   createPlayerTag,
   PositionComponent,
+  InventoryComponent,
 } from '../../../ecs/components'
 import { World, WorldEventBus } from '../../../ecs/world'
 import { EntityInitializer } from '../../../core/initializers/entityInitializer'
@@ -80,5 +81,29 @@ describe('core/initializers/entityInitializer', () => {
       COMPONENT_KEYS.position
     )
     expect(position).toEqual({ x: 10, y: 20 })
+  })
+
+  it('creates player entity with inventory component', () => {
+    // Arrange
+    const world = new World(new WorldEventBus())
+    const initializer = new EntityInitializer(world)
+    const gameData = createMinimalGameData()
+    gameData.meta.initialState.mapPosition = { x: 5, y: 5 }
+
+    // Act
+    initializer.initializeEntities(gameData)
+
+    // Assert
+    const [playerEntityId] = world.getEntitiesWith(COMPONENT_KEYS.player)
+    expect(playerEntityId).toBeDefined()
+    if (!playerEntityId) {
+      return
+    }
+    const inventory = world.getComponent<InventoryComponent>(
+      playerEntityId,
+      COMPONENT_KEYS.inventory
+    )
+    expect(inventory).toBeDefined()
+    expect(inventory?.items).toEqual([])
   })
 })
