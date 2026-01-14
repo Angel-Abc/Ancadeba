@@ -157,6 +157,39 @@ button:disabled {
     color: oklch(0.65 0.08 250);
   }
 
+  & .appearance-tab {
+    background: linear-gradient(
+      135deg,
+      oklch(0.38 0.14 250),
+      oklch(0.32 0.1 250)
+    );
+    border-color: oklch(0.5 0.16 250);
+    color: oklch(0.95 0.16 250);
+    box-shadow: 0 calc(0.6 * var(--ge-unit-size))
+      calc(1.2 * var(--ge-unit-size)) oklch(0 0 0 / 0.4);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        oklch(0.46 0.18 250),
+        oklch(0.38 0.14 250)
+      );
+      border-color: oklch(0.62 0.2 250);
+    }
+
+    &.is-active {
+      background: linear-gradient(
+        135deg,
+        oklch(0.52 0.22 250),
+        oklch(0.44 0.18 250)
+      );
+      border-color: oklch(0.7 0.24 250);
+      box-shadow: 0 calc(0.8 * var(--ge-unit-size))
+          calc(1.6 * var(--ge-unit-size)) oklch(0.6 0.2 250 / 0.5),
+        0 0 calc(1.6 * var(--ge-unit-size)) oklch(0.5 0.2 250 / 0.4);
+    }
+  }
+
   & .appearance-cell {
     border-color: oklch(0.45 0.15 250);
     background: linear-gradient(

@@ -1,5 +1,6 @@
 import { AppearanceComponent as AppearanceComponentData } from '@ancadeba/schemas'
 import { useService } from '@ancadeba/ui'
+import { useEffect, useState } from 'react'
 import {
   IAppearanceService,
   appearanceServiceToken,
@@ -14,6 +15,13 @@ import {
   ILanguageProvider,
   languageProviderToken,
 } from '../../../language/provider'
+import {
+  IResourceDataProvider,
+  resourceDataProviderToken,
+} from '../../../resourceData/provider'
+import { COMPONENT_KEYS } from '../../../ecs/components'
+import { IWorld, WORLD_EVENTS } from '../../../ecs/types'
+import { worldToken } from '../../../ecs/world'
 
 interface AppearanceComponentProps {
   component: AppearanceComponentData
@@ -30,79 +38,161 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
     appearanceDataStorageToken
   )
   const languageProvider = useService<ILanguageProvider>(languageProviderToken)
+  const resourceDataProvider = useService<IResourceDataProvider>(
+    resourceDataProviderToken
+  )
+  const world = useService<IWorld>(worldToken)
 
-  // Get category data
-  let category
-  try {
-    category = categoryStorage.getAppearanceCategoryData(component.categoryId)
-  } catch {
+  const categories = categoryStorage.getAllAppearanceCategories()
+  const defaultCategoryId =
+    categories.find((category) => category.id === component.categoryId)?.id ??
+    categories[0]?.id
+  const [activeCategoryId, setActiveCategoryId] = useState(defaultCategoryId)
+  const [equippedAppearances, setEquippedAppearances] = useState(() =>
+    appearanceService.getAllEquippedAppearances()
+  )
+
+  useEffect(() => {
+    const updateEquippedAppearances = () => {
+      setEquippedAppearances(appearanceService.getAllEquippedAppearances())
+    }
+    const handleAppearanceChange = (payload: { componentKey: string }) => {
+      if (payload.componentKey !== COMPONENT_KEYS.appearance) {
+        return
+      }
+      updateEquippedAppearances()
+    }
+    updateEquippedAppearances()
+    const unsubscribeAdded = world.subscribe(
+      WORLD_EVENTS.COMPONENT_ADDED,
+      handleAppearanceChange
+    )
+    const unsubscribeUpdated = world.subscribe(
+      WORLD_EVENTS.COMPONENT_UPDATED,
+      handleAppearanceChange
+    )
+    const unsubscribeRemoved = world.subscribe(
+      WORLD_EVENTS.COMPONENT_REMOVED,
+      handleAppearanceChange
+    )
+    return () => {
+      unsubscribeAdded()
+      unsubscribeUpdated()
+      unsubscribeRemoved()
+    }
+  }, [appearanceService, world])
+
+  const activeCategory =
+    categories.find((category) => category.id === activeCategoryId) ??
+    categories[0]
+
+  if (!activeCategory) {
     return (
       <div className="appearance-error">
-        Category not found: {component.categoryId}
+        No appearance categories available
       </div>
     )
   }
 
-  if (!category || !category.gridRows || !category.gridColumns) {
+  if (!activeCategory.gridRows || !activeCategory.gridColumns) {
     return (
       <div className="appearance-error">
-        Invalid category data: {component.categoryId}
+        Invalid category data: {activeCategory.id}
       </div>
     )
   }
 
-  // Get all appearances for this category
   const appearances = appearanceStorage.getAppearancesByCategory(
-    component.categoryId
+    activeCategory.id
   )
 
-  // Get equipped appearances
-  const equippedAppearances = appearanceService.getAllEquippedAppearances()
   const equippedInCategory = equippedAppearances.find(
-    (eq) => eq.categoryId === component.categoryId
+    (eq) => eq.categoryId === activeCategory.id
   )
+
+  const equippedAppearance = (() => {
+    if (!equippedInCategory) {
+      return undefined
+    }
+    try {
+      return appearanceStorage.getAppearanceData(
+        equippedInCategory.appearanceId
+      )
+    } catch {
+      return undefined
+    }
+  })()
 
   // Handle appearance click
   const handleAppearanceClick = (appearanceId: string) => {
     if (equippedInCategory?.appearanceId === appearanceId) {
       // Unequip if already equipped
-      appearanceService.unequipAppearance(component.categoryId)
+      appearanceService.unequipAppearance(activeCategory.id)
     } else {
       // Equip the appearance
-      appearanceService.equipAppearance(component.categoryId, appearanceId)
+      appearanceService.equipAppearance(activeCategory.id, appearanceId)
     }
   }
 
   // Get category name and description
-  const categoryName = languageProvider.getTranslation(category.name)
-  const categoryDescription = category.description
-    ? languageProvider.getTranslation(category.description)
+  const categoryName = languageProvider.getTranslation(activeCategory.name)
+  const categoryDescription = activeCategory.description
+    ? languageProvider.getTranslation(activeCategory.description)
     : undefined
 
   // Create grid style
   const gridStyle = {
-    gridTemplateRows: `repeat(${category.gridRows}, 1fr)`,
-    gridTemplateColumns: `repeat(${category.gridColumns}, 1fr)`,
+    gridTemplateRows: `repeat(${activeCategory.gridRows}, 1fr)`,
+    gridTemplateColumns: `repeat(${activeCategory.gridColumns}, 1fr)`,
   }
+  const assetsUrl = resourceDataProvider.assetsUrl
 
   return (
     <div className="appearance-component">
+      <div className="appearance-tabs" role="tablist">
+        {categories.map((category) => {
+          const isActive = category.id === activeCategory.id
+          const tabClassName = [
+            'appearance-tab',
+            isActive ? 'is-active' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+          const categoryLabel = languageProvider.getTranslation(category.name)
+          return (
+            <button
+              key={category.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              className={tabClassName}
+              onClick={() => setActiveCategoryId(category.id)}
+            >
+              {categoryLabel}
+            </button>
+          )
+        })}
+      </div>
       <h3 className="appearance-header">{categoryName}</h3>
       {categoryDescription && (
         <p className="appearance-description">{categoryDescription}</p>
       )}
 
       <div className="appearance-grid" style={gridStyle}>
-        {category.cells.map((cell, index) => {
+        {activeCategory.cells.map((cell, index) => {
           // Find appearances that have this slot
           const appearancesForSlot = appearances.filter((appearance) =>
             appearance.slots.some((slot) => slot.slotId === cell.slotId)
           )
 
-          // For simplicity, show the first appearance for this slot
-          const appearance = appearancesForSlot[0]
+          const equippedSlot = equippedAppearance?.slots.find(
+            (slot) => slot.slotId === cell.slotId
+          )
+          const appearance = equippedSlot
+            ? equippedAppearance
+            : appearancesForSlot[0]
           const isEquipped =
-            appearance && equippedInCategory?.appearanceId === appearance.id
+            appearance && equippedAppearance?.id === appearance.id
 
           // Calculate grid position
           const gridRowStart = cell.row + 1
@@ -115,9 +205,13 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
             gridColumn: `${gridColumnStart} / ${gridColumnEnd}`,
           }
 
-          const cellClassName = `appearance-cell ${
-            !appearance ? 'empty' : ''
-          } ${isEquipped ? 'equipped' : ''}`
+          const cellClassName = [
+            'appearance-cell',
+            !appearance ? 'empty' : '',
+            isEquipped ? 'equipped' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
 
           if (!appearance) {
             return (
@@ -138,11 +232,12 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
           const slotData = appearance.slots.find(
             (slot) => slot.slotId === cell.slotId
           )
-          const firstImage = slotData?.images?.[0]
+          const imagePath = slotData?.image
+          const imageUrl = imagePath ? assetsUrl + '/' + imagePath : undefined
 
           return (
             <div
-              key={`${appearance.id}-${index}`}
+              key={`${cell.slotId}-${index}`}
               className={cellClassName}
               style={cellStyle}
               onClick={() => handleAppearanceClick(appearance.id)}
@@ -155,9 +250,9 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
               }}
             >
               {isEquipped && <span className="equipped-badge">Equipped</span>}
-              {firstImage && (
+              {imageUrl && (
                 <img
-                  src={firstImage}
+                  src={imageUrl}
                   alt={appearanceName}
                   className="appearance-image"
                 />
@@ -172,7 +267,7 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
         <button
           className="appearance-remove-button"
           onClick={() =>
-            appearanceService.unequipAppearance(component.categoryId)
+            appearanceService.unequipAppearance(activeCategory.id)
           }
         >
           Remove Equipped
