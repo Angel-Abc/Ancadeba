@@ -10,12 +10,5 @@
       "image": "appearances/armor/iron/helmet.png",
       "layer": 8
     }
-  ],
-  "requirements": {
-    "minLevel": 5
-  },
-  "properties": {
-    "armorClass": 4,
-    "weight": "medium"
-  }
+  ]
 }

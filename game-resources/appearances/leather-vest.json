@@ -17,12 +17,5 @@
       "layer": 2,
       "color": "#654321"
     }
-  ],
-  "requirements": {
-    "minLevel": 1
-  },
-  "properties": {
-    "armorClass": 8,
-    "weight": "light"
-  }
+  ]
 }

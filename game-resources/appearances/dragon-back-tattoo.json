@@ -23,15 +23,5 @@
       "layer": 2,
       "color": "#8B0000"
     }
-  ],
-  "requirements": {
-    "minLevel": 15,
-    "requiredFlags": {
-      "completed-dragon-quest": true
-    }
-  },
-  "properties": {
-    "rarity": "legendary",
-    "magical": true
-  }
+  ]
 }

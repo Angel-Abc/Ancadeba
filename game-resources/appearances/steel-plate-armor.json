@@ -25,12 +25,5 @@
       "image": "appearances/armor/steel-plate/boots.png",
       "layer": 2
     }
-  ],
-  "requirements": {
-    "minLevel": 10
-  },
-  "properties": {
-    "armorClass": 18,
-    "weight": "heavy"
-  }
+  ]
 }
