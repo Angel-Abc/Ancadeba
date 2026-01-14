@@ -5,6 +5,8 @@ import { TileSet } from '../schemas/tileSet'
 import { VirtualKeys } from '../schemas/virtualKeys'
 import { VirtualInputs } from '../schemas/virtualInputs'
 import { Item } from '../schemas/item'
+import { AppearanceCategory } from '../schemas/appearanceCategory'
+import { Appearance } from '../schemas/appearance'
 
 export interface GameData {
   meta: Game
@@ -15,4 +17,6 @@ export interface GameData {
   tileSets: TileSet[]
   maps: MapData[]
   items: Item[]
+  appearanceCategories: AppearanceCategory[]
+  appearances: Appearance[]
 }

@@ -1,0 +1,25 @@
+{
+  "id": "tribal-face-tattoo",
+  "name": "appearance.tribal-face-tattoo.name",
+  "description": "appearance.tribal-face-tattoo.description",
+  "categoryId": "tattoos",
+  "tags": ["tribal", "face", "ceremonial"],
+  "slots": [
+    {
+      "slotId": "face",
+      "image": "appearances/tattoos/tribal/face.png",
+      "layer": 1,
+      "color": "#000000"
+    },
+    {
+      "slotId": "neck",
+      "image": "appearances/tattoos/tribal/neck.png",
+      "layer": 1,
+      "color": "#000000"
+    }
+  ],
+  "properties": {
+    "cultural": "northern-tribes",
+    "meaning": "warrior-mark"
+  }
+}

@@ -53,6 +53,7 @@ const inventoryComponentSchema = baseComponentSchema.extend({
 
 const appearanceComponentSchema = baseComponentSchema.extend({
   type: z.literal('appearance'),
+  categoryId: z.string(),
 })
 
 const textLogComponentSchema = baseComponentSchema.extend({

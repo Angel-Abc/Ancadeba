@@ -10,10 +10,14 @@ import {
   mapDataStorageToken,
   IItemDataStorage,
   itemDataStorageToken,
+  IAppearanceCategoryStorage,
+  appearanceCategoryStorageToken,
+  IAppearanceDataStorage,
+  appearanceDataStorageToken,
   ILanguageFileStorage,
   languageFileStorageToken,
 } from './storage'
-import { Scene, Item } from '@ancadeba/schemas'
+import { Scene, Item, AppearanceCategory, Appearance } from '@ancadeba/schemas'
 import { MapData } from './types'
 
 export interface IResourceDataProvider {
@@ -22,6 +26,10 @@ export interface IResourceDataProvider {
   getCssFilePaths(): string[]
   getMapData(mapId: string): MapData
   getItemData(itemId: string): Item
+  getAppearanceCategoryData(categoryId: string): AppearanceCategory
+  getAppearanceData(appearanceId: string): Appearance
+  getAllAppearanceCategories(): AppearanceCategory[]
+  getAppearancesByCategory(categoryId: string): Appearance[]
   getLanguageFilePaths(language: string): string[]
 }
 
@@ -33,6 +41,8 @@ export const resourceDataProviderDependencies: Token<unknown>[] = [
   cssFileStorageToken,
   mapDataStorageToken,
   itemDataStorageToken,
+  appearanceCategoryStorageToken,
+  appearanceDataStorageToken,
   languageFileStorageToken,
 ]
 export class ResourceDataProvider implements IResourceDataProvider {
@@ -42,6 +52,8 @@ export class ResourceDataProvider implements IResourceDataProvider {
     private readonly cssFileStorage: ICssFileStorage,
     private readonly mapDataStorage: IMapDataStorage,
     private readonly itemDataStorage: IItemDataStorage,
+    private readonly appearanceCategoryStorage: IAppearanceCategoryStorage,
+    private readonly appearanceDataStorage: IAppearanceDataStorage,
     private readonly languageFileStorage: ILanguageFileStorage
   ) {}
   get assetsUrl(): string {
@@ -60,6 +72,18 @@ export class ResourceDataProvider implements IResourceDataProvider {
   }
   getItemData(itemId: string): Item {
     return this.itemDataStorage.getItemData(itemId)
+  }
+  getAppearanceCategoryData(categoryId: string): AppearanceCategory {
+    return this.appearanceCategoryStorage.getAppearanceCategoryData(categoryId)
+  }
+  getAppearanceData(appearanceId: string): Appearance {
+    return this.appearanceDataStorage.getAppearanceData(appearanceId)
+  }
+  getAllAppearanceCategories(): AppearanceCategory[] {
+    return this.appearanceCategoryStorage.getAllAppearanceCategories()
+  }
+  getAppearancesByCategory(categoryId: string): Appearance[] {
+    return this.appearanceDataStorage.getAppearancesByCategory(categoryId)
   }
   getLanguageFilePaths(language: string): string[] {
     return this.languageFileStorage

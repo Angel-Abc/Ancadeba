@@ -1,0 +1,36 @@
+{
+  "id": "steel-plate-armor",
+  "name": "appearance.steel-plate-armor.name",
+  "description": "appearance.steel-plate-armor.description",
+  "categoryId": "armor",
+  "tags": ["heavy-armor", "metal", "full-set"],
+  "slots": [
+    {
+      "slotId": "head",
+      "image": "appearances/armor/steel-plate/helmet.png",
+      "layer": 10
+    },
+    {
+      "slotId": "torso",
+      "image": "appearances/armor/steel-plate/chest.png",
+      "layer": 5
+    },
+    {
+      "slotId": "legs",
+      "image": "appearances/armor/steel-plate/legs.png",
+      "layer": 3
+    },
+    {
+      "slotId": "feet",
+      "image": "appearances/armor/steel-plate/boots.png",
+      "layer": 2
+    }
+  ],
+  "requirements": {
+    "minLevel": 10
+  },
+  "properties": {
+    "armorClass": 18,
+    "weight": "heavy"
+  }
+}

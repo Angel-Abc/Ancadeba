@@ -1,0 +1,14 @@
+{
+  "id": "tribal-tattoo-kit",
+  "name": "item.tribal-tattoo-kit.name",
+  "description": "item.tribal-tattoo-kit.description",
+  "type": "misc",
+  "stackable": false,
+  "weight": 0.2,
+  "image": "items/tattoo-kit.png",
+  "appearanceId": "tribal-face-tattoo",
+  "properties": {
+    "permanent": true,
+    "category": "body-modification"
+  }
+}

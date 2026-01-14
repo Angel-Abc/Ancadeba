@@ -6,6 +6,8 @@ import type {
   ICssFileStorage,
   IMapDataStorage,
   IItemDataStorage,
+  IAppearanceCategoryStorage,
+  IAppearanceDataStorage,
   ILanguageFileStorage,
 } from '../../resourceData/storage'
 import type { MapData } from '../../resourceData/types'
@@ -39,6 +41,19 @@ describe('resourceData/provider', () => {
     getLoadedItemIds: vi.fn(),
   })
 
+  const createMockAppearanceCategoryStorage =
+    (): IAppearanceCategoryStorage => ({
+      addAppearanceCategoryData: vi.fn(),
+      getAppearanceCategoryData: vi.fn(),
+      getAllAppearanceCategories: vi.fn(() => []),
+    })
+
+  const createMockAppearanceDataStorage = (): IAppearanceDataStorage => ({
+    addAppearanceData: vi.fn(),
+    getAppearanceData: vi.fn(),
+    getAppearancesByCategory: vi.fn(() => []),
+  })
+
   const createMockLanguageFileStorage = (): ILanguageFileStorage => ({
     getLanguageFileNames: vi.fn(() => []),
     setLanguageFileNames: vi.fn(),
@@ -51,6 +66,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const provider = new ResourceDataProvider(
       resourceRootPath,
@@ -58,6 +75,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -75,6 +94,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const mockScene: Scene = {
       id: 'test-scene',
@@ -88,6 +109,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -106,6 +129,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([
       'game.css',
@@ -117,6 +142,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -138,6 +165,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([])
     const provider = new ResourceDataProvider(
@@ -146,6 +175,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -163,6 +194,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     const mockMapData: MapData = {
       id: 'test-map',
@@ -178,6 +211,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -196,6 +231,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([
       'en/system.json',
@@ -207,6 +244,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -228,6 +267,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([])
     const provider = new ResourceDataProvider(
@@ -236,6 +277,8 @@ describe('resourceData/provider', () => {
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      appearanceCategoryStorage,
+      appearanceDataStorage,
       languageFileStorage
     )
 
@@ -253,6 +296,8 @@ describe('resourceData/provider', () => {
     const cssFileStorage1 = createMockCssFileStorage()
     const mapDataStorage1 = createMockMapDataStorage()
     const itemDataStorage1 = createMockItemDataStorage()
+    const appearanceCategoryStorage1 = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage1 = createMockAppearanceDataStorage()
     const languageFileStorage1 = createMockLanguageFileStorage()
     const provider1 = new ResourceDataProvider(
       resourceRootPath1,
@@ -260,6 +305,8 @@ describe('resourceData/provider', () => {
       cssFileStorage1,
       mapDataStorage1,
       itemDataStorage1,
+      appearanceCategoryStorage1,
+      appearanceDataStorage1,
       languageFileStorage1
     )
 
@@ -268,12 +315,16 @@ describe('resourceData/provider', () => {
     const cssFileStorage2 = createMockCssFileStorage()
     const mapDataStorage2 = createMockMapDataStorage()
     const itemDataStorage2 = createMockItemDataStorage()
+    const appearanceCategoryStorage2 = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage2 = createMockAppearanceDataStorage()
     const languageFileStorage2 = createMockLanguageFileStorage()
     const resourceRootPath3 = createMockResourceRootPath('/data/resources')
     const sceneDataStorage3 = createMockSceneDataStorage()
     const cssFileStorage3 = createMockCssFileStorage()
     const mapDataStorage3 = createMockMapDataStorage()
     const itemDataStorage3 = createMockItemDataStorage()
+    const appearanceCategoryStorage3 = createMockAppearanceCategoryStorage()
+    const appearanceDataStorage3 = createMockAppearanceDataStorage()
     const languageFileStorage3 = createMockLanguageFileStorage()
     const provider2 = new ResourceDataProvider(
       resourceRootPath2,
@@ -281,6 +332,8 @@ describe('resourceData/provider', () => {
       cssFileStorage2,
       mapDataStorage2,
       itemDataStorage2,
+      appearanceCategoryStorage2,
+      appearanceDataStorage2,
       languageFileStorage2
     )
     const provider3 = new ResourceDataProvider(
@@ -289,6 +342,8 @@ describe('resourceData/provider', () => {
       cssFileStorage3,
       mapDataStorage3,
       itemDataStorage3,
+      appearanceCategoryStorage3,
+      appearanceDataStorage3,
       languageFileStorage3
     )
 

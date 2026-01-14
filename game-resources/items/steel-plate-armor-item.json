@@ -1,0 +1,16 @@
+{
+  "id": "steel-plate-armor-item",
+  "name": "item.steel-plate-armor-item.name",
+  "description": "item.steel-plate-armor-item.description",
+  "type": "equipment",
+  "stackable": false,
+  "weight": 45.0,
+  "image": "items/steel-plate-armor.png",
+  "appearanceId": "steel-plate-armor",
+  "properties": {
+    "armorClass": 18,
+    "durability": 200,
+    "slots": ["head", "torso", "legs", "feet"],
+    "equipmentType": "heavy-armor"
+  }
+}

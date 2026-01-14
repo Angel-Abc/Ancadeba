@@ -1,0 +1,45 @@
+{
+  "id": "armor",
+  "name": "appearance.category.armor.name",
+  "description": "appearance.category.armor.description",
+  "gridRows": 5,
+  "gridColumns": 3,
+  "displayOrder": 1,
+  "cells": [
+    {
+      "row": 0,
+      "column": 1,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "head",
+      "name": "appearance.slot.head"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "rowSpan": 2,
+      "columnSpan": 3,
+      "slotId": "torso",
+      "name": "appearance.slot.torso",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "row": 3,
+      "column": 0,
+      "rowSpan": 1,
+      "columnSpan": 3,
+      "slotId": "legs",
+      "name": "appearance.slot.legs"
+    },
+    {
+      "row": 4,
+      "column": 1,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "feet",
+      "name": "appearance.slot.feet"
+    }
+  ]
+}

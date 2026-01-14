@@ -15,6 +15,8 @@ import { ZodTypeAny } from 'zod'
 import { tileSetSchema } from '../schemas/tileSet'
 import { mapSchema } from '../schemas/map'
 import { itemSchema } from '../schemas/item'
+import { appearanceCategorySchema } from '../schemas/appearanceCategory'
+import { appearanceSchema } from '../schemas/appearance'
 import { Language, languageSchema } from '../schemas/language'
 import { VirtualKeys, virtualKeysSchema } from '../schemas/virtualKeys'
 import { VirtualInputs, virtualInputsSchema } from '../schemas/virtualInputs'
@@ -69,6 +71,16 @@ const defaultResourceCollectionFactory: ResourceCollectionFactory = (
     names: game.items,
     basePath: `${rootPath}/items`,
     schema: itemSchema,
+  },
+  appearanceCategories: {
+    names: game.appearanceCategories,
+    basePath: rootPath,
+    schema: appearanceCategorySchema,
+  },
+  appearances: {
+    names: game.appearances,
+    basePath: rootPath,
+    schema: appearanceSchema,
   },
 })
 

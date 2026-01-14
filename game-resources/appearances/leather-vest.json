@@ -1,0 +1,28 @@
+{
+  "id": "leather-vest",
+  "name": "appearance.leather-vest.name",
+  "description": "appearance.leather-vest.description",
+  "categoryId": "armor",
+  "tags": ["light-armor", "leather", "partial"],
+  "slots": [
+    {
+      "slotId": "torso",
+      "image": "appearances/armor/leather/vest.png",
+      "layer": 4,
+      "color": "#8B4513"
+    },
+    {
+      "slotId": "legs",
+      "image": "appearances/armor/leather/pants.png",
+      "layer": 2,
+      "color": "#654321"
+    }
+  ],
+  "requirements": {
+    "minLevel": 1
+  },
+  "properties": {
+    "armorClass": 8,
+    "weight": "light"
+  }
+}

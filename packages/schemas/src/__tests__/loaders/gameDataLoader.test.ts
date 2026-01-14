@@ -42,6 +42,8 @@ describe('loaders/gameDataLoader', () => {
       tileSets: ['outdoor'],
       maps: [],
       items: ['test-item'],
+      appearanceCategories: [],
+      appearances: [],
       virtualKeys: 'virtual-keys',
       virtualInputs: 'virtual-inputs',
       languages: {
@@ -186,6 +188,8 @@ describe('loaders/gameDataLoader', () => {
       tileSets: [tileSet],
       maps: [],
       items: [item],
+      appearanceCategories: [],
+      appearances: [],
       virtualKeys: virtualKeys,
       virtualInputs: virtualInputs,
     })

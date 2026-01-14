@@ -1,0 +1,114 @@
+{
+  "id": "tattoos",
+  "name": "appearance.category.tattoos.name",
+  "description": "appearance.category.tattoos.description",
+  "gridRows": 8,
+  "gridColumns": 6,
+  "displayOrder": 2,
+  "cells": [
+    {
+      "row": 0,
+      "column": 2,
+      "rowSpan": 1,
+      "columnSpan": 2,
+      "slotId": "face",
+      "name": "appearance.slot.face"
+    },
+    {
+      "row": 1,
+      "column": 2,
+      "rowSpan": 1,
+      "columnSpan": 2,
+      "slotId": "neck",
+      "name": "appearance.slot.neck"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "left-shoulder",
+      "name": "appearance.slot.left-shoulder"
+    },
+    {
+      "row": 2,
+      "column": 4,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "right-shoulder",
+      "name": "appearance.slot.right-shoulder"
+    },
+    {
+      "row": 2,
+      "column": 2,
+      "rowSpan": 2,
+      "columnSpan": 2,
+      "slotId": "chest",
+      "name": "appearance.slot.chest"
+    },
+    {
+      "row": 3,
+      "column": 0,
+      "rowSpan": 2,
+      "columnSpan": 1,
+      "slotId": "left-upper-arm",
+      "name": "appearance.slot.left-upper-arm"
+    },
+    {
+      "row": 3,
+      "column": 5,
+      "rowSpan": 2,
+      "columnSpan": 1,
+      "slotId": "right-upper-arm",
+      "name": "appearance.slot.right-upper-arm"
+    },
+    {
+      "row": 4,
+      "column": 2,
+      "rowSpan": 1,
+      "columnSpan": 2,
+      "slotId": "abdomen",
+      "name": "appearance.slot.abdomen"
+    },
+    {
+      "row": 5,
+      "column": 0,
+      "rowSpan": 2,
+      "columnSpan": 1,
+      "slotId": "left-forearm",
+      "name": "appearance.slot.left-forearm"
+    },
+    {
+      "row": 5,
+      "column": 5,
+      "rowSpan": 2,
+      "columnSpan": 1,
+      "slotId": "right-forearm",
+      "name": "appearance.slot.right-forearm"
+    },
+    {
+      "row": 5,
+      "column": 2,
+      "rowSpan": 2,
+      "columnSpan": 2,
+      "slotId": "back",
+      "name": "appearance.slot.back"
+    },
+    {
+      "row": 7,
+      "column": 0,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "left-hand",
+      "name": "appearance.slot.left-hand"
+    },
+    {
+      "row": 7,
+      "column": 5,
+      "rowSpan": 1,
+      "columnSpan": 1,
+      "slotId": "right-hand",
+      "name": "appearance.slot.right-hand"
+    }
+  ]
+}

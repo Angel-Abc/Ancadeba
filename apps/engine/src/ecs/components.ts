@@ -2,6 +2,7 @@ export const COMPONENT_KEYS = {
   position: 'position',
   player: 'player',
   inventory: 'inventory',
+  appearance: 'appearance',
 } as const
 
 export type PositionComponent = {
@@ -24,8 +25,21 @@ export type InventoryComponent = {
   currentWeight?: number
 }
 
+export type EquippedAppearance = {
+  categoryId: string
+  appearanceId: string
+}
+
+export type AppearanceComponent = {
+  equipped: EquippedAppearance[]
+}
+
 export const createPlayerTag = (): PlayerTagComponent => ({ isPlayer: true })
 
 export const createInventory = (): InventoryComponent => ({
   items: [],
+})
+
+export const createAppearanceComponent = (): AppearanceComponent => ({
+  equipped: [],
 })

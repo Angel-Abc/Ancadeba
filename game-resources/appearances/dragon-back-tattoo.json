@@ -1,0 +1,37 @@
+{
+  "id": "dragon-back-tattoo",
+  "name": "appearance.dragon-back-tattoo.name",
+  "description": "appearance.dragon-back-tattoo.description",
+  "categoryId": "tattoos",
+  "tags": ["dragon", "back", "elaborate", "mystical"],
+  "slots": [
+    {
+      "slotId": "back",
+      "image": "appearances/tattoos/dragon/back-main.png",
+      "layer": 2,
+      "color": "#8B0000"
+    },
+    {
+      "slotId": "left-shoulder",
+      "image": "appearances/tattoos/dragon/left-shoulder.png",
+      "layer": 2,
+      "color": "#8B0000"
+    },
+    {
+      "slotId": "right-shoulder",
+      "image": "appearances/tattoos/dragon/right-shoulder.png",
+      "layer": 2,
+      "color": "#8B0000"
+    }
+  ],
+  "requirements": {
+    "minLevel": 15,
+    "requiredFlags": {
+      "completed-dragon-quest": true
+    }
+  },
+  "properties": {
+    "rarity": "legendary",
+    "magical": true
+  }
+}

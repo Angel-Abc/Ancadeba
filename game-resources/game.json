@@ -24,7 +24,27 @@
   "styling": ["game.css"],
   "tileSets": ["outdoor"],
   "maps": ["start-beach"],
-  "items": ["apple", "brass-key", "wooden-sword", "health-potion", "old-map"],
+  "items": [
+    "apple",
+    "brass-key",
+    "wooden-sword",
+    "health-potion",
+    "old-map",
+    "steel-plate-armor-item",
+    "leather-vest-item",
+    "tribal-tattoo-kit"
+  ],
+  "appearanceCategories": [
+    "appearance-categories/armor",
+    "appearance-categories/tattoos"
+  ],
+  "appearances": [
+    "appearances/steel-plate-armor",
+    "appearances/leather-vest",
+    "appearances/iron-helmet",
+    "appearances/tribal-face-tattoo",
+    "appearances/dragon-back-tattoo"
+  ],
   "virtualKeys": "virtual-keys",
   "virtualInputs": "virtual-inputs",
   "languages": {
@@ -34,7 +54,8 @@
         "en/system.json",
         "en/start-beach.json",
         "en/tiles.json",
-        "en/items.json"
+        "en/items.json",
+        "en/appearances.json"
       ]
     }
   },

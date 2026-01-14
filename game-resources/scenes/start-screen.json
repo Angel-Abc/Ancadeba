@@ -40,6 +40,21 @@
               "value": true
             },
             {
+              "type": "add-item",
+              "itemId": "steel-plate-armor-item",
+              "quantity": 1
+            },
+            {
+              "type": "add-item",
+              "itemId": "leather-vest-item",
+              "quantity": 1
+            },
+            {
+              "type": "add-item",
+              "itemId": "tribal-tattoo-kit",
+              "quantity": 1
+            },
+            {
               "type": "switch-scene",
               "targetSceneId": "navigate"
             }

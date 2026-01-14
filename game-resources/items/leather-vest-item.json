@@ -1,0 +1,16 @@
+{
+  "id": "leather-vest-item",
+  "name": "item.leather-vest-item.name",
+  "description": "item.leather-vest-item.description",
+  "type": "equipment",
+  "stackable": false,
+  "weight": 8.0,
+  "image": "items/leather-vest.png",
+  "appearanceId": "leather-vest",
+  "properties": {
+    "armorClass": 12,
+    "durability": 80,
+    "slots": ["torso"],
+    "equipmentType": "light-armor"
+  }
+}

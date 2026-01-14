@@ -9,6 +9,8 @@ export const itemSchema = z.object({
   maxStack: z.number().int().positive().optional(),
   weight: z.number().nonnegative().default(0),
   image: z.string().optional(),
+  /** Optional reference to an appearance that this item provides when equipped */
+  appearanceId: z.string().optional(),
   properties: z.record(z.string(), z.unknown()).optional(),
 })
 

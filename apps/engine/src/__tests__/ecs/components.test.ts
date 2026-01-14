@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   createInventory,
   createPlayerTag,
+  createAppearanceComponent,
   InventoryComponent,
   InventoryItem,
   PlayerTagComponent,
+  AppearanceComponent,
+  EquippedAppearance,
 } from '../../ecs/components'
 
 describe('ecs/components', () => {
@@ -116,6 +119,88 @@ describe('ecs/components', () => {
 
       // Assert
       expect(item.quantity).toBe(1)
+    })
+  })
+
+  describe('createAppearanceComponent', () => {
+    it('creates empty appearance component', () => {
+      // Act
+      const appearance = createAppearanceComponent()
+
+      // Assert
+      expect(appearance).toEqual({ equipped: [] })
+    })
+
+    it('returns appearance with empty equipped array', () => {
+      // Arrange
+      const appearance: AppearanceComponent = createAppearanceComponent()
+
+      // Assert
+      expect(appearance.equipped).toEqual([])
+      expect(Array.isArray(appearance.equipped)).toBe(true)
+    })
+
+    it('creates new instance each time', () => {
+      // Act
+      const appearance1 = createAppearanceComponent()
+      const appearance2 = createAppearanceComponent()
+
+      // Assert
+      expect(appearance1).not.toBe(appearance2)
+      expect(appearance1.equipped).not.toBe(appearance2.equipped)
+    })
+  })
+
+  describe('AppearanceComponent', () => {
+    it('can hold multiple equipped appearances', () => {
+      // Arrange
+      const appearance: AppearanceComponent = createAppearanceComponent()
+      const equipped1: EquippedAppearance = {
+        categoryId: 'armor',
+        appearanceId: 'steel-plate-armor',
+      }
+      const equipped2: EquippedAppearance = {
+        categoryId: 'tattoos',
+        appearanceId: 'tribal-face-tattoo',
+      }
+
+      // Act
+      appearance.equipped.push(equipped1, equipped2)
+
+      // Assert
+      expect(appearance.equipped).toHaveLength(2)
+      expect(appearance.equipped[0]).toEqual({
+        categoryId: 'armor',
+        appearanceId: 'steel-plate-armor',
+      })
+      expect(appearance.equipped[1]).toEqual({
+        categoryId: 'tattoos',
+        appearanceId: 'tribal-face-tattoo',
+      })
+    })
+
+    it('allows empty equipped array', () => {
+      // Arrange
+      const appearance: AppearanceComponent = {
+        equipped: [],
+      }
+
+      // Assert
+      expect(appearance.equipped).toEqual([])
+    })
+  })
+
+  describe('EquippedAppearance', () => {
+    it('has categoryId and appearanceId', () => {
+      // Arrange
+      const equipped: EquippedAppearance = {
+        categoryId: 'armor',
+        appearanceId: 'leather-vest',
+      }
+
+      // Assert
+      expect(equipped.categoryId).toBe('armor')
+      expect(equipped.appearanceId).toBe('leather-vest')
     })
   })
 })

@@ -1,0 +1,21 @@
+{
+  "id": "iron-helmet",
+  "name": "appearance.iron-helmet.name",
+  "description": "appearance.iron-helmet.description",
+  "categoryId": "armor",
+  "tags": ["medium-armor", "metal", "headgear"],
+  "slots": [
+    {
+      "slotId": "head",
+      "image": "appearances/armor/iron/helmet.png",
+      "layer": 8
+    }
+  ],
+  "requirements": {
+    "minLevel": 5
+  },
+  "properties": {
+    "armorClass": 4,
+    "weight": "medium"
+  }
+}

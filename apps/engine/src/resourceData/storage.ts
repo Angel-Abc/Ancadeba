@@ -11,6 +11,12 @@ export { mapDataStorageToken } from './mapDataStorage'
 export type { IItemDataStorage } from './itemDataStorage'
 export { itemDataStorageToken } from './itemDataStorage'
 
+export type { IAppearanceCategoryStorage } from './appearanceCategoryStorage'
+export { appearanceCategoryStorageToken } from './appearanceCategoryStorage'
+
+export type { IAppearanceDataStorage } from './appearanceDataStorage'
+export { appearanceDataStorageToken } from './appearanceDataStorage'
+
 export type { ICssFileStorage, ILanguageFileStorage } from './assetFileStorage'
 export {
   cssFileStorageToken,

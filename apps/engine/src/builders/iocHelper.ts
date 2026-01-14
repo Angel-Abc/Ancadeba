@@ -75,6 +75,16 @@ import {
   itemDataStorageToken,
 } from '../resourceData/itemDataStorage'
 import {
+  AppearanceCategoryStorage,
+  appearanceCategoryStorageDependencies,
+  appearanceCategoryStorageToken,
+} from '../resourceData/appearanceCategoryStorage'
+import {
+  AppearanceDataStorage,
+  appearanceDataStorageDependencies,
+  appearanceDataStorageToken,
+} from '../resourceData/appearanceDataStorage'
+import {
   AssetFileStorage,
   assetFileStorageDependencies,
   cssFileStorageToken,
@@ -163,10 +173,23 @@ import {
   removeItemActionHandlerDependencies,
 } from '../core/actionHandlers/RemoveItemActionHandler'
 import {
+  EquipAppearanceActionHandler,
+  equipAppearanceActionHandlerDependencies,
+} from '../core/actionHandlers/EquipAppearanceActionHandler'
+import {
+  UnequipAppearanceActionHandler,
+  unequipAppearanceActionHandlerDependencies,
+} from '../core/actionHandlers/UnequipAppearanceActionHandler'
+import {
   InventoryService,
   inventoryServiceDependencies,
   inventoryServiceToken,
 } from '../inventory/inventoryService'
+import {
+  AppearanceService,
+  appearanceServiceDependencies,
+  appearanceServiceToken,
+} from '../appearance/appearanceService'
 import {
   SettingsStorage,
   settingsStorageDependencies,
@@ -222,6 +245,16 @@ import {
   itemDataInitializerDependencies,
   itemDataInitializerToken,
 } from '../core/initializers/itemDataInitializer'
+import {
+  AppearanceCategoryInitializer,
+  appearanceCategoryInitializerDependencies,
+  appearanceCategoryInitializerToken,
+} from '../core/initializers/appearanceCategoryInitializer'
+import {
+  AppearanceDataInitializer,
+  appearanceDataInitializerDependencies,
+  appearanceDataInitializerToken,
+} from '../core/initializers/appearanceDataInitializer'
 import {
   KeyboardInputService,
   keyboardInputServiceDependencies,
@@ -324,6 +357,16 @@ export function registerServices(container: Container): void {
       deps: itemDataInitializerDependencies,
     },
     {
+      token: appearanceCategoryInitializerToken,
+      useClass: AppearanceCategoryInitializer,
+      deps: appearanceCategoryInitializerDependencies,
+    },
+    {
+      token: appearanceDataInitializerToken,
+      useClass: AppearanceDataInitializer,
+      deps: appearanceDataInitializerDependencies,
+    },
+    {
       token: actionHandlerToken,
       useClass: SwitchSceneActionHandler,
       deps: switchSceneActionHandlerDependencies,
@@ -359,9 +402,25 @@ export function registerServices(container: Container): void {
       deps: removeItemActionHandlerDependencies,
     },
     {
+      token: actionHandlerToken,
+      useClass: EquipAppearanceActionHandler,
+      deps: equipAppearanceActionHandlerDependencies,
+    },
+    {
+      token: actionHandlerToken,
+      useClass: UnequipAppearanceActionHandler,
+      deps: unequipAppearanceActionHandlerDependencies,
+    },
+    {
       token: inventoryServiceToken,
       useClass: InventoryService,
       deps: inventoryServiceDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: appearanceServiceToken,
+      useClass: AppearanceService,
+      deps: appearanceServiceDependencies,
       scope: 'singleton',
     },
     {
@@ -492,6 +551,18 @@ export function registerServices(container: Container): void {
       token: itemDataStorageToken,
       useClass: ItemDataStorage,
       deps: itemDataStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: appearanceCategoryStorageToken,
+      useClass: AppearanceCategoryStorage,
+      deps: appearanceCategoryStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: appearanceDataStorageToken,
+      useClass: AppearanceDataStorage,
+      deps: appearanceDataStorageDependencies,
       scope: 'singleton',
     },
     {

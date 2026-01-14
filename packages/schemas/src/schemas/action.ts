@@ -32,8 +32,25 @@ export const actionSchema = z.discriminatedUnion('type', [
     itemId: z.string(),
     quantity: z.number().int().positive().default(1),
   }),
+  z.object({
+    type: z.literal('equip-appearance'),
+    categoryId: z.string(),
+    appearanceId: z.string(),
+  }),
+  z.object({
+    type: z.literal('unequip-appearance'),
+    categoryId: z.string(),
+  }),
 ])
 
 export type Action = z.infer<typeof actionSchema>
 export type AddItemAction = Extract<Action, { type: 'add-item' }>
 export type RemoveItemAction = Extract<Action, { type: 'remove-item' }>
+export type EquipAppearanceAction = Extract<
+  Action,
+  { type: 'equip-appearance' }
+>
+export type UnequipAppearanceAction = Extract<
+  Action,
+  { type: 'unequip-appearance' }
+>

@@ -78,6 +78,7 @@
     },
     {
       "type": "appearance",
+      "categoryId": "armor",
       "location": {
         "x": 18,
         "y": 12

@@ -10,6 +10,12 @@
     "item.health-potion.name": "Health Potion",
     "item.health-potion.description": "A glowing red potion that restores health.",
     "item.old-map.name": "Old Map",
-    "item.old-map.description": "A weathered map showing the local area. Some locations are marked with an X."
+    "item.old-map.description": "A weathered map showing the local area. Some locations are marked with an X.",
+    "item.steel-plate-armor-item.name": "Steel Plate Armor",
+    "item.steel-plate-armor-item.description": "Heavy steel armor that provides excellent protection. Equip to change your appearance.",
+    "item.leather-vest-item.name": "Leather Vest",
+    "item.leather-vest-item.description": "A sturdy leather vest. Light and practical. Equip to wear it.",
+    "item.tribal-tattoo-kit.name": "Tribal Tattoo Kit",
+    "item.tribal-tattoo-kit.description": "Sacred inks and needles for applying traditional tattoos. Use to apply face markings."
   }
 }

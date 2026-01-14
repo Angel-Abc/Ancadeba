@@ -32,6 +32,14 @@ import {
   IItemDataInitializer,
   itemDataInitializerToken,
 } from './initializers/itemDataInitializer'
+import {
+  IAppearanceCategoryInitializer,
+  appearanceCategoryInitializerToken,
+} from './initializers/appearanceCategoryInitializer'
+import {
+  IAppearanceDataInitializer,
+  appearanceDataInitializerToken,
+} from './initializers/appearanceDataInitializer'
 
 export interface IGameDataInitializer {
   initialize(gameData: GameData): Promise<void>
@@ -46,6 +54,8 @@ export const gameDataInitializerDependencies: Token<unknown>[] = [
   tileDataInitializerToken,
   mapDataInitializerToken,
   itemDataInitializerToken,
+  appearanceCategoryInitializerToken,
+  appearanceDataInitializerToken,
   virtualKeyStorageToken,
   virtualInputStorageToken,
   resourceDataLoggerToken,
@@ -59,6 +69,8 @@ export class GameDataInitializer implements IGameDataInitializer {
     private readonly tileDataInitializer: ITileDataInitializer,
     private readonly mapDataInitializer: IMapDataInitializer,
     private readonly itemDataInitializer: IItemDataInitializer,
+    private readonly appearanceCategoryInitializer: IAppearanceCategoryInitializer,
+    private readonly appearanceDataInitializer: IAppearanceDataInitializer,
     private readonly virtualKeyStorage: IVirtualKeyStorage,
     private readonly virtualInputStorage: IVirtualInputStorage,
     private readonly resourceDataLogger: IResourceDataLogger
@@ -72,6 +84,10 @@ export class GameDataInitializer implements IGameDataInitializer {
     this.tileDataInitializer.initializeTiles(gameData.tileSets)
     this.mapDataInitializer.initializeMaps(gameData.maps)
     this.itemDataInitializer.initializeItems(gameData.items)
+    this.appearanceCategoryInitializer.initializeAppearanceCategories(
+      gameData.appearanceCategories
+    )
+    this.appearanceDataInitializer.initializeAppearances(gameData.appearances)
     this.virtualKeyStorage.setVirtualKeys(gameData.virtualKeys.mappings)
     this.virtualInputStorage.setVirtualInputs(gameData.virtualInputs.mappings)
 

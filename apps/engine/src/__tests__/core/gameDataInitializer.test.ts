@@ -6,6 +6,8 @@ import type { ISceneDataInitializer } from '../../core/initializers/sceneDataIni
 import type { ITileDataInitializer } from '../../core/initializers/tileDataInitializer'
 import type { IMapDataInitializer } from '../../core/initializers/mapDataInitializer'
 import type { IItemDataInitializer } from '../../core/initializers/itemDataInitializer'
+import type { IAppearanceCategoryInitializer } from '../../core/initializers/appearanceCategoryInitializer'
+import type { IAppearanceDataInitializer } from '../../core/initializers/appearanceDataInitializer'
 import type {
   IVirtualKeyStorage,
   IVirtualInputStorage,
@@ -38,6 +40,16 @@ describe('core/gameDataInitializer', () => {
   const createMockItemDataInitializer = (): IItemDataInitializer => ({
     initializeItems: vi.fn(),
   })
+
+  const createMockAppearanceCategoryInitializer =
+    (): IAppearanceCategoryInitializer => ({
+      initializeAppearanceCategories: vi.fn(),
+    })
+
+  const createMockAppearanceDataInitializer =
+    (): IAppearanceDataInitializer => ({
+      initializeAppearances: vi.fn(),
+    })
 
   const createMockVirtualKeyStorage = (): IVirtualKeyStorage => ({
     setVirtualKeys: vi.fn(),
@@ -74,6 +86,8 @@ describe('core/gameDataInitializer', () => {
     maps: [],
     tileSets: [],
     items: [],
+    appearanceCategories: [],
+    appearances: [],
     virtualKeys: {
       id: 'virtual-keys',
       createdAt: '2026-01-10T00:00:00Z',
@@ -96,6 +110,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -106,6 +123,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -130,6 +149,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -140,6 +162,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -162,6 +186,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -172,6 +199,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -200,6 +229,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -210,6 +242,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -236,6 +270,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -246,6 +283,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -274,6 +313,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -284,6 +326,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -312,6 +356,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -322,6 +369,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -364,6 +413,9 @@ describe('core/gameDataInitializer', () => {
       callOrder.push('maps')
     })
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -377,6 +429,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -413,6 +467,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -423,6 +480,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger
@@ -445,6 +504,9 @@ describe('core/gameDataInitializer', () => {
     const tileDataInitializer = createMockTileDataInitializer()
     const mapDataInitializer = createMockMapDataInitializer()
     const itemDataInitializer = createMockItemDataInitializer()
+    const appearanceCategoryInitializer =
+      createMockAppearanceCategoryInitializer()
+    const appearanceDataInitializer = createMockAppearanceDataInitializer()
     const virtualKeyStorage = createMockVirtualKeyStorage()
     const virtualInputStorage = createMockVirtualInputStorage()
     const resourceDataLogger = createMockResourceDataLogger()
@@ -455,6 +517,8 @@ describe('core/gameDataInitializer', () => {
       tileDataInitializer,
       mapDataInitializer,
       itemDataInitializer,
+      appearanceCategoryInitializer,
+      appearanceDataInitializer,
       virtualKeyStorage,
       virtualInputStorage,
       resourceDataLogger

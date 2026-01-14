@@ -1,5 +1,7 @@
 import { InventoryComponent as InventoryComponentData } from '@ancadeba/schemas'
 import { useService } from '@ancadeba/ui'
+import { IMessageBus, messageBusToken } from '@ancadeba/utils'
+import { CORE_MESSAGES } from '../../../messages/core'
 import {
   IInventoryService,
   inventoryServiceToken,
@@ -23,8 +25,27 @@ export function InventoryComponent(_props: InventoryComponentProps) {
     resourceDataProviderToken
   )
   const languageProvider = useService<ILanguageProvider>(languageProviderToken)
+  const messageBus = useService<IMessageBus>(messageBusToken)
 
   const inventory = inventoryService.getPlayerInventory()
+
+  function handleEquipItem(itemId: string) {
+    const itemData = resourceDataProvider.getItemData(itemId)
+    if (!itemData.appearanceId) {
+      return
+    }
+
+    const appearance = resourceDataProvider.getAppearanceData(
+      itemData.appearanceId
+    )
+    messageBus.publish(CORE_MESSAGES.EXECUTE_ACTION, {
+      action: {
+        type: 'equip-appearance',
+        categoryId: appearance.categoryId,
+        appearanceId: itemData.appearanceId,
+      },
+    })
+  }
 
   if (!inventory || inventory.items.length === 0) {
     return (
@@ -55,6 +76,14 @@ export function InventoryComponent(_props: InventoryComponentProps) {
                 </span>
               </div>
               <p className="inventory-item-description">{itemDescription}</p>
+              {itemData.type === 'equipment' && itemData.appearanceId && (
+                <button
+                  className="inventory-item-use-button"
+                  onClick={() => handleEquipItem(item.itemId)}
+                >
+                  Equip
+                </button>
+              )}
             </li>
           )
         })}
