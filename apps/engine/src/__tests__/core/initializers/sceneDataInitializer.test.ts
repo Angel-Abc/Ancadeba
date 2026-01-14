@@ -3,6 +3,7 @@ import type { Scene } from '@ancadeba/schemas'
 import type {
   ISceneDataStorage,
   ICssFileStorage,
+  IComponentDefinitionStorage,
 } from '../../../resourceData/storage'
 import { SceneDataInitializer } from '../../../core/initializers/sceneDataInitializer'
 
@@ -17,6 +18,14 @@ describe('core/initializers/sceneDataInitializer', () => {
     addCssFileName: vi.fn(),
     getCssFileNames: vi.fn(() => []),
   })
+
+  const createMockComponentDefinitionStorage =
+    (): IComponentDefinitionStorage => ({
+      addComponentDefinition: vi.fn(),
+      getComponentDefinition: vi.fn(),
+      hasComponentDefinition: vi.fn(() => false),
+      getLoadedDefinitionIds: vi.fn(() => []),
+    })
 
   const baseTimestamp = '2026-01-10T00:00:00Z'
 
@@ -39,9 +48,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
 
     // Act
@@ -55,9 +66,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
     const scene = createScene('main-menu')
 
@@ -76,9 +89,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
     const scene1 = createScene('main-menu')
     const scene2 = createScene('settings')
@@ -110,9 +125,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
 
     // Act
@@ -126,9 +143,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
 
     // Act
@@ -142,9 +161,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
 
     // Act
@@ -159,9 +180,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
 
     // Act
@@ -184,9 +207,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
     const scene = createScene('test-scene')
 
@@ -208,9 +233,11 @@ describe('core/initializers/sceneDataInitializer', () => {
     // Arrange
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const initializer = new SceneDataInitializer(
       sceneDataStorage,
-      cssFileStorage
+      cssFileStorage,
+      componentDefinitionStorage
     )
     const scene: Scene = {
       ...createScene('complex-scene'),

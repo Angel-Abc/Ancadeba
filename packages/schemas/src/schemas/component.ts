@@ -1,10 +1,6 @@
 import { z } from 'zod'
 import { inputRuleSchema, menuOptionSchema } from './componentCommon'
-import {
-  createComponentTypeSchemas,
-  sizeSchema,
-  borderSchema,
-} from './componentTypes'
+import { sizeSchema, borderSchema } from './componentTypes'
 
 const locationSchema = z.object({
   x: z.number().int().nonnegative(),
@@ -14,25 +10,53 @@ const locationSchema = z.object({
 const baseComponentSchema = z.object({
   location: locationSchema,
   size: sizeSchema,
-  visible: z.boolean().default(true),
-  border: borderSchema,
+  visible: z.boolean().optional().default(true),
+  border: borderSchema.optional().default({ width: 0, padding: 0, margin: 0 }),
   inputRules: z.array(inputRuleSchema).optional(),
 })
 
-// Create all component type schemas using the shared factory
-const componentTypeSchemas = createComponentTypeSchemas(baseComponentSchema)
+// Define all component type schemas directly
+const backgroundComponentSchema = baseComponentSchema.extend({
+  type: z.literal('background'),
+  color: z.string(),
+  image: z.string(),
+})
 
-const backgroundComponentSchema = componentTypeSchemas.background
-const inventoryComponentSchema = componentTypeSchemas.inventory
-const appearanceComponentSchema = componentTypeSchemas.appearance
-const textLogComponentSchema = componentTypeSchemas.textLog
-const inputBarComponentSchema = componentTypeSchemas.inputBar
-const characterSheetComponentSchema = componentTypeSchemas.characterSheet
-const menuComponentSchema = componentTypeSchemas.menu
-const squaresMapComponentSchema = componentTypeSchemas.squaresMap
+const inventoryComponentSchema = baseComponentSchema.extend({
+  type: z.literal('inventory'),
+  slotsPerRow: z.number().int().positive(),
+  rows: z.number().int().positive(),
+})
+
+const appearanceComponentSchema = baseComponentSchema.extend({
+  type: z.literal('appearance'),
+  categoryId: z.string(),
+})
+
+const textLogComponentSchema = baseComponentSchema.extend({
+  type: z.literal('text-log'),
+})
+
+const inputBarComponentSchema = baseComponentSchema.extend({
+  type: z.literal('input-bar'),
+})
+
+const characterSheetComponentSchema = baseComponentSchema.extend({
+  type: z.literal('character-sheet'),
+})
+
+const menuComponentSchema = baseComponentSchema.extend({
+  type: z.literal('menu'),
+  options: z.array(menuOptionSchema).min(1),
+})
+
+const squaresMapComponentSchema = baseComponentSchema.extend({
+  type: z.literal('squares-map'),
+  viewport: sizeSchema,
+})
 
 // Inline component (legacy format with all properties)
-const inlineComponentSchema = z.discriminatedUnion('type', [
+const inlineComponentSchema = z.union([
   backgroundComponentSchema,
   menuComponentSchema,
   squaresMapComponentSchema,

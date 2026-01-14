@@ -66,9 +66,7 @@ describe('core/initializers/gameStateInitializer', () => {
   const createLanguageMap = (
     languages: GameData['meta']['languages']
   ): GameData['languages'] =>
-    new Map(
-      Object.entries(languages).map(([key, value]) => [key, value])
-    )
+    new Map(Object.entries(languages).map(([key, value]) => [key, value]))
 
   const createMinimalGameData = (): GameData => ({
     meta: {
@@ -96,6 +94,7 @@ describe('core/initializers/gameStateInitializer', () => {
       tileSets: [],
       maps: [],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: 'virtual-keys',
@@ -111,6 +110,7 @@ describe('core/initializers/gameStateInitializer', () => {
     maps: [],
     tileSets: [],
     items: [],
+    componentDefinitions: [],
     appearanceCategories: [],
     appearances: [],
     virtualKeys: {
@@ -378,6 +378,7 @@ describe('core/initializers/gameStateInitializer', () => {
         tileSets: [],
         maps: ['world-map'],
         items: [],
+        componentDefinitions: [],
         appearanceCategories: [],
         appearances: [],
         virtualKeys: 'virtual-keys',
@@ -391,6 +392,7 @@ describe('core/initializers/gameStateInitializer', () => {
       maps: [],
       tileSets: [],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: {

@@ -1,10 +1,10 @@
-import { Component as ComponentData } from '@ancadeba/schemas'
+import { InlineComponent } from '@ancadeba/schemas'
 import { useService } from '@ancadeba/ui'
 import { ILogger, loggerToken } from '@ancadeba/utils'
 import { componentRegistryToken, IComponentRegistry } from './componentRegistry'
 
 interface ComponentProps {
-  component: ComponentData
+  component: InlineComponent
 }
 
 export function Component({ component }: ComponentProps) {

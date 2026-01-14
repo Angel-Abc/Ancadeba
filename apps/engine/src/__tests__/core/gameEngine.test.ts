@@ -19,9 +19,7 @@ describe('core/gameEngine', () => {
   const createLanguageMap = (
     languages: GameData['meta']['languages']
   ): GameData['languages'] =>
-    new Map(
-      Object.entries(languages).map(([key, value]) => [key, value])
-    )
+    new Map(Object.entries(languages).map(([key, value]) => [key, value]))
 
   const createGameData = (
     metaOverrides: Partial<GameData['meta']> = {}
@@ -39,6 +37,7 @@ describe('core/gameEngine', () => {
       tileSets: [],
       maps: [],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: 'virtual-keys',
@@ -57,6 +56,7 @@ describe('core/gameEngine', () => {
       tileSets: [],
       maps: [],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: {

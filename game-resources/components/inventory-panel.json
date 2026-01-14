@@ -1,6 +1,8 @@
 {
   "id": "inventory-panel",
   "type": "inventory",
+  "slotsPerRow": 6,
+  "rows": 20,
   "border": {
     "width": 4,
     "padding": 8,

@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "tsc -b -w",
     "build": "tsc -b",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "vitest run"

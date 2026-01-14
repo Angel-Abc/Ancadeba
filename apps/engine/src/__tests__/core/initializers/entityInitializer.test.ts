@@ -23,6 +23,7 @@ describe('core/initializers/entityInitializer', () => {
       initialState: {
         scene: 'start-scene',
       },
+      componentDefinitions: [],
       scenes: [],
       styling: [],
       tileSets: [],
@@ -45,6 +46,7 @@ describe('core/initializers/entityInitializer', () => {
     maps: [],
     tileSets: [],
     items: [],
+    componentDefinitions: [],
     appearanceCategories: [],
     appearances: [],
     virtualKeys: {

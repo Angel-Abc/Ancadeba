@@ -1,13 +1,13 @@
 import {
   GridScreen as GridScreenData,
-  Component as ComponentData,
+  InlineComponent,
 } from '@ancadeba/schemas'
 import { CSSCustomProperties } from '@ancadeba/ui'
 import { Component } from './Component'
 
 interface GridScreenProps {
   screen: GridScreenData
-  components: ComponentData[]
+  components: InlineComponent[]
   sceneId: string
 }
 

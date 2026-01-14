@@ -56,6 +56,8 @@ export function InventoryComponent(_props: InventoryComponentProps) {
     )
   }
 
+  // const totalSlots = component.slotsPerRow * component.rows
+
   return (
     <div className="inventory-component">
       <h3>Inventory</h3>

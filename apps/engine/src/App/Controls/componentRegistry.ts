@@ -1,21 +1,21 @@
-import { Component as ComponentData } from '@ancadeba/schemas'
+import { InlineComponent } from '@ancadeba/schemas'
 import { ComponentType } from 'react'
 import { token } from '@ancadeba/utils'
 
-type ComponentByType<TType extends ComponentData['type']> = Extract<
-  ComponentData,
+type ComponentByType<TType extends InlineComponent['type']> = Extract<
+  InlineComponent,
   { type: TType }
 >
 
 export interface IComponentRegistry {
-  register<TType extends ComponentData['type']>(
+  register<TType extends InlineComponent['type']>(
     type: TType,
     component: ComponentType<{ component: ComponentByType<TType> }>
   ): void
-  resolve<TType extends ComponentData['type']>(
+  resolve<TType extends InlineComponent['type']>(
     type: TType
   ): ComponentType<{ component: ComponentByType<TType> }> | undefined
-  has(type: ComponentData['type']): boolean
+  has(type: InlineComponent['type']): boolean
 }
 
 const logName = 'App/Controls/componentRegistry'
@@ -23,21 +23,21 @@ export const componentRegistryToken = token<IComponentRegistry>(logName)
 
 export class ComponentRegistry implements IComponentRegistry {
   private components = new Map<
-    ComponentData['type'],
-    ComponentType<{ component: ComponentData }>
+    InlineComponent['type'],
+    ComponentType<{ component: InlineComponent }>
   >()
 
-  register<TType extends ComponentData['type']>(
+  register<TType extends InlineComponent['type']>(
     type: TType,
     component: ComponentType<{ component: ComponentByType<TType> }>
   ): void {
     this.components.set(
       type,
-      component as ComponentType<{ component: ComponentData }>
+      component as ComponentType<{ component: InlineComponent }>
     )
   }
 
-  resolve<TType extends ComponentData['type']>(
+  resolve<TType extends InlineComponent['type']>(
     type: TType
   ): ComponentType<{ component: ComponentByType<TType> }> | undefined {
     return this.components.get(type) as
@@ -45,7 +45,7 @@ export class ComponentRegistry implements IComponentRegistry {
       | undefined
   }
 
-  has(type: ComponentData['type']): boolean {
+  has(type: InlineComponent['type']): boolean {
     return this.components.has(type)
   }
 }

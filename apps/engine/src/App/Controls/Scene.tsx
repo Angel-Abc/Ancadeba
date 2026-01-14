@@ -45,12 +45,20 @@ export function Scene() {
     [activeSceneId, resourceDataProvider]
   )
 
+  const resolvedComponents = useMemo(
+    () =>
+      activeScene.components.map((c) =>
+        resourceDataProvider.resolveComponent(c)
+      ),
+    [activeScene.components, resourceDataProvider]
+  )
+
   switch (activeScene.screen.type) {
     case 'grid': {
       return (
         <GridScreen
           screen={activeScene.screen}
-          components={activeScene.components}
+          components={resolvedComponents}
           sceneId={activeScene.id}
         />
       )

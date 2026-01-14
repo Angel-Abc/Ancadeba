@@ -6,13 +6,11 @@ export const sizeSchema = z.object({
   height: z.number().int().positive(),
 })
 
-export const borderSchema = z
-  .object({
-    width: z.number().int().nonnegative().default(0),
-    padding: z.number().int().nonnegative().default(0),
-    margin: z.number().int().nonnegative().default(0),
-  })
-  .default({ width: 0, padding: 0, margin: 0 })
+export const borderSchema = z.object({
+  width: z.number().int().nonnegative(),
+  padding: z.number().int().nonnegative(),
+  margin: z.number().int().nonnegative(),
+})
 
 /**
  * Factory function to create component type schemas.
@@ -30,6 +28,8 @@ export function createComponentTypeSchemas<
     }),
     inventory: baseSchema.extend({
       type: z.literal('inventory'),
+      slotsPerRow: z.number().int().positive(),
+      rows: z.number().int().positive(),
     }),
     appearance: baseSchema.extend({
       type: z.literal('appearance'),

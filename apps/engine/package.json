@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node ../../scripts/copy-game-resources.mjs",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "clean": "rm -rf dist node_modules/.vite",
     "copy-resources": "node ../../scripts/copy-game-resources.mjs",

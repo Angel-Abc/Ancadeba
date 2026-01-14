@@ -76,7 +76,10 @@ export class InputConfigProvider implements IInputConfigProvider {
       this.gameStateProvider.activeSceneId
     )
     const sceneRules = scene.inputRules ?? []
-    const componentRules = scene.components.flatMap(
+    const resolvedComponents = scene.components.map((c) =>
+      this.resourceDataProvider.resolveComponent(c)
+    )
+    const componentRules = resolvedComponents.flatMap(
       (component) => component.inputRules ?? []
     )
 
