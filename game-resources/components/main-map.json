@@ -1,0 +1,43 @@
+{
+  "id": "main-map",
+  "type": "squares-map",
+  "viewport": {
+    "width": 9,
+    "height": 9
+  },
+  "border": {
+    "width": 4,
+    "padding": 8,
+    "margin": 4
+  },
+  "inputRules": [
+    {
+      "virtualInput": "VI_UP",
+      "enabled": {
+        "type": "can-move-up"
+      },
+      "caption": "input.move.up"
+    },
+    {
+      "virtualInput": "VI_DOWN",
+      "enabled": {
+        "type": "can-move-down"
+      },
+      "caption": "input.move.down"
+    },
+    {
+      "virtualInput": "VI_LEFT",
+      "enabled": {
+        "type": "can-move-left"
+      },
+      "caption": "input.move.left"
+    },
+    {
+      "virtualInput": "VI_RIGHT",
+      "enabled": {
+        "type": "can-move-right"
+      },
+      "caption": "input.move.right"
+    }
+  ]
+}

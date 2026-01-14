@@ -10,6 +10,8 @@ import {
   mapDataStorageToken,
   IItemDataStorage,
   itemDataStorageToken,
+  IComponentDefinitionStorage,
+  componentDefinitionStorageToken,
   IAppearanceCategoryStorage,
   appearanceCategoryStorageToken,
   IAppearanceDataStorage,
@@ -17,7 +19,16 @@ import {
   ILanguageFileStorage,
   languageFileStorageToken,
 } from './storage'
-import { Scene, Item, AppearanceCategory, Appearance } from '@ancadeba/schemas'
+import {
+  Scene,
+  Item,
+  AppearanceCategory,
+  Appearance,
+  ComponentDefinition,
+  Component,
+  InlineComponent,
+  ComponentReference,
+} from '@ancadeba/schemas'
 import { MapData } from './types'
 
 export interface IResourceDataProvider {
@@ -26,6 +37,9 @@ export interface IResourceDataProvider {
   getCssFilePaths(): string[]
   getMapData(mapId: string): MapData
   getItemData(itemId: string): Item
+  getComponentDefinition(definitionId: string): ComponentDefinition
+  hasComponentDefinition(definitionId: string): boolean
+  resolveComponent(component: Component): InlineComponent
   getAppearanceCategoryData(categoryId: string): AppearanceCategory
   getAppearanceData(appearanceId: string): Appearance
   getAllAppearanceCategories(): AppearanceCategory[]
@@ -41,6 +55,7 @@ export const resourceDataProviderDependencies: Token<unknown>[] = [
   cssFileStorageToken,
   mapDataStorageToken,
   itemDataStorageToken,
+  componentDefinitionStorageToken,
   appearanceCategoryStorageToken,
   appearanceDataStorageToken,
   languageFileStorageToken,
@@ -52,6 +67,7 @@ export class ResourceDataProvider implements IResourceDataProvider {
     private readonly cssFileStorage: ICssFileStorage,
     private readonly mapDataStorage: IMapDataStorage,
     private readonly itemDataStorage: IItemDataStorage,
+    private readonly componentDefinitionStorage: IComponentDefinitionStorage,
     private readonly appearanceCategoryStorage: IAppearanceCategoryStorage,
     private readonly appearanceDataStorage: IAppearanceDataStorage,
     private readonly languageFileStorage: ILanguageFileStorage
@@ -72,6 +88,37 @@ export class ResourceDataProvider implements IResourceDataProvider {
   }
   getItemData(itemId: string): Item {
     return this.itemDataStorage.getItemData(itemId)
+  }
+  getComponentDefinition(definitionId: string): ComponentDefinition {
+    return this.componentDefinitionStorage.getComponentDefinition(definitionId)
+  }
+  hasComponentDefinition(definitionId: string): boolean {
+    return this.componentDefinitionStorage.hasComponentDefinition(definitionId)
+  }
+  resolveComponent(component: Component): InlineComponent {
+    // If it's already an inline component, return as-is
+    if ('type' in component) {
+      return component as InlineComponent
+    }
+
+    // It's a component reference, resolve it
+    const reference = component as ComponentReference
+    const definition = this.getComponentDefinition(reference.definitionId)
+
+    // Merge definition with scene-level properties and overrides
+    const resolved: InlineComponent = {
+      ...definition,
+      location: reference.location,
+      size: reference.size,
+      visible: reference.visible,
+    } as InlineComponent
+
+    // Apply overrides if present
+    if (reference.overrides) {
+      Object.assign(resolved, reference.overrides)
+    }
+
+    return resolved
   }
   getAppearanceCategoryData(categoryId: string): AppearanceCategory {
     return this.appearanceCategoryStorage.getAppearanceCategoryData(categoryId)

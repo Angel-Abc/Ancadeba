@@ -6,6 +6,7 @@ import type {
   ICssFileStorage,
   IMapDataStorage,
   IItemDataStorage,
+  IComponentDefinitionStorage,
   IAppearanceCategoryStorage,
   IAppearanceDataStorage,
   ILanguageFileStorage,
@@ -43,6 +44,14 @@ describe('resourceData/provider', () => {
     getLoadedItemIds: vi.fn(),
   })
 
+  const createMockComponentDefinitionStorage =
+    (): IComponentDefinitionStorage => ({
+      addComponentDefinition: vi.fn(),
+      getComponentDefinition: vi.fn(),
+      hasComponentDefinition: vi.fn(),
+      getLoadedDefinitionIds: vi.fn(() => []),
+    })
+
   const createMockAppearanceCategoryStorage =
     (): IAppearanceCategoryStorage => ({
       addAppearanceCategoryData: vi.fn(),
@@ -61,26 +70,44 @@ describe('resourceData/provider', () => {
     setLanguageFileNames: vi.fn(),
   })
 
-  it('returns assetsUrl from storage rootPath', () => {
-    // Arrange
-    const resourceRootPath = createMockResourceRootPath('/game-resources')
+  const createProvider = (rootPath = '/resources') => {
+    const resourceRootPath = createMockResourceRootPath(rootPath)
     const sceneDataStorage = createMockSceneDataStorage()
     const cssFileStorage = createMockCssFileStorage()
     const mapDataStorage = createMockMapDataStorage()
     const itemDataStorage = createMockItemDataStorage()
+    const componentDefinitionStorage = createMockComponentDefinitionStorage()
     const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
     const appearanceDataStorage = createMockAppearanceDataStorage()
     const languageFileStorage = createMockLanguageFileStorage()
-    const provider = new ResourceDataProvider(
+
+    return {
+      provider: new ResourceDataProvider(
+        resourceRootPath,
+        sceneDataStorage,
+        cssFileStorage,
+        mapDataStorage,
+        itemDataStorage,
+        componentDefinitionStorage,
+        appearanceCategoryStorage,
+        appearanceDataStorage,
+        languageFileStorage
+      ),
       resourceRootPath,
       sceneDataStorage,
       cssFileStorage,
       mapDataStorage,
       itemDataStorage,
+      componentDefinitionStorage,
       appearanceCategoryStorage,
       appearanceDataStorage,
-      languageFileStorage
-    )
+      languageFileStorage,
+    }
+  }
+
+  it('returns assetsUrl from storage rootPath', () => {
+    // Arrange
+    const { provider } = createProvider('/game-resources')
 
     // Act
     const assetsUrl = provider.assetsUrl
@@ -91,14 +118,7 @@ describe('resourceData/provider', () => {
 
   it('delegates getSceneData to storage', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath()
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, sceneDataStorage } = createProvider()
     const mockScene: Scene = {
       id: 'test-scene',
       createdAt: '2026-01-10T00:00:00Z',
@@ -107,16 +127,6 @@ describe('resourceData/provider', () => {
       components: [],
     }
     vi.mocked(sceneDataStorage.getSceneData).mockReturnValue(mockScene)
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const scene = provider.getSceneData('test-scene')
@@ -128,28 +138,11 @@ describe('resourceData/provider', () => {
 
   it('maps CSS filenames to full URLs', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath('/resources')
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, cssFileStorage } = createProvider('/resources')
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([
       'game.css',
       'theme.css',
     ])
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const cssPaths = provider.getCssFilePaths()
@@ -164,25 +157,8 @@ describe('resourceData/provider', () => {
 
   it('returns empty array when no CSS files exist', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath()
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, cssFileStorage } = createProvider()
     vi.mocked(cssFileStorage.getCssFileNames).mockReturnValue([])
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const cssPaths = provider.getCssFilePaths()
@@ -193,14 +169,7 @@ describe('resourceData/provider', () => {
 
   it('delegates getMapData to storage', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath()
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, mapDataStorage } = createProvider()
     const mockMapData: MapData = {
       id: 'test-map',
       width: 10,
@@ -209,16 +178,6 @@ describe('resourceData/provider', () => {
       squares: [],
     }
     vi.mocked(mapDataStorage.getMapData).mockReturnValue(mockMapData)
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const mapData = provider.getMapData('test-map')
@@ -230,28 +189,11 @@ describe('resourceData/provider', () => {
 
   it('maps language filenames to full paths with language directory', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath('/resources')
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, languageFileStorage } = createProvider('/resources')
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([
       'en/system.json',
       'en/tiles.json',
     ])
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const languagePaths = provider.getLanguageFilePaths('en')
@@ -266,25 +208,8 @@ describe('resourceData/provider', () => {
 
   it('returns empty array when no language files exist', () => {
     // Arrange
-    const resourceRootPath = createMockResourceRootPath()
-    const sceneDataStorage = createMockSceneDataStorage()
-    const cssFileStorage = createMockCssFileStorage()
-    const mapDataStorage = createMockMapDataStorage()
-    const itemDataStorage = createMockItemDataStorage()
-    const appearanceCategoryStorage = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage = createMockAppearanceDataStorage()
-    const languageFileStorage = createMockLanguageFileStorage()
+    const { provider, languageFileStorage } = createProvider()
     vi.mocked(languageFileStorage.getLanguageFileNames).mockReturnValue([])
-    const provider = new ResourceDataProvider(
-      resourceRootPath,
-      sceneDataStorage,
-      cssFileStorage,
-      mapDataStorage,
-      itemDataStorage,
-      appearanceCategoryStorage,
-      appearanceDataStorage,
-      languageFileStorage
-    )
 
     // Act
     const languagePaths = provider.getLanguageFilePaths('fr')
@@ -295,61 +220,9 @@ describe('resourceData/provider', () => {
 
   it('constructs correct assetsUrl with different rootPaths', () => {
     // Arrange
-    const resourceRootPath1 = createMockResourceRootPath('/game')
-    const sceneDataStorage1 = createMockSceneDataStorage()
-    const cssFileStorage1 = createMockCssFileStorage()
-    const mapDataStorage1 = createMockMapDataStorage()
-    const itemDataStorage1 = createMockItemDataStorage()
-    const appearanceCategoryStorage1 = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage1 = createMockAppearanceDataStorage()
-    const languageFileStorage1 = createMockLanguageFileStorage()
-    const provider1 = new ResourceDataProvider(
-      resourceRootPath1,
-      sceneDataStorage1,
-      cssFileStorage1,
-      mapDataStorage1,
-      itemDataStorage1,
-      appearanceCategoryStorage1,
-      appearanceDataStorage1,
-      languageFileStorage1
-    )
-
-    const resourceRootPath2 = createMockResourceRootPath('/different-path')
-    const sceneDataStorage2 = createMockSceneDataStorage()
-    const cssFileStorage2 = createMockCssFileStorage()
-    const mapDataStorage2 = createMockMapDataStorage()
-    const itemDataStorage2 = createMockItemDataStorage()
-    const appearanceCategoryStorage2 = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage2 = createMockAppearanceDataStorage()
-    const languageFileStorage2 = createMockLanguageFileStorage()
-    const resourceRootPath3 = createMockResourceRootPath('/data/resources')
-    const sceneDataStorage3 = createMockSceneDataStorage()
-    const cssFileStorage3 = createMockCssFileStorage()
-    const mapDataStorage3 = createMockMapDataStorage()
-    const itemDataStorage3 = createMockItemDataStorage()
-    const appearanceCategoryStorage3 = createMockAppearanceCategoryStorage()
-    const appearanceDataStorage3 = createMockAppearanceDataStorage()
-    const languageFileStorage3 = createMockLanguageFileStorage()
-    const provider2 = new ResourceDataProvider(
-      resourceRootPath2,
-      sceneDataStorage2,
-      cssFileStorage2,
-      mapDataStorage2,
-      itemDataStorage2,
-      appearanceCategoryStorage2,
-      appearanceDataStorage2,
-      languageFileStorage2
-    )
-    const provider3 = new ResourceDataProvider(
-      resourceRootPath3,
-      sceneDataStorage3,
-      cssFileStorage3,
-      mapDataStorage3,
-      itemDataStorage3,
-      appearanceCategoryStorage3,
-      appearanceDataStorage3,
-      languageFileStorage3
-    )
+    const { provider: provider1 } = createProvider('/game')
+    const { provider: provider2 } = createProvider('/different-path')
+    const { provider: provider3 } = createProvider('/data/resources')
 
     // Act & Assert
     expect(provider1.assetsUrl).toBe('/game/assets')

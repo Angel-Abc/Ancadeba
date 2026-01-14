@@ -1,0 +1,9 @@
+{
+  "id": "inventory-panel",
+  "type": "inventory",
+  "border": {
+    "width": 4,
+    "padding": 8,
+    "margin": 4
+  }
+}

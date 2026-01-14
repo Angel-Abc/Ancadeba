@@ -11,6 +11,9 @@ export { mapDataStorageToken } from './mapDataStorage'
 export type { IItemDataStorage } from './itemDataStorage'
 export { itemDataStorageToken } from './itemDataStorage'
 
+export type { IComponentDefinitionStorage } from './componentDefinitionStorage'
+export { componentDefinitionStorageToken } from './componentDefinitionStorage'
+
 export type { IAppearanceCategoryStorage } from './appearanceCategoryStorage'
 export { appearanceCategoryStorageToken } from './appearanceCategoryStorage'
 

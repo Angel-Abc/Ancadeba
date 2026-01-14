@@ -81,6 +81,9 @@ export class GameDataInitializer implements IGameDataInitializer {
     this.entityInitializer.initializeEntities(gameData)
     this.sceneDataInitializer.initializeScenes(gameData.scenes)
     this.sceneDataInitializer.initializeStyling(gameData.meta.styling)
+    this.sceneDataInitializer.initializeComponentDefinitions(
+      gameData.componentDefinitions
+    )
     this.tileDataInitializer.initializeTiles(gameData.tileSets)
     this.mapDataInitializer.initializeMaps(gameData.maps)
     this.itemDataInitializer.initializeItems(gameData.items)

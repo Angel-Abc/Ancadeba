@@ -75,6 +75,11 @@ import {
   itemDataStorageToken,
 } from '../resourceData/itemDataStorage'
 import {
+  ComponentDefinitionStorage,
+  componentDefinitionStorageDependencies,
+  componentDefinitionStorageToken,
+} from '../resourceData/componentDefinitionStorage'
+import {
   AppearanceCategoryStorage,
   appearanceCategoryStorageDependencies,
   appearanceCategoryStorageToken,
@@ -551,6 +556,12 @@ export function registerServices(container: Container): void {
       token: itemDataStorageToken,
       useClass: ItemDataStorage,
       deps: itemDataStorageDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: componentDefinitionStorageToken,
+      useClass: ComponentDefinitionStorage,
+      deps: componentDefinitionStorageDependencies,
       scope: 'singleton',
     },
     {

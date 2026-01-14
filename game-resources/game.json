@@ -34,6 +34,12 @@
     "leather-vest-item",
     "tribal-tattoo-kit"
   ],
+  "componentDefinitions": [
+    "main-map",
+    "inventory-panel",
+    "armor-appearance",
+    "character-sheet-panel"
+  ],
   "appearanceCategories": [
     "appearance-categories/armor",
     "appearance-categories/tattoos"

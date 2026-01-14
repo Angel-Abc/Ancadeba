@@ -1,0 +1,9 @@
+{
+  "id": "character-sheet-panel",
+  "type": "character-sheet",
+  "border": {
+    "width": 4,
+    "padding": 8,
+    "margin": 4
+  }
+}

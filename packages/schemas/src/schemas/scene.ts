@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { BaseSchema } from './base'
-import { componentSchema, inputRuleSchema } from './component'
+import { componentSchema } from './component'
+import { inputRuleSchema } from './componentCommon'
 import { inputRangeSchema } from './inputRange'
 
 export const gridScreenSchema = z.object({

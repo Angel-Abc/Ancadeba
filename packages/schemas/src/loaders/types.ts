@@ -7,6 +7,7 @@ import { VirtualInputs } from '../schemas/virtualInputs'
 import { Item } from '../schemas/item'
 import { AppearanceCategory } from '../schemas/appearanceCategory'
 import { Appearance } from '../schemas/appearance'
+import { ComponentDefinition } from '../schemas/componentDefinition'
 
 export interface GameData {
   meta: Game
@@ -17,6 +18,7 @@ export interface GameData {
   tileSets: TileSet[]
   maps: MapData[]
   items: Item[]
+  componentDefinitions: ComponentDefinition[]
   appearanceCategories: AppearanceCategory[]
   appearances: Appearance[]
 }

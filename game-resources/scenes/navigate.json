@@ -11,7 +11,7 @@
   },
   "components": [
     {
-      "type": "squares-map",
+      "definitionId": "main-map",
       "location": {
         "x": 0,
         "y": 0
@@ -19,49 +19,10 @@
       "size": {
         "width": 6,
         "height": 12
-      },
-      "viewport": {
-        "width": 9,
-        "height": 9
-      },
-      "border": {
-        "width": 4,
-        "padding": 8,
-        "margin": 4
-      },
-      "inputRules": [
-        {
-          "virtualInput": "VI_UP",
-          "enabled": {
-            "type": "can-move-up"
-          },
-          "caption": "input.move.up"
-        },
-        {
-          "virtualInput": "VI_DOWN",
-          "enabled": {
-            "type": "can-move-down"
-          },
-          "caption": "input.move.down"
-        },
-        {
-          "virtualInput": "VI_LEFT",
-          "enabled": {
-            "type": "can-move-left"
-          },
-          "caption": "input.move.left"
-        },
-        {
-          "virtualInput": "VI_RIGHT",
-          "enabled": {
-            "type": "can-move-right"
-          },
-          "caption": "input.move.right"
-        }
-      ]
+      }
     },
     {
-      "type": "inventory",
+      "definitionId": "inventory-panel",
       "location": {
         "x": 18,
         "y": 0
@@ -69,16 +30,10 @@
       "size": {
         "width": 6,
         "height": 12
-      },
-      "border": {
-        "width": 4,
-        "padding": 8,
-        "margin": 4
       }
     },
     {
-      "type": "appearance",
-      "categoryId": "armor",
+      "definitionId": "armor-appearance",
       "location": {
         "x": 18,
         "y": 12
@@ -86,15 +41,10 @@
       "size": {
         "width": 6,
         "height": 12
-      },
-      "border": {
-        "width": 4,
-        "padding": 8,
-        "margin": 4
       }
     },
     {
-      "type": "character-sheet",
+      "definitionId": "character-sheet-panel",
       "location": {
         "x": 0,
         "y": 12
@@ -102,11 +52,6 @@
       "size": {
         "width": 6,
         "height": 12
-      },
-      "border": {
-        "width": 4,
-        "padding": 8,
-        "margin": 4
       }
     },
     {

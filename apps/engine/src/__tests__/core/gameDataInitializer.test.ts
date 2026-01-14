@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { GameData, Map as MapData, Scene, TileSet } from '@ancadeba/schemas'
+import type {
+  GameData,
+  Map as MapData,
+  Scene,
+  TileSet,
+} from '@ancadeba/schemas'
 import type { IGameStateInitializer } from '../../core/initializers/gameStateInitializer'
 import type { IEntityInitializer } from '../../core/initializers/entityInitializer'
 import type { ISceneDataInitializer } from '../../core/initializers/sceneDataInitializer'
@@ -27,6 +32,7 @@ describe('core/gameDataInitializer', () => {
   const createMockSceneDataInitializer = (): ISceneDataInitializer => ({
     initializeScenes: vi.fn(),
     initializeStyling: vi.fn(),
+    initializeComponentDefinitions: vi.fn(),
   })
 
   const createMockTileDataInitializer = (): ITileDataInitializer => ({
@@ -70,9 +76,7 @@ describe('core/gameDataInitializer', () => {
   const createLanguageMap = (
     languages: GameData['meta']['languages']
   ): GameData['languages'] =>
-    new Map(
-      Object.entries(languages).map(([key, value]) => [key, value])
-    )
+    new Map(Object.entries(languages).map(([key, value]) => [key, value]))
 
   const createScene = (id: string): Scene => ({
     id,
@@ -125,6 +129,7 @@ describe('core/gameDataInitializer', () => {
       tileSets: [],
       maps: [],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: 'virtual-keys',
@@ -140,6 +145,7 @@ describe('core/gameDataInitializer', () => {
     maps: [],
     tileSets: [],
     items: [],
+    componentDefinitions: [],
     appearanceCategories: [],
     appearances: [],
     virtualKeys: {
@@ -595,6 +601,7 @@ describe('core/gameDataInitializer', () => {
         tileSets: ['outdoor'],
         maps: ['world'],
         items: [],
+        componentDefinitions: [],
         appearanceCategories: [],
         appearances: [],
         virtualKeys: 'virtual-keys',
@@ -607,6 +614,7 @@ describe('core/gameDataInitializer', () => {
       tileSets: [createTileSet('outdoor')],
       maps: [createMapData('world')],
       items: [],
+      componentDefinitions: [],
       appearanceCategories: [],
       appearances: [],
       virtualKeys: {

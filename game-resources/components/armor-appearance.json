@@ -1,0 +1,10 @@
+{
+  "id": "armor-appearance",
+  "type": "appearance",
+  "categoryId": "armor",
+  "border": {
+    "width": 4,
+    "padding": 8,
+    "margin": 4
+  }
+}

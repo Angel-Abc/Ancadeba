@@ -20,6 +20,7 @@ import { appearanceSchema } from '../schemas/appearance'
 import { Language, languageSchema } from '../schemas/language'
 import { VirtualKeys, virtualKeysSchema } from '../schemas/virtualKeys'
 import { VirtualInputs, virtualInputsSchema } from '../schemas/virtualInputs'
+import { componentDefinitionSchema } from '../schemas/componentDefinition'
 
 export interface IGameDataLoader {
   loadGameData(): Promise<GameData>
@@ -71,6 +72,11 @@ const defaultResourceCollectionFactory: ResourceCollectionFactory = (
     names: game.items,
     basePath: `${rootPath}/items`,
     schema: itemSchema,
+  },
+  componentDefinitions: {
+    names: game.componentDefinitions,
+    basePath: `${rootPath}/components`,
+    schema: componentDefinitionSchema,
   },
   appearanceCategories: {
     names: game.appearanceCategories,
