@@ -1,5 +1,5 @@
 import { InventoryComponent as InventoryComponentData } from '@ancadeba/schemas'
-import { useService } from '@ancadeba/ui'
+import { CSSCustomProperties, useService } from '@ancadeba/ui'
 import { IMessageBus, messageBusToken } from '@ancadeba/utils'
 import { CORE_MESSAGES } from '../../../messages/core'
 import {
@@ -19,7 +19,7 @@ interface InventoryComponentProps {
   component: InventoryComponentData
 }
 
-export function InventoryComponent(_props: InventoryComponentProps) {
+export function InventoryComponent({ component }: InventoryComponentProps) {
   const inventoryService = useService<IInventoryService>(inventoryServiceToken)
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
@@ -56,40 +56,48 @@ export function InventoryComponent(_props: InventoryComponentProps) {
     )
   }
 
-  // const totalSlots = component.slotsPerRow * component.rows
+  const totalSlots = component.slotsPerRow * component.rows
+  const style: CSSCustomProperties = {
+    '--ge-inventory-columns': component.slotsPerRow.toString(),
+  }
 
   return (
-    <div className="inventory-component">
+    <div className="inventory-component" style={style}>
       <h3>Inventory</h3>
-      <ul className="inventory-list">
-        {inventory.items.map((item) => {
-          const itemData = resourceDataProvider.getItemData(item.itemId)
-          const itemName = languageProvider.getTranslation(itemData.name)
-          const itemDescription = languageProvider.getTranslation(
-            itemData.description
-          )
-
-          return (
-            <li key={item.itemId} className="inventory-item">
-              <div className="inventory-item-header">
-                <span className="inventory-item-name">{itemName}</span>
-                <span className="inventory-item-quantity">
-                  x{item.quantity}
-                </span>
+      <div className="container">
+        <div className="slots">
+          {Array.from({ length: totalSlots }).map((_, index) => {
+            if (!inventory.items[index]) {
+              return <div key={index} className="slot"></div>
+            }
+            const item = inventory.items[index]
+            const itemData = resourceDataProvider.getItemData(item.itemId)
+            const itemName = languageProvider.getTranslation(itemData.name)
+            // const itemDescription = languageProvider.getTranslation(
+            //   itemData.description
+            // )
+            return (
+              <div key={index} className="slot slot-filled">
+                <img
+                  src={`${resourceDataProvider.assetsUrl}/images/${itemData.image}`}
+                  alt={itemName}
+                />
+                {/* <div className="item-name">{itemName}</div>
+                <div className="item-quantity">x{item.quantity}</div>
+                <div className="item-description">{itemDescription}</div>
+                {itemData.type === 'equipment' && itemData.appearanceId && (
+                  <button
+                    className="item-use-button"
+                    onClick={() => handleEquipItem(item.itemId)}
+                  >
+                    Equip
+                  </button>
+                )} */}
               </div>
-              <p className="inventory-item-description">{itemDescription}</p>
-              {itemData.type === 'equipment' && itemData.appearanceId && (
-                <button
-                  className="inventory-item-use-button"
-                  onClick={() => handleEquipItem(item.itemId)}
-                >
-                  Equip
-                </button>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

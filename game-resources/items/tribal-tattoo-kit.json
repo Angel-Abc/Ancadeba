@@ -5,7 +5,7 @@
   "type": "misc",
   "stackable": false,
   "weight": 0.2,
-  "image": "items/tattoo-kit.png",
+  "image": "items/tribal-tattoo-kit.svg",
   "appearanceId": "tribal-face-tattoo",
   "properties": {
     "permanent": true,

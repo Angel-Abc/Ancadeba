@@ -5,7 +5,7 @@
   "type": "equipment",
   "stackable": false,
   "weight": 8.0,
-  "image": "items/leather-vest.png",
+  "image": "items/leather-vest.svg",
   "appearanceId": "leather-vest",
   "properties": {
     "armorClass": 12,

@@ -5,7 +5,7 @@
   "type": "equipment",
   "stackable": false,
   "weight": 45.0,
-  "image": "items/steel-plate-armor.png",
+  "image": "items/steel-plate-armor.svg",
   "appearanceId": "steel-plate-armor",
   "properties": {
     "armorClass": 18,
