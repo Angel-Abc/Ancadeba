@@ -55,6 +55,14 @@ export class RemoveItemActionHandler implements IActionHandler {
     }
 
     const existingItem = inventory.items[existingItemIndex]
+    if (!existingItem) {
+      this.logger.warn(
+        logName,
+        'Cannot remove {0}: item not found in inventory',
+        action.itemId
+      )
+      return
+    }
 
     if (existingItem.quantity < action.quantity) {
       this.logger.warn(

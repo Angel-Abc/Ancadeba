@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { IKeyboardListener } from '@ancadeba/utils'
+import type { IKeyboardListener, KeyboardEvent } from '@ancadeba/utils'
 import type { IVirtualKeyMapper } from '../../system/virtualKeyMapper'
 import type { IEngineMessageBus } from '../../system/engineMessageBus'
 import { KeyboardInputService } from '../../system/keyboardInputService'
@@ -37,15 +37,8 @@ describe('system/keyboardInputService', () => {
 
   it('keyboard event matching virtual key publishes correct message', () => {
     // Arrange
-    let callback:
-      | ((event: {
-          code: string
-          shift: boolean
-          ctrl: boolean
-          alt: boolean
-        }) => void)
-      | null = null
-    const mockListen = vi.fn((cb) => {
+    let callback: ((event: KeyboardEvent) => void) | null = null
+    const mockListen = vi.fn((cb: (event: KeyboardEvent) => void) => {
       callback = cb
       return () => {}
     })
@@ -78,7 +71,11 @@ describe('system/keyboardInputService', () => {
 
     // Act
     service.start()
-    callback?.({ code: 'Space', shift: false, ctrl: false, alt: false })
+    if (!callback) {
+      throw new Error('Expected keyboard listener to be registered')
+    }
+    const listenCallback = callback as (event: KeyboardEvent) => void
+    listenCallback({ code: 'Space', shift: false, ctrl: false, alt: false })
 
     // Assert
     expect(mockPublish).toHaveBeenCalledWith(UI_MESSAGES.VIRTUAL_KEY_PRESSED, {
@@ -88,15 +85,8 @@ describe('system/keyboardInputService', () => {
 
   it('keyboard event with shift modifier matches correctly', () => {
     // Arrange
-    let callback:
-      | ((event: {
-          code: string
-          shift: boolean
-          ctrl: boolean
-          alt: boolean
-        }) => void)
-      | null = null
-    const mockListen = vi.fn((cb) => {
+    let callback: ((event: KeyboardEvent) => void) | null = null
+    const mockListen = vi.fn((cb: (event: KeyboardEvent) => void) => {
       callback = cb
       return () => {}
     })
@@ -129,7 +119,11 @@ describe('system/keyboardInputService', () => {
 
     // Act
     service.start()
-    callback?.({ code: 'KeyQ', shift: true, ctrl: false, alt: false })
+    if (!callback) {
+      throw new Error('Expected keyboard listener to be registered')
+    }
+    const listenCallback = callback as (event: KeyboardEvent) => void
+    listenCallback({ code: 'KeyQ', shift: true, ctrl: false, alt: false })
 
     // Assert
     expect(mockPublish).toHaveBeenCalledWith(UI_MESSAGES.VIRTUAL_KEY_PRESSED, {
@@ -139,15 +133,8 @@ describe('system/keyboardInputService', () => {
 
   it('non-matching keyboard event does not publish message', () => {
     // Arrange
-    let callback:
-      | ((event: {
-          code: string
-          shift: boolean
-          ctrl: boolean
-          alt: boolean
-        }) => void)
-      | null = null
-    const mockListen = vi.fn((cb) => {
+    let callback: ((event: KeyboardEvent) => void) | null = null
+    const mockListen = vi.fn((cb: (event: KeyboardEvent) => void) => {
       callback = cb
       return () => {}
     })
@@ -174,7 +161,11 @@ describe('system/keyboardInputService', () => {
 
     // Act
     service.start()
-    callback?.({ code: 'Enter', shift: false, ctrl: false, alt: false })
+    if (!callback) {
+      throw new Error('Expected keyboard listener to be registered')
+    }
+    const listenCallback = callback as (event: KeyboardEvent) => void
+    listenCallback({ code: 'Enter', shift: false, ctrl: false, alt: false })
 
     // Assert
     expect(mockPublish).not.toHaveBeenCalled()

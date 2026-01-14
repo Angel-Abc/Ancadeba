@@ -31,14 +31,17 @@ describe('core/initializers/appearanceCategoryInitializer', () => {
       id: 'armor',
       name: 'appearance.category.armor.name',
       description: 'appearance.category.armor.description',
-      grid: {
-        rows: 5,
-        columns: 3,
-      },
+      gridRows: 5,
+      gridColumns: 3,
+      displayOrder: 0,
       cells: [
         {
-          position: { row: 0, column: 1 },
+          row: 0,
+          column: 1,
+          rowSpan: 1,
+          columnSpan: 1,
           slotId: 'head',
+          name: 'appearance.slot.head',
         },
       ],
     }
@@ -62,21 +65,37 @@ describe('core/initializers/appearanceCategoryInitializer', () => {
       id: 'armor',
       name: 'appearance.category.armor.name',
       description: 'appearance.category.armor.description',
-      grid: {
-        rows: 5,
-        columns: 3,
-      },
-      cells: [],
+      gridRows: 5,
+      gridColumns: 3,
+      displayOrder: 0,
+      cells: [
+        {
+          row: 0,
+          column: 0,
+          rowSpan: 1,
+          columnSpan: 1,
+          slotId: 'head',
+          name: 'appearance.slot.head',
+        },
+      ],
     }
     const category2: AppearanceCategory = {
       id: 'tattoos',
       name: 'appearance.category.tattoos.name',
       description: 'appearance.category.tattoos.description',
-      grid: {
-        rows: 8,
-        columns: 6,
-      },
-      cells: [],
+      gridRows: 8,
+      gridColumns: 6,
+      displayOrder: 0,
+      cells: [
+        {
+          row: 0,
+          column: 0,
+          rowSpan: 1,
+          columnSpan: 1,
+          slotId: 'face',
+          name: 'appearance.slot.face',
+        },
+      ],
     }
 
     // Act
@@ -103,22 +122,55 @@ describe('core/initializers/appearanceCategoryInitializer', () => {
         id: 'armor',
         name: 'appearance.category.armor.name',
         description: 'appearance.category.armor.description',
-        grid: { rows: 5, columns: 3 },
-        cells: [],
+        gridRows: 5,
+        gridColumns: 3,
+        displayOrder: 0,
+        cells: [
+          {
+            row: 0,
+            column: 0,
+            rowSpan: 1,
+            columnSpan: 1,
+            slotId: 'head',
+            name: 'appearance.slot.head',
+          },
+        ],
       },
       {
         id: 'tattoos',
         name: 'appearance.category.tattoos.name',
         description: 'appearance.category.tattoos.description',
-        grid: { rows: 8, columns: 6 },
-        cells: [],
+        gridRows: 8,
+        gridColumns: 6,
+        displayOrder: 0,
+        cells: [
+          {
+            row: 0,
+            column: 0,
+            rowSpan: 1,
+            columnSpan: 1,
+            slotId: 'face',
+            name: 'appearance.slot.face',
+          },
+        ],
       },
       {
         id: 'hairstyles',
         name: 'appearance.category.hairstyles.name',
         description: 'appearance.category.hairstyles.description',
-        grid: { rows: 4, columns: 4 },
-        cells: [],
+        gridRows: 4,
+        gridColumns: 4,
+        displayOrder: 0,
+        cells: [
+          {
+            row: 0,
+            column: 0,
+            rowSpan: 1,
+            columnSpan: 1,
+            slotId: 'hair',
+            name: 'appearance.slot.hair',
+          },
+        ],
       },
     ]
 

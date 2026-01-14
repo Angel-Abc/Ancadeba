@@ -254,6 +254,9 @@ describe('appearance/appearanceService', () => {
 
       // Assert
       const call = vi.mocked(world.setComponent).mock.calls[0]
+      if (!call) {
+        throw new Error('Expected setComponent to be called')
+      }
       const updatedAppearances = call[2] as AppearanceComponent
       expect(updatedAppearances.equipped).toHaveLength(2)
       expect(updatedAppearances.equipped).toContainEqual({

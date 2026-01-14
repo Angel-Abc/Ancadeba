@@ -19,5 +19,6 @@ This project prioritizes determinism, clarity, and architectural correctness ove
 Before marking any code task as complete, ensure the following commands are run and pass:
 
 - pnpm lint
+- pnpm typecheck
 - pnpm build
 - pnpm test

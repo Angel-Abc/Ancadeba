@@ -10,11 +10,29 @@ describe('core/initializers/sceneDataInitializer', () => {
   const createMockSceneDataStorage = (): ISceneDataStorage => ({
     addSceneData: vi.fn(),
     getSceneData: vi.fn(),
+    getLoadedSceneIds: vi.fn(() => []),
   })
 
   const createMockCssFileStorage = (): ICssFileStorage => ({
     addCssFileName: vi.fn(),
     getCssFileNames: vi.fn(() => []),
+  })
+
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
+  const baseComponent = {
+    location: { x: 0, y: 0 },
+    size: { width: 1, height: 1 },
+    visible: true,
+    border: { width: 0, padding: 0, margin: 0 },
+  }
+
+  const createScene = (id: string): Scene => ({
+    id,
+    createdAt: baseTimestamp,
+    updatedAt: baseTimestamp,
+    screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
+    components: [],
   })
 
   it('processes empty array without errors', () => {
@@ -41,11 +59,7 @@ describe('core/initializers/sceneDataInitializer', () => {
       sceneDataStorage,
       cssFileStorage
     )
-    const scene: Scene = {
-      id: 'main-menu',
-      sceneType: 'menu',
-      components: [],
-    }
+    const scene = createScene('main-menu')
 
     // Act
     initializer.initializeScenes([scene])
@@ -66,21 +80,9 @@ describe('core/initializers/sceneDataInitializer', () => {
       sceneDataStorage,
       cssFileStorage
     )
-    const scene1: Scene = {
-      id: 'main-menu',
-      sceneType: 'menu',
-      components: [],
-    }
-    const scene2: Scene = {
-      id: 'settings',
-      sceneType: 'menu',
-      components: [],
-    }
-    const scene3: Scene = {
-      id: 'game',
-      sceneType: 'game',
-      components: [],
-    }
+    const scene1 = createScene('main-menu')
+    const scene2 = createScene('settings')
+    const scene3 = createScene('game')
 
     // Act
     initializer.initializeScenes([scene1, scene2, scene3])
@@ -186,11 +188,7 @@ describe('core/initializers/sceneDataInitializer', () => {
       sceneDataStorage,
       cssFileStorage
     )
-    const scene: Scene = {
-      id: 'test-scene',
-      sceneType: 'menu',
-      components: [],
-    }
+    const scene = createScene('test-scene')
 
     // Act
     initializer.initializeScenes([scene])
@@ -215,11 +213,17 @@ describe('core/initializers/sceneDataInitializer', () => {
       cssFileStorage
     )
     const scene: Scene = {
-      id: 'complex-scene',
-      sceneType: 'game',
+      ...createScene('complex-scene'),
       components: [
-        { type: 'button', id: 'btn1' },
-        { type: 'text', id: 'txt1' },
+        {
+          ...baseComponent,
+          type: 'menu',
+          options: [{ label: 'menu.start', actions: [{ type: 'back' }] }],
+        },
+        {
+          ...baseComponent,
+          type: 'text-log',
+        },
       ],
     }
 
@@ -231,8 +235,11 @@ describe('core/initializers/sceneDataInitializer', () => {
       'complex-scene',
       scene
     )
-    const calledScene = vi.mocked(sceneDataStorage.addSceneData).mock
-      .calls[0][1]
+    const call = vi.mocked(sceneDataStorage.addSceneData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addSceneData to be called')
+    }
+    const calledScene = call[1]
     expect(calledScene).toBe(scene)
     expect(calledScene.components).toHaveLength(2)
   })

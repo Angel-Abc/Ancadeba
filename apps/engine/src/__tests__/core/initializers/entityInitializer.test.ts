@@ -10,16 +10,55 @@ import { World, WorldEventBus } from '../../../ecs/world'
 import { EntityInitializer } from '../../../core/initializers/entityInitializer'
 
 describe('core/initializers/entityInitializer', () => {
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
   const createMinimalGameData = (): GameData => ({
     meta: {
+      id: 'test-game',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       title: 'Test Game',
+      description: 'Test game description',
+      version: '0.0.0',
       initialState: {
         scene: 'start-scene',
       },
+      scenes: [],
+      styling: [],
+      tileSets: [],
+      maps: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: 'virtual-keys',
+      virtualInputs: 'virtual-inputs',
+      languages: {
+        en: { name: 'English', files: ['system.json'] },
+      },
+      defaultSettings: {
+        language: 'en',
+        volume: 0.5,
+      },
     },
+    languages: new Map([['en', { name: 'English', files: ['system.json'] }]]),
     scenes: [],
     maps: [],
     tileSets: [],
+    items: [],
+    appearanceCategories: [],
+    appearances: [],
+    virtualKeys: {
+      id: 'virtual-keys',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      mappings: [],
+    },
+    virtualInputs: {
+      id: 'virtual-inputs',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      mappings: [],
+    },
   })
 
   it('does nothing when mapPosition is missing', () => {

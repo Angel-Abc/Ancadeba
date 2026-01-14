@@ -193,7 +193,12 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
                   assetsUrl={resourceDataProvider.assetsUrl}
                 >
                   {entities?.map((entity, index) => {
-                    const offset = entityOffsets[index % entityOffsets.length]
+                    const offset =
+                      entityOffsets[index % entityOffsets.length] ??
+                      entityOffsets[0]
+                    if (!offset) {
+                      return null
+                    }
                     return (
                       <div
                         key={`${key}-entity-${entity.id}`}

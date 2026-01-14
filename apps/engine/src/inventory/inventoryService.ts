@@ -3,6 +3,8 @@ import { COMPONENT_KEYS, InventoryComponent } from '../ecs/components'
 import { IWorld, worldToken } from '../ecs/world'
 import { IInventoryService } from './types'
 
+export type { IInventoryService } from './types'
+
 const logName = 'engine/inventory/inventoryService'
 export const inventoryServiceToken = token<IInventoryService>(logName)
 export const inventoryServiceDependencies: Token<unknown>[] = [worldToken]
@@ -17,6 +19,9 @@ export class InventoryService implements IInventoryService {
     }
 
     const playerEntity = playerEntities[0]
+    if (playerEntity === undefined) {
+      return undefined
+    }
     return this.world.getComponent<InventoryComponent>(
       playerEntity,
       COMPONENT_KEYS.inventory

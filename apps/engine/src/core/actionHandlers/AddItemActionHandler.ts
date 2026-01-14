@@ -59,6 +59,10 @@ export class AddItemActionHandler implements IActionHandler {
     if (existingItemIndex !== -1 && itemData.stackable) {
       // Item exists and is stackable - increment quantity
       const existingItem = inventory.items[existingItemIndex]
+      if (!existingItem) {
+        this.logger.warn(logName, 'Item entry missing for {0}', action.itemId)
+        return
+      }
       const newQuantity = existingItem.quantity + action.quantity
 
       // Check maxStack limit

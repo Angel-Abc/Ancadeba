@@ -23,6 +23,7 @@ describe('gameState/provider', () => {
         return mockState.activeMapId
       },
       getFlag: vi.fn((flagName: string) => mockState.flags[flagName]),
+      setFlag: vi.fn(),
     }
   }
 

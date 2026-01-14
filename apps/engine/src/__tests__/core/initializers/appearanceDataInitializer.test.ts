@@ -34,10 +34,11 @@ describe('core/initializers/appearanceDataInitializer', () => {
       slots: [
         {
           slotId: 'torso',
-          images: ['assets/images/armor/steel-plate-torso.png'],
+          image: 'assets/images/armor/steel-plate-torso.png',
           layer: 2,
         },
       ],
+      tags: [],
     }
 
     // Act
@@ -61,6 +62,7 @@ describe('core/initializers/appearanceDataInitializer', () => {
       description: 'appearance.steel-plate-armor.description',
       categoryId: 'armor',
       slots: [],
+      tags: [],
     }
     const appearance2: Appearance = {
       id: 'tribal-face-tattoo',
@@ -68,6 +70,7 @@ describe('core/initializers/appearanceDataInitializer', () => {
       description: 'appearance.tribal-face-tattoo.description',
       categoryId: 'tattoos',
       slots: [],
+      tags: [],
     }
 
     // Act
@@ -96,6 +99,7 @@ describe('core/initializers/appearanceDataInitializer', () => {
         description: 'appearance.steel-plate-armor.description',
         categoryId: 'armor',
         slots: [],
+        tags: [],
       },
       {
         id: 'leather-vest',
@@ -103,6 +107,7 @@ describe('core/initializers/appearanceDataInitializer', () => {
         description: 'appearance.leather-vest.description',
         categoryId: 'armor',
         slots: [],
+        tags: [],
       },
       {
         id: 'tribal-face-tattoo',
@@ -110,6 +115,7 @@ describe('core/initializers/appearanceDataInitializer', () => {
         description: 'appearance.tribal-face-tattoo.description',
         categoryId: 'tattoos',
         slots: [],
+        tags: [],
       },
     ]
 

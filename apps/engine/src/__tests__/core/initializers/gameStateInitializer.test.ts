@@ -1,32 +1,55 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { GameData } from '@ancadeba/schemas'
 import type { IGameStateMutator } from '../../../gameState.ts/storage'
+import type { GameState } from '../../../gameState.ts/types'
 import type { ISettingsStorage } from '../../../settings/storage'
 import type { ILanguageStorage } from '../../../language/storage'
 import type { ILanguageFileStorage } from '../../../resourceData/storage'
 import { GameStateInitializer } from '../../../core/initializers/gameStateInitializer'
 
 describe('core/initializers/gameStateInitializer', () => {
-  const createMockGameStateMutator = (): IGameStateMutator => ({
-    state: null!,
-    updateSceneId: vi.fn(),
-    updateMapId: vi.fn(),
-    setFlag: vi.fn(),
-    pushScene: vi.fn(),
-    popScene: vi.fn(),
-  })
+  const createMockGameStateMutator = (): IGameStateMutator => {
+    let storedState: GameState = {
+      title: '',
+      activeSceneId: '',
+      activeMapId: null,
+      flags: {},
+      sceneStack: [],
+    }
 
-  const createMockSettingsStorage = (): ISettingsStorage => ({
-    get language() {
-      return 'en'
-    },
-    get volume() {
-      return 5
-    },
-    setDefaultSettings: vi.fn(),
-    updateLanguage: vi.fn(),
-    updateVolume: vi.fn(),
-  })
+    return {
+      update: vi.fn((value) => {
+        storedState = { ...storedState, ...value }
+      }),
+      get state(): GameState {
+        return storedState
+      },
+      set state(value: GameState) {
+        storedState = value
+      },
+    }
+  }
+
+  const createMockSettingsStorage = (): ISettingsStorage => {
+    let language = 'en'
+    let volume = 0.5
+
+    return {
+      setDefaultSettings: vi.fn(),
+      get language() {
+        return language
+      },
+      get volume() {
+        return volume
+      },
+      set language(value: string) {
+        language = value
+      },
+      set volume(value: number) {
+        volume = value
+      },
+    }
+  }
 
   const createMockLanguageStorage = (): ILanguageStorage => ({
     setLanguage: vi.fn().mockResolvedValue(undefined),
@@ -38,12 +61,26 @@ describe('core/initializers/gameStateInitializer', () => {
     setLanguageFileNames: vi.fn(),
   })
 
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
+  const createLanguageMap = (
+    languages: GameData['meta']['languages']
+  ): GameData['languages'] =>
+    new Map(
+      Object.entries(languages).map(([key, value]) => [key, value])
+    )
+
   const createMinimalGameData = (): GameData => ({
     meta: {
+      id: 'test-game',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       title: 'Test Game',
+      description: 'Test game description',
+      version: '0.0.0',
       defaultSettings: {
         language: 'en',
-        volume: 5,
+        volume: 0.5,
       },
       languages: {
         en: {
@@ -54,10 +91,40 @@ describe('core/initializers/gameStateInitializer', () => {
       initialState: {
         scene: 'start-scene',
       },
+      scenes: [],
+      styling: [],
+      tileSets: [],
+      maps: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: 'virtual-keys',
+      virtualInputs: 'virtual-inputs',
     },
+    languages: createLanguageMap({
+      en: {
+        name: 'English',
+        files: ['system.json'],
+      },
+    }),
     scenes: [],
     maps: [],
     tileSets: [],
+    items: [],
+    appearanceCategories: [],
+    appearances: [],
+    virtualKeys: {
+      id: 'virtual-keys',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      mappings: [],
+    },
+    virtualInputs: {
+      id: 'virtual-inputs',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      mappings: [],
+    },
   })
 
   it('sets default settings correctly', async () => {
@@ -81,7 +148,7 @@ describe('core/initializers/gameStateInitializer', () => {
     expect(settingsStorage.setDefaultSettings).toHaveBeenCalledTimes(1)
     expect(settingsStorage.setDefaultSettings).toHaveBeenCalledWith({
       language: 'en',
-      volume: 5,
+      volume: 0.5,
     })
   })
 
@@ -195,6 +262,7 @@ describe('core/initializers/gameStateInitializer', () => {
       en: { name: 'English', files: ['system.json', 'game.json'] },
       es: { name: 'Spanish', files: ['system.json'] },
     }
+    gameData.languages = createLanguageMap(gameData.meta.languages)
 
     // Act
     await initializer.initializeGameState(gameData)
@@ -249,9 +317,10 @@ describe('core/initializers/gameStateInitializer', () => {
     const gameData = createMinimalGameData()
     gameData.meta.languages = {
       en: { name: 'English', files: ['en-system.json'] },
-      es: { name: 'Español', files: ['es-system.json'] },
-      fr: { name: 'Français', files: ['fr-system.json'] },
+      es: { name: 'Espanol', files: ['es-system.json'] },
+      fr: { name: 'Francais', files: ['fr-system.json'] },
     }
+    gameData.languages = createLanguageMap(gameData.meta.languages)
 
     // Act
     await initializer.initializeGameState(gameData)
@@ -286,10 +355,15 @@ describe('core/initializers/gameStateInitializer', () => {
     )
     const gameData: GameData = {
       meta: {
+        id: 'integration-test-game',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
         title: 'Integration Test Game',
+        description: 'Integration test data',
+        version: '1.0.0',
         defaultSettings: {
           language: 'en',
-          volume: 7,
+          volume: 0.7,
         },
         languages: {
           en: { name: 'English', files: ['system.json', 'ui.json'] },
@@ -299,10 +373,38 @@ describe('core/initializers/gameStateInitializer', () => {
           scene: 'start-menu',
           map: 'world-map',
         },
+        scenes: ['start-menu'],
+        styling: [],
+        tileSets: [],
+        maps: ['world-map'],
+        items: [],
+        appearanceCategories: [],
+        appearances: [],
+        virtualKeys: 'virtual-keys',
+        virtualInputs: 'virtual-inputs',
       },
+      languages: createLanguageMap({
+        en: { name: 'English', files: ['system.json', 'ui.json'] },
+        de: { name: 'Deutsch', files: ['system.json'] },
+      }),
       scenes: [],
       maps: [],
       tileSets: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
+        mappings: [],
+      },
     }
 
     // Act
@@ -311,7 +413,7 @@ describe('core/initializers/gameStateInitializer', () => {
     // Assert
     expect(settingsStorage.setDefaultSettings).toHaveBeenCalledWith({
       language: 'en',
-      volume: 7,
+      volume: 0.7,
     })
     expect(gameStateMutator.state).toEqual({
       title: 'Integration Test Game',

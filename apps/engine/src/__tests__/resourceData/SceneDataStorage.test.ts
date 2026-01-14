@@ -14,13 +14,17 @@ describe('resourceData/SceneDataStorage', () => {
     }),
   })
 
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
   it('stores and retrieves scene data', () => {
     // Arrange
     const logger = createMockLogger()
     const storage = new SceneDataStorage(logger)
     const scene: Scene = {
       id: 'test-scene',
-      sceneType: 'menu',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
       components: [],
     }
 
@@ -52,12 +56,16 @@ describe('resourceData/SceneDataStorage', () => {
     const storage = new SceneDataStorage(logger)
     const scene1: Scene = {
       id: 'scene-1',
-      sceneType: 'menu',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
       components: [],
     }
     const scene2: Scene = {
       id: 'scene-2',
-      sceneType: 'game',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
       components: [],
     }
 

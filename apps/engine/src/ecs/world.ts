@@ -9,6 +9,8 @@ import {
   WorldEventPayloads,
 } from './types'
 
+export type { IWorld } from './types'
+
 const eventBusLogName = 'engine/ecs/WorldEventBus'
 export const worldEventBusToken = token<IWorldEventBus>(eventBusLogName)
 export const worldEventBusDependencies: Token<unknown>[] = []

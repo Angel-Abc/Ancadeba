@@ -97,7 +97,11 @@ describe('core/actionHandlers/RemoveItemActionHandler', () => {
 
     // Assert
     expect(inventory.items).toHaveLength(1)
-    expect(inventory.items[0].quantity).toBe(3)
+    const item = inventory.items[0]
+    if (!item) {
+      throw new Error('Expected inventory item to exist')
+    }
+    expect(item.quantity).toBe(3)
     expect(world.setComponent).toHaveBeenCalledWith(
       1,
       COMPONENT_KEYS.inventory,
@@ -121,7 +125,11 @@ describe('core/actionHandlers/RemoveItemActionHandler', () => {
     handler.handle({ type: 'remove-item', itemId: 'apple', quantity: 5 })
 
     // Assert
-    expect(inventory.items[0].quantity).toBe(2) // Should not change
+    const item = inventory.items[0]
+    if (!item) {
+      throw new Error('Expected inventory item to exist')
+    }
+    expect(item.quantity).toBe(2) // Should not change
     expect(logger.warn).toHaveBeenCalledWith(
       'engine/core/actionHandlers/RemoveItemActionHandler',
       'Cannot remove {0} {1}: only {2} available',

@@ -45,6 +45,11 @@ const createResourceDataProvider = (): IResourceDataProvider => ({
   getSceneData: vi.fn(),
   getCssFilePaths: vi.fn().mockReturnValue([]),
   getMapData: vi.fn(),
+  getItemData: vi.fn(),
+  getAppearanceCategoryData: vi.fn(),
+  getAppearanceData: vi.fn(),
+  getAllAppearanceCategories: vi.fn(() => []),
+  getAppearancesByCategory: vi.fn(() => []),
   getLanguageFilePaths: vi.fn().mockReturnValue([]),
 })
 

@@ -2,14 +2,14 @@ import { Token, token } from '@ancadeba/utils'
 import { GameState } from './types'
 
 export interface IGameStateReader {
-  get state(): GameState
-  get activeSceneId(): string
-  get activeMapId(): string | null
+  state: GameState
+  activeSceneId: string
+  activeMapId: string | null
 }
 
 export interface IGameStateMutator {
   update(value: Partial<GameState>): void
-  set state(value: GameState)
+  state: GameState
 }
 
 export interface IFlagStorage {

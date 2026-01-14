@@ -8,6 +8,8 @@ import {
 import { IWorld, worldToken } from '../ecs/world'
 import { IAppearanceService } from './types'
 
+export type { IAppearanceService } from './types'
+
 const logName = 'engine/appearance/appearanceService'
 export const appearanceServiceToken = token<IAppearanceService>(logName)
 export const appearanceServiceDependencies: Token<unknown>[] = [worldToken]
@@ -22,6 +24,9 @@ export class AppearanceService implements IAppearanceService {
     }
 
     const playerEntity = playerEntities[0]
+    if (playerEntity === undefined) {
+      return undefined
+    }
     return this.world.getComponent<AppearanceComponent>(
       playerEntity,
       COMPONENT_KEYS.appearance
@@ -58,6 +63,9 @@ export class AppearanceService implements IAppearanceService {
     }
 
     const playerEntity = playerEntities[0]
+    if (playerEntity === undefined) {
+      return
+    }
     let appearances = this.world.getComponent<AppearanceComponent>(
       playerEntity,
       COMPONENT_KEYS.appearance
@@ -97,6 +105,9 @@ export class AppearanceService implements IAppearanceService {
     }
 
     const playerEntity = playerEntities[0]
+    if (playerEntity === undefined) {
+      return
+    }
     const appearances = this.world.getComponent<AppearanceComponent>(
       playerEntity,
       COMPONENT_KEYS.appearance

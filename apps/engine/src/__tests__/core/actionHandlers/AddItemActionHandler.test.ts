@@ -36,6 +36,10 @@ describe('core/actionHandlers/AddItemActionHandler', () => {
     getCssFilePaths: vi.fn(() => []),
     getMapData: vi.fn(),
     getItemData: vi.fn(),
+    getAppearanceCategoryData: vi.fn(),
+    getAppearanceData: vi.fn(),
+    getAllAppearanceCategories: vi.fn(() => []),
+    getAppearancesByCategory: vi.fn(() => []),
     getLanguageFilePaths: vi.fn(() => []),
   })
 
@@ -107,7 +111,11 @@ describe('core/actionHandlers/AddItemActionHandler', () => {
 
     // Assert
     expect(inventory.items).toHaveLength(1)
-    expect(inventory.items[0]).toEqual({ itemId: 'apple', quantity: 3 })
+    const firstItem = inventory.items[0]
+    if (!firstItem) {
+      throw new Error('Expected inventory item to be added')
+    }
+    expect(firstItem).toEqual({ itemId: 'apple', quantity: 3 })
     expect(world.setComponent).toHaveBeenCalledWith(
       1,
       COMPONENT_KEYS.inventory,
@@ -145,7 +153,11 @@ describe('core/actionHandlers/AddItemActionHandler', () => {
 
     // Assert
     expect(inventory.items).toHaveLength(1)
-    expect(inventory.items[0].quantity).toBe(5)
+    const item = inventory.items[0]
+    if (!item) {
+      throw new Error('Expected inventory item to exist')
+    }
+    expect(item.quantity).toBe(5)
   })
 
   it('adds non-stackable item as separate entry', () => {
@@ -178,7 +190,11 @@ describe('core/actionHandlers/AddItemActionHandler', () => {
 
     // Assert
     expect(inventory.items).toHaveLength(2)
-    expect(inventory.items[1]).toEqual({ itemId: 'brass-key', quantity: 1 })
+    const item = inventory.items[1]
+    if (!item) {
+      throw new Error('Expected inventory item to be added')
+    }
+    expect(item).toEqual({ itemId: 'brass-key', quantity: 1 })
   })
 
   it('respects maxStack limit', () => {
@@ -211,7 +227,11 @@ describe('core/actionHandlers/AddItemActionHandler', () => {
     handler.handle({ type: 'add-item', itemId: 'health-potion', quantity: 2 })
 
     // Assert
-    expect(inventory.items[0].quantity).toBe(4) // Should not change
+    const item = inventory.items[0]
+    if (!item) {
+      throw new Error('Expected inventory item to exist')
+    }
+    expect(item.quantity).toBe(4) // Should not change
     expect(logger.warn).toHaveBeenCalledWith(
       'engine/core/actionHandlers/AddItemActionHandler',
       'Cannot add {0} {1}: would exceed max stack of {2}',

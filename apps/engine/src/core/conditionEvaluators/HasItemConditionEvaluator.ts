@@ -34,6 +34,10 @@ export class HasItemConditionEvaluator implements IConditionEvaluator {
     }
 
     const playerEntity = playerEntities[0]
+    if (playerEntity === undefined) {
+      this.logger.warn(logName, 'No player entity found')
+      return false
+    }
     const inventory = this.world.getComponent<InventoryComponent>(
       playerEntity,
       COMPONENT_KEYS.inventory

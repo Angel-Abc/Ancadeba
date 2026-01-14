@@ -22,8 +22,8 @@ describe('resourceData/MapDataStorage', () => {
       id: 'test-map',
       width: 10,
       height: 10,
-      tileIds: [],
-      walkableGrid: [],
+      tiles: new Map(),
+      squares: [],
     }
 
     // Act
@@ -56,15 +56,15 @@ describe('resourceData/MapDataStorage', () => {
       id: 'map-1',
       width: 5,
       height: 5,
-      tileIds: [],
-      walkableGrid: [],
+      tiles: new Map(),
+      squares: [],
     }
     const map2: MapData = {
       id: 'map-2',
       width: 10,
       height: 10,
-      tileIds: [],
-      walkableGrid: [],
+      tiles: new Map(),
+      squares: [],
     }
 
     // Act

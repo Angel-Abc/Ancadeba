@@ -14,6 +14,66 @@ import type {
 import type { GameState } from '../../gameState.ts/types'
 
 describe('core/gameEngine', () => {
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
+  const createLanguageMap = (
+    languages: GameData['meta']['languages']
+  ): GameData['languages'] =>
+    new Map(
+      Object.entries(languages).map(([key, value]) => [key, value])
+    )
+
+  const createGameData = (
+    metaOverrides: Partial<GameData['meta']> = {}
+  ): GameData => {
+    const meta: GameData['meta'] = {
+      id: 'game-1',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
+      title: 'Test Game',
+      description: 'Test Description',
+      version: '1.0.0',
+      initialState: { scene: 'intro' },
+      scenes: ['intro'],
+      styling: [],
+      tileSets: [],
+      maps: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: 'virtual-keys',
+      virtualInputs: 'virtual-inputs',
+      languages: {
+        en: { name: 'English', files: ['system.json'] },
+      },
+      defaultSettings: { language: 'en', volume: 0.5 },
+      ...metaOverrides,
+    }
+
+    return {
+      meta,
+      languages: createLanguageMap(meta.languages),
+      scenes: [],
+      tileSets: [],
+      maps: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: {
+        id: 'virtual-keys',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
+        mappings: [],
+      },
+      virtualInputs: {
+        id: 'virtual-inputs',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
+        mappings: [],
+      },
+    }
+  }
+
   it('initializes game state before publishing the start message', async () => {
     // Arrange
     const logger: ILogger = {
@@ -61,7 +121,7 @@ describe('core/gameEngine', () => {
       },
     }
     const gameDataInitializer: IGameDataInitializer = {
-      initialize: vi.fn((gameData) => {
+      initialize: vi.fn(async (gameData) => {
         const { scene: initialScene, ...initialState } =
           gameData.meta.initialState
         gameStateStorage.state = {
@@ -80,6 +140,7 @@ describe('core/gameEngine', () => {
     })
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
+      loadLanguageData: vi.fn(),
     }
     const engine = new GameEngine(
       logger,
@@ -97,36 +158,15 @@ describe('core/gameEngine', () => {
     expect(messageBus.publish).not.toHaveBeenCalled()
 
     // Act
-    resolveGameData?.({
-      meta: {
+    resolveGameData?.(
+      createGameData({
         id: 'game-1',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Test Game',
         description: 'Test Description',
-        version: '1.0.0',
-        initialState: { scene: 'intro' },
-        scenes: ['intro'],
-        styling: [],
-        tileSets: [],
-        maps: [],
-      },
-      scenes: [],
-      tileSets: [],
-      maps: [],
-      virtualKeys: {
-        id: 'virtual-keys',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-      virtualInputs: {
-        id: 'virtual-inputs',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-    })
+      })
+    )
     await Promise.resolve()
 
     // Assert
@@ -199,7 +239,7 @@ describe('core/gameEngine', () => {
       },
     }
     const gameDataInitializer: IGameDataInitializer = {
-      initialize: vi.fn((gameData) => {
+      initialize: vi.fn(async (gameData) => {
         const { scene: initialScene, ...initialState } =
           gameData.meta.initialState
         gameStateStorage.state = {
@@ -218,6 +258,7 @@ describe('core/gameEngine', () => {
     })
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
+      loadLanguageData: vi.fn(),
     }
     const engine = new GameEngine(
       logger,
@@ -236,36 +277,15 @@ describe('core/gameEngine', () => {
     expect(messageBus.publish).not.toHaveBeenCalled()
 
     // Act
-    resolveGameData?.({
-      meta: {
+    resolveGameData?.(
+      createGameData({
         id: 'game-2',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Ready First',
         description: 'UI ready before data',
-        version: '1.0.0',
-        initialState: { scene: 'intro' },
-        scenes: ['intro'],
-        styling: [],
-        tileSets: [],
-        maps: [],
-      },
-      scenes: [],
-      tileSets: [],
-      maps: [],
-      virtualKeys: {
-        id: 'virtual-keys',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-      virtualInputs: {
-        id: 'virtual-inputs',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-    })
+      })
+    )
     await startPromise
 
     // Assert
@@ -331,7 +351,7 @@ describe('core/gameEngine', () => {
       },
     }
     const gameDataInitializer: IGameDataInitializer = {
-      initialize: vi.fn((gameData) => {
+      initialize: vi.fn(async (gameData) => {
         const { scene: initialScene, ...initialState } =
           gameData.meta.initialState
         gameStateStorage.state = {
@@ -350,6 +370,7 @@ describe('core/gameEngine', () => {
     })
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(() => gameDataPromise),
+      loadLanguageData: vi.fn(),
     }
     const engine = new GameEngine(
       logger,
@@ -368,36 +389,15 @@ describe('core/gameEngine', () => {
     expect(messageBus.publish).not.toHaveBeenCalled()
 
     // Act
-    resolveGameData?.({
-      meta: {
+    resolveGameData?.(
+      createGameData({
         id: 'game-3',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
         title: 'Already Ready',
         description: 'UI ready before start',
-        version: '1.0.0',
-        initialState: { scene: 'intro' },
-        scenes: ['intro'],
-        styling: [],
-        tileSets: [],
-        maps: [],
-      },
-      scenes: [],
-      tileSets: [],
-      maps: [],
-      virtualKeys: {
-        id: 'virtual-keys',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-      virtualInputs: {
-        id: 'virtual-inputs',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
-        mappings: [],
-      },
-    })
+      })
+    )
     await startPromise
 
     // Assert
@@ -439,10 +439,11 @@ describe('core/gameEngine', () => {
       stop: vi.fn(),
     }
     const gameDataInitializer: IGameDataInitializer = {
-      initialize: vi.fn(),
+      initialize: vi.fn(async () => undefined),
     }
     const gameDataLoader: IGameDataLoader = {
       loadGameData: vi.fn(),
+      loadLanguageData: vi.fn(),
     }
     const engine = new GameEngine(
       logger,

@@ -11,6 +11,11 @@ describe('language/loader', () => {
     getSceneData: vi.fn(),
     getCssFilePaths: vi.fn(() => []),
     getMapData: vi.fn(),
+    getItemData: vi.fn(),
+    getAppearanceCategoryData: vi.fn(),
+    getAppearanceData: vi.fn(),
+    getAllAppearanceCategories: vi.fn(() => []),
+    getAppearancesByCategory: vi.fn(() => []),
     getLanguageFilePaths: vi.fn(() => []),
   })
 

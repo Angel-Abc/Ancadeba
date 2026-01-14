@@ -23,6 +23,7 @@ describe('resourceData/provider', () => {
   const createMockSceneDataStorage = (): ISceneDataStorage => ({
     addSceneData: vi.fn(),
     getSceneData: vi.fn(),
+    getLoadedSceneIds: vi.fn(() => []),
   })
 
   const createMockCssFileStorage = (): ICssFileStorage => ({
@@ -33,6 +34,7 @@ describe('resourceData/provider', () => {
   const createMockMapDataStorage = (): IMapDataStorage => ({
     addMapData: vi.fn(),
     getMapData: vi.fn(),
+    getLoadedMapIds: vi.fn(() => []),
   })
 
   const createMockItemDataStorage = (): IItemDataStorage => ({
@@ -99,7 +101,9 @@ describe('resourceData/provider', () => {
     const languageFileStorage = createMockLanguageFileStorage()
     const mockScene: Scene = {
       id: 'test-scene',
-      sceneType: 'menu',
+      createdAt: '2026-01-10T00:00:00Z',
+      updatedAt: '2026-01-10T00:00:00Z',
+      screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
       components: [],
     }
     vi.mocked(sceneDataStorage.getSceneData).mockReturnValue(mockScene)

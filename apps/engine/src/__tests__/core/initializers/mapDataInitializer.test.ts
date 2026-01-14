@@ -7,20 +7,24 @@ import type {
 import { MapDataInitializer } from '../../../core/initializers/mapDataInitializer'
 
 describe('core/initializers/mapDataInitializer', () => {
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
   const createMockTile = (id: string): Tile => ({
     id,
     image: `${id}.png`,
-    isObstacle: false,
+    walkable: true,
   })
 
   const createMockMapDataStorage = (): IMapDataStorage => ({
     addMapData: vi.fn(),
     getMapData: vi.fn(),
+    getLoadedMapIds: vi.fn(() => []),
   })
 
   const createMockTileDataStorage = (): ITileDataStorage => ({
     addTileData: vi.fn(),
     getTileData: vi.fn((tileId: string) => createMockTile(tileId)),
+    getLoadedTileIds: vi.fn(() => []),
   })
 
   it('processes empty array without errors', () => {
@@ -43,6 +47,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 3,
       height: 2,
       tiles: [{ key: 'g', tile: 'outdoor.grass' }],
@@ -54,8 +60,11 @@ describe('core/initializers/mapDataInitializer', () => {
 
     // Assert
     expect(mapDataStorage.addMapData).toHaveBeenCalledTimes(1)
-    const [id, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [id, transformedMap] = call
     expect(id).toBe('test-map')
     expect(transformedMap.id).toBe('test-map')
     expect(transformedMap.width).toBe(3)
@@ -69,6 +78,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const map1: MapData = {
       id: 'map-1',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 2,
       height: 2,
       tiles: [{ key: 'g', tile: 'outdoor.grass' }],
@@ -76,6 +87,8 @@ describe('core/initializers/mapDataInitializer', () => {
     }
     const map2: MapData = {
       id: 'map-2',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 3,
       height: 1,
       tiles: [{ key: 's', tile: 'outdoor.sand' }],
@@ -83,6 +96,8 @@ describe('core/initializers/mapDataInitializer', () => {
     }
     const map3: MapData = {
       id: 'map-3',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 1,
       height: 3,
       tiles: [{ key: 'w', tile: 'outdoor.water' }],
@@ -94,9 +109,15 @@ describe('core/initializers/mapDataInitializer', () => {
 
     // Assert
     expect(mapDataStorage.addMapData).toHaveBeenCalledTimes(3)
-    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[0][0]).toBe('map-1')
-    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[1][0]).toBe('map-2')
-    expect(vi.mocked(mapDataStorage.addMapData).mock.calls[2][0]).toBe('map-3')
+    const [firstCall, secondCall, thirdCall] = vi.mocked(
+      mapDataStorage.addMapData
+    ).mock.calls
+    if (!firstCall || !secondCall || !thirdCall) {
+      throw new Error('Expected addMapData to be called three times')
+    }
+    expect(firstCall[0]).toBe('map-1')
+    expect(secondCall[0]).toBe('map-2')
+    expect(thirdCall[0]).toBe('map-3')
   })
 
   it('transforms tiles into Map structure with getTileData lookups', () => {
@@ -106,6 +127,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 2,
       height: 1,
       tiles: [
@@ -122,8 +145,11 @@ describe('core/initializers/mapDataInitializer', () => {
     expect(tileDataStorage.getTileData).toHaveBeenCalledTimes(2)
     expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.grass')
     expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.sand')
-    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [, transformedMap] = call
     expect(transformedMap.tiles).toBeInstanceOf(Map)
     expect(transformedMap.tiles.size).toBe(2)
     expect(transformedMap.tiles.get('g')).toEqual(
@@ -141,6 +167,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'test-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 3,
       height: 2,
       tiles: [{ key: 'g', tile: 'outdoor.grass' }],
@@ -151,8 +179,11 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [, transformedMap] = call
     expect(transformedMap.squares).toEqual([
       ['g', 'g', 'g'],
       ['g', 'g', 'g'],
@@ -166,6 +197,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'complex-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 4,
       height: 3,
       tiles: [
@@ -186,8 +219,11 @@ describe('core/initializers/mapDataInitializer', () => {
     expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.sand')
     expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.water')
     expect(tileDataStorage.getTileData).toHaveBeenCalledWith('outdoor.rock')
-    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [, transformedMap] = call
     expect(transformedMap.tiles.size).toBe(4)
     expect(transformedMap.squares).toEqual([
       ['g', 'g', 's', 's'],
@@ -203,6 +239,8 @@ describe('core/initializers/mapDataInitializer', () => {
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'integration-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 2,
       height: 2,
       tiles: [
@@ -216,8 +254,11 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [id, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [id, transformedMap] = call
     expect(id).toBe('integration-map')
     expect(transformedMap).toEqual({
       id: 'integration-map',
@@ -241,12 +282,14 @@ describe('core/initializers/mapDataInitializer', () => {
     const customTile: Tile = {
       id: 'custom.tile',
       image: 'custom-tile.png',
-      isObstacle: true,
+      walkable: false,
     }
     vi.mocked(tileDataStorage.getTileData).mockReturnValue(customTile)
     const initializer = new MapDataInitializer(mapDataStorage, tileDataStorage)
     const mapData: MapData = {
       id: 'ref-map',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       width: 1,
       height: 1,
       tiles: [{ key: 'c', tile: 'custom.tile' }],
@@ -257,9 +300,12 @@ describe('core/initializers/mapDataInitializer', () => {
     initializer.initializeMaps([mapData])
 
     // Assert
-    const [, transformedMap] = vi.mocked(mapDataStorage.addMapData).mock
-      .calls[0]
+    const call = vi.mocked(mapDataStorage.addMapData).mock.calls[0]
+    if (!call) {
+      throw new Error('Expected addMapData to be called')
+    }
+    const [, transformedMap] = call
     expect(transformedMap.tiles.get('c')).toBe(customTile)
-    expect(transformedMap.tiles.get('c')?.isObstacle).toBe(true)
+    expect(transformedMap.tiles.get('c')?.walkable).toBe(false)
   })
 })

@@ -7,7 +7,10 @@ describe('core/initializers/tileDataInitializer', () => {
   const createMockTileDataStorage = (): ITileDataStorage => ({
     addTileData: vi.fn(),
     getTileData: vi.fn(),
+    getLoadedTileIds: vi.fn(() => []),
   })
+
+  const baseTimestamp = '2026-01-10T00:00:00Z'
 
   it('processes empty array without errors', () => {
     // Arrange
@@ -31,6 +34,8 @@ describe('core/initializers/tileDataInitializer', () => {
     }
     const tileSet: TileSet = {
       id: 'outdoor',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile],
     }
 
@@ -60,6 +65,8 @@ describe('core/initializers/tileDataInitializer', () => {
     }
     const tileSet: TileSet = {
       id: 'outdoor',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile1, tile2, tile3],
     }
 
@@ -99,10 +106,14 @@ describe('core/initializers/tileDataInitializer', () => {
     }
     const outdoorTileSet: TileSet = {
       id: 'outdoor',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [outdoorTile],
     }
     const indoorTileSet: TileSet = {
       id: 'indoor',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [indoorTile],
     }
 
@@ -137,10 +148,14 @@ describe('core/initializers/tileDataInitializer', () => {
     }
     const tileSet1: TileSet = {
       id: 'set-a',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile1],
     }
     const tileSet2: TileSet = {
       id: 'set-b',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile2],
     }
 
@@ -158,6 +173,8 @@ describe('core/initializers/tileDataInitializer', () => {
     const initializer = new TileDataInitializer(storage)
     const emptyTileSet: TileSet = {
       id: 'empty',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [],
     }
 
@@ -177,14 +194,20 @@ describe('core/initializers/tileDataInitializer', () => {
     const tile3: Tile = { id: 'tile3', walkable: true }
     const tileSet1: TileSet = {
       id: 'set1',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile1, tile2],
     }
     const tileSet2: TileSet = {
       id: 'set2',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [],
     }
     const tileSet3: TileSet = {
       id: 'set3',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       tiles: [tile3],
     }
 

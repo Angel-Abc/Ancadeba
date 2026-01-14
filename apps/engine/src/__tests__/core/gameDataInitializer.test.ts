@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { GameData } from '@ancadeba/schemas'
+import type { GameData, Map as MapData, Scene, TileSet } from '@ancadeba/schemas'
 import type { IGameStateInitializer } from '../../core/initializers/gameStateInitializer'
 import type { IEntityInitializer } from '../../core/initializers/entityInitializer'
 import type { ISceneDataInitializer } from '../../core/initializers/sceneDataInitializer'
@@ -65,12 +65,51 @@ describe('core/gameDataInitializer', () => {
     logResourceData: vi.fn(),
   })
 
+  const baseTimestamp = '2026-01-10T00:00:00Z'
+
+  const createLanguageMap = (
+    languages: GameData['meta']['languages']
+  ): GameData['languages'] =>
+    new Map(
+      Object.entries(languages).map(([key, value]) => [key, value])
+    )
+
+  const createScene = (id: string): Scene => ({
+    id,
+    createdAt: baseTimestamp,
+    updatedAt: baseTimestamp,
+    screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
+    components: [],
+  })
+
+  const createTileSet = (id: string): TileSet => ({
+    id,
+    createdAt: baseTimestamp,
+    updatedAt: baseTimestamp,
+    tiles: [],
+  })
+
+  const createMapData = (id: string): MapData => ({
+    id,
+    createdAt: baseTimestamp,
+    updatedAt: baseTimestamp,
+    width: 1,
+    height: 1,
+    tiles: [],
+    map: [],
+  })
+
   const createMinimalGameData = (): GameData => ({
     meta: {
+      id: 'test-game',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       title: 'Test Game',
+      description: 'Test game description',
+      version: '0.0.0',
       defaultSettings: {
         language: 'en',
-        volume: 5,
+        volume: 0.5,
       },
       languages: {
         en: {
@@ -81,7 +120,22 @@ describe('core/gameDataInitializer', () => {
       initialState: {
         scene: 'start-scene',
       },
+      scenes: [],
+      styling: [],
+      tileSets: [],
+      maps: [],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
+      virtualKeys: 'virtual-keys',
+      virtualInputs: 'virtual-inputs',
     },
+    languages: createLanguageMap({
+      en: {
+        name: 'English',
+        files: ['system.json'],
+      },
+    }),
     scenes: [],
     maps: [],
     tileSets: [],
@@ -90,14 +144,14 @@ describe('core/gameDataInitializer', () => {
     appearances: [],
     virtualKeys: {
       id: 'virtual-keys',
-      createdAt: '2026-01-10T00:00:00Z',
-      updatedAt: '2026-01-10T00:00:00Z',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       mappings: [],
     },
     virtualInputs: {
       id: 'virtual-inputs',
-      createdAt: '2026-01-10T00:00:00Z',
-      updatedAt: '2026-01-10T00:00:00Z',
+      createdAt: baseTimestamp,
+      updatedAt: baseTimestamp,
       mappings: [],
     },
   })
@@ -206,10 +260,8 @@ describe('core/gameDataInitializer', () => {
       resourceDataLogger
     )
     const gameData = createMinimalGameData()
-    gameData.scenes = [
-      { id: 'scene1', sceneType: 'menu', components: [] },
-      { id: 'scene2', sceneType: 'game', components: [] },
-    ]
+    gameData.scenes = [createScene('scene1'), createScene('scene2')]
+    gameData.meta.scenes = gameData.scenes.map((scene) => scene.id)
 
     // Act
     await initializer.initialize(gameData)
@@ -290,10 +342,8 @@ describe('core/gameDataInitializer', () => {
       resourceDataLogger
     )
     const gameData = createMinimalGameData()
-    gameData.tileSets = [
-      { id: 'outdoor', tiles: [] },
-      { id: 'indoor', tiles: [] },
-    ]
+    gameData.tileSets = [createTileSet('outdoor'), createTileSet('indoor')]
+    gameData.meta.tileSets = gameData.tileSets.map((tileSet) => tileSet.id)
 
     // Act
     await initializer.initialize(gameData)
@@ -333,10 +383,8 @@ describe('core/gameDataInitializer', () => {
       resourceDataLogger
     )
     const gameData = createMinimalGameData()
-    gameData.maps = [
-      { id: 'map1', width: 10, height: 10, tiles: [], map: [] },
-      { id: 'map2', width: 5, height: 5, tiles: [], map: [] },
-    ]
+    gameData.maps = [createMapData('map1'), createMapData('map2')]
+    gameData.meta.maps = gameData.maps.map((map) => map.id)
 
     // Act
     await initializer.initialize(gameData)
@@ -525,10 +573,15 @@ describe('core/gameDataInitializer', () => {
     )
     const gameData: GameData = {
       meta: {
+        id: 'full-integration',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
         title: 'Full Integration Test',
+        description: 'Full integration test data',
+        version: '1.0.0',
         defaultSettings: {
           language: 'en',
-          volume: 8,
+          volume: 0.8,
         },
         languages: {
           en: { name: 'English', files: ['system.json'] },
@@ -537,24 +590,35 @@ describe('core/gameDataInitializer', () => {
           scene: 'start',
           map: 'world',
         },
+        scenes: ['start', 'game'],
         styling: ['game.css', 'theme.css'],
+        tileSets: ['outdoor'],
+        maps: ['world'],
+        items: [],
+        appearanceCategories: [],
+        appearances: [],
+        virtualKeys: 'virtual-keys',
+        virtualInputs: 'virtual-inputs',
       },
-      scenes: [
-        { id: 'start', sceneType: 'menu', components: [] },
-        { id: 'game', sceneType: 'game', components: [] },
-      ],
-      tileSets: [{ id: 'outdoor', tiles: [] }],
-      maps: [{ id: 'world', width: 10, height: 10, tiles: [], map: [] }],
+      languages: createLanguageMap({
+        en: { name: 'English', files: ['system.json'] },
+      }),
+      scenes: [createScene('start'), createScene('game')],
+      tileSets: [createTileSet('outdoor')],
+      maps: [createMapData('world')],
+      items: [],
+      appearanceCategories: [],
+      appearances: [],
       virtualKeys: {
         id: 'virtual-keys',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
         mappings: [],
       },
       virtualInputs: {
         id: 'virtual-inputs',
-        createdAt: '2026-01-10T00:00:00Z',
-        updatedAt: '2026-01-10T00:00:00Z',
+        createdAt: baseTimestamp,
+        updatedAt: baseTimestamp,
         mappings: [],
       },
     }

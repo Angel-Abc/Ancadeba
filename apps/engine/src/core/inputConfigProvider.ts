@@ -104,6 +104,9 @@ export class InputConfigProvider implements IInputConfigProvider {
           return
         }
         const nextRule = pendingRules[pendingIndex]
+        if (!nextRule) {
+          return
+        }
         pendingIndex += 1
         resolvedRules.set(input.virtualInput, nextRule)
       })
