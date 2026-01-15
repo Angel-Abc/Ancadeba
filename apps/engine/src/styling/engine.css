@@ -87,7 +87,6 @@ body {
   );
   width: var(--ge-grid-item-client-width);
   height: var(--ge-grid-item-client-height);
-  overflow: hidden;
 
   & h3 {
     height: var(--header-height);
@@ -112,6 +111,12 @@ body {
       box-sizing: border-box;
       aspect-ratio: 1 / 1;
       overflow: hidden;
+
+      & img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
     }
   }
 }

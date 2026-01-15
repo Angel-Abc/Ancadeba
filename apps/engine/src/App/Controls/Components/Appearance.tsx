@@ -88,9 +88,7 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
 
   if (!activeCategory) {
     return (
-      <div className="appearance-error">
-        No appearance categories available
-      </div>
+      <div className="appearance-error">No appearance categories available</div>
     )
   }
 
@@ -152,10 +150,7 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
       <div className="appearance-tabs" role="tablist">
         {categories.map((category) => {
           const isActive = category.id === activeCategory.id
-          const tabClassName = [
-            'appearance-tab',
-            isActive ? 'is-active' : '',
-          ]
+          const tabClassName = ['appearance-tab', isActive ? 'is-active' : '']
             .filter(Boolean)
             .join(' ')
           const categoryLabel = languageProvider.getTranslation(category.name)
@@ -255,6 +250,9 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
                   src={imageUrl}
                   alt={appearanceName}
                   className="appearance-image"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
                 />
               )}
               <p className="appearance-name">{appearanceName}</p>
@@ -266,9 +264,7 @@ export function AppearanceComponent({ component }: AppearanceComponentProps) {
       {equippedInCategory && (
         <button
           className="appearance-remove-button"
-          onClick={() =>
-            appearanceService.unequipAppearance(activeCategory.id)
-          }
+          onClick={() => appearanceService.unequipAppearance(activeCategory.id)}
         >
           Remove Equipped
         </button>

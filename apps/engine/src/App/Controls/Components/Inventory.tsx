@@ -81,6 +81,9 @@ export function InventoryComponent({ component }: InventoryComponentProps) {
                 <img
                   src={`${resourceDataProvider.assetsUrl}/images/${itemData.image}`}
                   alt={itemName}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
                 />
                 {/* <div className="item-name">{itemName}</div>
                 <div className="item-quantity">x{item.quantity}</div>
