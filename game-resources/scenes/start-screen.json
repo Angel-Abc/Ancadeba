@@ -46,6 +46,11 @@
             },
             {
               "type": "add-item",
+              "itemId": "wooden-sword",
+              "quantity": 1
+            },
+            {
+              "type": "add-item",
               "itemId": "leather-vest-item",
               "quantity": 1
             },

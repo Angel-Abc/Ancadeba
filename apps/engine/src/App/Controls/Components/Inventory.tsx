@@ -10,10 +10,7 @@ import {
   IResourceDataProvider,
   resourceDataProviderToken,
 } from '../../../resourceData/provider'
-import {
-  ILanguageProvider,
-  languageProviderToken,
-} from '../../../language/provider'
+import { InventoryItemComponent } from './InventoryItem'
 
 interface InventoryComponentProps {
   component: InventoryComponentData
@@ -24,12 +21,11 @@ export function InventoryComponent({ component }: InventoryComponentProps) {
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )
-  const languageProvider = useService<ILanguageProvider>(languageProviderToken)
   const messageBus = useService<IMessageBus>(messageBusToken)
 
   const inventory = inventoryService.getPlayerInventory()
 
-  function handleEquipItem(itemId: string) {
+  function _handleEquipItem(itemId: string) {
     const itemData = resourceDataProvider.getItemData(itemId)
     if (!itemData.appearanceId) {
       return
@@ -71,32 +67,13 @@ export function InventoryComponent({ component }: InventoryComponentProps) {
               return <div key={index} className="slot"></div>
             }
             const item = inventory.items[index]
-            const itemData = resourceDataProvider.getItemData(item.itemId)
-            const itemName = languageProvider.getTranslation(itemData.name)
-            // const itemDescription = languageProvider.getTranslation(
-            //   itemData.description
-            // )
             return (
-              <div key={index} className="slot slot-filled">
-                <img
-                  src={`${resourceDataProvider.assetsUrl}/images/${itemData.image}`}
-                  alt={itemName}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-                {/* <div className="item-name">{itemName}</div>
-                <div className="item-quantity">x{item.quantity}</div>
-                <div className="item-description">{itemDescription}</div>
-                {itemData.type === 'equipment' && itemData.appearanceId && (
-                  <button
-                    className="item-use-button"
-                    onClick={() => handleEquipItem(item.itemId)}
-                  >
-                    Equip
-                  </button>
-                )} */}
-              </div>
+              <InventoryItemComponent
+                key={index}
+                itemId={item.itemId}
+                quantity={item.quantity}
+                _onEquip={_handleEquipItem}
+              />
             )
           })}
         </div>
