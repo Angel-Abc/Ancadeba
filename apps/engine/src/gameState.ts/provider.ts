@@ -5,6 +5,7 @@ import {
   flagStorageToken,
   IGameStateReader,
   IFlagStorage,
+  IValueStorage,
 } from './storage'
 
 export interface IGameStateProvider {
@@ -14,6 +15,7 @@ export interface IGameStateProvider {
   get gameTitle(): string
   get inputRanges(): InputRange | undefined
   getFlag(flagName: string): boolean | undefined
+  getValue(name: string): string | undefined
 }
 
 const logName = 'engine/gameState/provider'
@@ -24,11 +26,17 @@ export const gameStateProviderDependencies: Token<unknown>[] = [
 ]
 export class GameStateProvider implements IGameStateProvider {
   constructor(
-    private readonly gameStateStorage: IGameStateReader & IFlagStorage
+    private readonly gameStateStorage: IGameStateReader &
+      IFlagStorage &
+      IValueStorage
   ) {}
 
   getFlag(flagName: string): boolean | undefined {
     return this.gameStateStorage.getFlag(flagName)
+  }
+
+  getValue(name: string): string | undefined {
+    return this.gameStateStorage.getValue(name)
   }
 
   get activeSceneId(): string {

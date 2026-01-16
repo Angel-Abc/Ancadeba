@@ -32,6 +32,7 @@ describe('core/conditionEvaluators/FlagConditionEvaluator', () => {
       return undefined
     },
     getFlag: vi.fn(),
+    getValue: vi.fn(),
   })
 
   it('returns true for canEvaluate when condition type is flag', () => {

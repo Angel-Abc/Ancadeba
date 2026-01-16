@@ -17,6 +17,8 @@ describe('core/actionHandlers', () => {
         switchScene: vi.fn(),
         goBack: vi.fn(),
         setFlag: vi.fn(),
+        setValue: vi.fn(),
+        unsetValue: vi.fn(),
       }
       const handler = new SwitchSceneActionHandler(gameStateManager)
 
@@ -38,6 +40,8 @@ describe('core/actionHandlers', () => {
         switchScene: vi.fn(),
         goBack: vi.fn(),
         setFlag: vi.fn(),
+        setValue: vi.fn(),
+        unsetValue: vi.fn(),
       }
       const handler = new SwitchSceneActionHandler(gameStateManager)
 
@@ -81,6 +85,8 @@ describe('core/actionHandlers', () => {
         switchScene: vi.fn(),
         goBack: vi.fn(),
         setFlag: vi.fn(),
+        setValue: vi.fn(),
+        unsetValue: vi.fn(),
       }
       const handler = new SetFlagActionHandler(gameStateManager)
 
@@ -105,6 +111,8 @@ describe('core/actionHandlers', () => {
         switchScene: vi.fn(),
         goBack: vi.fn(),
         setFlag: vi.fn(),
+        setValue: vi.fn(),
+        unsetValue: vi.fn(),
       }
       const handler = new BackActionHandler(gameStateManager)
 

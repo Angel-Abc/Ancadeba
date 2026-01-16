@@ -101,6 +101,7 @@ describe('core/gameEngine', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: [],
     }
     const gameStateStorage: IGameStateReader & IGameStateMutator = {
@@ -129,6 +130,7 @@ describe('core/gameEngine', () => {
           activeSceneId: initialScene,
           activeMapId: gameData.meta.initialState.map || null,
           flags: {},
+          values: {},
           sceneStack: [initialScene],
           ...initialState,
         }
@@ -175,6 +177,7 @@ describe('core/gameEngine', () => {
       activeSceneId: 'intro',
       activeMapId: null,
       flags: {},
+      values: {},
       sceneStack: ['intro'],
     })
     expect(messageBus.publish).not.toHaveBeenCalled()
@@ -219,6 +222,7 @@ describe('core/gameEngine', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: [],
     }
     const gameStateStorage: IGameStateReader & IGameStateMutator = {
@@ -247,6 +251,7 @@ describe('core/gameEngine', () => {
           activeSceneId: initialScene,
           activeMapId: gameData.meta.initialState.map || null,
           flags: {},
+          values: {},
           sceneStack: [initialScene],
           ...initialState,
         }
@@ -294,6 +299,7 @@ describe('core/gameEngine', () => {
       activeSceneId: 'intro',
       activeMapId: null,
       flags: {},
+      values: {},
       sceneStack: ['intro'],
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)
@@ -331,6 +337,7 @@ describe('core/gameEngine', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: [],
     }
     const gameStateStorage: IGameStateReader & IGameStateMutator = {
@@ -359,6 +366,7 @@ describe('core/gameEngine', () => {
           activeSceneId: initialScene,
           activeMapId: gameData.meta.initialState.map || null,
           flags: {},
+          values: {},
           sceneStack: [initialScene],
           ...initialState,
         }
@@ -406,6 +414,7 @@ describe('core/gameEngine', () => {
       activeSceneId: 'intro',
       activeMapId: null,
       flags: {},
+      values: {},
       sceneStack: ['intro'],
     })
     expect(messageBus.publish).toHaveBeenCalledTimes(1)

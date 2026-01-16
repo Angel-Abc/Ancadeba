@@ -8,7 +8,9 @@ import {
   gameStateReaderToken,
   gameStateMutatorToken,
   flagStorageToken,
+  valueStorageToken,
   IFlagStorage,
+  IValueStorage,
   IGameStateMutator,
   IGameStateReader,
 } from './storage'
@@ -17,6 +19,8 @@ export interface IGameStateManager {
   switchScene(sceneId: string): void
   goBack(): void
   setFlag(flagName: string, value: boolean): void
+  setValue(name: string, value: string): void
+  unsetValue(name: string): void
 }
 
 const logName = 'engine/gameState/manager'
@@ -27,6 +31,7 @@ export const gameStateManagerDependencies: Token<unknown>[] = [
   gameStateReaderToken,
   gameStateMutatorToken,
   flagStorageToken,
+  valueStorageToken,
 ]
 
 export class GameStateManager implements IGameStateManager {
@@ -35,7 +40,8 @@ export class GameStateManager implements IGameStateManager {
     private readonly messageBus: IEngineMessageBus,
     private readonly gameStateReader: IGameStateReader,
     private readonly gameStateMutator: IGameStateMutator,
-    private readonly flagStorage: IFlagStorage
+    private readonly flagStorage: IFlagStorage,
+    private readonly valueStorage: IValueStorage
   ) {}
 
   switchScene(sceneId: string): void {
@@ -70,5 +76,13 @@ export class GameStateManager implements IGameStateManager {
 
   setFlag(flagName: string, value: boolean): void {
     this.flagStorage.setFlag(flagName, value)
+  }
+
+  setValue(name: string, value: string): void {
+    this.valueStorage.setValue(name, value)
+  }
+
+  unsetValue(name: string): void {
+    this.valueStorage.unsetValue(name)
   }
 }

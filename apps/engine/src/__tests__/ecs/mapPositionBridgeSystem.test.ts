@@ -30,6 +30,7 @@ const createGameState = (overrides: Partial<GameState> = {}): GameState => ({
   activeSceneId: '',
   activeMapId: null,
   flags: {},
+  values: {},
   sceneStack: [],
   ...overrides,
 })

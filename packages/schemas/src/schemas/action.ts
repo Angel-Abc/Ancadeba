@@ -41,6 +41,15 @@ export const actionSchema = z.discriminatedUnion('type', [
     type: z.literal('unequip-appearance'),
     categoryId: z.string(),
   }),
+  z.object({
+    type: z.literal('set-value'),
+    name: z.string(),
+    value: z.string(),
+  }),
+  z.object({
+    type: z.literal('unset-value'),
+    name: z.string(),
+  }),
 ])
 
 export type Action = z.infer<typeof actionSchema>
@@ -54,3 +63,5 @@ export type UnequipAppearanceAction = Extract<
   Action,
   { type: 'unequip-appearance' }
 >
+export type SetValueAction = Extract<Action, { type: 'set-value' }>
+export type UnsetValueAction = Extract<Action, { type: 'unset-value' }>

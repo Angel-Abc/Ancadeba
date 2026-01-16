@@ -9,6 +9,7 @@ export interface GameState extends Record<string, unknown> {
     y: number
   }
   flags: Record<string, boolean>
+  values: Record<string, string>
   sceneStack: string[]
   inputRanges?: InputRange
 }

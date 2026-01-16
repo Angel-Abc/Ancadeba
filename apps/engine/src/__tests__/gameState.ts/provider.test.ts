@@ -1,15 +1,22 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { IGameStateReader, IFlagStorage } from '../../gameState.ts/storage'
+import type {
+  IGameStateReader,
+  IFlagStorage,
+  IValueStorage,
+} from '../../gameState.ts/storage'
 import type { GameState } from '../../gameState.ts/types'
 import { GameStateProvider } from '../../gameState.ts/provider'
 
 describe('gameState/provider', () => {
-  const createMockGameStateStorage = (): IGameStateReader & IFlagStorage => {
+  const createMockGameStateStorage = (): IGameStateReader &
+    IFlagStorage &
+    IValueStorage => {
     const mockState: GameState = {
       activeSceneId: 'test-scene',
       activeMapId: null,
       title: 'Test Game',
       flags: {},
+      values: {},
       sceneStack: [],
     }
     return {
@@ -24,6 +31,9 @@ describe('gameState/provider', () => {
       },
       getFlag: vi.fn((flagName: string) => mockState.flags[flagName]),
       setFlag: vi.fn(),
+      getValue: vi.fn((name: string) => mockState.values[name]),
+      setValue: vi.fn(),
+      unsetValue: vi.fn(),
     }
   }
 

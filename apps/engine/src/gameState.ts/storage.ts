@@ -17,11 +17,18 @@ export interface IFlagStorage {
   setFlag(flagName: string, value: boolean): void
 }
 
+export interface IValueStorage {
+  getValue(name: string): string | undefined
+  setValue(name: string, value: string): void
+  unsetValue(name: string): void
+}
+
 // Combined interface for internal implementation only
 interface IGameStateStorage
   extends IGameStateReader,
     IGameStateMutator,
-    IFlagStorage {}
+    IFlagStorage,
+    IValueStorage {}
 
 const logName = 'engine/gameState/storage'
 export const gameStateStorageToken = token<IGameStateStorage>(logName)
@@ -30,6 +37,7 @@ export const gameStateMutatorToken = token<IGameStateMutator>(
   logName + '/mutator'
 )
 export const flagStorageToken = token<IFlagStorage>(logName + '/flags')
+export const valueStorageToken = token<IValueStorage>(logName + '/values')
 export const gameStateStorageDependencies: Token<unknown>[] = []
 export class GameStateStorage implements IGameStateStorage {
   private gameState: GameState = {
@@ -37,6 +45,7 @@ export class GameStateStorage implements IGameStateStorage {
     activeMapId: null,
     title: '',
     flags: {},
+    values: {},
     sceneStack: [],
     inputRanges: undefined,
   }
@@ -74,5 +83,25 @@ export class GameStateStorage implements IGameStateStorage {
 
   get activeMapId(): string | null {
     return this.gameState.activeMapId
+  }
+
+  getValue(name: string): string | undefined {
+    return this.gameState.values[name]
+  }
+
+  setValue(name: string, value: string): void {
+    this.update({
+      values: {
+        ...this.gameState.values,
+        [name]: value,
+      },
+    })
+  }
+
+  unsetValue(name: string): void {
+    const { [name]: _, ...remainingValues } = this.gameState.values
+    this.update({
+      values: remainingValues,
+    })
   }
 }

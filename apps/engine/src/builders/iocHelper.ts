@@ -162,6 +162,10 @@ import {
   setFlagActionHandlerDependencies,
 } from '../core/actionHandlers/SetFlagActionHandler'
 import {
+  SetValueActionHandler,
+  setValueActionHandlerDependencies,
+} from '../core/actionHandlers/SetValueActionHandler'
+import {
   BackActionHandler,
   backActionHandlerDependencies,
 } from '../core/actionHandlers/BackActionHandler'
@@ -385,6 +389,11 @@ export function registerServices(container: Container): void {
       token: actionHandlerToken,
       useClass: SetFlagActionHandler,
       deps: setFlagActionHandlerDependencies,
+    },
+    {
+      token: actionHandlerToken,
+      useClass: SetValueActionHandler,
+      deps: setValueActionHandlerDependencies,
     },
     {
       token: actionHandlerToken,

@@ -33,6 +33,7 @@ describe('core/conditionResolver', () => {
       return undefined
     },
     getFlag: vi.fn(),
+    getValue: vi.fn(),
   })
 
   it('returns true when flag matches expected value true', () => {

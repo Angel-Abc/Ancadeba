@@ -33,11 +33,13 @@ describe('gameState/manager', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: ['scene-1'],
     }
     const manager = new GameStateManager(
       logger,
       messageBus,
+      storage,
       storage,
       storage,
       storage
@@ -52,6 +54,7 @@ describe('gameState/manager', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: ['scene-1', 'scene-2'],
     })
     expect(messageBus.publish).toHaveBeenCalledWith(
@@ -70,12 +73,14 @@ describe('gameState/manager', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: ['scene-1'],
     }
     const updateSpy = vi.spyOn(storage, 'update')
     const manager = new GameStateManager(
       logger,
       messageBus,
+      storage,
       storage,
       storage,
       storage
@@ -103,11 +108,13 @@ describe('gameState/manager', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: ['scene-1', 'scene-2', 'scene-3'],
     }
     const manager = new GameStateManager(
       logger,
       messageBus,
+      storage,
       storage,
       storage,
       storage
@@ -122,6 +129,7 @@ describe('gameState/manager', () => {
       activeMapId: null,
       title: '',
       flags: {},
+      values: {},
       sceneStack: ['scene-1', 'scene-2'],
     })
     expect(messageBus.publish).toHaveBeenCalledWith(
@@ -141,6 +149,7 @@ describe('gameState/manager', () => {
       messageBus,
       storage,
       storage,
+      storage,
       storage
     )
 
@@ -151,5 +160,50 @@ describe('gameState/manager', () => {
     expect(storage.state.flags).toEqual({
       'flag-1': true,
     })
+  })
+
+  it('delegates setValue to storage', () => {
+    // Arrange
+    const logger = createLogger()
+    const messageBus = createMessageBus()
+    const storage = new GameStateStorage()
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage,
+      storage
+    )
+
+    // Act
+    manager.setValue('player-choice', 'helped-merchant')
+
+    // Assert
+    expect(storage.state.values).toEqual({
+      'player-choice': 'helped-merchant',
+    })
+  })
+
+  it('delegates unsetValue to storage', () => {
+    // Arrange
+    const logger = createLogger()
+    const messageBus = createMessageBus()
+    const storage = new GameStateStorage()
+    storage.setValue('temp-value', 'test')
+    const manager = new GameStateManager(
+      logger,
+      messageBus,
+      storage,
+      storage,
+      storage,
+      storage
+    )
+
+    // Act
+    manager.unsetValue('temp-value')
+
+    // Assert
+    expect(storage.state.values).toEqual({})
   })
 })

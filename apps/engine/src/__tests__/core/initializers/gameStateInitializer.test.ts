@@ -14,6 +14,7 @@ describe('core/initializers/gameStateInitializer', () => {
       activeSceneId: '',
       activeMapId: null,
       flags: {},
+      values: {},
       sceneStack: [],
     }
 
@@ -176,6 +177,7 @@ describe('core/initializers/gameStateInitializer', () => {
       activeSceneId: 'start-scene',
       activeMapId: 'start-map',
       flags: {},
+      values: {},
       sceneStack: ['start-scene'],
       map: 'start-map',
     })
@@ -422,6 +424,7 @@ describe('core/initializers/gameStateInitializer', () => {
       activeSceneId: 'start-menu',
       activeMapId: 'world-map',
       flags: {},
+      values: {},
       sceneStack: ['start-menu'],
       map: 'world-map',
     })
