@@ -10,7 +10,7 @@ import {
   IResourceDataProvider,
   resourceDataProviderToken,
 } from '../../../resourceData/provider'
-import { InventoryItemComponent } from './InventoryItem'
+import { InventoryItem } from './Controls/InventoryItem'
 
 interface InventoryComponentProps {
   component: InventoryComponentData
@@ -68,7 +68,7 @@ export function InventoryComponent({ component }: InventoryComponentProps) {
             }
             const item = inventory.items[index]
             return (
-              <InventoryItemComponent
+              <InventoryItem
                 key={index}
                 itemId={item.itemId}
                 quantity={item.quantity}

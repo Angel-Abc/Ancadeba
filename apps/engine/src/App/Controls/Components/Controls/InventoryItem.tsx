@@ -2,24 +2,24 @@ import { useService } from '@ancadeba/ui'
 import {
   IResourceDataProvider,
   resourceDataProviderToken,
-} from '../../../resourceData/provider'
+} from '../../../../resourceData/provider'
 import {
   ILanguageProvider,
   languageProviderToken,
-} from '../../../language/provider'
+} from '../../../../language/provider'
 import { useState } from 'react'
 
-interface InventoryItemComponentProps {
+interface InventoryItemProps {
   itemId: string
   quantity: number
   _onEquip: (itemId: string) => void
 }
 
-export function InventoryItemComponent({
+export function InventoryItem({
   itemId,
   quantity,
   _onEquip,
-}: InventoryItemComponentProps) {
+}: InventoryItemProps) {
   const resourceDataProvider = useService<IResourceDataProvider>(
     resourceDataProviderToken
   )

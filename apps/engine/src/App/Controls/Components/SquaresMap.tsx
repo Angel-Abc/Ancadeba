@@ -14,7 +14,7 @@ import {
   IEngineMessageBus,
 } from '../../../system/engineMessageBus'
 import { CORE_MESSAGES } from '../../../messages/core'
-import { MapTile } from './MapTile'
+import { MapTile } from './Controls/MapTile'
 import { COMPONENT_KEYS, PositionComponent } from '../../../ecs/components'
 import type { EntityId, IWorld } from '../../../ecs/types'
 import { WORLD_EVENTS } from '../../../ecs/types'
@@ -183,9 +183,7 @@ export function SquaresMapComponent({ component }: SquaresMapComponentProps) {
               if (tile === undefined) {
                 return <div key={key} className="empty-tile" />
               }
-              const entities = entitiesByPosition.get(
-                `${colIndex},${rowIndex}`
-              )
+              const entities = entitiesByPosition.get(`${colIndex},${rowIndex}`)
               return (
                 <MapTile
                   key={key}
