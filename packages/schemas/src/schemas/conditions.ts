@@ -27,5 +27,21 @@ export const conditionSchema = z.discriminatedUnion('type', [
     type: z.literal('inventory-space'),
     requiredSlots: z.number().int().positive(),
   }),
+  z.object({
+    type: z.literal('value-set'),
+    name: z.string(),
+  }),
+  z.object({
+    type: z.literal('value-not-set'),
+    name: z.string(),
+  }),
+  z.object({
+    type: z.literal('value-equals'),
+    name: z.string(),
+    value: z.string(),
+  }),
 ])
 export type Condition = z.infer<typeof conditionSchema>
+export type ValueSetCondition = Extract<Condition, { type: 'value-set' }>
+export type ValueNotSetCondition = Extract<Condition, { type: 'value-not-set' }>
+export type ValueEqualsCondition = Extract<Condition, { type: 'value-equals' }>

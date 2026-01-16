@@ -126,6 +126,10 @@ import {
   flagConditionEvaluatorDependencies,
 } from '../core/conditionEvaluators/FlagConditionEvaluator'
 import {
+  ValueConditionEvaluator,
+  valueConditionEvaluatorDependencies,
+} from '../core/conditionEvaluators/ValueConditionEvaluator'
+import {
   CanMoveConditionEvaluator,
   canMoveConditionEvaluatorDependencies,
 } from '../core/conditionEvaluators/CanMoveConditionEvaluator'
@@ -623,6 +627,11 @@ export function registerServices(container: Container): void {
       token: conditionEvaluatorToken,
       useClass: FlagConditionEvaluator,
       deps: flagConditionEvaluatorDependencies,
+    },
+    {
+      token: conditionEvaluatorToken,
+      useClass: ValueConditionEvaluator,
+      deps: valueConditionEvaluatorDependencies,
     },
     {
       token: conditionEvaluatorToken,
