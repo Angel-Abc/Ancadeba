@@ -7,6 +7,7 @@ import { AppearanceComponent } from './Components/Appearance'
 import { CharacterSheetComponent } from './Components/CharacterSheet'
 import { TextLogComponent } from './Components/TextLog'
 import { InputBarComponent } from './Components/InputBar'
+import { ItemDetailsComponent } from './Components/ItemDetails'
 
 export function registerComponents(registry: IComponentRegistry): void {
   registry.register('background', BackgroundComponent)
@@ -17,4 +18,5 @@ export function registerComponents(registry: IComponentRegistry): void {
   registry.register('character-sheet', CharacterSheetComponent)
   registry.register('text-log', TextLogComponent)
   registry.register('input-bar', InputBarComponent)
+  registry.register('item-details', ItemDetailsComponent)
 }
