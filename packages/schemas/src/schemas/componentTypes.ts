@@ -18,7 +18,7 @@ export const borderSchema = z.object({
  * inline components and component definitions.
  */
 export function createComponentTypeSchemas<
-  TBase extends z.ZodObject<z.ZodRawShape>
+  TBase extends z.ZodObject<z.ZodRawShape>,
 >(baseSchema: TBase) {
   return {
     background: baseSchema.extend({
@@ -43,6 +43,10 @@ export function createComponentTypeSchemas<
     }),
     characterSheet: baseSchema.extend({
       type: z.literal('character-sheet'),
+    }),
+    itemDetails: baseSchema.extend({
+      type: z.literal('item-details'),
+      'itemId-field': z.string(),
     }),
     menu: baseSchema.extend({
       type: z.literal('menu'),

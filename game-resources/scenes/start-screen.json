@@ -60,6 +60,11 @@
               "quantity": 1
             },
             {
+              "type": "add-item",
+              "itemId": "health-potion",
+              "quantity": 58
+            },
+            {
               "type": "switch-scene",
               "targetSceneId": "navigate"
             }

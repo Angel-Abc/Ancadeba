@@ -44,6 +44,12 @@ const characterSheetComponentDefinitionSchema =
     type: z.literal('character-sheet'),
   })
 
+const itemDetailsComponentDefinitionSchema =
+  baseComponentDefinitionSchema.extend({
+    type: z.literal('item-details'),
+    'itemId-field': z.string(),
+  })
+
 const menuComponentDefinitionSchema = baseComponentDefinitionSchema.extend({
   type: z.literal('menu'),
   options: z.array(menuOptionSchema).min(1),
@@ -62,6 +68,7 @@ export const componentDefinitionSchema = z.discriminatedUnion('type', [
   inventoryComponentDefinitionSchema,
   appearanceComponentDefinitionSchema,
   characterSheetComponentDefinitionSchema,
+  itemDetailsComponentDefinitionSchema,
   textLogComponentDefinitionSchema,
   inputBarComponentDefinitionSchema,
 ])
@@ -84,6 +91,9 @@ export type AppearanceComponentDefinition = z.infer<
 >
 export type CharacterSheetComponentDefinition = z.infer<
   typeof characterSheetComponentDefinitionSchema
+>
+export type ItemDetailsComponentDefinition = z.infer<
+  typeof itemDetailsComponentDefinitionSchema
 >
 export type TextLogComponentDefinition = z.infer<
   typeof textLogComponentDefinitionSchema

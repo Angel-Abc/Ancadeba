@@ -33,6 +33,22 @@
       }
     },
     {
+      "type": "item-details",
+      "itemId-field": "selectedInventoryItemId",
+      "location": {
+        "x": 12,
+        "y": 0
+      },
+      "size": {
+        "width": 6,
+        "height": 6
+      },
+      "visible": {
+        "type": "value-set",
+        "name": "selectedInventoryItemId"
+      }
+    },
+    {
       "definitionId": "armor-appearance",
       "location": {
         "x": 18,

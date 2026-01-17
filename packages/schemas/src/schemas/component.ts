@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { inputRuleSchema, menuOptionSchema } from './componentCommon'
 import { sizeSchema, borderSchema } from './componentTypes'
+import { conditionSchema } from './conditions'
 
 const locationSchema = z.object({
   x: z.number().int().nonnegative(),
@@ -10,7 +11,7 @@ const locationSchema = z.object({
 const baseComponentSchema = z.object({
   location: locationSchema,
   size: sizeSchema,
-  visible: z.boolean().optional().default(true),
+  visible: z.union([z.boolean(), conditionSchema]).optional().default(true),
   border: borderSchema.optional().default({ width: 0, padding: 0, margin: 0 }),
   inputRules: z.array(inputRuleSchema).optional(),
 })
@@ -45,6 +46,11 @@ const characterSheetComponentSchema = baseComponentSchema.extend({
   type: z.literal('character-sheet'),
 })
 
+const itemDetailsComponentSchema = baseComponentSchema.extend({
+  type: z.literal('item-details'),
+  'itemId-field': z.string(),
+})
+
 const menuComponentSchema = baseComponentSchema.extend({
   type: z.literal('menu'),
   options: z.array(menuOptionSchema).min(1),
@@ -63,6 +69,7 @@ const inlineComponentSchema = z.union([
   inventoryComponentSchema,
   appearanceComponentSchema,
   characterSheetComponentSchema,
+  itemDetailsComponentSchema,
   textLogComponentSchema,
   inputBarComponentSchema,
 ])
@@ -72,7 +79,7 @@ const componentReferenceSchema = z.object({
   definitionId: z.string(),
   location: locationSchema,
   size: sizeSchema,
-  visible: z.boolean().default(true),
+  visible: z.union([z.boolean(), conditionSchema]).optional().default(true),
   // Optional overrides for definition properties
   overrides: z
     .object({
@@ -105,5 +112,6 @@ export type AppearanceComponent = z.infer<typeof appearanceComponentSchema>
 export type CharacterSheetComponent = z.infer<
   typeof characterSheetComponentSchema
 >
+export type ItemDetailsComponent = z.infer<typeof itemDetailsComponentSchema>
 export type TextLogComponent = z.infer<typeof textLogComponentSchema>
 export type InputBarComponent = z.infer<typeof inputBarComponentSchema>

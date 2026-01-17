@@ -53,3 +53,15 @@ button:disabled {
     }
   }
 }
+
+.inventory-component {
+  & .slot .quantity {
+    border-right: calc(2 * var(--ge-unit-size)) solid
+      var(--ge-component-border-color);
+    border-bottom: calc(2 * var(--ge-unit-size)) solid
+      var(--ge-component-border-color);
+    padding-left: calc(3 * var(--ge-unit-size));
+    padding-right: calc(3 * var(--ge-unit-size));
+    font-size: 80%;
+  }
+}

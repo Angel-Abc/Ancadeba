@@ -48,6 +48,7 @@ import {
   gameStateReaderToken,
   gameStateMutatorToken,
   flagStorageToken,
+  valueStorageToken,
 } from '../gameState.ts/storage'
 import {
   ResourceDataProvider,
@@ -539,6 +540,11 @@ export function registerServices(container: Container): void {
     },
     {
       token: flagStorageToken,
+      useFactory: (container) => container.resolve(gameStateStorageToken),
+      scope: 'singleton',
+    },
+    {
+      token: valueStorageToken,
       useFactory: (container) => container.resolve(gameStateStorageToken),
       scope: 'singleton',
     },
