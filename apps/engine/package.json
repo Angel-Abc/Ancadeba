@@ -6,21 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node ../../scripts/copy-game-resources.mjs",
-    "typecheck": "tsc -b --noEmit",
-    "clean": "rm -rf dist node_modules/.vite",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "clean": "rimraf dist node_modules/.vite",
     "copy-resources": "node ../../scripts/copy-game-resources.mjs",
     "test": "vitest run"
   },
   "dependencies": {
     "@ancadeba/schemas": "workspace:*",
     "@ancadeba/utils": "workspace:*",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@ancadeba/ui": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "vite": "^7.1.4",
-    "@vitejs/plugin-react": "^5.0.0"
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "vite": "^7.3.1",
+    "@vitejs/plugin-react": "^5.1.2"
   }
 }

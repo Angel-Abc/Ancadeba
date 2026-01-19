@@ -10,9 +10,15 @@ This project prioritizes determinism, clarity, and architectural correctness ove
 - Prefer dependency injection over global singletons.
 - Emphasize single responsibility for classes/modules.
 
+## Testing Guidelines
+
+- Use Arrange/Act/Assert comments in tests; keep each section explicit.
+
 ## Required Checks
 
 Before marking any code task as complete, ensure the following commands are run and pass:
 
+- pnpm typecheck
 - pnpm lint
 - pnpm build
+- pnpm test

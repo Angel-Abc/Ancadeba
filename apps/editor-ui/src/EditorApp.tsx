@@ -8,10 +8,14 @@ export function EditorApp() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadLevels().catch((err) => {
-      console.error(err)
-      setError(String(err))
-    })
+    loadLevels()
+      .then((nextLevels) => {
+        setLevels(nextLevels)
+      })
+      .catch((err) => {
+        console.error(err)
+        setError(String(err))
+      })
   }, [])
 
   if (error) {

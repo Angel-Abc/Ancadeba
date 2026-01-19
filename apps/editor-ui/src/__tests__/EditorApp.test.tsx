@@ -6,7 +6,7 @@ import { EditorApp } from '../EditorApp'
 describe('EditorApp', () => {
   beforeEach(() => {
     // Arrange: mock fetch for API call
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => [
         {
