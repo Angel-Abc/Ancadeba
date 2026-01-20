@@ -22,7 +22,7 @@ const GAME_RESOURCES_DIR =
  */
 invariant(
   fs.existsSync(GAME_RESOURCES_DIR),
-  `Game resources directory does not exist: ${GAME_RESOURCES_DIR}`
+  `Game resources directory does not exist: ${GAME_RESOURCES_DIR}`,
 )
 
 /**

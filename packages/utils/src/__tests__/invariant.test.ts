@@ -17,7 +17,7 @@ describe('utils', () => {
 
       // Act / Assert
       expect(() => invariant(condition, 'invariant failed')).toThrow(
-        'invariant failed'
+        'invariant failed',
       )
     })
   })

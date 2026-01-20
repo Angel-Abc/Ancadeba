@@ -30,16 +30,7 @@ module.exports = [
       // Code Style
       quotes: ['error', 'single', { avoidEscape: true }],
       semi: ['error', 'never'],
-      'comma-dangle': [
-        'error',
-        {
-          arrays: 'always-multiline',
-          objects: 'always-multiline',
-          imports: 'always-multiline',
-          exports: 'always-multiline',
-          functions: 'never',
-        },
-      ],
+      'comma-dangle': ['error', 'always-multiline'],
       indent: ['error', 2, { SwitchCase: 1 }],
       'object-curly-spacing': ['error', 'always'],
       'array-bracket-spacing': ['error', 'never'],
@@ -66,6 +57,14 @@ module.exports = [
     files: ['**/logger/**/*.ts', '**/src/index.ts'],
     rules: {
       'no-console': 'off',
+    },
+  },
+  // Relax rules for test files
+  {
+    files: ['**/__tests__/**/*.test.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
+      'max-lines-per-function': 'off',
+      'max-depth': 'off',
     },
   },
 ]
