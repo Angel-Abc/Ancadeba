@@ -14,5 +14,5 @@ const root = createRoot(container)
 root.render(
   <React.StrictMode>
     <EditorApp />
-  </React.StrictMode>
+  </React.StrictMode>,
 )

@@ -19,7 +19,7 @@ function formatMessageForConsole(
       }
 
       return String(arg)
-    }
+    },
   )
 
   return { formattedMessage, extraArgs }
@@ -33,7 +33,7 @@ function logMessage(
 ): string {
   const { formattedMessage, extraArgs } = formatMessageForConsole(
     message,
-    ...args
+    ...args,
   )
   if (!isLevelEnabled(logLevel)) return formattedMessage
   if (logLevel === LogLevel.debug && !isCategoryEnabled(category))

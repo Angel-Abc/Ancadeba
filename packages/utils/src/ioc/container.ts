@@ -86,6 +86,13 @@ export class Container implements IContainer {
 
     if (providers && providers.length > 0) {
       for (const provider of providers) {
+        // Check if a singleton instance already exists for this specific provider
+        if (this.singletons.has(t)) {
+          const singleton = this.singletons.get(t) as T
+          instances.push(singleton)
+          continue
+        }
+
         if (this.resolving.includes(t)) {
           const path = [...this.resolving, t].map(describeToken).join(' -> ')
           throw new Error(
@@ -100,6 +107,12 @@ export class Container implements IContainer {
         this.resolving.push(t)
         try {
           const instance = this.instantiate(provider)
+          const scope = (provider as { scope?: Scope }).scope ?? 'singleton'
+          const isValueFunction =
+            'useValue' in provider &&
+            isFunction((provider as { useValue: T }).useValue)
+          if (scope === 'singleton' && !isValueFunction)
+            this.singletons.set(t, instance)
           instances.push(instance as T)
         } finally {
           this.resolving.pop()
