@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 import { invariant } from '@ancadeba/utils'
-import { LevelSchema } from '@ancadeba/schemas'
+// import { LevelSchema } from '@ancadeba/schemas'
 
 const app: Application = express()
 app.use(express.json())
@@ -22,7 +22,7 @@ const GAME_RESOURCES_DIR =
  */
 invariant(
   fs.existsSync(GAME_RESOURCES_DIR),
-  `Game resources directory does not exist: ${GAME_RESOURCES_DIR}`
+  `Game resources directory does not exist: ${GAME_RESOURCES_DIR}`,
 )
 
 /**
@@ -37,22 +37,22 @@ app.use((req, _res, next) => {
   next()
 })
 
-app.get('/api/levels', (_req, res) => {
-  const levelsDir = path.join(GAME_RESOURCES_DIR, 'levels')
+// app.get('/api/levels', (_req, res) => {
+//   const levelsDir = path.join(GAME_RESOURCES_DIR, 'levels')
 
-  if (!fs.existsSync(levelsDir)) {
-    return res.json([])
-  }
+//   if (!fs.existsSync(levelsDir)) {
+//     return res.json([])
+//   }
 
-  const files = fs.readdirSync(levelsDir).filter((f) => f.endsWith('.json'))
+//   const files = fs.readdirSync(levelsDir).filter((f) => f.endsWith('.json'))
 
-  const levels = files.map((file) => {
-    const raw = fs.readFileSync(path.join(levelsDir, file), 'utf-8')
-    return LevelSchema.parse(JSON.parse(raw))
-  })
+//   const levels = files.map((file) => {
+//     const raw = fs.readFileSync(path.join(levelsDir, file), 'utf-8')
+//     return LevelSchema.parse(JSON.parse(raw))
+//   })
 
-  res.json(levels)
-})
+//   res.json(levels)
+// })
 
 export { app }
 
