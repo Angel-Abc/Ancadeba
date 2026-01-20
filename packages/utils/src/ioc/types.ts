@@ -2,6 +2,7 @@ import type { Token } from './token'
 
 export type IContainer = {
   resolve<T>(t: Token<T>): T
+  resolveAll<T>(t: Token<T>): T[]
 }
 
 export type Class<T> = new (...args: any[]) => T
