@@ -4,7 +4,7 @@ export function assertNever(value: never): never {
 
 export function invariant(
   condition: unknown,
-  message: string,
+  message: string
 ): asserts condition {
   if (!condition) {
     throw new Error(message)
@@ -20,7 +20,7 @@ export function typedKeys<T extends object>(obj: T): Array<keyof T> {
 }
 
 export function typedEntries<T extends object>(
-  obj: T,
+  obj: T
 ): { [K in keyof T]: [K, T[K]] }[keyof T][] {
   /* // eslint-disable-next-line @typescript-eslint/no-explicit-any */
   return Object.entries(obj) as any
