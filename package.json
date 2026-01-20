@@ -8,15 +8,19 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "test:watch": "pnpm -r test:watch",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:ui": "pnpm -r test:ui"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.0.9",
     "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.1",
     "@vitest/coverage-v8": "^4.0.17",
-    "@typescript-eslint/parser": "^8.53.0",
     "eslint": "^9.39.2",
     "jsdom": "^27.4.0",
     "rimraf": "^6.1.2",

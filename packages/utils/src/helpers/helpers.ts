@@ -22,6 +22,5 @@ export function typedKeys<T extends object>(obj: T): Array<keyof T> {
 export function typedEntries<T extends object>(
   obj: T,
 ): { [K in keyof T]: [K, T[K]] }[keyof T][] {
-  /* // eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  return Object.entries(obj) as any
+  return Object.entries(obj) as { [K in keyof T]: [K, T[K]] }[keyof T][]
 }

@@ -1,7 +1,7 @@
 import { isFunction } from '../checks/typeChecks'
-import { ILogger } from '../logger/types'
-import { describeToken, Token } from './token'
-import { IContainer, Provider, Scope } from './types'
+import type { ILogger } from '../logger/types'
+import { describeToken, type Token } from './token'
+import type { IContainer, Provider, Scope } from './types'
 
 const logName: string = 'utils/ioc/container'
 
@@ -15,7 +15,9 @@ export class Container implements IContainer {
     private logger: ILogger,
     parent?: Container,
   ) {
-    this.parent = parent
+    if (parent) {
+      this.parent = parent
+    }
   }
 
   register<T>(provider: Provider<T>): this {

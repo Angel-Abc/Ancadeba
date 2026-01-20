@@ -32,16 +32,50 @@ export default defineConfig({
 
       const filePath = path.join(GAME_RESOURCES_DIR, req.url)
 
+      // Security: prevent path traversal
       if (!filePath.startsWith(GAME_RESOURCES_DIR)) {
         res.statusCode = 403
+        res.setHeader('Content-Type', 'text/plain')
         return res.end('Forbidden')
       }
 
+      // Check if file exists
       if (!fs.existsSync(filePath)) {
         return next()
       }
 
-      res.end(fs.readFileSync(filePath))
+      // Security: only serve files (not directories)
+      const stats = fs.statSync(filePath)
+      if (!stats.isFile()) {
+        return next()
+      }
+
+      // Set appropriate content type
+      const ext = path.extname(filePath).toLowerCase()
+      const contentTypes: Record<string, string> = {
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.ogg': 'audio/ogg',
+      }
+      res.setHeader(
+        'Content-Type',
+        contentTypes[ext] ?? 'application/octet-stream',
+      )
+
+      try {
+        res.end(fs.readFileSync(filePath))
+      } catch (err) {
+        res.statusCode = 500
+        res.setHeader('Content-Type', 'text/plain')
+        res.end('Internal Server Error')
+      }
     })
   },
 

@@ -14,6 +14,12 @@ export default defineConfig({
      */
     clearMocks: true,
     restoreMocks: true,
+    mockReset: true,
+
+    /**
+     * Test timeout (5 seconds)
+     */
+    testTimeout: 5000,
 
     /**
      * Coverage is opt-in per package

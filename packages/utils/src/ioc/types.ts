@@ -5,7 +5,7 @@ export type IContainer = {
   resolveAll<T>(t: Token<T>): T[]
 }
 
-export type Class<T> = new (...args: any[]) => T
+export type Class<T> = new (...args: unknown[]) => T
 export type Factory<T> = (c: IContainer) => T
 
 export type Scope = 'singleton' | 'transient'

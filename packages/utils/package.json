@@ -16,6 +16,9 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "clean": "rimraf dist --glob *.tsbuildinfo",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   }
 }
