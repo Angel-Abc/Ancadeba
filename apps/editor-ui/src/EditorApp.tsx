@@ -1,4 +1,4 @@
-export function EditorApp() {
+export function EditorApp(): React.JSX.Element {
   return (
     <div style={{ padding: 16 }}>
       <h1>Ancadeba Editor</h1>

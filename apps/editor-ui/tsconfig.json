@@ -10,6 +10,7 @@
   "include": ["src"],
   "references": [
     { "path": "../../packages/schemas" },
-    { "path": "../../packages/utils" }
+    { "path": "../../packages/utils" },
+    { "path": "../../packages/ui" }
   ]
 }

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { Container } from '../container'
 import { token } from '../token'
-import { Provider } from '../types'
-import { ILogger } from '../../logger/types'
+import type { Provider } from '../types'
+import type { ILogger } from '../../logger/types'
 
 describe('Container', () => {
   let container: Container

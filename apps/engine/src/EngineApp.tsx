@@ -2,7 +2,7 @@
  * Example engine shell.
  * This will evolve into your actual game runtime.
  */
-export function EngineApp() {
+export function EngineApp(): React.JSX.Element {
   return (
     <div style={{ padding: 16 }}>
       <h1>Ancadeba Engine</h1>

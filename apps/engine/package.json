@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "clean": "rimraf dist node_modules/.vite",
     "copy-resources": "node ../../scripts/copy-game-resources.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@ancadeba/schemas": "workspace:*",

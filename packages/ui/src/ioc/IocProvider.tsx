@@ -1,10 +1,15 @@
 import React, {
   createContext,
-  PropsWithChildren,
   useContext,
   useMemo,
+  type PropsWithChildren,
 } from 'react'
-import { ILogger, type IContainer, Token, loggerToken } from '@ancadeba/utils'
+import {
+  loggerToken,
+  type IContainer,
+  type ILogger,
+  type Token,
+} from '@ancadeba/utils'
 
 const logName = 'ioc/IocProvider'
 
@@ -13,7 +18,7 @@ export const IocContext = createContext<IContainer | null>(null)
 export const IocProvider = ({
   container,
   children,
-}: PropsWithChildren<{ container: IContainer }>) => {
+}: PropsWithChildren<{ container: IContainer }>): React.JSX.Element => {
   return <IocContext.Provider value={container}>{children}</IocContext.Provider>
 }
 
