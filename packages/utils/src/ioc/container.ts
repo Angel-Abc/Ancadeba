@@ -46,7 +46,7 @@ export class Container implements IContainer {
     if (!providers || providers.length === 0) {
       if (this.parent) return this.parent.resolve(t)
       throw new Error(
-        this.logger.error(logName, 'No provider for {0}', describeToken(t))
+        this.logger.error(logName, 'No provider for {0}', describeToken(t)),
       )
     }
 
@@ -61,7 +61,7 @@ export class Container implements IContainer {
     if (this.resolving.includes(t)) {
       const path = [...this.resolving, t].map(describeToken).join(' -> ')
       throw new Error(
-        this.logger.error(logName, 'Circular dependency detected: {0}', path)
+        this.logger.error(logName, 'Circular dependency detected: {0}', path),
       )
     }
 
@@ -126,8 +126,8 @@ export class Container implements IContainer {
       this.logger.error(
         logName,
         'Invalid provider for {0}',
-        describeToken((p as Provider<T>).token)
-      )
+        describeToken((p as Provider<T>).token),
+      ),
     )
   }
 }
