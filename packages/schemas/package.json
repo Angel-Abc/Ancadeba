@@ -19,6 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ancadeba/utils": "workspace:*",
     "zod": "^4.3.5"
   }
 }
