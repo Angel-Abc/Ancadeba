@@ -1,0 +1,23 @@
+{
+  "name": "@ancadeba/editor-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -b",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "clean": "rimraf dist --glob *.tsbuildinfo",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ancadeba/schemas": "workspace:*",
+    "@ancadeba/utils": "workspace:*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "tsx": "^4.21.0"
+  }
+}

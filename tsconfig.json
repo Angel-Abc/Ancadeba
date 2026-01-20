@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/schemas" },
+    { "path": "./packages/utils" },
+    { "path": "./apps/editor-server" },
+    { "path": "./apps/engine" },
+    { "path": "./apps/editor-ui" }
+  ]
+}
