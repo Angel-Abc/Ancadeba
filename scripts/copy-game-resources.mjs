@@ -5,7 +5,7 @@ const gameResourcesDir =
   process.env.GAME_RESOURCES_DIR ??
   path.resolve(process.cwd(), '../../game-resources')
 
-const engineDistDir = path.resolve(process.cwd(), './dist/resources')
+const gameClientDistDir = path.resolve(process.cwd(), './dist/resources')
 
 function copyDir(src, dest) {
   if (!fs.existsSync(src)) {
@@ -29,6 +29,6 @@ function copyDir(src, dest) {
 
 console.log(`Copying game resources:`)
 console.log(`  from ${gameResourcesDir}`)
-console.log(`  to   ${engineDistDir}`)
+console.log(`  to   ${gameClientDistDir}`)
 
-copyDir(gameResourcesDir, engineDistDir)
+copyDir(gameResourcesDir, gameClientDistDir)

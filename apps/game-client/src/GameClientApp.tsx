@@ -1,11 +1,11 @@
 /**
- * Example engine shell.
+ * Example game client shell.
  * This will evolve into your actual game runtime.
  */
-export function EngineApp(): React.JSX.Element {
+export function GameClientApp(): React.JSX.Element {
   return (
     <div style={{ padding: 16 }}>
-      <h1>Ancadeba Engine</h1>
+      <h1>Ancadeba Game Client</h1>
       <p>TODO</p>
     </div>
   )

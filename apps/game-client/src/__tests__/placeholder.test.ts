@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-describe('engine placeholder', () => {
+describe('game-client placeholder', () => {
   it('keeps the test runner wired', () => {
     // Arrange
     const expected = true

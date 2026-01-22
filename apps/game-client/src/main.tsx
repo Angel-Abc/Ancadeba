@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { EngineApp } from './EngineApp'
+import { GameClientApp } from './GameClientApp'
 
 const container = document.getElementById('root')
 
@@ -13,6 +13,6 @@ const root = createRoot(container)
 
 root.render(
   <React.StrictMode>
-    <EngineApp />
+    <GameClientApp />
   </React.StrictMode>,
 )
