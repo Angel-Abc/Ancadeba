@@ -50,9 +50,9 @@ importers:
 
   apps/editor-server:
     dependencies:
-      '@ancadeba/schemas':
+      '@ancadeba/content':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/content
       '@ancadeba/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -69,9 +69,9 @@ importers:
 
   apps/editor-ui:
     dependencies:
-      '@ancadeba/schemas':
+      '@ancadeba/content':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/content
       '@ancadeba/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -97,9 +97,9 @@ importers:
 
   apps/game-client:
     dependencies:
-      '@ancadeba/schemas':
+      '@ancadeba/content':
         specifier: workspace:*
-        version: link:../../packages/schemas
+        version: link:../../packages/content
       '@ancadeba/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -125,6 +125,15 @@ importers:
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)(tsx@4.21.0)
+
+  packages/content:
+    dependencies:
+      '@ancadeba/utils':
+        specifier: workspace:*
+        version: link:../utils
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
 
   packages/engine:
     dependencies:
@@ -156,15 +165,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.8)
-
-  packages/schemas:
-    dependencies:
-      '@ancadeba/utils':
-        specifier: workspace:*
-        version: link:../utils
-      zod:
-        specifier: ^4.3.5
-        version: 4.3.5
 
   packages/ui:
     dependencies:

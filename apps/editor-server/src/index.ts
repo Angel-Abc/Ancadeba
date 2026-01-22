@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 import { invariant } from '@ancadeba/utils'
-// import { LevelSchema } from '@ancadeba/schemas'
+// import { LevelSchema } from '@ancadeba/content'
 
 const app: Application = express()
 app.use(express.json())

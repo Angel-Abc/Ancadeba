@@ -16,7 +16,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@ancadeba/schemas": "workspace:*",
+    "@ancadeba/content": "workspace:*",
     "@ancadeba/utils": "workspace:*",
     "@ancadeba/ui": "workspace:*",
     "react": "^19.2.3",

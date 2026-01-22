@@ -1,7 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/schemas" },
+    { "path": "./packages/content" },
     { "path": "./packages/utils" },
     { "path": "./packages/ui" },
     { "path": "./apps/editor-server" },
