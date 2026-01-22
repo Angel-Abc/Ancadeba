@@ -95,7 +95,7 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)(tsx@4.21.0)
 
-  apps/engine:
+  apps/game-client:
     dependencies:
       '@ancadeba/schemas':
         specifier: workspace:*
@@ -125,6 +125,37 @@ importers:
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.0.9)(tsx@4.21.0)
+
+  packages/engine:
+    dependencies:
+      '@ancadeba/utils':
+        specifier: workspace:*
+        version: link:../utils
+
+  packages/engine-ui:
+    dependencies:
+      '@ancadeba/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@ancadeba/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@ancadeba/utils':
+        specifier: workspace:*
+        version: link:../utils
+      react:
+        specifier: ^19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.8
+        version: 19.2.8
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.8)
 
   packages/schemas:
     dependencies:

@@ -1,0 +1,27 @@
+{
+  "name": "@ancadeba/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "clean": "rimraf dist --glob *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@ancadeba/utils": "workspace:*"
+  }
+}
