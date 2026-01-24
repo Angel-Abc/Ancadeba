@@ -96,7 +96,7 @@ describe('Container', () => {
       expect(allInstances[0]).toBe(singleInstance)
     })
 
-    it('should use default singleton scope when scope is not specified', () => {
+    it('should use default transient scope when scope is not specified', () => {
       // Arrange
       const testToken = token<string>('test-token')
       const provider: Provider<string> = {
@@ -108,12 +108,16 @@ describe('Container', () => {
       // Act
       const instance1 = container.resolve(testToken)
       const instance2 = container.resolve(testToken)
-      const instances = container.resolveAll(testToken)
+      const instances1 = container.resolveAll(testToken)
+      const instances2 = container.resolveAll(testToken)
 
       // Assert
-      expect(instance1).toBe(instance2)
-      expect(instances).toHaveLength(1)
-      expect(instances[0]).toBe(instance1)
+      expect(instance1).not.toBe(instance2)
+      expect(instances1).toHaveLength(1)
+      expect(instances2).toHaveLength(1)
+      expect(instances1[0]).not.toBe(instances2[0])
+      expect(instances1[0]).not.toBe(instance1)
+      expect(instances1[0]).not.toBe(instance2)
     })
   })
 
