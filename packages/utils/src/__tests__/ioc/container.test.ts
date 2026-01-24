@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { Container } from '../container'
-import { token } from '../token'
-import type { Provider } from '../types'
+import { Container } from '../../ioc/container'
+import { token } from '../../ioc/token'
+import type { Provider } from '../../ioc/types'
 import type { ILogger } from '../../logger/types'
 
 describe('Container', () => {
