@@ -70,7 +70,7 @@ export class Container implements IContainer {
     this.resolving.push(t)
     try {
       const instance = this.instantiate(provider)
-      const scope = (provider as { scope?: Scope }).scope ?? 'singleton'
+      const scope = (provider as { scope?: Scope }).scope ?? 'transient'
       const isValueFunction =
         'useValue' in provider &&
         isFunction((provider as { useValue: T }).useValue)
