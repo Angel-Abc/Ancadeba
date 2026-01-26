@@ -1,13 +1,11 @@
-import { isFunction } from '../checks/typeChecks'
 import type { ILogger } from '../logger/types'
 import { describeToken, type Token } from './token'
 import type { IContainer, Provider, Scope } from './types'
 
-const logName: string = 'utils/ioc/container'
-
 export class Container implements IContainer {
+  public static readonly logName: string = 'utils/ioc/container'
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
-  private singletons = new Map<Token<unknown>, unknown>()
+  private singletons = new WeakMap<Provider<unknown>, unknown>()
   private resolving: Token<unknown>[] = []
   readonly parent?: Container
 
@@ -43,27 +41,30 @@ export class Container implements IContainer {
     return new Container(this.logger, this)
   }
 
-  resolve<T>(t: Token<T>): T {
+  getProviders<T>(t: Token<T>): Provider<T>[] {
     const providers = this.providers.get(t) as Provider<T>[] | undefined
-    if (!providers || providers.length === 0) {
-      if (this.parent) return this.parent.resolve(t)
-      throw new Error(
-        this.logger.error(logName, 'No provider for {0}', describeToken(t)),
-      )
+    if (providers) {
+      return providers
     }
+    if (this.parent) {
+      return this.parent.getProviders(t)
+    }
+    return []
+  }
 
-    const provider = providers[0]
-    if (!provider) {
-      throw new Error(
-        this.logger.error(logName, 'No provider for {0}', describeToken(t)),
-      )
+  resolveProvider<T>(provider: Provider<T>, t: Token<T>): T {
+    if (this.singletons.has(provider as Provider<unknown>)) {
+      return this.singletons.get(provider as Provider<unknown>) as T
     }
-    if (this.singletons.has(t)) return this.singletons.get(t) as T
 
     if (this.resolving.includes(t)) {
       const path = [...this.resolving, t].map(describeToken).join(' -> ')
       throw new Error(
-        this.logger.error(logName, 'Circular dependency detected: {0}', path),
+        this.logger.error(
+          Container.logName,
+          'Circular dependency detected: {0}',
+          path,
+        ),
       )
     }
 
@@ -71,54 +72,47 @@ export class Container implements IContainer {
     try {
       const instance = this.instantiate(provider)
       const scope = (provider as { scope?: Scope }).scope ?? 'transient'
-      const isValueFunction =
-        'useValue' in provider &&
-        isFunction((provider as { useValue: T }).useValue)
-      if (scope === 'singleton' && !isValueFunction)
-        this.singletons.set(t, instance)
+      if (scope === 'singleton') {
+        this.singletons.set(provider as Provider<unknown>, instance)
+      }
       return instance as T
     } finally {
       this.resolving.pop()
     }
   }
 
+  resolve<T>(t: Token<T>): T {
+    const providers = this.getProviders(t)
+    if (providers.length === 0) {
+      throw new Error(
+        this.logger.error(
+          Container.logName,
+          'No provider for {0}',
+          describeToken(t),
+        ),
+      )
+    }
+
+    if (providers.length > 1) {
+      this.logger.warn(
+        Container.logName,
+        'Multiple providers found for {0}, using the first one registered',
+        describeToken(t),
+      )
+    }
+
+    const provider = providers[0] as Provider<T>
+    return this.resolveProvider(provider, t)
+  }
+
   resolveAll<T>(t: Token<T>): T[] {
-    const providers = this.providers.get(t) as Provider<T>[] | undefined
+    const providers = this.getProviders(t)
     const instances: T[] = []
 
-    if (providers && providers.length > 0) {
+    if (providers.length > 0) {
       for (const provider of providers) {
-        // Check if a singleton instance already exists for this specific provider
-        if (this.singletons.has(t)) {
-          const singleton = this.singletons.get(t) as T
-          instances.push(singleton)
-          continue
-        }
-
-        if (this.resolving.includes(t)) {
-          const path = [...this.resolving, t].map(describeToken).join(' -> ')
-          throw new Error(
-            this.logger.error(
-              logName,
-              'Circular dependency detected: {0}',
-              path,
-            ),
-          )
-        }
-
-        this.resolving.push(t)
-        try {
-          const instance = this.instantiate(provider)
-          const scope = (provider as { scope?: Scope }).scope ?? 'transient'
-          const isValueFunction =
-            'useValue' in provider &&
-            isFunction((provider as { useValue: T }).useValue)
-          if (scope === 'singleton' && !isValueFunction)
-            this.singletons.set(t, instance)
-          instances.push(instance as T)
-        } finally {
-          this.resolving.pop()
-        }
+        const instance = this.resolveProvider(provider, t)
+        instances.push(instance)
       }
     }
 
@@ -139,7 +133,7 @@ export class Container implements IContainer {
 
     throw new Error(
       this.logger.error(
-        logName,
+        Container.logName,
         'Invalid provider for {0}',
         describeToken((p as Provider<T>).token),
       ),

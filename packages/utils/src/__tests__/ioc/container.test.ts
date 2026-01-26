@@ -188,6 +188,32 @@ describe('Container', () => {
       expect(instances1[0]).toBe(instances2[0])
       expect(instances1[1]).toBe(instances2[1])
     })
+
+    it('should maintain separate singleton instances for different providers with the same token', () => {
+      // Arrange
+      const testToken = token<string>('test-token')
+      const provider1: Provider<string> = {
+        token: testToken,
+        useFactory: () => 'value-1',
+        scope: 'singleton',
+      }
+      const provider2: Provider<string> = {
+        token: testToken,
+        useFactory: () => 'value-2',
+        scope: 'singleton',
+      }
+      container.register(provider1)
+      container.register(provider2)
+
+      // Act
+      const instances = container.resolveAll(testToken)
+
+      // Assert
+      expect(instances).toHaveLength(2)
+      expect(instances[0]).toBe('value-1')
+      expect(instances[1]).toBe('value-2')
+      expect(instances[0]).not.toBe(instances[1])
+    })
   })
 
   describe('useClass provider', () => {
