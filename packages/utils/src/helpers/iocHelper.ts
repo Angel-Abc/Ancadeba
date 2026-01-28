@@ -1,0 +1,22 @@
+import { type Container } from '../ioc/container'
+import { ConsoleLogger } from '../logger/console'
+import { loggerToken } from '../logger/types'
+import { MessageBus, messageBusDependencies } from '../messages/bus'
+import { messageBusToken } from '../messages/types'
+
+export function registerServices(container: Container): void {
+  container.registerAll([
+    {
+      token: loggerToken,
+      useClass: ConsoleLogger,
+      deps: [],
+      scope: 'singleton',
+    },
+    {
+      token: messageBusToken,
+      useClass: MessageBus,
+      deps: messageBusDependencies,
+      scope: 'singleton',
+    },
+  ])
+}
