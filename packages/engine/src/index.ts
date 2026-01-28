@@ -1,3 +1,1 @@
-export function helloEngine(): string {
-  return 'Hello from Engine package!'
-}
+export * from './helpers/iocHelper'
