@@ -7,16 +7,8 @@ export class Container implements IContainer {
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
   private singletons = new WeakMap<Provider<unknown>, unknown>()
   private resolving: Token<unknown>[] = []
-  readonly parent?: Container
 
-  constructor(
-    private logger: ILogger,
-    parent?: Container,
-  ) {
-    if (parent) {
-      this.parent = parent
-    }
-  }
+  constructor(private logger: ILogger) {}
 
   register<T>(provider: Provider<T>): this {
     const existing = this.providers.get(provider.token)
@@ -34,22 +26,12 @@ export class Container implements IContainer {
   }
 
   has<T>(t: Token<T>): boolean {
-    return this.providers.has(t) || !!this.parent?.has(t)
-  }
-
-  createChild(): Container {
-    return new Container(this.logger, this)
+    return this.providers.has(t)
   }
 
   getProviders<T>(t: Token<T>): Provider<T>[] {
     const providers = this.providers.get(t) as Provider<T>[] | undefined
-    if (providers) {
-      return providers
-    }
-    if (this.parent) {
-      return this.parent.getProviders(t)
-    }
-    return []
+    return providers ?? []
   }
 
   resolveProvider<T>(provider: Provider<T>, t: Token<T>): T {
@@ -109,15 +91,9 @@ export class Container implements IContainer {
     const providers = this.getProviders(t)
     const instances: T[] = []
 
-    if (providers.length > 0) {
-      for (const provider of providers) {
-        const instance = this.resolveProvider(provider, t)
-        instances.push(instance)
-      }
-    }
-
-    if (this.parent) {
-      instances.push(...this.parent.resolveAll(t))
+    for (const provider of providers) {
+      const instance = this.resolveProvider(provider, t)
+      instances.push(instance)
     }
 
     return instances
