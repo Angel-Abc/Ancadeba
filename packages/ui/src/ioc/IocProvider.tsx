@@ -11,7 +11,7 @@ import {
   type Token,
 } from '@ancadeba/utils'
 
-const logName = 'ioc/IocProvider'
+const logName = 'ui/ioc/IocProvider'
 
 export const IocContext = createContext<IContainer | null>(null)
 

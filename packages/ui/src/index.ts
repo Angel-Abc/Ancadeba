@@ -1,3 +1,1 @@
-export function helloUI(): string {
-  return 'Hello from UI package!'
-}
+export * from './ioc/IocProvider'

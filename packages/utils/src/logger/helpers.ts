@@ -1,10 +1,5 @@
-import { LogLevel } from './types'
-
-// NOTE: in the future get log level from the config
-const currentLevel = LogLevel.debug
-
-// NOTE: in the future get enabled categories from the config
-const enabledCategories = new Set<string>()
+import { currentLevel, enabledCategories } from './configuration'
+import { type LogLevel } from './logLevel'
 
 export function isLevelEnabled(level: LogLevel): boolean {
   return level >= currentLevel

@@ -1,6 +1,7 @@
 import { token } from '../ioc/token'
+import { ConsoleLogger } from './console'
 
-const logName = 'logger/types'
+const logName = '/utils/logger/types'
 
 export interface ILogger {
   debug(category: string, message: string, ...args: unknown[]): string
@@ -10,10 +11,6 @@ export interface ILogger {
 }
 export const loggerToken = token<ILogger>(logName)
 
-export const LogLevel = {
-  debug: 0,
-  info: 1,
-  warning: 2,
-  error: 3,
-} as const
-export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel]
+export function createInstance(): ILogger {
+  return new ConsoleLogger()
+}

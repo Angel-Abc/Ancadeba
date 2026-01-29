@@ -1,5 +1,6 @@
 import { isCategoryEnabled, isLevelEnabled } from './helpers'
-import { LogLevel, type ILogger } from './types'
+import { LogLevel } from './logLevel'
+import { type ILogger } from './types'
 
 function formatMessageForConsole(
   message: string,
