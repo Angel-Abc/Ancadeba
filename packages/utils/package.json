@@ -12,6 +12,7 @@
     }
   },
   "scripts": {
+    "dev": "tsc -b --watch",
     "build": "tsc -b",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
