@@ -1,8 +1,14 @@
-import { token } from '@ancadeba/utils'
-import type { IGameLoader } from '../loaders/GameLoader'
-import type { ISurfaceLoader } from '../loaders/SurfaceLoader'
+import type { Game } from '../schemas/game'
+import type { Surface } from '../schemas/surface'
 
-export const gameLoaderToken = token<IGameLoader>('content/loaders/GameLoader')
-export const surfaceLoaderToken = token<ISurfaceLoader>(
-  'content/loaders/SurfaceLoader',
-)
+export interface IGameLoader {
+  load(): Promise<Game>
+}
+
+export interface ISurfaceLoader {
+  load(surfacePath: string): Promise<Surface>
+  loadAll(surfacePaths: string[]): Promise<Surface[]>
+}
+
+export const GameLoaderLogName = 'content/loaders/GameLoader'
+export const SurfaceLoaderLogName = 'content/loaders/SurfaceLoader'

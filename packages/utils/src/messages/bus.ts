@@ -1,10 +1,11 @@
 import { type Token } from '../ioc/token'
-import { type ILogger, loggerToken } from '../logger/types'
-import type { EventPayload, IMessageBus } from './types'
+import { type ILogger } from '../logger/types'
+import { loggerToken } from '../logger/tokens'
+import { type EventPayload, type IMessageBus, MessageBusLogName } from './types'
 
 export const messageBusDependencies: Token<unknown>[] = [loggerToken]
 export class MessageBus implements IMessageBus {
-  public static readonly logName: string = 'utils/messages/Bus'
+  public static readonly logName: string = MessageBusLogName
 
   private readonly subscribers: Map<
     string,

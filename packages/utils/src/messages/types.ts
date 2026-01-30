@@ -1,8 +1,3 @@
-import { token } from '../ioc/token'
-import { MessageBus } from './bus'
-
-export const messageBusToken = token<IMessageBus>(MessageBus.logName)
-
 export type EventPayload = unknown
 
 export interface IMessageBus {
@@ -12,3 +7,5 @@ export interface IMessageBus {
     callback: (payload: EventPayload) => void,
   ): () => void
 }
+
+export const MessageBusLogName = 'utils/messages/Bus'

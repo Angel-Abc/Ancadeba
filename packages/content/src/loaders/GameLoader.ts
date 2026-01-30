@@ -1,19 +1,29 @@
 import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
 import { gameSchema, type Game } from '../schemas/game'
+import { resourcesConfigurationToken } from '../configuration/tokens'
+import type { IResourcesConfiguration } from '../configuration/types'
+import { GameLoaderLogName, type IGameLoader } from './types'
 
-export interface IGameLoader {
-  load(baseUrl: string): Promise<Game>
-}
-
-export const gameLoaderDependencies: Token<unknown>[] = [loggerToken]
-
-const logName = 'content/loaders/GameLoader'
+export const gameLoaderDependencies: Token<unknown>[] = [
+  loggerToken,
+  resourcesConfigurationToken,
+]
 
 export class GameLoader implements IGameLoader {
-  constructor(private readonly logger: ILogger) {}
+  public static readonly logName: string = GameLoaderLogName
 
-  async load(baseUrl: string): Promise<Game> {
-    this.logger.debug(logName, 'Loading game metadata from {0}', baseUrl)
+  constructor(
+    private readonly logger: ILogger,
+    private readonly resourcesConfiguration: IResourcesConfiguration,
+  ) {}
+
+  async load(): Promise<Game> {
+    const baseUrl = this.resourcesConfiguration.getResourcesPath()
+    this.logger.debug(
+      GameLoader.logName,
+      'Loading game metadata from {0}',
+      baseUrl,
+    )
 
     const response = await fetch(`${baseUrl}/index.json`)
 
@@ -24,7 +34,7 @@ export class GameLoader implements IGameLoader {
     const data = await response.json()
     const parsed = gameSchema.parse(data)
 
-    this.logger.debug(logName, 'Game metadata loaded: {0}', parsed)
+    this.logger.debug(GameLoader.logName, 'Game metadata loaded: {0}', parsed)
     return parsed
   }
 }

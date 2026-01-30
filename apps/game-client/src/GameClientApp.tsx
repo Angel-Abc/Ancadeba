@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useService } from '@ancadeba/ui'
-import { bootServiceToken, type IBootService } from './services/types'
+import { bootServiceToken } from './services/tokens'
+import type { IBootService } from './services/types'
 import { BootState, type BootProgress } from './services/BootService'
 import { BootSurface } from './widgets/BootSurface'
 import { ErrorSurface } from './widgets/ErrorSurface'

@@ -1,14 +1,9 @@
 import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
 import { gameLoaderToken, type IGameLoader } from '@ancadeba/content'
-import {
-  resourcesConfigurationToken,
-  type IBootService,
-  type IResourcesConfiguration,
-} from './types'
+import { type IBootService, BootServiceLogName } from './types'
 
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
-  resourcesConfigurationToken,
   gameLoaderToken,
 ]
 
@@ -25,9 +20,9 @@ export interface BootProgress {
   progress: number
 }
 
-const logName = 'game-client/services/BootService'
-
 export class BootService implements IBootService {
+  public static readonly logName: string = BootServiceLogName
+
   private state: BootState = BootState.Booting
   private message: string = 'Starting...'
   private progress: number = 0
@@ -35,7 +30,6 @@ export class BootService implements IBootService {
 
   constructor(
     private readonly logger: ILogger,
-    private readonly resourcesConfiguration: IResourcesConfiguration,
     private readonly gameLoader: IGameLoader,
   ) {}
 
@@ -62,7 +56,7 @@ export class BootService implements IBootService {
 
   async initialize(): Promise<void> {
     try {
-      this.logger.info(logName, 'Initializing game client')
+      this.logger.info(BootService.logName, 'Initializing game client')
       this.updateProgress(BootState.Booting, 'Initializing...', 0)
 
       // Phase 1: Validate resources path
@@ -79,9 +73,16 @@ export class BootService implements IBootService {
 
       // Phase 4: Ready
       this.updateProgress(BootState.Ready, 'Ready!', 1.0)
-      this.logger.info(logName, 'Game client initialized successfully')
+      this.logger.info(
+        BootService.logName,
+        'Game client initialized successfully',
+      )
     } catch (error) {
-      this.logger.error(logName, 'Failed to initialize game client: {0}', error)
+      this.logger.error(
+        BootService.logName,
+        'Failed to initialize game client: {0}',
+        error,
+      )
       this.updateProgress(
         BootState.Error,
         `Error: ${error instanceof Error ? error.message : String(error)}`,
@@ -92,9 +93,8 @@ export class BootService implements IBootService {
   }
 
   private async loadGameMetadata(): Promise<void> {
-    const resourcesPath = this.resourcesConfiguration.getResourcesPath()
-    const game = await this.gameLoader.load(resourcesPath)
-    this.logger.debug(logName, 'Game loaded: {0}', game.title)
+    const game = await this.gameLoader.load()
+    this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
   }
 
   private updateProgress(
