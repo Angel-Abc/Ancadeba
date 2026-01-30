@@ -1,1 +1,1 @@
-export * from './ioc/IocProvider'
+export { IocProvider, useService } from './ioc/IocProvider'

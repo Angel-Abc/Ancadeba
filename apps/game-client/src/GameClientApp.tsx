@@ -1,30 +1,54 @@
+import { useEffect, useState } from 'react'
+import { useService } from '@ancadeba/ui'
+import { bootServiceToken, type IBootService } from './services/types'
+import { BootState, type BootProgress } from './services/BootService'
+import { BootSurface } from './widgets/BootSurface'
+import { ErrorSurface } from './widgets/ErrorSurface'
+import { GameplaySurface } from './widgets/GameplaySurface'
+
 /**
- * Example game client shell.
- * This will evolve into your actual game runtime.
+ * Main game client application shell.
+ * Manages boot lifecycle and surface transitions following the data-driven architecture.
  */
 export function GameClientApp(): React.JSX.Element {
-  return (
-    <div style={{ padding: 16 }}>
-      <h1>Ancadeba Game Client</h1>
-      <p>TODO</p>
-    </div>
+  const bootService = useService<IBootService>(bootServiceToken)
+
+  const [bootProgress, setBootProgress] = useState<BootProgress>(
+    bootService.getProgress(),
   )
+
+  useEffect(() => {
+    // Subscribe to boot progress updates
+    const unsubscribe = bootService.subscribe((progress: BootProgress) => {
+      setBootProgress(progress)
+    })
+
+    // Start initialization
+    bootService.initialize().catch(() => {
+      // Error is already handled in BootService and logged
+    })
+
+    return unsubscribe
+  }, [bootService])
+
+  // Render appropriate surface based on boot state
+  switch (bootProgress.state) {
+    case BootState.Booting:
+    case BootState.Loading:
+      return (
+        <BootSurface
+          message={bootProgress.message}
+          progress={bootProgress.progress}
+        />
+      )
+
+    case BootState.Error:
+      return <ErrorSurface message={bootProgress.message} />
+
+    case BootState.Ready:
+      return <GameplaySurface />
+
+    default:
+      return <ErrorSurface message="Unknown boot state" />
+  }
 }
-
-// async function loadLevels(): Promise<Level[]> {
-//   const base = import.meta.env.DEV
-//     ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`
-//     : '/resources'
-
-//   const response = await fetch(`${base}/levels/index.json`)
-
-//   invariant(response.ok, `Failed to load levels index: ${response.status}`)
-
-//   const raw = await response.json()
-
-//   if (!Array.isArray(raw)) {
-//     throw new Error('Levels index must be an array')
-//   }
-
-//   return raw.map((item) => LevelSchema.parse(item))
-// }

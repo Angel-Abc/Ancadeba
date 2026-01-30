@@ -26,7 +26,7 @@ export class ContainerBuilder implements IContainerBuilder {
 
     const container = new Container(this.logger)
     registerUtilsServices(container)
-    registerGameClientServices(container)
+    registerGameClientServices(container, this.resourcesDataPath)
 
     return container
   }
