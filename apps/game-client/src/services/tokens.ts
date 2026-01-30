@@ -8,7 +8,8 @@ import {
   WorldServiceLogName,
 } from './types'
 
-export const bootProgressTrackerToken =
-  token<IBootProgressTracker>(BootProgressTrackerLogName)
+export const bootProgressTrackerToken = token<IBootProgressTracker>(
+  BootProgressTrackerLogName,
+)
 export const bootServiceToken = token<IBootService>(BootServiceLogName)
 export const worldServiceToken = token<IWorldService>(WorldServiceLogName)

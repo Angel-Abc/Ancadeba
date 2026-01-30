@@ -1,8 +1,5 @@
 import { BootState, type BootProgress } from './BootService'
-import {
-  BootProgressTrackerLogName,
-  type IBootProgressTracker,
-} from './types'
+import { BootProgressTrackerLogName, type IBootProgressTracker } from './types'
 
 /**
  * Manages boot progress state and notifies observers of changes.
