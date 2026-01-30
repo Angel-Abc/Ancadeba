@@ -1,10 +1,16 @@
 import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
 import { gameLoaderToken, type IGameLoader } from '@ancadeba/content'
-import { type IBootService, BootServiceLogName } from './types'
+import {
+  type IBootService,
+  type IWorldService,
+  BootServiceLogName,
+} from './types'
+import { worldServiceToken } from './tokens'
 
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
   gameLoaderToken,
+  worldServiceToken,
 ]
 
 export enum BootState {
@@ -31,6 +37,7 @@ export class BootService implements IBootService {
   constructor(
     private readonly logger: ILogger,
     private readonly gameLoader: IGameLoader,
+    private readonly worldService: IWorldService,
   ) {}
 
   getState(): BootState {
@@ -69,7 +76,7 @@ export class BootService implements IBootService {
 
       // Phase 3: Initialize engine
       this.updateProgress(BootState.Loading, 'Initializing engine...', 0.6)
-      await this.delay(100) // Simulate async work
+      await this.initializeEngine()
 
       // Phase 4: Ready
       this.updateProgress(BootState.Ready, 'Ready!', 1.0)
@@ -95,6 +102,16 @@ export class BootService implements IBootService {
   private async loadGameMetadata(): Promise<void> {
     const game = await this.gameLoader.load()
     this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+  }
+
+  private async initializeEngine(): Promise<void> {
+    const world = this.worldService.getWorld()
+    this.logger.debug(
+      BootService.logName,
+      'ECS World initialized with {0} entities',
+      world.getEntities().length,
+    )
+    await this.delay(100) // Simulate async work
   }
 
   private updateProgress(
