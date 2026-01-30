@@ -1,4 +1,5 @@
 import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
+import { gameLoaderToken, type IGameLoader } from '@ancadeba/content'
 import {
   resourcesConfigurationToken,
   type IBootService,
@@ -8,6 +9,7 @@ import {
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
   resourcesConfigurationToken,
+  gameLoaderToken,
 ]
 
 export enum BootState {
@@ -34,6 +36,7 @@ export class BootService implements IBootService {
   constructor(
     private readonly logger: ILogger,
     private readonly resourcesConfiguration: IResourcesConfiguration,
+    private readonly gameLoader: IGameLoader,
   ) {}
 
   getState(): BootState {
@@ -90,16 +93,8 @@ export class BootService implements IBootService {
 
   private async loadGameMetadata(): Promise<void> {
     const resourcesPath = this.resourcesConfiguration.getResourcesPath()
-    this.logger.debug(logName, 'Loading game metadata from {0}', resourcesPath)
-
-    const response = await fetch(`${resourcesPath}/levels/index.json`)
-
-    if (!response.ok) {
-      throw new Error(`Failed to load game metadata: ${response.status}`)
-    }
-
-    const data = await response.json()
-    this.logger.debug(logName, 'Game metadata loaded: {0}', data)
+    const game = await this.gameLoader.load(resourcesPath)
+    this.logger.debug(logName, 'Game loaded: {0}', game.title)
   }
 
   private updateProgress(

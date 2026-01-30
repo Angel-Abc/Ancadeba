@@ -1,0 +1,19 @@
+{
+  "id": "gameplay",
+  "tags": ["gameplay", "interactive"],
+  "requires": ["ecs:projections", "world:ready"],
+  "forbids": [],
+  "layout": {
+    "type": "game-layout",
+    "views": [
+      {
+        "type": "world-view",
+        "position": "center"
+      },
+      {
+        "type": "inventory-view",
+        "position": "right"
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "boot",
+  "tags": ["ui", "loading"],
+  "requires": ["boot:progress"],
+  "forbids": ["ecs:projections"],
+  "layout": {
+    "type": "centered",
+    "widgets": [
+      {
+        "type": "progress-bar",
+        "dataSource": "boot:progress"
+      }
+    ]
+  }
+}

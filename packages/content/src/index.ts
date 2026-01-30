@@ -1,2 +1,6 @@
 export * from './schemas/game.js'
+export * from './schemas/surface.js'
+export * from './loaders/types.js'
+export * from './loaders/GameLoader.js'
+export * from './loaders/SurfaceLoader.js'
 export * from './helpers/iocHelper.js'
