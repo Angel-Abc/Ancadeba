@@ -1,5 +1,11 @@
 import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
-import { gameLoaderToken, type IGameLoader } from '@ancadeba/content'
+import {
+  gameLoaderToken,
+  type IGameLoader,
+  surfaceLoaderToken,
+  type ISurfaceLoader,
+  type Surface,
+} from '@ancadeba/content'
 import {
   type IBootService,
   type IWorldService,
@@ -11,6 +17,7 @@ import { worldServiceToken, bootProgressTrackerToken } from './tokens'
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
   gameLoaderToken,
+  surfaceLoaderToken,
   worldServiceToken,
   bootProgressTrackerToken,
 ]
@@ -35,9 +42,13 @@ export interface BootProgress {
 export class BootService implements IBootService {
   public static readonly logName: string = BootServiceLogName
 
+  private bootSurface: Surface | null = null
+  private initializationPromise: Promise<void> | null = null
+
   constructor(
     private readonly logger: ILogger,
     private readonly gameLoader: IGameLoader,
+    private readonly surfaceLoader: ISurfaceLoader,
     private readonly worldService: IWorldService,
     private readonly progressTracker: IBootProgressTracker,
   ) {}
@@ -54,7 +65,32 @@ export class BootService implements IBootService {
     return this.progressTracker.subscribe(callback)
   }
 
-  async initialize(): Promise<void> {
+  getBootSurface(): Surface | null {
+    return this.bootSurface
+  }
+
+  initialize(): Promise<void> {
+    // Guard: Return existing promise if already initializing or initialized
+    if (this.initializationPromise) {
+      return this.initializationPromise
+    }
+
+    // Guard: Don't re-initialize if already ready or in error state
+    const currentState = this.progressTracker.getState()
+    if (currentState === BootState.Ready || currentState === BootState.Error) {
+      this.logger.debug(
+        BootService.logName,
+        'Skipping initialization, already in state: {0}',
+        currentState,
+      )
+      return Promise.resolve()
+    }
+
+    this.initializationPromise = this.performInitialization()
+    return this.initializationPromise
+  }
+
+  private async performInitialization(): Promise<void> {
     try {
       this.logger.info(BootService.logName, 'Initializing game client')
       this.progressTracker.updateProgress(
@@ -63,21 +99,22 @@ export class BootService implements IBootService {
         0,
       )
 
-      // Phase 1: Validate resources path
-      this.progressTracker.updateProgress(
-        BootState.Loading,
-        'Validating resources...',
-        0.1,
-      )
-      await this.delay(100) // Simulate async work
-
-      // Phase 2: Load game metadata
+      // Phase 1: Load game metadata
       this.progressTracker.updateProgress(
         BootState.Loading,
         'Loading game data...',
+        0.1,
+      )
+      const game = await this.gameLoader.load()
+      this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+
+      // Phase 2: Load surfaces and find boot surface
+      this.progressTracker.updateProgress(
+        BootState.Loading,
+        'Loading surfaces...',
         0.3,
       )
-      await this.loadGameMetadata()
+      await this.loadBootSurface(game.surfaces ?? [])
 
       // Phase 3: Initialize engine
       this.progressTracker.updateProgress(
@@ -108,9 +145,33 @@ export class BootService implements IBootService {
     }
   }
 
-  private async loadGameMetadata(): Promise<void> {
-    const game = await this.gameLoader.load()
-    this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+  private async loadBootSurface(surfacePaths: string[]): Promise<void> {
+    if (surfacePaths.length === 0) {
+      throw new Error('No surfaces defined in game metadata')
+    }
+
+    const surfaces = await this.surfaceLoader.loadAll(surfacePaths)
+
+    // Find boot surface by capability: requires 'boot:progress', forbids 'ecs:projections'
+    this.bootSurface =
+      surfaces.find(
+        (s) =>
+          s.requires?.includes('boot:progress') &&
+          ((s.forbids ?? []).includes('ecs:projections') ||
+            !(s.requires ?? []).includes('ecs:projections')),
+      ) ?? null
+
+    if (!this.bootSurface) {
+      throw new Error(
+        'No boot surface found (must require "boot:progress" and forbid "ecs:projections")',
+      )
+    }
+
+    this.logger.debug(
+      BootService.logName,
+      'Boot surface loaded: {0}',
+      this.bootSurface.id,
+    )
   }
 
   private async initializeEngine(): Promise<void> {

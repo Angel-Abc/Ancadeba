@@ -38,6 +38,7 @@ export function GameClientApp(): React.JSX.Element {
     case BootState.Loading:
       return (
         <BootSurface
+          surface={bootService.getBootSurface()}
           message={bootProgress.message}
           progress={bootProgress.progress}
         />

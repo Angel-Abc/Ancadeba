@@ -1,11 +1,14 @@
 import type React from 'react'
+import type { Surface } from '@ancadeba/content'
 
 interface BootSurfaceProps {
+  surface: Surface | null
   message: string
   progress: number
 }
 
 export function BootSurface({
+  surface,
   message,
   progress,
 }: BootSurfaceProps): React.JSX.Element {
@@ -42,6 +45,12 @@ export function BootSurface({
         />
       </div>
       <p style={{ marginTop: '1rem', color: '#888' }}>{message}</p>
+      {surface && (
+        <div style={{ marginTop: '2rem', fontSize: '0.75rem', color: '#666' }}>
+          <div>Surface: {surface.id}</div>
+          {surface.tags && <div>Tags: {surface.tags.join(', ')}</div>}
+        </div>
+      )}
     </div>
   )
 }
