@@ -1,0 +1,41 @@
+{
+  "id": "start-menu",
+  "tags": ["ui", "menu", "main-menu"],
+  "requires": ["persistence:listSaves"],
+  "forbids": ["ecs:projections"],
+  "layout": {
+    "type": "centered",
+    "widgets": [
+      {
+        "type": "title",
+        "text": "Market Value"
+      },
+      {
+        "type": "menu",
+        "items": [
+          {
+            "id": "new-game",
+            "label": "New Game",
+            "action": "start-new-game"
+          },
+          {
+            "id": "continue",
+            "label": "Continue",
+            "action": "continue-game",
+            "enabled": "has-save-game"
+          },
+          {
+            "id": "settings",
+            "label": "Settings",
+            "action": "open-settings"
+          },
+          {
+            "id": "quit",
+            "label": "Quit",
+            "action": "quit-game"
+          }
+        ]
+      }
+    ]
+  }
+}
