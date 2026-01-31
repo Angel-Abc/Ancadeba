@@ -291,4 +291,173 @@ describe('Container', () => {
       expect(() => container.resolve(token1)).toThrow(/Circular dependency/)
     })
   })
+
+  describe('object-based injection', () => {
+    it('should use positional injection for 4 or fewer dependencies', () => {
+      // Arrange
+      const dep1Token = token<string>('dep1Token')
+      const dep2Token = token<number>('dep2Token')
+      const dep3Token = token<boolean>('dep3Token')
+      const dep4Token = token<string>('dep4Token')
+
+      class TestClass {
+        constructor(
+          public dep1: string,
+          public dep2: number,
+          public dep3: boolean,
+          public dep4: string,
+        ) {}
+      }
+
+      container.register({ token: dep1Token, useValue: 'value1' })
+      container.register({ token: dep2Token, useValue: 42 })
+      container.register({ token: dep3Token, useValue: true })
+      container.register({ token: dep4Token, useValue: 'value4' })
+
+      const testToken = token<TestClass>('test-class')
+      container.register({
+        token: testToken,
+        useClass: TestClass,
+        deps: [dep1Token, dep2Token, dep3Token, dep4Token],
+        scope: 'singleton',
+      })
+
+      // Act
+      const instance = container.resolve(testToken)
+
+      // Assert
+      expect(instance.dep1).toBe('value1')
+      expect(instance.dep2).toBe(42)
+      expect(instance.dep3).toBe(true)
+      expect(instance.dep4).toBe('value4')
+    })
+
+    it('should use object injection for more than 4 dependencies', () => {
+      // Arrange
+      const dep1Token = token<string>('dep1Token')
+      const dep2Token = token<number>('dep2Token')
+      const dep3Token = token<boolean>('dep3Token')
+      const dep4Token = token<string>('dep4Token')
+      const dep5Token = token<string>('dep5Token')
+
+      class TestClass {
+        public dep1: string
+        public dep2: number
+        public dep3: boolean
+        public dep4: string
+        public dep5: string
+
+        constructor(deps: {
+          dep1: string
+          dep2: number
+          dep3: boolean
+          dep4: string
+          dep5: string
+        }) {
+          this.dep1 = deps.dep1
+          this.dep2 = deps.dep2
+          this.dep3 = deps.dep3
+          this.dep4 = deps.dep4
+          this.dep5 = deps.dep5
+        }
+      }
+
+      container.register({ token: dep1Token, useValue: 'value1' })
+      container.register({ token: dep2Token, useValue: 42 })
+      container.register({ token: dep3Token, useValue: true })
+      container.register({ token: dep4Token, useValue: 'value4' })
+      container.register({ token: dep5Token, useValue: 'value5' })
+
+      const testToken = token<TestClass>('test-class')
+      container.register({
+        token: testToken,
+        useClass: TestClass,
+        deps: [dep1Token, dep2Token, dep3Token, dep4Token, dep5Token],
+        scope: 'singleton',
+      })
+
+      // Act
+      const instance = container.resolve(testToken)
+
+      // Assert
+      expect(instance.dep1).toBe('value1')
+      expect(instance.dep2).toBe(42)
+      expect(instance.dep3).toBe(true)
+      expect(instance.dep4).toBe('value4')
+      expect(instance.dep5).toBe('value5')
+    })
+
+    it('should derive property names from token descriptions correctly', () => {
+      // Arrange
+      const loggerToken = token<string>('loggerToken')
+      const gameLoaderToken = token<string>('gameLoaderToken')
+      const surfaceLoaderToken = token<string>('surfaceLoaderToken')
+      const worldServiceToken = token<string>('worldServiceToken')
+      const bootProgressTrackerToken = token<string>('bootProgressTrackerToken')
+
+      class TestService {
+        public logger: string
+        public gameLoader: string
+        public surfaceLoader: string
+        public worldService: string
+        public bootProgressTracker: string
+
+        constructor(deps: {
+          logger: string
+          gameLoader: string
+          surfaceLoader: string
+          worldService: string
+          bootProgressTracker: string
+        }) {
+          this.logger = deps.logger
+          this.gameLoader = deps.gameLoader
+          this.surfaceLoader = deps.surfaceLoader
+          this.worldService = deps.worldService
+          this.bootProgressTracker = deps.bootProgressTracker
+        }
+      }
+
+      container.register({ token: loggerToken, useValue: 'logger-instance' })
+      container.register({
+        token: gameLoaderToken,
+        useValue: 'gameLoader-instance',
+      })
+      container.register({
+        token: surfaceLoaderToken,
+        useValue: 'surfaceLoader-instance',
+      })
+      container.register({
+        token: worldServiceToken,
+        useValue: 'worldService-instance',
+      })
+      container.register({
+        token: bootProgressTrackerToken,
+        useValue: 'bootProgressTracker-instance',
+      })
+
+      const testToken = token<TestService>('test-service')
+      container.register({
+        token: testToken,
+        useClass: TestService,
+        deps: [
+          loggerToken,
+          gameLoaderToken,
+          surfaceLoaderToken,
+          worldServiceToken,
+          bootProgressTrackerToken,
+        ],
+        scope: 'singleton',
+      })
+
+      // Act
+      const instance = container.resolve(testToken)
+
+      // Assert
+      expect(instance.logger).toBe('logger-instance')
+      expect(instance.gameLoader).toBe('gameLoader-instance')
+      expect(instance.surfaceLoader).toBe('surfaceLoader-instance')
+      expect(instance.worldService).toBe('worldService-instance')
+      expect(instance.bootProgressTracker).toBe('bootProgressTracker-instance')
+    })
+  })
 })

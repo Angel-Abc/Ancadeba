@@ -2,6 +2,21 @@ import type { ILogger } from '../logger/types'
 import { describeToken, type Token } from './token'
 import type { IContainer, Provider, Scope } from './types'
 
+/**
+ * Converts a token description to a camelCase property name.
+ * Removes 'Token' suffix if present.
+ * Examples: 'loggerToken' -> 'logger', 'gameLoaderToken' -> 'gameLoader'
+ */
+function tokenToPropertyName(token: Token<unknown>): string {
+  const description = describeToken(token)
+  // Remove 'Token' suffix if present
+  const withoutSuffix = description.endsWith('Token')
+    ? description.slice(0, -5)
+    : description
+  // Convert to camelCase (already should be, but ensure first char is lowercase)
+  return withoutSuffix.charAt(0).toLowerCase() + withoutSuffix.slice(1)
+}
+
 export class Container implements IContainer {
   public static readonly logName: string = 'utils/ioc/container'
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
@@ -102,7 +117,20 @@ export class Container implements IContainer {
   private instantiate<T>(p: Provider<T>): T {
     if ('useValue' in p) return p.useValue
     if ('useClass' in p) {
-      const deps = (p.deps ?? []).map((d) => this.resolve(d))
+      const depTokens = p.deps ?? []
+      const deps = depTokens.map((d) => this.resolve(d))
+
+      // Use object injection if more than 4 dependencies
+      if (depTokens.length > 4) {
+        const depsObject: Record<string, unknown> = {}
+        depTokens.forEach((token, index) => {
+          const propertyName = tokenToPropertyName(token)
+          depsObject[propertyName] = deps[index]
+        })
+        return new p.useClass(depsObject)
+      }
+
+      // Use positional injection for 4 or fewer dependencies
       return new p.useClass(...deps)
     }
     if ('useFactory' in p) return p.useFactory(this)

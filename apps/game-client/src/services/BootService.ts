@@ -45,13 +45,25 @@ export class BootService implements IBootService {
   private bootSurface: Surface | null = null
   private initializationPromise: Promise<void> | null = null
 
-  constructor(
-    private readonly logger: ILogger,
-    private readonly gameLoader: IGameLoader,
-    private readonly surfaceLoader: ISurfaceLoader,
-    private readonly worldService: IWorldService,
-    private readonly progressTracker: IBootProgressTracker,
-  ) {}
+  private readonly logger: ILogger
+  private readonly gameLoader: IGameLoader
+  private readonly surfaceLoader: ISurfaceLoader
+  private readonly worldService: IWorldService
+  private readonly progressTracker: IBootProgressTracker
+
+  constructor(deps: {
+    logger: ILogger
+    gameLoader: IGameLoader
+    surfaceLoader: ISurfaceLoader
+    worldService: IWorldService
+    bootProgressTracker: IBootProgressTracker
+  }) {
+    this.logger = deps.logger
+    this.gameLoader = deps.gameLoader
+    this.surfaceLoader = deps.surfaceLoader
+    this.worldService = deps.worldService
+    this.progressTracker = deps.bootProgressTracker
+  }
 
   getState(): BootState {
     return this.progressTracker.getState()
