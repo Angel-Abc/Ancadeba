@@ -9,6 +9,10 @@ import { createInstance } from '@ancadeba/utils'
 import { IocProvider } from '@ancadeba/ui'
 import { widgetRegistryToken, type IWidgetRegistry } from '@ancadeba/engine-ui'
 
+import './styling/reset.css'
+import './styling/variables.css'
+import './styling/game-client.css'
+
 // const logName = 'game-client/src/main'
 const resourcesDataPath = import.meta.env.DEV
   ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`

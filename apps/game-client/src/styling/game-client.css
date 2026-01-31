@@ -1,0 +1,12 @@
+body {
+  width: 100vw;
+  height: 100vh;
+  font-family: var(--ge-font-family);
+  font-size: var(--ge-font-size);
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
