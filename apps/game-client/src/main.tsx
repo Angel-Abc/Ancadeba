@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client'
 
 import { GameClientApp } from './GameClientApp'
 import { ContainerBuilder } from './builders/container'
+import { registerWidgets } from './helpers/widgetRegistration'
 
 import { createInstance } from '@ancadeba/utils'
 import { IocProvider } from '@ancadeba/ui'
+import { widgetRegistryToken, type IWidgetRegistry } from '@ancadeba/engine-ui'
 
 // const logName = 'game-client/src/main'
 const resourcesDataPath = import.meta.env.DEV
@@ -16,6 +18,11 @@ const containerBuilder = new ContainerBuilder(
   resourcesDataPath,
 )
 const servicesContainer = containerBuilder.build()
+
+// Register widgets with the widget registry
+const widgetRegistry =
+  servicesContainer.resolve<IWidgetRegistry>(widgetRegistryToken)
+registerWidgets(widgetRegistry)
 
 const rootContainer = document.getElementById('root')
 

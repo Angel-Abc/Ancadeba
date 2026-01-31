@@ -10,6 +10,7 @@
   "include": ["src"],
   "references": [
     { "path": "../../packages/content" },
+    { "path": "../../packages/engine-ui" },
     { "path": "../../packages/utils" },
     { "path": "../../packages/ui" }
   ]

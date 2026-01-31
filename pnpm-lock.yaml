@@ -103,6 +103,9 @@ importers:
       '@ancadeba/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@ancadeba/engine-ui':
+        specifier: workspace:*
+        version: link:../../packages/engine-ui
       '@ancadeba/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -146,6 +149,9 @@ importers:
 
   packages/engine-ui:
     dependencies:
+      '@ancadeba/content':
+        specifier: workspace:*
+        version: link:../content
       '@ancadeba/engine':
         specifier: workspace:*
         version: link:../engine

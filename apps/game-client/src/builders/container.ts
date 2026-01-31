@@ -5,6 +5,7 @@ import {
   type ILogger,
 } from '@ancadeba/utils'
 import { registerServices as registerContentServices } from '@ancadeba/content'
+import { registerServices as registerEngineUIServices } from '@ancadeba/engine-ui'
 import { registerServices as registerGameClientServices } from '../helpers/iocHelper.js'
 
 export interface IContainerBuilder {
@@ -28,6 +29,7 @@ export class ContainerBuilder implements IContainerBuilder {
     const container = new Container(this.logger)
     registerUtilsServices(container)
     registerContentServices(container, this.resourcesDataPath)
+    registerEngineUIServices(container)
     registerGameClientServices(container)
 
     return container

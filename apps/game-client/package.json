@@ -18,6 +18,7 @@
   "dependencies": {
     "@ancadeba/content": "workspace:*",
     "@ancadeba/engine": "workspace:*",
+    "@ancadeba/engine-ui": "workspace:*",
     "@ancadeba/utils": "workspace:*",
     "@ancadeba/ui": "workspace:*",
     "react": "^19.2.3",

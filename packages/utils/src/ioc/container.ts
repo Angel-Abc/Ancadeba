@@ -4,16 +4,27 @@ import type { IContainer, Provider, Scope } from './types'
 
 /**
  * Converts a token description to a camelCase property name.
- * Removes 'Token' suffix if present.
- * Examples: 'loggerToken' -> 'logger', 'gameLoaderToken' -> 'gameLoader'
+ * Handles both token-style names ('loggerToken') and LogName-style paths ('utils/logger/Logger').
+ * Examples:
+ *   'loggerToken' -> 'logger'
+ *   'utils/logger/Logger' -> 'logger'
+ *   'content/loaders/GameLoader' -> 'gameLoader'
+ *   'game-client/services/BootProgressTracker' -> 'bootProgressTracker'
  */
 function tokenToPropertyName(token: Token<unknown>): string {
   const description = describeToken(token)
-  // Remove 'Token' suffix if present
-  const withoutSuffix = description.endsWith('Token')
-    ? description.slice(0, -5)
+
+  // If it contains slashes, extract the last segment (class name)
+  const lastSegment = description.includes('/')
+    ? description.split('/').pop() || description
     : description
-  // Convert to camelCase (already should be, but ensure first char is lowercase)
+
+  // Remove 'Token' suffix if present
+  const withoutSuffix = lastSegment.endsWith('Token')
+    ? lastSegment.slice(0, -5)
+    : lastSegment
+
+  // Convert to camelCase (ensure first char is lowercase)
   return withoutSuffix.charAt(0).toLowerCase() + withoutSuffix.slice(1)
 }
 
