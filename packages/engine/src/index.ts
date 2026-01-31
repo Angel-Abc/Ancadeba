@@ -1,3 +1,4 @@
+export * from './effects'
 export * from './helpers/iocHelper'
 export * from './types'
 export { World } from './World'

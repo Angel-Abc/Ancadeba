@@ -4,6 +4,8 @@ export const gameSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   version: z.string(),
+  bootSurfaceId: z.string(),
+  initialSurfaceId: z.string(),
   widgets: z.array(z.string()).optional(),
   surfaces: z.array(z.string()).optional(),
 })

@@ -1,4 +1,10 @@
-import { loggerToken, type ILogger, type Token } from '@ancadeba/utils'
+import {
+  loggerToken,
+  type ILogger,
+  type Token,
+  messageBusToken,
+  type IMessageBus,
+} from '@ancadeba/utils'
 import {
   gameLoaderToken,
   type IGameLoader,
@@ -6,17 +12,17 @@ import {
   type ISurfaceLoader,
   widgetLoaderToken,
   type IWidgetLoader,
+  type Game,
 } from '@ancadeba/content'
+import { type IOpenSurfaceEffect } from '@ancadeba/engine'
 import {
   type IBootService,
-  type IWorldService,
   type IBootProgressTracker,
   type IResourceRepository,
   type ISurfaceSelector,
   BootServiceLogName,
 } from './types'
 import {
-  worldServiceToken,
   bootProgressTrackerToken,
   resourceRepositoryToken,
   surfaceSelectorToken,
@@ -24,10 +30,10 @@ import {
 
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
+  messageBusToken,
   gameLoaderToken,
   surfaceLoaderToken,
   widgetLoaderToken,
-  worldServiceToken,
   bootProgressTrackerToken,
   resourceRepositoryToken,
   surfaceSelectorToken,
@@ -54,31 +60,32 @@ export class BootService implements IBootService {
   public static readonly logName: string = BootServiceLogName
 
   private initializationPromise: Promise<void> | null = null
+  private gameData: Game | null = null
 
   private readonly logger: ILogger
+  private readonly messageBus: IMessageBus
   private readonly gameLoader: IGameLoader
   private readonly surfaceLoader: ISurfaceLoader
   private readonly widgetLoader: IWidgetLoader
-  private readonly worldService: IWorldService
   private readonly progressTracker: IBootProgressTracker
   private readonly resourceRepository: IResourceRepository
   private readonly surfaceSelector: ISurfaceSelector
 
   constructor(deps: {
     logger: ILogger
+    messageBus: IMessageBus
     gameLoader: IGameLoader
     surfaceLoader: ISurfaceLoader
     widgetLoader: IWidgetLoader
-    worldService: IWorldService
     bootProgressTracker: IBootProgressTracker
     resourceRepository: IResourceRepository
     surfaceSelector: ISurfaceSelector
   }) {
     this.logger = deps.logger
+    this.messageBus = deps.messageBus
     this.gameLoader = deps.gameLoader
     this.surfaceLoader = deps.surfaceLoader
     this.widgetLoader = deps.widgetLoader
-    this.worldService = deps.worldService
     this.progressTracker = deps.bootProgressTracker
     this.resourceRepository = deps.resourceRepository
     this.surfaceSelector = deps.surfaceSelector
@@ -128,18 +135,20 @@ export class BootService implements IBootService {
 
       await this.loadGameAndResources()
 
-      this.progressTracker.updateProgress(
-        BootState.Loading,
-        'Initializing engine...',
-        0.7,
-      )
-      await this.initializeEngine()
-
       this.progressTracker.updateProgress(BootState.Ready, 'Ready!', 1.0)
       this.logger.info(
         BootService.logName,
         'Game client initialized successfully',
       )
+
+      // Publish OpenSurface effect for initial surface via message bus
+      if (this.gameData?.initialSurfaceId) {
+        const openSurfaceEffect: IOpenSurfaceEffect = {
+          type: 'OpenSurface',
+          surfaceId: this.gameData.initialSurfaceId,
+        }
+        this.messageBus.publish('OpenSurface', openSurfaceEffect)
+      }
     } catch (error) {
       this.handleInitializationError(error)
     }
@@ -152,8 +161,12 @@ export class BootService implements IBootService {
       'Loading game data...',
       0.1,
     )
-    const game = await this.gameLoader.load()
-    this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+    this.gameData = await this.gameLoader.load()
+    this.logger.debug(
+      BootService.logName,
+      'Game loaded: {0}',
+      this.gameData.title,
+    )
 
     // Load widgets from game metadata
     this.progressTracker.updateProgress(
@@ -161,7 +174,7 @@ export class BootService implements IBootService {
       'Loading widgets...',
       0.2,
     )
-    await this.loadWidgets(game.widgets ?? [])
+    await this.loadWidgets(this.gameData.widgets ?? [])
 
     // Load surfaces and find boot surface
     this.progressTracker.updateProgress(
@@ -169,7 +182,7 @@ export class BootService implements IBootService {
       'Loading surfaces...',
       0.4,
     )
-    await this.loadBootSurface(game.surfaces ?? [])
+    await this.loadBootSurface(this.gameData.surfaces ?? [])
   }
 
   private handleInitializationError(error: unknown): void {
@@ -235,19 +248,5 @@ export class BootService implements IBootService {
       'All surfaces loaded: {0}',
       surfaces.map((s) => s.id).join(', '),
     )
-  }
-
-  private async initializeEngine(): Promise<void> {
-    const world = this.worldService.getWorld()
-    this.logger.debug(
-      BootService.logName,
-      'ECS World initialized with {0} entities',
-      world.getEntities().length,
-    )
-    await this.delay(100) // Simulate async work
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }

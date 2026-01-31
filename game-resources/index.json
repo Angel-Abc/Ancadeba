@@ -2,6 +2,8 @@
   "title": "Market Value",
   "description": "Stranded on a world where everything has a price.",
   "version": "0.1.0",
+  "bootSurfaceId": "boot",
+  "initialSurfaceId": "start-menu",
   "widgets": [
     "widgets/boot-progress.json",
     "widgets/main-title.json",

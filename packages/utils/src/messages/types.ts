@@ -8,4 +8,4 @@ export interface IMessageBus {
   ): () => void
 }
 
-export const MessageBusLogName = 'utils/messages/Bus'
+export const MessageBusLogName = 'utils/messages/MessageBus'
