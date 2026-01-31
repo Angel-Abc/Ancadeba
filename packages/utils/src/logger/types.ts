@@ -1,6 +1,6 @@
 import { ConsoleLogger } from './console'
 
-export const LoggerLogName = '/utils/logger/types'
+export const LoggerLogName = 'utils/logger/Logger'
 
 export interface ILogger {
   debug(category: string, message: string, ...args: unknown[]): string

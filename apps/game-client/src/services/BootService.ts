@@ -6,16 +6,21 @@ import {
   type ISurfaceLoader,
   widgetLoaderToken,
   type IWidgetLoader,
-  type Surface,
-  type WidgetDefinition,
 } from '@ancadeba/content'
 import {
   type IBootService,
   type IWorldService,
   type IBootProgressTracker,
+  type IResourceRepository,
+  type ISurfaceSelector,
   BootServiceLogName,
 } from './types'
-import { worldServiceToken, bootProgressTrackerToken } from './tokens'
+import {
+  worldServiceToken,
+  bootProgressTrackerToken,
+  resourceRepositoryToken,
+  surfaceSelectorToken,
+} from './tokens'
 
 export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
@@ -24,6 +29,8 @@ export const bootServiceDependencies: Token<unknown>[] = [
   widgetLoaderToken,
   worldServiceToken,
   bootProgressTrackerToken,
+  resourceRepositoryToken,
+  surfaceSelectorToken,
 ]
 
 export enum BootState {
@@ -41,13 +48,11 @@ export interface BootProgress {
 
 /**
  * Orchestrates the game client boot process.
- * Responsible only for coordinating initialization phases.
+ * Single responsibility: Coordinating initialization phases.
  */
 export class BootService implements IBootService {
   public static readonly logName: string = BootServiceLogName
 
-  private bootSurface: Surface | null = null
-  private widgetDefinitions: Record<string, WidgetDefinition> = {}
   private initializationPromise: Promise<void> | null = null
 
   private readonly logger: ILogger
@@ -56,6 +61,8 @@ export class BootService implements IBootService {
   private readonly widgetLoader: IWidgetLoader
   private readonly worldService: IWorldService
   private readonly progressTracker: IBootProgressTracker
+  private readonly resourceRepository: IResourceRepository
+  private readonly surfaceSelector: ISurfaceSelector
 
   constructor(deps: {
     logger: ILogger
@@ -64,6 +71,8 @@ export class BootService implements IBootService {
     widgetLoader: IWidgetLoader
     worldService: IWorldService
     bootProgressTracker: IBootProgressTracker
+    resourceRepository: IResourceRepository
+    surfaceSelector: ISurfaceSelector
   }) {
     this.logger = deps.logger
     this.gameLoader = deps.gameLoader
@@ -71,6 +80,8 @@ export class BootService implements IBootService {
     this.widgetLoader = deps.widgetLoader
     this.worldService = deps.worldService
     this.progressTracker = deps.bootProgressTracker
+    this.resourceRepository = deps.resourceRepository
+    this.surfaceSelector = deps.surfaceSelector
   }
 
   getState(): BootState {
@@ -83,14 +94,6 @@ export class BootService implements IBootService {
 
   subscribe(callback: (progress: BootProgress) => void): () => void {
     return this.progressTracker.subscribe(callback)
-  }
-
-  getBootSurface(): Surface | null {
-    return this.bootSurface
-  }
-
-  getWidgetDefinitions(): Record<string, WidgetDefinition> {
-    return this.widgetDefinitions
   }
 
   initialize(): Promise<void> {
@@ -193,13 +196,7 @@ export class BootService implements IBootService {
     }
 
     const widgets = await this.widgetLoader.loadAll(widgetPaths)
-    this.widgetDefinitions = widgets.reduce(
-      (acc, widget) => {
-        acc[widget.id] = widget
-        return acc
-      },
-      {} as Record<string, WidgetDefinition>,
-    )
+    this.resourceRepository.setWidgetDefinitions(widgets)
 
     this.logger.debug(
       BootService.logName,
@@ -216,25 +213,27 @@ export class BootService implements IBootService {
 
     const surfaces = await this.surfaceLoader.loadAll(surfacePaths)
 
-    // Find boot surface by capability: requires 'boot:progress', forbids 'ecs:projections'
-    this.bootSurface =
-      surfaces.find(
-        (s) =>
-          s.requires?.includes('boot:progress') &&
-          ((s.forbids ?? []).includes('ecs:projections') ||
-            !(s.requires ?? []).includes('ecs:projections')),
-      ) ?? null
+    // Store all surfaces
+    this.resourceRepository.setSurfaces(surfaces)
 
-    if (!this.bootSurface) {
+    // Find and store boot surface
+    const bootSurface = this.surfaceSelector.findBootSurface(surfaces)
+    if (!bootSurface) {
       throw new Error(
         'No boot surface found (must require "boot:progress" and forbid "ecs:projections")',
       )
     }
+    this.resourceRepository.setBootSurface(bootSurface)
 
     this.logger.debug(
       BootService.logName,
       'Boot surface loaded: {0}',
-      this.bootSurface.id,
+      bootSurface.id,
+    )
+    this.logger.debug(
+      BootService.logName,
+      'All surfaces loaded: {0}',
+      surfaces.map((s) => s.id).join(', '),
     )
   }
 

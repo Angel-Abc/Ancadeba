@@ -6,6 +6,10 @@ import {
   BootProgressTrackerLogName,
   type IWorldService,
   WorldServiceLogName,
+  type IResourceRepository,
+  ResourceRepositoryLogName,
+  type ISurfaceSelector,
+  SurfaceSelectorLogName,
 } from './types'
 
 export const bootProgressTrackerToken = token<IBootProgressTracker>(
@@ -13,3 +17,9 @@ export const bootProgressTrackerToken = token<IBootProgressTracker>(
 )
 export const bootServiceToken = token<IBootService>(BootServiceLogName)
 export const worldServiceToken = token<IWorldService>(WorldServiceLogName)
+export const resourceRepositoryToken = token<IResourceRepository>(
+  ResourceRepositoryLogName,
+)
+export const surfaceSelectorToken = token<ISurfaceSelector>(
+  SurfaceSelectorLogName,
+)
