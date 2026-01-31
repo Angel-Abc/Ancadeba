@@ -135,6 +135,9 @@ export class BootService implements IBootService {
 
       await this.loadGameAndResources()
 
+      // Load game data definitions (items, characters, etc.)
+      await this.loadGameData()
+
       this.progressTracker.updateProgress(BootState.Ready, 'Ready!', 1.0)
       this.logger.info(
         BootService.logName,
@@ -248,5 +251,16 @@ export class BootService implements IBootService {
       'All surfaces loaded: {0}',
       surfaces.map((s) => s.id).join(', '),
     )
+  }
+
+  private async loadGameData(): Promise<void> {
+    // TODO: Load game data definitions (items, characters, maps, etc.)
+    // This data will be used when instantiating the world
+    this.progressTracker.updateProgress(
+      BootState.Loading,
+      'Loading game data...',
+      0.7,
+    )
+    this.logger.debug(BootService.logName, 'Game data loading (placeholder)')
   }
 }
