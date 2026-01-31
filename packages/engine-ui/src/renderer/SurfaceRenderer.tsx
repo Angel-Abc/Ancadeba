@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useService } from '@ancadeba/ui'
-import type { Surface } from '@ancadeba/content'
+import type { Surface, GridLayout, WidgetDefinition } from '@ancadeba/content'
 import { widgetRegistryToken } from '../registry/tokens'
 import type { IWidgetRegistry, WidgetProps } from '../registry/types'
 
@@ -13,26 +13,13 @@ interface SurfaceRendererProps {
    */
   surface: Surface
   /**
+   * Widget definitions loaded from external files, keyed by widget ID.
+   */
+  widgetDefinitions?: Record<string, WidgetDefinition>
+  /**
    * Optional children to render if layout doesn't specify widgets.
    */
   children?: React.ReactNode
-}
-
-/**
- * Layout definition shape (subset of what's in the Surface schema).
- */
-interface LayoutDefinition {
-  type?: string
-  widgets?: WidgetDefinition[]
-  [key: string]: unknown
-}
-
-/**
- * Widget definition from surface layout schema.
- */
-interface WidgetDefinition {
-  type: string
-  [key: string]: unknown
 }
 
 /**
@@ -41,99 +28,122 @@ interface WidgetDefinition {
  */
 export function SurfaceRenderer({
   surface,
+  widgetDefinitions = {},
   children,
 }: SurfaceRendererProps): React.JSX.Element {
   const widgetRegistry = useService<IWidgetRegistry>(widgetRegistryToken)
 
-  // Cast layout to expected shape
-  const layout = surface.layout as LayoutDefinition | undefined
-
-  // Handle centered layout type
-  if (layout?.type === 'centered') {
-    return renderCenteredLayout(widgetRegistry, layout, children)
+  if (!surface.layout) {
+    return (
+      <div style={{ padding: '1rem' }}>
+        <h2>No Layout Defined</h2>
+        <p>Surface: {surface.id}</p>
+        {children}
+      </div>
+    )
   }
 
-  // Handle game-layout type (for gameplay surfaces)
-  if (layout?.type === 'game-layout') {
-    return renderGameLayout(surface, children)
-  }
-
-  // Fallback for unknown layout types
-  return renderUnknownLayout(surface, layout, children)
+  return renderGridLayout(
+    widgetRegistry,
+    surface.layout,
+    widgetDefinitions,
+    children,
+  )
 }
 
 /**
- * Renders a centered layout with widgets.
+ * Renders a grid layout with positioned widgets.
  */
-function renderCenteredLayout(
+function renderGridLayout(
   widgetRegistry: IWidgetRegistry,
-  layout: LayoutDefinition,
+  layout: GridLayout,
+  widgetDefinitions: Record<string, WidgetDefinition>,
   children?: React.ReactNode,
 ): React.JSX.Element {
-  const widgets = layout.widgets ?? []
+  const { columns, rows, widgets } = layout
 
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
+        width: '100vw',
         height: '100vh',
         backgroundColor: '#1a1a1a',
         color: '#ffffff',
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      {widgets.map((widgetDef: WidgetDefinition, index: number) => {
-        const widgetFactory = widgetRegistry.get(widgetDef.type)
-
-        if (!widgetFactory) {
-          return (
-            <div key={index} style={{ color: '#ff4444' }}>
-              Unknown widget: {widgetDef.type}
-            </div>
-          )
-        }
-
-        // Pass the widget definition as props
-        // The widget can extract what it needs (e.g., dataSource)
-        return <div key={index}>{widgetFactory(widgetDef as WidgetProps)}</div>
-      })}
+      {widgets.map((widgetRef, index: number) =>
+        renderGridWidget(widgetRegistry, widgetRef, widgetDefinitions, index),
+      )}
       {children}
     </div>
   )
 }
 
 /**
- * Renders a game layout (placeholder for future implementation).
+ * Renders a single widget in a grid cell.
  */
-function renderGameLayout(
-  surface: Surface,
-  children?: React.ReactNode,
+function renderGridWidget(
+  widgetRegistry: IWidgetRegistry,
+  widgetRef: GridLayout['widgets'][number],
+  widgetDefinitions: Record<string, WidgetDefinition>,
+  index: number,
 ): React.JSX.Element {
+  const { x, y, width, height } = widgetRef.position
+  const gridStyle = {
+    gridColumn: `${x + 1} / span ${width}`,
+    gridRow: `${y + 1} / span ${height}`,
+  }
+
+  const widgetDef = widgetDefinitions[widgetRef.widgetId]
+  if (!widgetDef) {
+    return renderErrorWidget(
+      index,
+      gridStyle,
+      `Widget not found: ${widgetRef.widgetId}`,
+    )
+  }
+
+  const widgetFactory = widgetRegistry.get(widgetDef.type)
+  if (!widgetFactory) {
+    return renderErrorWidget(
+      index,
+      gridStyle,
+      `Unknown widget type: ${widgetDef.type}`,
+    )
+  }
+
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Game Layout (Not Yet Implemented)</h2>
-      <p>Surface: {surface.id}</p>
-      {children}
+    <div key={index} style={gridStyle}>
+      {widgetFactory(widgetDef as WidgetProps)}
     </div>
   )
 }
 
 /**
- * Renders an unknown layout type fallback.
+ * Renders an error widget when widget definition or factory is not found.
  */
-function renderUnknownLayout(
-  surface: Surface,
-  layout: LayoutDefinition | undefined,
-  children?: React.ReactNode,
+function renderErrorWidget(
+  index: number,
+  gridStyle: React.CSSProperties,
+  message: string,
 ): React.JSX.Element {
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Unknown Layout Type: {layout?.type ?? 'none'}</h2>
-      <p>Surface: {surface.id}</p>
-      {children}
+    <div
+      key={index}
+      style={{
+        ...gridStyle,
+        color: '#ff4444',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid #ff4444',
+      }}
+    >
+      {message}
     </div>
   )
 }

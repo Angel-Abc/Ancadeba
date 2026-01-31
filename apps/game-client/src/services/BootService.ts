@@ -4,7 +4,10 @@ import {
   type IGameLoader,
   surfaceLoaderToken,
   type ISurfaceLoader,
+  widgetLoaderToken,
+  type IWidgetLoader,
   type Surface,
+  type WidgetDefinition,
 } from '@ancadeba/content'
 import {
   type IBootService,
@@ -18,6 +21,7 @@ export const bootServiceDependencies: Token<unknown>[] = [
   loggerToken,
   gameLoaderToken,
   surfaceLoaderToken,
+  widgetLoaderToken,
   worldServiceToken,
   bootProgressTrackerToken,
 ]
@@ -43,11 +47,13 @@ export class BootService implements IBootService {
   public static readonly logName: string = BootServiceLogName
 
   private bootSurface: Surface | null = null
+  private widgetDefinitions: Record<string, WidgetDefinition> = {}
   private initializationPromise: Promise<void> | null = null
 
   private readonly logger: ILogger
   private readonly gameLoader: IGameLoader
   private readonly surfaceLoader: ISurfaceLoader
+  private readonly widgetLoader: IWidgetLoader
   private readonly worldService: IWorldService
   private readonly progressTracker: IBootProgressTracker
 
@@ -55,12 +61,14 @@ export class BootService implements IBootService {
     logger: ILogger
     gameLoader: IGameLoader
     surfaceLoader: ISurfaceLoader
+    widgetLoader: IWidgetLoader
     worldService: IWorldService
     bootProgressTracker: IBootProgressTracker
   }) {
     this.logger = deps.logger
     this.gameLoader = deps.gameLoader
     this.surfaceLoader = deps.surfaceLoader
+    this.widgetLoader = deps.widgetLoader
     this.worldService = deps.worldService
     this.progressTracker = deps.bootProgressTracker
   }
@@ -79,6 +87,10 @@ export class BootService implements IBootService {
 
   getBootSurface(): Surface | null {
     return this.bootSurface
+  }
+
+  getWidgetDefinitions(): Record<string, WidgetDefinition> {
+    return this.widgetDefinitions
   }
 
   initialize(): Promise<void> {
@@ -111,50 +123,90 @@ export class BootService implements IBootService {
         0,
       )
 
-      // Phase 1: Load game metadata
-      this.progressTracker.updateProgress(
-        BootState.Loading,
-        'Loading game data...',
-        0.1,
-      )
-      const game = await this.gameLoader.load()
-      this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+      await this.loadGameAndResources()
 
-      // Phase 2: Load surfaces and find boot surface
-      this.progressTracker.updateProgress(
-        BootState.Loading,
-        'Loading surfaces...',
-        0.3,
-      )
-      await this.loadBootSurface(game.surfaces ?? [])
-
-      // Phase 3: Initialize engine
       this.progressTracker.updateProgress(
         BootState.Loading,
         'Initializing engine...',
-        0.6,
+        0.7,
       )
       await this.initializeEngine()
 
-      // Phase 4: Ready
       this.progressTracker.updateProgress(BootState.Ready, 'Ready!', 1.0)
       this.logger.info(
         BootService.logName,
         'Game client initialized successfully',
       )
     } catch (error) {
-      this.logger.error(
-        BootService.logName,
-        'Failed to initialize game client: {0}',
-        error,
-      )
-      this.progressTracker.updateProgress(
-        BootState.Error,
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
-        0,
-      )
-      throw error
+      this.handleInitializationError(error)
     }
+  }
+
+  private async loadGameAndResources(): Promise<void> {
+    // Load game metadata
+    this.progressTracker.updateProgress(
+      BootState.Loading,
+      'Loading game data...',
+      0.1,
+    )
+    const game = await this.gameLoader.load()
+    this.logger.debug(BootService.logName, 'Game loaded: {0}', game.title)
+
+    // Load widgets from game metadata
+    this.progressTracker.updateProgress(
+      BootState.Loading,
+      'Loading widgets...',
+      0.2,
+    )
+    await this.loadWidgets(game.widgets ?? [])
+
+    // Load surfaces and find boot surface
+    this.progressTracker.updateProgress(
+      BootState.Loading,
+      'Loading surfaces...',
+      0.4,
+    )
+    await this.loadBootSurface(game.surfaces ?? [])
+  }
+
+  private handleInitializationError(error: unknown): void {
+    this.logger.error(
+      BootService.logName,
+      'Failed to initialize game client: {0}',
+      error,
+    )
+    this.progressTracker.updateProgress(
+      BootState.Error,
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+      0,
+    )
+    throw error
+  }
+
+  private async loadWidgets(widgetPaths: string[]): Promise<void> {
+    if (widgetPaths.length === 0) {
+      this.logger.debug(
+        BootService.logName,
+        'No widgets defined in game metadata',
+      )
+      return
+    }
+
+    const widgets = await this.widgetLoader.loadAll(widgetPaths)
+    this.widgetDefinitions = widgets.reduce(
+      (acc, widget) => {
+        acc[widget.id] = widget
+        return acc
+      },
+      {} as Record<string, WidgetDefinition>,
+    )
+
+    this.logger.debug(
+      BootService.logName,
+      'Loaded {0} widgets: {1}',
+      widgets.length,
+      widgets.map((w) => w.id).join(', '),
+    )
   }
 
   private async loadBootSurface(surfacePaths: string[]): Promise<void> {

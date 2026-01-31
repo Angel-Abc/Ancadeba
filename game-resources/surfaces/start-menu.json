@@ -4,37 +4,27 @@
   "requires": ["persistence:listSaves"],
   "forbids": ["ecs:projections"],
   "layout": {
-    "type": "centered",
+    "type": "grid",
+    "columns": 12,
+    "rows": 12,
     "widgets": [
       {
-        "type": "title",
-        "text": "Market Value"
+        "widgetId": "main-title",
+        "position": {
+          "x": 4,
+          "y": 3,
+          "width": 4,
+          "height": 1
+        }
       },
       {
-        "type": "menu",
-        "items": [
-          {
-            "id": "new-game",
-            "label": "New Game",
-            "action": "start-new-game"
-          },
-          {
-            "id": "continue",
-            "label": "Continue",
-            "action": "continue-game",
-            "enabled": "has-save-game"
-          },
-          {
-            "id": "settings",
-            "label": "Settings",
-            "action": "open-settings"
-          },
-          {
-            "id": "quit",
-            "label": "Quit",
-            "action": "quit-game"
-          }
-        ]
+        "widgetId": "main-menu",
+        "position": {
+          "x": 4,
+          "y": 5,
+          "width": 4,
+          "height": 4
+        }
       }
     ]
   }

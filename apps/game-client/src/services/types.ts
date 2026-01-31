@@ -1,6 +1,6 @@
 import type { BootProgress, BootState } from './BootService'
 import type { World } from '@ancadeba/engine'
-import type { Surface } from '@ancadeba/content'
+import type { Surface, WidgetDefinition } from '@ancadeba/content'
 
 export interface IBootProgressTracker {
   getState(): BootState
@@ -15,6 +15,7 @@ export interface IBootService {
   subscribe(callback: (progress: BootProgress) => void): () => void
   initialize(): Promise<void>
   getBootSurface(): Surface | null
+  getWidgetDefinitions(): Record<string, WidgetDefinition>
 }
 
 export interface IWorldService {

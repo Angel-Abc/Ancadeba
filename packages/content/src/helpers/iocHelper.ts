@@ -1,11 +1,16 @@
 import { type Container } from '@ancadeba/utils'
 import { resourcesConfigurationToken } from '../configuration/tokens'
-import { gameLoaderToken, surfaceLoaderToken } from '../loaders/tokens'
+import {
+  gameLoaderToken,
+  surfaceLoaderToken,
+  widgetLoaderToken,
+} from '../loaders/tokens'
 import { GameLoader, gameLoaderDependencies } from '../loaders/GameLoader'
 import {
   SurfaceLoader,
   surfaceLoaderDependencies,
 } from '../loaders/SurfaceLoader'
+import { WidgetLoader, widgetLoaderDependencies } from '../loaders/WidgetLoader'
 import { ResourcesConfiguration } from '../configuration/ResourcesConfiguration'
 
 export function registerServices(
@@ -28,6 +33,12 @@ export function registerServices(
       token: surfaceLoaderToken,
       useClass: SurfaceLoader,
       deps: surfaceLoaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: widgetLoaderToken,
+      useClass: WidgetLoader,
+      deps: widgetLoaderDependencies,
       scope: 'singleton',
     },
   ])

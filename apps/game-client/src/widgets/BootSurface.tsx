@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { Surface } from '@ancadeba/content'
+import type { Surface, WidgetDefinition } from '@ancadeba/content'
 import {
   DataSourceProvider,
   SurfaceRenderer,
@@ -8,12 +8,14 @@ import {
 
 interface BootSurfaceProps {
   surface: Surface | null
+  widgetDefinitions: Record<string, WidgetDefinition>
   message: string
   progress: number
 }
 
 export function BootSurface({
   surface,
+  widgetDefinitions,
   message,
   progress,
 }: BootSurfaceProps): React.JSX.Element {
@@ -49,7 +51,7 @@ export function BootSurface({
   // Use the data-driven surface renderer
   return (
     <DataSourceProvider dataSources={dataSources}>
-      <SurfaceRenderer surface={surface}>
+      <SurfaceRenderer surface={surface} widgetDefinitions={widgetDefinitions}>
         <h1 style={{ fontSize: '3rem', marginBottom: '2rem' }}>Ancadeba</h1>
         <div style={{ marginTop: '2rem', fontSize: '0.75rem', color: '#666' }}>
           <div>Surface: {surface.id}</div>

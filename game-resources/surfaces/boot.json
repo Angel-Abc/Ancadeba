@@ -4,11 +4,18 @@
   "requires": ["boot:progress"],
   "forbids": ["ecs:projections"],
   "layout": {
-    "type": "centered",
+    "type": "grid",
+    "columns": 12,
+    "rows": 12,
     "widgets": [
       {
-        "type": "progress-bar",
-        "dataSource": "boot:progress"
+        "widgetId": "boot-progress",
+        "position": {
+          "x": 3,
+          "y": 5,
+          "width": 6,
+          "height": 2
+        }
       }
     ]
   }

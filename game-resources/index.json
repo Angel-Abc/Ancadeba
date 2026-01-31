@@ -2,6 +2,13 @@
   "title": "Market Value",
   "description": "Stranded on a world where everything has a price.",
   "version": "0.1.0",
+  "widgets": [
+    "widgets/boot-progress.json",
+    "widgets/main-title.json",
+    "widgets/main-menu.json",
+    "widgets/world-view.json",
+    "widgets/inventory-panel.json"
+  ],
   "surfaces": [
     "surfaces/boot.json",
     "surfaces/start-menu.json",

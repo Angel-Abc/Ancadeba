@@ -39,6 +39,7 @@ export function GameClientApp(): React.JSX.Element {
       return (
         <BootSurface
           surface={bootService.getBootSurface()}
+          widgetDefinitions={bootService.getWidgetDefinitions()}
           message={bootProgress.message}
           progress={bootProgress.progress}
         />
