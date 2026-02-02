@@ -1,0 +1,26 @@
+{
+  "name": "@angelabc/ancadeba",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game Engine",
+  "keywords": [],
+  "author": "AngelAbc",
+  "license": "MPL-2.0",
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream --if-present run dev",
+    "build": "pnpm -r --if-present run build",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r --if-present run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "25.1.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^4.0.18"
+  }
+}

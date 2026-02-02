@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/editor-server" },
+    { "path": "./apps/editor-ui" },
+    { "path": "./apps/game-client" },
+    { "path": "./packages/content" },
+    { "path": "./packages/engine" },
+    { "path": "./packages/engine-ui" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/utils" }
+  ]
+}
