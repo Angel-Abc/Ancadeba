@@ -3,6 +3,8 @@ import { ContainerBuilder } from './builders/containerBuilder'
 import { createInstance } from '@ancadeba/utils'
 import { IocProvider } from '@ancadeba/ui'
 import React from 'react'
+import { bootLoaderToken, IBootLoader } from './services/bootLoader'
+import { App } from './app/App'
 
 const resourcesDataPath = import.meta.env.DEV
   ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`
@@ -13,12 +15,14 @@ const containerBuilder = new ContainerBuilder(
 )
 const container = containerBuilder.build()
 
+void container.resolve<IBootLoader>(bootLoaderToken).loadBootScreen()
+
 const root = createRoot(document.getElementById('root')!)
 
 root.render(
   <React.StrictMode>
     <IocProvider container={container}>
-      <div>Hello, Ancadeba Game Client!</div>
+      <App />
     </IocProvider>
   </React.StrictMode>,
 )
