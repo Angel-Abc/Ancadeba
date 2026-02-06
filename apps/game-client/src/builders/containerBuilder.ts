@@ -2,6 +2,7 @@ import { Container, IContainer, ILogger } from '@ancadeba/utils'
 import { registerServices as registerGameClientServices } from '../helpers/iocHelper'
 import { registerServices as registerUtilsServices } from '@ancadeba/utils'
 import { registerServices as registerContentServices } from '@ancadeba/content'
+import { registerServices as registerEngineServices } from '@ancadeba/engine'
 
 export interface IContainerBuilder {
   build(): IContainer
@@ -24,6 +25,7 @@ export class ContainerBuilder implements IContainerBuilder {
     registerGameClientServices(container)
     registerUtilsServices(container)
     registerContentServices(container, this.resourcesDataPath)
+    registerEngineServices(container)
     return container
   }
 }

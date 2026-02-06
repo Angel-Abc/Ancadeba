@@ -1,5 +1,9 @@
 import { Container } from '@ancadeba/utils'
-import { gameDefinitionProviderToken } from '../definitionProviders/tokens'
+import {
+  gameDefinitionProviderToken,
+  surfaceDefinitionProviderToken,
+  widgetDefinitionProviderToken,
+} from '../definitionProviders/tokens'
 import {
   gameDefinitionProvider,
   gameDefinitionProviderDependencies,
@@ -14,6 +18,14 @@ import {
   SurfaceDataProvider,
   surfaceDataProviderDependencies,
 } from '../dataProviders/surfaceDataProvider'
+import {
+  SurfaceDefinitionProvider,
+  surfaceDefinitionProviderDependencies,
+} from '../definitionProviders/surfaceDefinitionProvider'
+import {
+  WidgetDefinitionProvider,
+  widgetDefinitionProviderDependencies,
+} from '../definitionProviders/widgetDefinitionProvider'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -21,6 +33,12 @@ export function registerServices(container: Container): void {
       token: gameDefinitionProviderToken,
       useClass: gameDefinitionProvider,
       deps: gameDefinitionProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: surfaceDefinitionProviderToken,
+      useClass: SurfaceDefinitionProvider,
+      deps: surfaceDefinitionProviderDependencies,
       scope: 'singleton',
     },
     {
@@ -34,6 +52,12 @@ export function registerServices(container: Container): void {
       useClass: SurfaceDataProvider,
       deps: surfaceDataProviderDependencies,
       scope: 'transient',
+    },
+    {
+      token: widgetDefinitionProviderToken,
+      useClass: WidgetDefinitionProvider,
+      deps: widgetDefinitionProviderDependencies,
+      scope: 'singleton',
     },
   ])
 }

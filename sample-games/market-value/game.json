@@ -1,5 +1,12 @@
 {
   "title": "Market Value",
   "description": "Stranded on a world where everything has a price.",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "bootSurfaceId": "boot-loader",
+  "surfaces": {
+    "boot-loader": "surfaces/boot-loader.json"
+  },
+  "widgets": {
+    "boot-progress": "widgets/boot-progress.json"
+  }
 }

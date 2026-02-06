@@ -1,0 +1,22 @@
+{
+  "surfaceId": "boot-loader",
+  "requires": ["TODO"],
+  "layout": {
+    "type": "grid",
+    "rows": 16,
+    "columns": 16,
+    "widgets": [
+      {
+        "widgetId": "boot-progress",
+        "position": {
+          "row": 4,
+          "column": 4
+        },
+        "size": {
+          "width": 8,
+          "height": 8
+        }
+      }
+    ]
+  }
+}

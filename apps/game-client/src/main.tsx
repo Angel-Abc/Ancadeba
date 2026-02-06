@@ -6,9 +6,7 @@ import React from 'react'
 import { bootLoaderToken, IBootLoader } from './services/bootLoader'
 import { App } from './app/App'
 
-const resourcesDataPath = import.meta.env.DEV
-  ? `/@fs/${import.meta.env.VITE_GAME_RESOURCES_DIR}`
-  : '/resources'
+const resourcesDataPath = '/resources'
 const containerBuilder = new ContainerBuilder(
   createInstance(),
   resourcesDataPath,

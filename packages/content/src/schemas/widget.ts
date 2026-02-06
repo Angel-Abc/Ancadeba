@@ -6,9 +6,7 @@ const baseWidgetSchema = z.object({
 })
 
 export const progressWidgetSchema = baseWidgetSchema.extend({
-  widgetId: z.string(),
   type: z.literal('progress'),
-  requires: z.array(z.string()),
 })
 
 export const widgetSchema = z.discriminatedUnion('type', [progressWidgetSchema])

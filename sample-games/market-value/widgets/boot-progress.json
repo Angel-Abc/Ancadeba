@@ -1,0 +1,5 @@
+{
+  "widgetId": "boot-progress",
+  "type": "progress",
+  "requires": ["TODO"]
+}
