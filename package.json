@@ -6,7 +6,7 @@
   "keywords": [],
   "author": "AngelAbc",
   "license": "MPL-2.0",
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@10.29.1",
   "scripts": {
     "dev": "pnpm -r --parallel --stream --if-present run dev",
     "build": "pnpm -r --if-present run build",
