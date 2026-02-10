@@ -3,6 +3,24 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 
+function normalizePathForCompare(filePath: string): string {
+  const normalized = path.normalize(filePath)
+  return process.platform === 'win32' ? normalized.toLowerCase() : normalized
+}
+
+function isPathInsideDirectory(targetDir: string, resolvedPath: string): boolean {
+  const normalizedTargetDir = normalizePathForCompare(path.resolve(targetDir))
+  const normalizedResolvedPath = normalizePathForCompare(path.resolve(resolvedPath))
+  const targetPrefix = normalizedTargetDir.endsWith(path.sep)
+    ? normalizedTargetDir
+    : `${normalizedTargetDir}${path.sep}`
+
+  return (
+    normalizedResolvedPath === normalizedTargetDir ||
+    normalizedResolvedPath.startsWith(targetPrefix)
+  )
+}
+
 export default defineConfig(({ mode }) => {
   const envDir = path.resolve(__dirname, '../../')
   const env = loadEnv(mode, envDir)
@@ -20,13 +38,32 @@ export default defineConfig(({ mode }) => {
               const url = req.url?.split('?')[0]
               if (!url) return next()
 
-              const filePath = path.join(
+              let relativePath: string
+              try {
+                relativePath = decodeURIComponent(
+                  url.startsWith('/') ? url.slice(1) : url,
+                )
+              } catch {
+                return next()
+              }
+
+              const normalizedRelativePath = path
+                .normalize(relativePath)
+                .replace(/^([/\\])+/, '')
+              const resolvedPath = path.resolve(
                 targetDir,
-                decodeURIComponent(url.startsWith('/') ? url.slice(1) : url),
+                normalizedRelativePath,
               )
 
-              if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-                const ext = path.extname(filePath).toLowerCase()
+              if (!isPathInsideDirectory(targetDir, resolvedPath)) {
+                return next()
+              }
+
+              if (
+                fs.existsSync(resolvedPath) &&
+                fs.statSync(resolvedPath).isFile()
+              ) {
+                const ext = path.extname(resolvedPath).toLowerCase()
                 const mimeTypes: Record<string, string> = {
                   '.json': 'application/json',
                   '.png': 'image/png',
@@ -39,7 +76,7 @@ export default defineConfig(({ mode }) => {
                   'Content-Type',
                   mimeTypes[ext] || 'application/octet-stream',
                 )
-                fs.createReadStream(filePath).pipe(res)
+                fs.createReadStream(resolvedPath).pipe(res)
               } else {
                 next()
               }
