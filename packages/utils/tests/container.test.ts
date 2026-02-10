@@ -92,7 +92,7 @@ describe('IoC container', () => {
     expect(resolveAction).toThrow('Circular dependency detected')
   })
 
-  it('uses object injection when more than four dependencies are defined', () => {
+  it('uses object injection when dependencies are defined as a map', () => {
     // Arrange
     const depOneToken = token<string>('tests/DepOneToken')
     const depTwoToken = token<string>('tests/DepTwoToken')
@@ -134,7 +134,13 @@ describe('IoC container', () => {
     container.register({
       token: dashboardToken,
       useClass: Dashboard,
-      deps: [depOneToken, depTwoToken, depThreeToken, depFourToken, depFiveToken],
+      deps: {
+        depOne: depOneToken,
+        depTwo: depTwoToken,
+        depThree: depThreeToken,
+        depFour: depFourToken,
+        depFive: depFiveToken,
+      },
       scope: 'transient',
     })
 

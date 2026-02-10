@@ -2,20 +2,6 @@ import type { ILogger } from '../logger/types'
 import { describeToken, type Token } from './token'
 import type { IContainer, Provider, Scope, Dependency } from './types'
 
-function tokenToPropertyName(token: Token<unknown>): string {
-  const description = describeToken(token)
-
-  const lastSegment = description.includes('/')
-    ? description.split('/').pop() || description
-    : description
-
-  const withoutSuffix = lastSegment.endsWith('Token')
-    ? lastSegment.slice(0, -5)
-    : lastSegment
-
-  return withoutSuffix.charAt(0).toLowerCase() + withoutSuffix.slice(1)
-}
-
 export class Container implements IContainer {
   private static readonly logName: string = 'utils/ioc/container'
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
@@ -131,24 +117,7 @@ export class Container implements IContainer {
         return this.resolve(token)
       })
 
-      // Use object injection if more than 4 dependencies
-      if (depDefs.length > 4) {
-        const depsObject: Record<string, unknown> = {}
-        depDefs.forEach((def, index) => {
-          let propertyName: string
-
-          if (typeof def !== 'symbol') {
-            propertyName = def.param
-          } else {
-            propertyName = tokenToPropertyName(def)
-          }
-
-          depsObject[propertyName] = deps[index]
-        })
-        return new p.useClass(depsObject)
-      }
-
-      // Use positional injection for 4 or fewer dependencies
+      // Use positional injection for array dependencies
       return new p.useClass(...deps)
     }
     if ('useFactory' in p) return p.useFactory(this)

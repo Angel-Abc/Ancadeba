@@ -18,13 +18,13 @@ export interface IBootLoader {
 export const bootLoaderToken = token<IBootLoader>(
   'game-client/services/bootLoader',
 )
-export const bootLoaderDependencies: Token<unknown>[] = [
-  loggerToken,
-  uiReadySignalToken,
-  gameDefinitionProviderToken,
-  surfaceDefinitionProviderToken,
-  widgetDefinitionProviderToken,
-]
+export const bootLoaderDependencies: Record<string, Token<unknown>> = {
+  logger: loggerToken,
+  uiReadySignal: uiReadySignalToken,
+  gameDefinitionProvider: gameDefinitionProviderToken,
+  surfaceDefinitionProvider: surfaceDefinitionProviderToken,
+  widgetDefinitionProvider: widgetDefinitionProviderToken,
+}
 export class BootLoader implements IBootLoader {
   private readonly logger: ILogger
   private readonly uiReadySignal: IUIReadySignal
@@ -33,19 +33,19 @@ export class BootLoader implements IBootLoader {
   private readonly widgetDefinitionProvider: IWidgetDefinitionProvider
   constructor({
     logger,
-    uIReadySignal,
+    uiReadySignal,
     gameDefinitionProvider,
     surfaceDefinitionProvider,
     widgetDefinitionProvider,
   }: {
     logger: ILogger
-    uIReadySignal: IUIReadySignal
+    uiReadySignal: IUIReadySignal
     gameDefinitionProvider: IGameDefinitionProvider
     surfaceDefinitionProvider: ISurfaceDefinitionProvider
     widgetDefinitionProvider: IWidgetDefinitionProvider
   }) {
     this.logger = logger
-    this.uiReadySignal = uIReadySignal
+    this.uiReadySignal = uiReadySignal
     this.gameDefinitionProvider = gameDefinitionProvider
     this.surfaceDefinitionProvider = surfaceDefinitionProvider
     this.widgetDefinitionProvider = widgetDefinitionProvider
