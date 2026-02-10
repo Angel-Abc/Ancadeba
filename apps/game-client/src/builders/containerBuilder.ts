@@ -3,6 +3,7 @@ import { registerServices as registerGameClientServices } from '../helpers/iocHe
 import { registerServices as registerUtilsServices } from '@ancadeba/utils'
 import { registerServices as registerContentServices } from '@ancadeba/content'
 import { registerServices as registerEngineServices } from '@ancadeba/engine'
+import { registerServices as registerEngineUiServices } from '@ancadeba/engine-ui'
 
 export interface IContainerBuilder {
   build(): IContainer
@@ -26,6 +27,7 @@ export class ContainerBuilder implements IContainerBuilder {
     registerUtilsServices(container)
     registerContentServices(container, this.resourcesDataPath)
     registerEngineServices(container)
+    registerEngineUiServices(container)
     return container
   }
 }

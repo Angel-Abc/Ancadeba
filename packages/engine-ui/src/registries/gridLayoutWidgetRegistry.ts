@@ -1,22 +1,24 @@
-export interface GridLayoutWidgetProps {
-  widgetId: string
-}
+import type {
+  GridLayoutWidgetComponent,
+  IGridLayoutWidgetRegistry,
+} from './types'
 
-export type GridLayoutWidgetComponent =
-  React.ComponentType<GridLayoutWidgetProps>
+export class GridLayoutWidgetRegistry implements IGridLayoutWidgetRegistry {
+  private readonly registry: Map<string, GridLayoutWidgetComponent> = new Map()
 
-type GridLayoutWidgetRegistry = Record<string, GridLayoutWidgetComponent>
-const registry: GridLayoutWidgetRegistry = {}
+  register(id: string, component: GridLayoutWidgetComponent): void {
+    this.registry.set(id, component)
+  }
 
-export function registerGridLayoutWidget(
-  id: string,
-  component: GridLayoutWidgetComponent,
-): void {
-  registry[id] = component
-}
+  get(id: string): GridLayoutWidgetComponent | undefined {
+    return this.registry.get(id)
+  }
 
-export function getGridLayoutWidget(
-  id: string,
-): GridLayoutWidgetComponent | undefined {
-  return registry[id]
+  has(id: string): boolean {
+    return this.registry.has(id)
+  }
+
+  reset(): void {
+    this.registry.clear()
+  }
 }
