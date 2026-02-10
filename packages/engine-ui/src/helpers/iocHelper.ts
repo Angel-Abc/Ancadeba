@@ -1,11 +1,11 @@
 import { Container } from '@ancadeba/utils'
-import { GridLayoutWidgetRegistry } from '../registries/gridLayoutWidgetRegistry'
-import { gridLayoutWidgetRegistryToken } from '../registries/tokens'
+import { WidgetRegistry } from '../registries/widgetRegistry'
+import { widgetRegistryToken } from '../registries/tokens'
 
 export function registerServices(container: Container): void {
   container.register({
-    token: gridLayoutWidgetRegistryToken,
-    useClass: GridLayoutWidgetRegistry,
+    token: widgetRegistryToken,
+    useClass: WidgetRegistry,
     deps: [],
     scope: 'singleton',
   })

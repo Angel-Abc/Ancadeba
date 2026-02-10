@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Container, loggerToken, type ILogger } from '@ancadeba/utils'
 import { registerServices } from '../src/helpers/iocHelper'
-import { GridLayoutWidgetRegistry } from '../src/registries/gridLayoutWidgetRegistry'
-import { gridLayoutWidgetRegistryToken } from '../src/registries/tokens'
-import type { GridLayoutWidgetComponent } from '../src/registries/types'
+import { WidgetRegistry } from '../src/registries/widgetRegistry'
+import { widgetRegistryToken } from '../src/registries/tokens'
+import type { WidgetComponent } from '../src/registries/types'
 
 function createLogger(): ILogger {
   return {
@@ -14,11 +14,11 @@ function createLogger(): ILogger {
   }
 }
 
-describe('engine-ui grid layout widget registry', () => {
+describe('engine-ui widget registry', () => {
   it('registers and resolves components by widget ID', () => {
     // Arrange
-    const registry = new GridLayoutWidgetRegistry()
-    const component: GridLayoutWidgetComponent = () => null
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent = () => null
 
     // Act
     registry.register('progress', component)
@@ -31,8 +31,8 @@ describe('engine-ui grid layout widget registry', () => {
 
   it('resets registered widgets to support lifecycle boundaries', () => {
     // Arrange
-    const registry = new GridLayoutWidgetRegistry()
-    const component: GridLayoutWidgetComponent = () => null
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent = () => null
     registry.register('progress', component)
 
     // Act
@@ -55,11 +55,11 @@ describe('engine-ui grid layout widget registry', () => {
     registerServices(container)
 
     // Act
-    const first = container.resolve(gridLayoutWidgetRegistryToken)
-    const second = container.resolve(gridLayoutWidgetRegistryToken)
+    const first = container.resolve(widgetRegistryToken)
+    const second = container.resolve(widgetRegistryToken)
 
     // Assert
-    expect(first).toBeInstanceOf(GridLayoutWidgetRegistry)
+    expect(first).toBeInstanceOf(WidgetRegistry)
     expect(first).toBe(second)
   })
 })

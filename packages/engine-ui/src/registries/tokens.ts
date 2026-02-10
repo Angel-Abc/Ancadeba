@@ -1,6 +1,6 @@
 import { token } from '@ancadeba/utils'
-import type { IGridLayoutWidgetRegistry } from './types'
+import type { IWidgetRegistry } from './types'
 
-export const gridLayoutWidgetRegistryToken = token<IGridLayoutWidgetRegistry>(
-  'engine-ui/registries/gridLayoutWidgetRegistry',
+export const widgetRegistryToken = token<IWidgetRegistry>(
+  'engine-ui/registries/widgetRegistry',
 )

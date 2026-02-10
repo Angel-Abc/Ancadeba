@@ -1,15 +1,15 @@
 import type { ComponentType } from 'react'
 
-export interface GridLayoutWidgetProps {
+export interface WidgetProps {
   widgetId: string
 }
 
-export type GridLayoutWidgetComponent =
-  ComponentType<GridLayoutWidgetProps>
+export type WidgetComponent =
+  ComponentType<WidgetProps>
 
-export interface IGridLayoutWidgetRegistry {
-  register(id: string, component: GridLayoutWidgetComponent): void
-  get(id: string): GridLayoutWidgetComponent | undefined
+export interface IWidgetRegistry {
+  register(id: string, component: WidgetComponent): void
+  get(id: string): WidgetComponent | undefined
   has(id: string): boolean
   reset(): void
 }
