@@ -1,13 +1,5 @@
 export interface GridLayoutWidgetProps {
   widgetId: string
-  position: {
-    row: number
-    column: number
-  }
-  size: {
-    width: number
-    height: number
-  }
 }
 
 export type GridLayoutWidgetComponent =
