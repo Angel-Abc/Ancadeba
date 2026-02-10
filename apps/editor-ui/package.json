@@ -2,7 +2,12 @@
   "name": "@ancadeba/editor-ui",
   "version": "1.0.0",
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
   "keywords": [],
   "author": "AngelAbc",
   "license": "MPL-2.0",

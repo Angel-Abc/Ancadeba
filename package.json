@@ -9,11 +9,11 @@
   "packageManager": "pnpm@10.29.1",
   "scripts": {
     "dev": "pnpm -r --parallel --stream --if-present run dev",
-    "build": "pnpm -r --if-present run build",
-    "lint": "pnpm -r --if-present run lint",
-    "test": "vitest run",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
     "test:watch": "vitest",
-    "typecheck": "pnpm -r --if-present run typecheck"
+    "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
     "@types/node": "25.1.0",
