@@ -1,9 +1,9 @@
 import { Container } from '@ancadeba/utils'
 import { WidgetRegistry } from '../registries/widgetRegistry'
-import { SurfaceRegistry } from '../registries/surfaceRegistry'
+import { LayoutRegistry } from '../registries/layoutRegistry'
 import {
   widgetRegistryToken,
-  surfaceRegistryToken,
+  layoutRegistryToken,
 } from '../registries/tokens'
 
 export function registerServices(container: Container): void {
@@ -15,8 +15,8 @@ export function registerServices(container: Container): void {
   })
 
   container.register({
-    token: surfaceRegistryToken,
-    useClass: SurfaceRegistry,
+    token: layoutRegistryToken,
+    useClass: LayoutRegistry,
     deps: [],
     scope: 'singleton',
   })

@@ -7,12 +7,12 @@ export interface WidgetProps {
 export type WidgetComponent =
   ComponentType<WidgetProps>
 
-export interface SurfaceProps {
-  surfaceId: string
+export interface LayoutProps {
+  layoutType: string
 }
 
-export type SurfaceComponent =
-  ComponentType<SurfaceProps>
+export type LayoutComponent =
+  ComponentType<LayoutProps>
 
 export interface IWidgetRegistry {
   register(id: string, component: WidgetComponent): void
@@ -21,9 +21,9 @@ export interface IWidgetRegistry {
   reset(): void
 }
 
-export interface ISurfaceRegistry {
-  register(id: string, component: SurfaceComponent): void
-  get(id: string): SurfaceComponent | undefined
+export interface ILayoutRegistry {
+  register(id: string, component: LayoutComponent): void
+  get(id: string): LayoutComponent | undefined
   has(id: string): boolean
   reset(): void
 }
