@@ -1,3 +1,3 @@
 export * from './helpers/iocHelper'
-export * from './definitionProviders/tokens'
-export * from './definitionProviders/types'
+export * from './providers/definition/tokens'
+export * from './providers/definition/types'

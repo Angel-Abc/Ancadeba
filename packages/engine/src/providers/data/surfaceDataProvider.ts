@@ -1,7 +1,7 @@
 import { Token } from '@ancadeba/utils'
 import { ISurfaceDataProvider } from './types'
-import { surfaceDataStorageToken } from '../dataStorage.ts/tokens'
-import { ISurfaceDataStorage } from '../dataStorage.ts/types'
+import { surfaceDataStorageToken } from '../../storage/data/tokens'
+import { ISurfaceDataStorage } from '../../storage/data/types'
 
 export const surfaceDataProviderDependencies: Token<unknown>[] = [
   surfaceDataStorageToken,

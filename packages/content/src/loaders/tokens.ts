@@ -8,3 +8,6 @@ export const surfaceLoaderToken = token<ISurfaceLoader>(
 export const widgetLoaderToken = token<IWidgetLoader>(
   'content/loaders/widgetLoader',
 )
+export const languageLoaderToken = token<IGameLoader>(
+  'content/loaders/languageLoader',
+)

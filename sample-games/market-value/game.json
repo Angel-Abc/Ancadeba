@@ -1,12 +1,16 @@
 {
-  "title": "Market Value",
-  "description": "Stranded on a world where everything has a price.",
+  "title": "GAME.TITLE",
+  "description": "GAME.DESCRIPTION",
   "version": "1.0.0",
   "bootSurfaceId": "boot-loader",
+  "language": "en",
   "surfaces": {
     "boot-loader": "surfaces/boot-loader.json"
   },
   "widgets": {
     "boot-progress": "widgets/boot-progress.json"
+  },
+  "languages": {
+    "en": ["languages/en/engine.json"]
   }
 }

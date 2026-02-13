@@ -3,29 +3,29 @@ import {
   gameDefinitionProviderToken,
   surfaceDefinitionProviderToken,
   widgetDefinitionProviderToken,
-} from '../definitionProviders/tokens'
+} from '../providers/definition/tokens'
 import {
   gameDefinitionProvider,
   gameDefinitionProviderDependencies,
-} from '../definitionProviders/gameDefinitionProvider'
-import { surfaceDataStorageToken } from '../dataStorage.ts/tokens'
+} from '../providers/definition/gameDefinitionProvider'
+import { surfaceDataStorageToken } from '../storage/data/tokens'
 import {
   surfaceDataStorage,
   surfaceDataStorageDependencies,
-} from '../dataStorage.ts/surfaceDataStorage'
-import { surfaceDataProviderToken } from '../dataProviders/tokens'
+} from '../storage/data/surfaceDataStorage'
+import { surfaceDataProviderToken } from '../providers/data/tokens'
 import {
   SurfaceDataProvider,
   surfaceDataProviderDependencies,
-} from '../dataProviders/surfaceDataProvider'
+} from '../providers/data/surfaceDataProvider'
 import {
   SurfaceDefinitionProvider,
   surfaceDefinitionProviderDependencies,
-} from '../definitionProviders/surfaceDefinitionProvider'
+} from '../providers/definition/surfaceDefinitionProvider'
 import {
   WidgetDefinitionProvider,
   widgetDefinitionProviderDependencies,
-} from '../definitionProviders/widgetDefinitionProvider'
+} from '../providers/definition/widgetDefinitionProvider'
 
 export function registerServices(container: Container): void {
   container.registerAll([

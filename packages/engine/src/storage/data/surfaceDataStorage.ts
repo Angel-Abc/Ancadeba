@@ -7,7 +7,7 @@ import {
 } from '@ancadeba/utils'
 import { ISurfaceDataStorage } from './types'
 import { surfaceDataStorageToken } from './tokens'
-import { MESSAGE_ENGINE_SURFACE_DATA_CHANGED } from '../message/dataMessages'
+import { MESSAGE_ENGINE_SURFACE_DATA_CHANGED } from '../../message/dataMessages'
 
 export const surfaceDataStorageDependencies: Token<unknown>[] = [
   loggerToken,
