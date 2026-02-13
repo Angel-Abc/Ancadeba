@@ -43,8 +43,10 @@ describe('content loaders', () => {
       title: 'Test Game',
       version: '1.0.0',
       bootSurfaceId: 'boot',
+      language: 'en',
       surfaces: { boot: 'surfaces/boot.json' },
       widgets: { progress: 'widgets/progress.json' },
+      languages: { en: 'languages/en.json' },
     }
     const fetchMock = vi.fn(async () => ({
       ok: true,
