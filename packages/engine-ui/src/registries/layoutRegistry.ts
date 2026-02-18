@@ -1,24 +1,4 @@
-import type {
-  LayoutComponent,
-  ILayoutRegistry,
-} from './types'
+import type { LayoutComponent } from './types'
+import { Registry } from './registry'
 
-export class LayoutRegistry implements ILayoutRegistry {
-  private readonly registry: Map<string, LayoutComponent> = new Map()
-
-  register(id: string, component: LayoutComponent): void {
-    this.registry.set(id, component)
-  }
-
-  get(id: string): LayoutComponent | undefined {
-    return this.registry.get(id)
-  }
-
-  has(id: string): boolean {
-    return this.registry.has(id)
-  }
-
-  reset(): void {
-    this.registry.clear()
-  }
-}
+export class LayoutRegistry extends Registry<LayoutComponent> {}
