@@ -4,12 +4,46 @@ import type {
   IContainer,
   IRegistrar,
   Provider,
+  ValueProvider,
+  ClassProvider,
+  FactoryProvider,
   Scope,
   Dependency,
 } from './types'
 
+type ProviderHandler = (p: Provider<unknown>, container: Container) => unknown
+
 export class Container implements IContainer, IRegistrar {
   private static readonly logName: string = 'utils/ioc/container'
+
+  private static readonly strategies: ReadonlyMap<string, ProviderHandler> =
+    new Map<string, ProviderHandler>([
+      ['useValue', (p) => (p as ValueProvider<unknown>).useValue],
+      [
+        'useClass',
+        (p, container) => {
+          const cp = p as ClassProvider<unknown>
+          if (cp.deps && !Array.isArray(cp.deps)) {
+            const depsObject: Record<string, unknown> = {}
+            for (const [key, depToken] of Object.entries(cp.deps)) {
+              depsObject[key] = container.resolve(depToken as Token<unknown>)
+            }
+            return new cp.useClass(depsObject)
+          }
+          const depDefs = (cp.deps as Dependency[]) ?? []
+          const deps = depDefs.map((d) => {
+            const depToken = typeof d === 'symbol' ? d : d.token
+            return container.resolve(depToken)
+          })
+          return new cp.useClass(...deps)
+        },
+      ],
+      [
+        'useFactory',
+        (p, container) => (p as FactoryProvider<unknown>).useFactory(container),
+      ],
+    ])
+
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
   private singletons = new WeakMap<Provider<unknown>, unknown>()
   private resolving: Token<unknown>[] = []
@@ -106,28 +140,9 @@ export class Container implements IContainer, IRegistrar {
   }
 
   private instantiate<T>(p: Provider<T>): T {
-    if ('useValue' in p) return p.useValue
-    if ('useClass' in p) {
-      if (p.deps && !Array.isArray(p.deps)) {
-        // Handle Record<string, Token<unknown>> -> Always usage object injection
-        const depsObject: Record<string, unknown> = {}
-        for (const [key, token] of Object.entries(p.deps)) {
-          depsObject[key] = this.resolve(token)
-        }
-        return new p.useClass(depsObject)
-      }
-
-      const depDefs = (p.deps as Dependency[]) ?? []
-      const deps = depDefs.map((d) => {
-        const token = typeof d === 'symbol' ? d : d.token
-        return this.resolve(token)
-      })
-
-      // Use positional injection for array dependencies
-      return new p.useClass(...deps)
+    for (const [key, handle] of Container.strategies) {
+      if (key in p) return handle(p as Provider<unknown>, this) as T
     }
-    if ('useFactory' in p) return p.useFactory(this)
-
     throw new Error(
       this.logger.error(
         Container.logName,
