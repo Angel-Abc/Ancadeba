@@ -5,19 +5,41 @@ import {
   bootLoaderDependencies,
   bootLoaderToken,
 } from '../services/bootLoader'
+import {
+  GameInitializer,
+  gameInitializerDependencies,
+  gameInitializerToken,
+} from '../services/gameInitializer'
+import {
+  BootSurfacePreloader,
+  bootSurfacePreloaderDependencies,
+  bootSurfacePreloaderToken,
+} from '../services/bootSurfacePreloader'
 
 export function registerServices(container: IRegistrar): void {
   container.registerAll([
     {
-      token: bootLoaderToken,
-      useClass: BootLoader,
-      deps: bootLoaderDependencies,
-      scope: 'singleton',
-    },
-    {
       token: uiReadySignalToken,
       useClass: UIReadySignal,
       deps: [],
+      scope: 'singleton',
+    },
+    {
+      token: gameInitializerToken,
+      useClass: GameInitializer,
+      deps: gameInitializerDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: bootSurfacePreloaderToken,
+      useClass: BootSurfacePreloader,
+      deps: bootSurfacePreloaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: bootLoaderToken,
+      useClass: BootLoader,
+      deps: bootLoaderDependencies,
       scope: 'singleton',
     },
   ])
