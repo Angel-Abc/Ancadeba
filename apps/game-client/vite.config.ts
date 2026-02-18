@@ -8,9 +8,14 @@ function normalizePathForCompare(filePath: string): string {
   return process.platform === 'win32' ? normalized.toLowerCase() : normalized
 }
 
-function isPathInsideDirectory(targetDir: string, resolvedPath: string): boolean {
+function isPathInsideDirectory(
+  targetDir: string,
+  resolvedPath: string,
+): boolean {
   const normalizedTargetDir = normalizePathForCompare(path.resolve(targetDir))
-  const normalizedResolvedPath = normalizePathForCompare(path.resolve(resolvedPath))
+  const normalizedResolvedPath = normalizePathForCompare(
+    path.resolve(resolvedPath),
+  )
   const targetPrefix = normalizedTargetDir.endsWith(path.sep)
     ? normalizedTargetDir
     : `${normalizedTargetDir}${path.sep}`
@@ -102,6 +107,26 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        '@ancadeba/content': path.resolve(
+          __dirname,
+          '../../packages/content/src/index.ts',
+        ),
+        '@ancadeba/engine': path.resolve(
+          __dirname,
+          '../../packages/engine/src/index.ts',
+        ),
+        '@ancadeba/engine-ui': path.resolve(
+          __dirname,
+          '../../packages/engine-ui/src/index.ts',
+        ),
+        '@ancadeba/ui': path.resolve(
+          __dirname,
+          '../../packages/ui/src/index.ts',
+        ),
+        '@ancadeba/utils': path.resolve(
+          __dirname,
+          '../../packages/utils/src/index.ts',
+        ),
         '/resources': resourcesDir
           ? path.resolve(envDir, resourcesDir)
           : path.resolve(__dirname, 'dist', 'resources'),
