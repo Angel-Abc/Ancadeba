@@ -29,3 +29,8 @@ export type Provider<T = unknown> =
   | ValueProvider<T>
   | ClassProvider<T>
   | FactoryProvider<T>
+
+export type IRegistrar = {
+  register<T>(provider: Provider<T>): unknown
+  registerAll(providers: Provider<unknown>[]): unknown
+}

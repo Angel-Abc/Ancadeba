@@ -1,10 +1,10 @@
-import { Container } from '../ioc/container'
+import type { IRegistrar } from '../ioc/types'
 import { ConsoleLogger } from '../logger/console'
 import { loggerToken } from '../logger/tokens'
 import { MessageBus, messageBusDependencies } from '../messageBus/bus'
 import { messageBusToken } from '../messageBus/tokens'
 
-export function registerServices(container: Container): void {
+export function registerServices(container: IRegistrar): void {
   container.registerAll([
     {
       token: loggerToken,

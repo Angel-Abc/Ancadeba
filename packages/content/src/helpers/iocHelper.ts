@@ -1,4 +1,4 @@
-import { Container } from '@ancadeba/utils'
+import type { IRegistrar } from '@ancadeba/utils'
 import { resourceConfigurationToken } from '../configuration/tokens'
 import { ResourceConfiguration } from '../configuration/resourceConfiguration'
 import {
@@ -19,7 +19,7 @@ import {
 } from '../loaders/languageLoader'
 
 export function registerServices(
-  container: Container,
+  container: IRegistrar,
   resourcesDataPath: string,
 ): void {
   container.registerAll([

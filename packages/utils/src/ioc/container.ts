@@ -1,8 +1,14 @@
 import type { ILogger } from '../logger/types'
 import { describeToken, type Token } from './token'
-import type { IContainer, Provider, Scope, Dependency } from './types'
+import type {
+  IContainer,
+  IRegistrar,
+  Provider,
+  Scope,
+  Dependency,
+} from './types'
 
-export class Container implements IContainer {
+export class Container implements IContainer, IRegistrar {
   private static readonly logName: string = 'utils/ioc/container'
   private providers = new Map<Token<unknown>, Provider<unknown>[]>()
   private singletons = new WeakMap<Provider<unknown>, unknown>()

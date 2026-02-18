@@ -1,4 +1,4 @@
-import { Container } from '@ancadeba/utils'
+import type { IRegistrar } from '@ancadeba/utils'
 import {
   gameDefinitionProviderToken,
   languageDefinitionProviderToken,
@@ -37,7 +37,7 @@ import {
   translationProviderDependencies,
 } from '../providers/definition/translationProvider'
 
-export function registerServices(container: Container): void {
+export function registerServices(container: IRegistrar): void {
   container.registerAll([
     {
       token: gameDefinitionProviderToken,

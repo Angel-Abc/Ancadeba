@@ -1,3 +1,3 @@
 export interface IResourceConfiguration {
-  resourcePath: string
+  readonly resourcePath: string
 }
