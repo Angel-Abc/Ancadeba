@@ -5,7 +5,7 @@ import { Game, gameLoaderToken, IGameLoader } from '@ancadeba/content'
 export const gameDefinitionProviderDependencies: Token<unknown>[] = [
   gameLoaderToken,
 ]
-export class gameDefinitionProvider implements IGameDefinitionProvider {
+export class GameDefinitionProvider implements IGameDefinitionProvider {
   private game: Game | null = null
 
   constructor(private readonly gameLoader: IGameLoader) {}

@@ -13,7 +13,7 @@ export const surfaceDataStorageDependencies: Token<unknown>[] = [
   loggerToken,
   messageBusToken,
 ]
-export class surfaceDataStorage implements ISurfaceDataStorage {
+export class SurfaceDataStorage implements ISurfaceDataStorage {
   private _surfaceId: string | null = null
 
   constructor(

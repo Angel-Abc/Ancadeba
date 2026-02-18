@@ -7,12 +7,12 @@ import {
   widgetDefinitionProviderToken,
 } from '../providers/definition/tokens'
 import {
-  gameDefinitionProvider,
+  GameDefinitionProvider,
   gameDefinitionProviderDependencies,
 } from '../providers/definition/gameDefinitionProvider'
 import { surfaceDataStorageToken } from '../storage/data/tokens'
 import {
-  surfaceDataStorage,
+  SurfaceDataStorage,
   surfaceDataStorageDependencies,
 } from '../storage/data/surfaceDataStorage'
 import { surfaceDataProviderToken } from '../providers/data/tokens'
@@ -41,7 +41,7 @@ export function registerServices(container: Container): void {
   container.registerAll([
     {
       token: gameDefinitionProviderToken,
-      useClass: gameDefinitionProvider,
+      useClass: GameDefinitionProvider,
       deps: gameDefinitionProviderDependencies,
       scope: 'singleton',
     },
@@ -53,7 +53,7 @@ export function registerServices(container: Container): void {
     },
     {
       token: surfaceDataStorageToken,
-      useClass: surfaceDataStorage,
+      useClass: SurfaceDataStorage,
       deps: surfaceDataStorageDependencies,
       scope: 'singleton',
     },
