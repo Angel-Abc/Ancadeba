@@ -46,7 +46,7 @@ describe('content loaders', () => {
       language: 'en',
       surfaces: { boot: 'surfaces/boot.json' },
       widgets: { progress: 'widgets/progress.json' },
-      languages: { en: 'languages/en.json' },
+      languages: { en: ['languages/en.json'] },
     }
     const fetchMock = vi.fn(async () => ({
       ok: true,
