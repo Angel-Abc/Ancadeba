@@ -1,5 +1,10 @@
 import { token } from '@ancadeba/utils'
-import { IGameLoader, ISurfaceLoader, IWidgetLoader } from './types'
+import {
+  IGameLoader,
+  ILanguageLoader,
+  ISurfaceLoader,
+  IWidgetLoader,
+} from './types'
 
 export const gameLoaderToken = token<IGameLoader>('content/loaders/gameLoader')
 export const surfaceLoaderToken = token<ISurfaceLoader>(
@@ -8,6 +13,6 @@ export const surfaceLoaderToken = token<ISurfaceLoader>(
 export const widgetLoaderToken = token<IWidgetLoader>(
   'content/loaders/widgetLoader',
 )
-export const languageLoaderToken = token<IGameLoader>(
+export const languageLoaderToken = token<ILanguageLoader>(
   'content/loaders/languageLoader',
 )
