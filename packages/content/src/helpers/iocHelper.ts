@@ -3,6 +3,7 @@ import { resourceConfigurationToken } from '../configuration/tokens'
 import { ResourceConfiguration } from '../configuration/resourceConfiguration'
 import {
   gameLoaderToken,
+  languageLoaderToken,
   surfaceLoaderToken,
   widgetLoaderToken,
 } from '../loaders/tokens'
@@ -12,6 +13,10 @@ import {
   surfaceLoaderDependencies,
 } from '../loaders/surfaceLoader'
 import { WidgetLoader, widgetLoaderDependencies } from '../loaders/widgetLoader'
+import {
+  LanguageLoader,
+  languageLoaderDependencies,
+} from '../loaders/languageLoader'
 
 export function registerServices(
   container: Container,
@@ -40,6 +45,12 @@ export function registerServices(
       token: widgetLoaderToken,
       useClass: WidgetLoader,
       deps: widgetLoaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: languageLoaderToken,
+      useClass: LanguageLoader,
+      deps: languageLoaderDependencies,
       scope: 'singleton',
     },
   ])

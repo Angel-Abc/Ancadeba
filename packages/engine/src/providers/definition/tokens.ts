@@ -1,11 +1,17 @@
 import { token } from '@ancadeba/utils'
 
 export const gameDefinitionProviderToken = token(
-  'engine/definitionProviders/gameDefinitionProvider',
+  'engine/providers/definition/gameDefinitionProvider',
 )
 export const surfaceDefinitionProviderToken = token(
-  'engine/definitionProviders/surfaceDefinitionProvider',
+  'engine/providers/definition/surfaceDefinitionProvider',
 )
 export const widgetDefinitionProviderToken = token(
-  'engine/definitionProviders/widgetDefinitionProvider',
+  'engine/providers/definition/widgetDefinitionProvider',
+)
+export const languageDefinitionProviderToken = token(
+  'engine/providers/definition/languageDefinitionProvider',
+)
+export const translationProviderToken = token(
+  'engine/providers/definition/translationProvider',
 )

@@ -1,7 +1,9 @@
 import { Container } from '@ancadeba/utils'
 import {
   gameDefinitionProviderToken,
+  languageDefinitionProviderToken,
   surfaceDefinitionProviderToken,
+  translationProviderToken,
   widgetDefinitionProviderToken,
 } from '../providers/definition/tokens'
 import {
@@ -26,6 +28,14 @@ import {
   WidgetDefinitionProvider,
   widgetDefinitionProviderDependencies,
 } from '../providers/definition/widgetDefinitionProvider'
+import {
+  LanguageDefinitionProvider,
+  languageDefinitionProviderDependencies,
+} from '../providers/definition/languageDefinitionProvider'
+import {
+  TranslationProvider,
+  translationProviderDependencies,
+} from '../providers/definition/translationProvider'
 
 export function registerServices(container: Container): void {
   container.registerAll([
@@ -58,6 +68,18 @@ export function registerServices(container: Container): void {
       useClass: WidgetDefinitionProvider,
       deps: widgetDefinitionProviderDependencies,
       scope: 'singleton',
+    },
+    {
+      token: languageDefinitionProviderToken,
+      useClass: LanguageDefinitionProvider,
+      deps: languageDefinitionProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: translationProviderToken,
+      useClass: TranslationProvider,
+      deps: translationProviderDependencies,
+      scope: 'transient',
     },
   ])
 }

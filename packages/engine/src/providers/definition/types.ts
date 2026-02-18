@@ -9,3 +9,10 @@ export interface ISurfaceDefinitionProvider {
 export interface IWidgetDefinitionProvider {
   getWidgetDefinition(widgetId: string): Promise<Widget>
 }
+export interface ILanguageDefinitionProvider {
+  setLanguage(languageId: string): Promise<void>
+  getKeyValue(key: string): string
+}
+export interface ITranslationProvider {
+  getTranslation(key: string): string
+}

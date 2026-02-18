@@ -5,9 +5,13 @@ import { IUIReadySignal, uiReadySignalToken } from '../signals/UIReadySignal'
 import {
   gameDefinitionProviderToken,
   IGameDefinitionProvider,
+  ILanguageDefinitionProvider,
   ISurfaceDefinitionProvider,
+  ITranslationProvider,
   IWidgetDefinitionProvider,
+  languageDefinitionProviderToken,
   surfaceDefinitionProviderToken,
+  translationProviderToken,
   widgetDefinitionProviderToken,
 } from '@ancadeba/engine'
 
@@ -18,38 +22,25 @@ export interface IBootLoader {
 export const bootLoaderToken = token<IBootLoader>(
   'game-client/services/bootLoader',
 )
-export const bootLoaderDependencies: Record<string, Token<unknown>> = {
-  logger: loggerToken,
-  uiReadySignal: uiReadySignalToken,
-  gameDefinitionProvider: gameDefinitionProviderToken,
-  surfaceDefinitionProvider: surfaceDefinitionProviderToken,
-  widgetDefinitionProvider: widgetDefinitionProviderToken,
-}
+export const bootLoaderDependencies: Token<unknown>[] = [
+  loggerToken,
+  uiReadySignalToken,
+  gameDefinitionProviderToken,
+  surfaceDefinitionProviderToken,
+  widgetDefinitionProviderToken,
+  languageDefinitionProviderToken,
+  translationProviderToken,
+]
 export class BootLoader implements IBootLoader {
-  private readonly logger: ILogger
-  private readonly uiReadySignal: IUIReadySignal
-  private readonly gameDefinitionProvider: IGameDefinitionProvider
-  private readonly surfaceDefinitionProvider: ISurfaceDefinitionProvider
-  private readonly widgetDefinitionProvider: IWidgetDefinitionProvider
-  constructor({
-    logger,
-    uiReadySignal,
-    gameDefinitionProvider,
-    surfaceDefinitionProvider,
-    widgetDefinitionProvider,
-  }: {
-    logger: ILogger
-    uiReadySignal: IUIReadySignal
-    gameDefinitionProvider: IGameDefinitionProvider
-    surfaceDefinitionProvider: ISurfaceDefinitionProvider
-    widgetDefinitionProvider: IWidgetDefinitionProvider
-  }) {
-    this.logger = logger
-    this.uiReadySignal = uiReadySignal
-    this.gameDefinitionProvider = gameDefinitionProvider
-    this.surfaceDefinitionProvider = surfaceDefinitionProvider
-    this.widgetDefinitionProvider = widgetDefinitionProvider
-  }
+  constructor(
+    private readonly logger: ILogger,
+    private readonly uiReadySignal: IUIReadySignal,
+    private readonly gameDefinitionProvider: IGameDefinitionProvider,
+    private readonly surfaceDefinitionProvider: ISurfaceDefinitionProvider,
+    private readonly widgetDefinitionProvider: IWidgetDefinitionProvider,
+    private readonly languageDefinitionProvider: ILanguageDefinitionProvider,
+    private readonly translationProvider: ITranslationProvider,
+  ) {}
 
   async loadBootScreen(): Promise<void> {
     const gameData = await this.gameDefinitionProvider.getGameDefinition()
@@ -57,6 +48,10 @@ export class BootLoader implements IBootLoader {
       // no boot surface defined, skip boot surface rendering
       return
     }
+
+    await this.languageDefinitionProvider.setLanguage(gameData.language)
+    const title = this.translationProvider.getTranslation(gameData.title)
+    this.logger.info(bootLoaderToken, 'Loading game "{0}" ...', title)
 
     const bootSurface =
       await this.surfaceDefinitionProvider.getSurfaceDefinition(
