@@ -1,31 +1,32 @@
-import { ILogger, loggerToken, Token, token } from '@ancadeba/utils'
 import {
-  IWidgetDefinitionProvider,
   ISurfaceDefinitionProvider,
+  IWidgetDefinitionProvider,
+} from '../providers/definition/types'
+import {
   surfaceDefinitionProviderToken,
   widgetDefinitionProviderToken,
-} from '@ancadeba/engine'
+} from '../providers/definition/tokens'
+import { ISurfaceDataStorage } from '../storage/data/types'
+import { surfaceDataStorageToken } from '../storage/data/tokens'
+import { IBootstrapBootSurface } from './types'
+import { ILogger, loggerToken, Token } from '@ancadeba/utils'
 
-export interface IBootSurfacePreloader {
-  preload(bootSurfaceId: string): Promise<void>
-}
-
-export const bootSurfacePreloaderToken = token<IBootSurfacePreloader>(
-  'game-client/services/bootSurfacePreloader',
-)
-export const bootSurfacePreloaderDependencies: Token<unknown>[] = [
+export const bootstrapBootSurfaceDependencies: Token<unknown>[] = [
   loggerToken,
   surfaceDefinitionProviderToken,
   widgetDefinitionProviderToken,
+  surfaceDataStorageToken,
 ]
-export class BootSurfacePreloader implements IBootSurfacePreloader {
+
+export class BootstrapBootSurface implements IBootstrapBootSurface {
   constructor(
     private readonly logger: ILogger,
     private readonly surfaceDefinitionProvider: ISurfaceDefinitionProvider,
     private readonly widgetDefinitionProvider: IWidgetDefinitionProvider,
+    private readonly surfaceDataStorage: ISurfaceDataStorage,
   ) {}
 
-  async preload(bootSurfaceId: string): Promise<void> {
+  async execute(bootSurfaceId: string): Promise<void> {
     const bootSurface =
       await this.surfaceDefinitionProvider.getSurfaceDefinition(bootSurfaceId)
     const widgets = await Promise.all(
@@ -35,10 +36,12 @@ export class BootSurfacePreloader implements IBootSurfacePreloader {
     )
 
     this.logger.debug(
-      bootSurfacePreloaderToken,
+      'engine/bootstrap/bootstrapBootSurface',
       'Boot surface {0} loaded widgets {1}.',
       bootSurface,
       widgets,
     )
+
+    this.surfaceDataStorage.surfaceId = bootSurfaceId
   }
 }

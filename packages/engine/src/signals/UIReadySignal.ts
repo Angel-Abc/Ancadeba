@@ -6,7 +6,7 @@ export interface IUIReadySignal {
 }
 
 export const uiReadySignalToken = token<IUIReadySignal>(
-  'game-client/signals/UIReadySignal',
+  'engine/signals/UIReadySignal',
 )
 export class UIReadySignal implements IUIReadySignal {
   private _resolveReady!: () => void

@@ -36,6 +36,24 @@ import {
   TranslationProvider,
   translationProviderDependencies,
 } from '../providers/definition/translationProvider'
+import { bootstrapEngineToken } from '../bootstrap/tokens'
+import {
+  BootstrapEngine,
+  bootstrapEngineDependencies,
+} from '../bootstrap/bootstrapEngine'
+import {
+  bootstrapBootSurfaceToken,
+  bootstrapGameDefinitionToken,
+} from '../bootstrap/tokens'
+import {
+  BootstrapBootSurface,
+  bootstrapBootSurfaceDependencies,
+} from '../bootstrap/bootstrapBootSurface'
+import {
+  BootstrapGameDefinition,
+  bootstrapGameDefinitionDependencies,
+} from '../bootstrap/bootstrapGameDefinition'
+import { uiReadySignalToken, UIReadySignal } from '../signals/UIReadySignal'
 
 export function registerServices(container: IRegistrar): void {
   container.registerAll([
@@ -80,6 +98,30 @@ export function registerServices(container: IRegistrar): void {
       useClass: TranslationProvider,
       deps: translationProviderDependencies,
       scope: 'transient',
+    },
+    {
+      token: uiReadySignalToken,
+      useClass: UIReadySignal,
+      deps: [],
+      scope: 'singleton',
+    },
+    {
+      token: bootstrapGameDefinitionToken,
+      useClass: BootstrapGameDefinition,
+      deps: bootstrapGameDefinitionDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: bootstrapBootSurfaceToken,
+      useClass: BootstrapBootSurface,
+      deps: bootstrapBootSurfaceDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: bootstrapEngineToken,
+      useClass: BootstrapEngine,
+      deps: bootstrapEngineDependencies,
+      scope: 'singleton',
     },
   ])
 }

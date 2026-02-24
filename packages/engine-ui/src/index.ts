@@ -1,3 +1,5 @@
 export * from './helpers/iocHelper'
 export * from './registries/tokens'
 export * from './registries/types'
+export * from './visuals/Surface'
+export * from './visuals/Engine'

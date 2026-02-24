@@ -15,7 +15,9 @@
   "packageManager": "pnpm@10.26.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -23,7 +25,9 @@
     }
   },
   "dependencies": {
+    "@ancadeba/ui": "workspace:*",
     "@ancadeba/utils": "workspace:*",
+    "@ancadeba/engine": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

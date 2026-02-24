@@ -121,6 +121,12 @@ importers:
 
   packages/engine-ui:
     dependencies:
+      '@ancadeba/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@ancadeba/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@ancadeba/utils':
         specifier: workspace:*
         version: link:../utils
