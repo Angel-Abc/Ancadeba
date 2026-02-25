@@ -26,7 +26,3 @@ Before marking any code task as complete, ensure the following commands are run 
 - pnpm lint
 - pnpm build
 - pnpm test
-
-# ExecPlans
-
-When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.
