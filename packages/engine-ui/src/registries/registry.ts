@@ -3,6 +3,12 @@ import type { IRegistry } from './types'
 export class Registry<TComponent> implements IRegistry<TComponent> {
   private readonly registry: Map<string, TComponent> = new Map()
 
+  constructor(entries: Record<string, TComponent> = {}) {
+    for (const [id, component] of Object.entries(entries)) {
+      this.registry.set(id, component)
+    }
+  }
+
   register(id: string, component: TComponent): void {
     this.registry.set(id, component)
   }

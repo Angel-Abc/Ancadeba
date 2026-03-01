@@ -1,4 +1,8 @@
 import type { WidgetComponent } from './types'
 import { Registry } from './registry'
 
-export class WidgetRegistry extends Registry<WidgetComponent> {}
+export class WidgetRegistry extends Registry<WidgetComponent> {
+  constructor(entries: Record<string, WidgetComponent> = {}) {
+    super(entries)
+  }
+}
