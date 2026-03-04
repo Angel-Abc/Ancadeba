@@ -5,19 +5,7 @@ import { widgetRegistryToken, layoutRegistryToken } from '../registries/tokens'
 import { LayoutComponent, WidgetComponent } from '../registries/types'
 
 export function registerServices(container: IRegistrar): void {
-  container.register({
-    token: widgetRegistryToken,
-    useClass: WidgetRegistry,
-    deps: [],
-    scope: 'singleton',
-  })
-
-  container.register({
-    token: layoutRegistryToken,
-    useClass: LayoutRegistry,
-    deps: [],
-    scope: 'singleton',
-  })
+  container.registerAll([])
 }
 
 export function registerWidgetsRegistry(

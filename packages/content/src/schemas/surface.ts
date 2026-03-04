@@ -19,10 +19,13 @@ export const gridLayoutSchema = z.object({
   widgets: z.array(gridLayoutWidgetSchema),
 })
 
+export const layoutSchema = z.discriminatedUnion('type', [gridLayoutSchema])
+
 export const surfaceSchema = z.object({
   surfaceId: z.string(),
   requires: z.array(z.string()),
-  layout: gridLayoutSchema,
+  layout: layoutSchema,
 })
 
 export type Surface = z.infer<typeof surfaceSchema>
+export type Layout = z.infer<typeof layoutSchema>

@@ -1,3 +1,4 @@
+import { Layout } from '@ancadeba/content'
 import type { ComponentType } from 'react'
 
 export interface WidgetProps {
@@ -7,7 +8,7 @@ export interface WidgetProps {
 export type WidgetComponent = ComponentType<WidgetProps>
 
 export interface LayoutProps {
-  layoutType: string
+  layout: Layout
 }
 
 export type LayoutComponent = ComponentType<LayoutProps>
