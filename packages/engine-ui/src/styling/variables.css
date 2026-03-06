@@ -1,0 +1,11 @@
+:root {
+  /* Create a responsive unit system based on the smaller dimension of the viewport */
+  --ge-min-root-size: min(100vw, 100vh);
+  --ge-unit-size: calc(0.001 * var(--ge-min-root-size));
+
+  --ge-font-family: 'Arial', sans-serif;
+  --ge-font-color: oklch(0.819 0.1135 65.12);
+  --ge-font-size: calc(20 * var(--ge-unit-size));
+
+  --ge-background-color: oklch(0 0 0);
+}

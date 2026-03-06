@@ -1,0 +1,25 @@
+@import './reset.css';
+@import './variables.css';
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-size: var(--ge-font-size);
+  font-family: var(--ge-font-family);
+  color: var(--ge-font-color);
+  background-color: var(--ge-background-color);
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.layout-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(var(--ge-grid-width));
+  grid-template-rows: repeat(var(--ge-grid-height));
+}

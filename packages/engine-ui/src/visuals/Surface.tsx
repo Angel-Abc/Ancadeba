@@ -85,11 +85,7 @@ const SurfaceVisual = (): React.JSX.Element => {
     return <div>Loading...</div>
   }
 
-  return (
-    <div>
-      <Layout layout={surface.layout} />
-    </div>
-  )
+  return <Layout layout={surface.layout} />
 }
 
 export { SurfaceVisual as Surface }

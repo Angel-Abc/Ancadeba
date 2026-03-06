@@ -8,6 +8,7 @@ import { useService } from '@ancadeba/ui'
 import { IMessageBus, messageBusToken } from '@ancadeba/utils'
 import { useEffect, useState } from 'react'
 import { Surface } from './Surface'
+import '../styling/engine.css'
 
 export function Engine(): React.JSX.Element {
   const uiSignalReady = useService<IUIReadySignal>(uiReadySignalToken)
