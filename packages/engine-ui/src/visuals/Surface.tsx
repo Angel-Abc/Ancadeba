@@ -81,10 +81,6 @@ const SurfaceVisual = (): React.JSX.Element => {
     return <div>Layout {surface.layout.type} not found</div>
   }
 
-  if (!surface) {
-    return <div>Loading...</div>
-  }
-
   return <Layout layout={surface.layout} />
 }
 
