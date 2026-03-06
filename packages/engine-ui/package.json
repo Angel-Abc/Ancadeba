@@ -25,15 +25,16 @@
     }
   },
   "dependencies": {
+    "@ancadeba/content": "workspace:*",
+    "@ancadeba/engine": "workspace:*",
     "@ancadeba/ui": "workspace:*",
     "@ancadeba/utils": "workspace:*",
-    "@ancadeba/engine": "workspace:*",
-    "@ancadeba/content": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "classnames": "^2.5.1"
   }
 }

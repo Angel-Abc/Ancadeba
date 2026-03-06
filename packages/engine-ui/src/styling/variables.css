@@ -8,4 +8,9 @@
   --ge-font-size: calc(20 * var(--ge-unit-size));
 
   --ge-background-color: oklch(0 0 0);
+
+  /* Grid layout defaults */
+  --ge-layout-grid-border: 5;
+  --ge-layout-grid-padding: 5;
+  --ge-layout-grid-margin: 5;
 }

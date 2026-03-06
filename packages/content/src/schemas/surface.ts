@@ -10,6 +10,7 @@ export const gridLayoutWidgetSchema = z.object({
     width: z.number().min(1),
     height: z.number().min(1),
   }),
+  border: z.boolean().optional().default(true),
 })
 
 export const gridLayoutSchema = z.object({

@@ -9,13 +9,14 @@
       {
         "widgetId": "boot-progress",
         "position": {
-          "row": 4,
-          "column": 4
+          "column": 4,
+          "row": 7
         },
         "size": {
           "width": 8,
-          "height": 8
-        }
+          "height": 2
+        },
+        "border": false
       }
     ]
   }

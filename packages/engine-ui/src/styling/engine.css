@@ -20,6 +20,40 @@ body {
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template-columns: repeat(var(--ge-grid-width));
-  grid-template-rows: repeat(var(--ge-grid-height));
+  grid-template-columns: repeat(var(--ge-grid-width), 1fr);
+  grid-template-rows: repeat(var(--ge-grid-height), 1fr);
+
+  & .grid-item {
+    --border-size: calc(var(--ge-layout-grid-border) * var(--ge-unit-size));
+    --padding-size: calc(var(--ge-layout-grid-padding) * var(--ge-unit-size));
+    --margin-size: calc(var(--ge-layout-grid-margin) * var(--ge-unit-size));
+    --border-radius: calc(var(--border-size) + var(--padding-size));
+    --outer-width: calc(
+      100vw / var(--ge-grid-width) * var(--ge-grid-item-width)
+    );
+    --outer-height: calc(
+      100vh / var(--ge-grid-height) * var(--ge-grid-item-height)
+    );
+    --client-width: calc(
+      var(--outer-width) - var(--border-size) * 2 - var(--padding-size) * 2 -
+        var(--margin-size) * 2
+    );
+    --client-height: calc(
+      var(--outer-height) - var(--border-size) * 2 - var(--padding-size) * 2 -
+        var(--margin-size) * 2
+    );
+
+    display: grid;
+    grid-column: var(--ge-grid-item-x) / span var(--ge-grid-item-width);
+    grid-row: var(--ge-grid-item-y) / span var(--ge-grid-item-height);
+    padding: var(--padding-size);
+    margin: var(--margin-size);
+  }
+
+  & .grid-item-bordered {
+    border-style: solid;
+    border-color: var(--ge-font-color);
+    border-radius: var(--border-radius);
+    border-width: var(--border-size);
+  }
 }
