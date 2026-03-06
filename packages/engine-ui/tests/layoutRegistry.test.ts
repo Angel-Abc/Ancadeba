@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { GridLayout } from '@ancadeba/content'
 import { Container, loggerToken, type ILogger } from '@ancadeba/utils'
+import { createElement } from 'react'
 import { registerServices } from '../src/helpers/iocHelper'
 import { LayoutRegistry } from '../src/registries/layoutRegistry'
 import { layoutRegistryToken } from '../src/registries/tokens'
@@ -18,7 +20,7 @@ describe('engine-ui layout registry', () => {
   it('registers and resolves components by layout type', () => {
     // Arrange
     const registry = new LayoutRegistry()
-    const component: LayoutComponent = () => null
+    const component: LayoutComponent<'grid'> = () => null
 
     // Act
     registry.register('grid', component)
@@ -32,7 +34,7 @@ describe('engine-ui layout registry', () => {
   it('resets registered layouts to support lifecycle boundaries', () => {
     // Arrange
     const registry = new LayoutRegistry()
-    const component: LayoutComponent = () => null
+    const component: LayoutComponent<'grid'> = () => null
     registry.register('grid', component)
 
     // Act
@@ -41,6 +43,27 @@ describe('engine-ui layout registry', () => {
     // Assert
     expect(registry.get('grid')).toBeUndefined()
     expect(registry.has('grid')).toBe(false)
+  })
+
+  it('renders the registered component with the matching layout data', () => {
+    // Arrange
+    const registry = new LayoutRegistry()
+    const component: LayoutComponent<'grid'> = ({ layout }) => (
+      createElement('div', null, `${layout.rows}x${layout.columns}`)
+    )
+    const layout: GridLayout = {
+      type: 'grid',
+      rows: 2,
+      columns: 3,
+      widgets: [],
+    }
+    registry.register('grid', component)
+
+    // Act
+    const rendered = registry.render(layout)
+
+    // Assert
+    expect(rendered).not.toBeNull()
   })
 
   it('registers the registry service as a singleton in IoC wiring', () => {

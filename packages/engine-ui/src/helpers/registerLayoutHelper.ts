@@ -1,6 +1,6 @@
-import { LayoutComponent } from '../registries/types'
+import type { LayoutComponentMap } from '../registries/types'
 import { GridLayout } from '../visuals/layouts/GridLayout'
 
-export const knownLayouts: Record<string, LayoutComponent> = {
+export const knownLayouts: LayoutComponentMap = {
   grid: GridLayout,
 }

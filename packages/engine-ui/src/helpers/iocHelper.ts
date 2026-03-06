@@ -2,7 +2,10 @@ import type { IRegistrar } from '@ancadeba/utils'
 import { WidgetRegistry } from '../registries/widgetRegistry'
 import { LayoutRegistry } from '../registries/layoutRegistry'
 import { widgetRegistryToken, layoutRegistryToken } from '../registries/tokens'
-import type { LayoutComponent, WidgetComponent } from '../registries/types'
+import type {
+  LayoutRegistryEntries,
+  WidgetRegistryEntries,
+} from '../registries/types'
 import { knownWidgets } from './registerWidgetHelper'
 import { knownLayouts } from './registerLayoutHelper'
 
@@ -13,7 +16,7 @@ export function registerServices(container: IRegistrar): void {
 
 export function registerWidgetsRegistry(
   container: IRegistrar,
-  widgets: Record<string, WidgetComponent>,
+  widgets: WidgetRegistryEntries,
 ): void {
   container.register({
     token: widgetRegistryToken,
@@ -27,7 +30,7 @@ export function registerWidgetsRegistry(
 
 export function registerLayoutsRegistry(
   container: IRegistrar,
-  layouts: Record<string, LayoutComponent>,
+  layouts: LayoutRegistryEntries,
 ): void {
   container.register({
     token: layoutRegistryToken,

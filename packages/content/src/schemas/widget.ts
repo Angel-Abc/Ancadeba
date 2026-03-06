@@ -11,4 +11,9 @@ export const progressWidgetSchema = baseWidgetSchema.extend({
 
 export const widgetSchema = z.discriminatedUnion('type', [progressWidgetSchema])
 
-export type Widget = z.infer<typeof widgetSchema>
+export type ProgressWidget = z.infer<typeof progressWidgetSchema>
+export interface WidgetByType {
+  progress: ProgressWidget
+}
+export type WidgetType = keyof WidgetByType
+export type Widget = WidgetByType[WidgetType]

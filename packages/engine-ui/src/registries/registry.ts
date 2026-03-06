@@ -1,23 +1,28 @@
 import type { IRegistry } from './types'
 
-export class Registry<TComponent> implements IRegistry<TComponent> {
-  private readonly registry: Map<string, TComponent> = new Map()
+export class Registry<TKey extends string, TComponent>
+  implements IRegistry<TKey, TComponent>
+{
+  private readonly registry: Map<TKey, TComponent> = new Map()
 
-  constructor(entries: Record<string, TComponent> = {}) {
-    for (const [id, component] of Object.entries(entries)) {
+  constructor(entries: Partial<Record<TKey, TComponent>> = {}) {
+    for (const [id, component] of Object.entries(entries) as [
+      TKey,
+      TComponent,
+    ][]) {
       this.registry.set(id, component)
     }
   }
 
-  register(id: string, component: TComponent): void {
+  register(id: TKey, component: TComponent): void {
     this.registry.set(id, component)
   }
 
-  get(id: string): TComponent | undefined {
+  get(id: TKey): TComponent | undefined {
     return this.registry.get(id)
   }
 
-  has(id: string): boolean {
+  has(id: TKey): boolean {
     return this.registry.has(id)
   }
 

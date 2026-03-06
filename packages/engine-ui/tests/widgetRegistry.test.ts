@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { Widget } from '@ancadeba/content'
 import { Container, loggerToken, type ILogger } from '@ancadeba/utils'
+import { createElement } from 'react'
 import { registerServices } from '../src/helpers/iocHelper'
 import { WidgetRegistry } from '../src/registries/widgetRegistry'
 import { widgetRegistryToken } from '../src/registries/tokens'
@@ -15,10 +17,10 @@ function createLogger(): ILogger {
 }
 
 describe('engine-ui widget registry', () => {
-  it('registers and resolves components by widget ID', () => {
+  it('registers and resolves components by widget type', () => {
     // Arrange
     const registry = new WidgetRegistry()
-    const component: WidgetComponent = () => null
+    const component: WidgetComponent<'progress'> = () => null
 
     // Act
     registry.register('progress', component)
@@ -32,7 +34,7 @@ describe('engine-ui widget registry', () => {
   it('resets registered widgets to support lifecycle boundaries', () => {
     // Arrange
     const registry = new WidgetRegistry()
-    const component: WidgetComponent = () => null
+    const component: WidgetComponent<'progress'> = () => null
     registry.register('progress', component)
 
     // Act
@@ -41,6 +43,25 @@ describe('engine-ui widget registry', () => {
     // Assert
     expect(registry.get('progress')).toBeUndefined()
     expect(registry.has('progress')).toBe(false)
+  })
+
+  it('renders the registered component with the matching widget data', () => {
+    // Arrange
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent<'progress'> = ({ widget }) =>
+      createElement('div', null, widget.widgetId)
+    const widget: Widget = {
+      widgetId: 'boot-progress',
+      type: 'progress',
+      requires: [],
+    }
+    registry.register('progress', component)
+
+    // Act
+    const rendered = registry.render(widget)
+
+    // Assert
+    expect(rendered).not.toBeNull()
   })
 
   it('registers the registry service as a singleton in IoC wiring', () => {

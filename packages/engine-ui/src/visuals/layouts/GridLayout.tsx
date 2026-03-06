@@ -1,8 +1,12 @@
+import type { Layout } from '@ancadeba/content'
 import { CSSCustomProperties } from '@ancadeba/ui'
-import { LayoutProps } from '../../registries/types'
+import type { LayoutProps } from '../../registries/types'
 import classNames from 'classnames'
+import { WidgetSlot } from '../widgets/WidgetSlot'
 
-export const GridLayout: React.FC<LayoutProps> = ({
+type GridLayoutData = Extract<Layout, { type: 'grid' }>
+
+export const GridLayout: React.FC<LayoutProps<GridLayoutData>> = ({
   layout,
 }): React.JSX.Element => {
   const style: CSSCustomProperties = {
@@ -31,7 +35,7 @@ export const GridLayout: React.FC<LayoutProps> = ({
               widget.border ? 'grid-item-bordered' : '',
             )}
           >
-            {widget.widgetId}
+            <WidgetSlot widgetId={widget.widgetId} />
           </div>
         )
       })}

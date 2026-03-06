@@ -76,12 +76,12 @@ const SurfaceVisual = (): React.JSX.Element => {
     return <div>Loading surface...</div>
   }
 
-  const Layout = layoutRegistry.get(surface.layout.type)
-  if (!Layout) {
+  const layout = layoutRegistry.render(surface.layout)
+  if (!layout) {
     return <div>Layout {surface.layout.type} not found</div>
   }
 
-  return <Layout layout={surface.layout} />
+  return layout
 }
 
 export { SurfaceVisual as Surface }

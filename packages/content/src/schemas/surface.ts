@@ -28,5 +28,11 @@ export const surfaceSchema = z.object({
   layout: layoutSchema,
 })
 
+export type GridLayoutWidget = z.infer<typeof gridLayoutWidgetSchema>
+export type GridLayout = z.infer<typeof gridLayoutSchema>
+export interface LayoutByType {
+  grid: GridLayout
+}
+export type LayoutType = keyof LayoutByType
 export type Surface = z.infer<typeof surfaceSchema>
-export type Layout = z.infer<typeof layoutSchema>
+export type Layout = LayoutByType[LayoutType]

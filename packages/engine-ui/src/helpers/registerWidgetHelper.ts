@@ -1,3 +1,6 @@
-import { WidgetComponent } from '../registries/types'
+import type { WidgetComponentMap } from '../registries/types'
+import { ProgressWidget } from '../visuals/widgets/ProgressWidget'
 
-export const knownWidgets: Record<string, WidgetComponent> = {}
+export const knownWidgets: WidgetComponentMap = {
+  progress: ProgressWidget,
+}
