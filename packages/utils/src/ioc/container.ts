@@ -16,7 +16,7 @@ type ProviderHandler = (p: Provider<unknown>, container: Container) => unknown
 export class Container implements IContainer, IRegistrar {
   private static readonly logName: string = 'utils/ioc/container'
 
-  private static readonly strategies: ReadonlyMap<string, ProviderHandler> =
+  protected static readonly strategies: ReadonlyMap<string, ProviderHandler> =
     new Map<string, ProviderHandler>([
       ['useValue', (p) => (p as ValueProvider<unknown>).useValue],
       [
