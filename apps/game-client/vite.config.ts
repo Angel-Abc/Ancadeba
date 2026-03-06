@@ -70,6 +70,7 @@ export default defineConfig(({ mode }) => {
               ) {
                 const ext = path.extname(resolvedPath).toLowerCase()
                 const mimeTypes: Record<string, string> = {
+                  '.css': 'text/css',
                   '.json': 'application/json',
                   '.png': 'image/png',
                   '.jpg': 'image/jpeg',

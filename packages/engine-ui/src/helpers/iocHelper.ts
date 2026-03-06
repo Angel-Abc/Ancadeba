@@ -2,10 +2,13 @@ import type { IRegistrar } from '@ancadeba/utils'
 import { WidgetRegistry } from '../registries/widgetRegistry'
 import { LayoutRegistry } from '../registries/layoutRegistry'
 import { widgetRegistryToken, layoutRegistryToken } from '../registries/tokens'
-import { LayoutComponent, WidgetComponent } from '../registries/types'
+import type { LayoutComponent, WidgetComponent } from '../registries/types'
+import { knownWidgets } from './registerWidgetHelper'
+import { knownLayouts } from './registerLayoutHelper'
 
 export function registerServices(container: IRegistrar): void {
-  container.registerAll([])
+  registerWidgetsRegistry(container, knownWidgets)
+  registerLayoutsRegistry(container, knownLayouts)
 }
 
 export function registerWidgetsRegistry(

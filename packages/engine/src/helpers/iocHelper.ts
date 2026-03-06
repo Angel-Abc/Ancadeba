@@ -54,6 +54,11 @@ import {
   bootstrapGameDefinitionDependencies,
 } from '../bootstrap/bootstrapGameDefinition'
 import { uiReadySignalToken, UIReadySignal } from '../signals/UIReadySignal'
+import {
+  GameStyleLoader,
+  gameStyleLoaderDependencies,
+} from '../styling/gameStyleLoader'
+import { gameStyleLoaderToken } from '../styling/tokens'
 
 export function registerServices(container: IRegistrar): void {
   container.registerAll([
@@ -98,6 +103,12 @@ export function registerServices(container: IRegistrar): void {
       useClass: TranslationProvider,
       deps: translationProviderDependencies,
       scope: 'transient',
+    },
+    {
+      token: gameStyleLoaderToken,
+      useClass: GameStyleLoader,
+      deps: gameStyleLoaderDependencies,
+      scope: 'singleton',
     },
     {
       token: uiReadySignalToken,

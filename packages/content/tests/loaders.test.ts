@@ -44,6 +44,7 @@ describe('content loaders', () => {
       version: '1.0.0',
       bootSurfaceId: 'boot',
       language: 'en',
+      styles: ['styles/theme.css'],
       surfaces: { boot: 'surfaces/boot.json' },
       widgets: { progress: 'widgets/progress.json' },
       languages: { en: ['languages/en.json'] },
@@ -61,6 +62,38 @@ describe('content loaders', () => {
     // Assert
     expect(fetchMock).toHaveBeenCalledWith('/resources/game.json')
     expect(result).toEqual(game)
+  })
+
+  it('throws when the game JSON does not match the schema', async () => {
+    // Arrange
+    const { logger, errorMock } = createLoggerMocks()
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        title: 'Test Game',
+        version: '1.0.0',
+        bootSurfaceId: 'boot',
+        language: 'en',
+        styles: 'styles/theme.css',
+        surfaces: { boot: 'surfaces/boot.json' },
+        widgets: { progress: 'widgets/progress.json' },
+        languages: { en: ['languages/en.json'] },
+      }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new GameLoader(logger, resourceConfiguration)
+
+    // Act
+    const resultPromise = loader.loadGame()
+
+    // Assert
+    await expect(resultPromise).rejects.toThrow('error')
+    expect(errorMock).toHaveBeenCalledWith(
+      'utils/utils/loadJsonResource',
+      'Schema validation failed for resource {0} with error {1}',
+      '/resources/game.json',
+      expect.any(String),
+    )
   })
 
   it('throws when the surface file cannot be fetched', async () => {

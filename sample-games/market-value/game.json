@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "bootSurfaceId": "boot-loader",
   "language": "en",
+  "styles": ["styles/theme.css"],
   "surfaces": {
     "boot-loader": "surfaces/boot-loader.json"
   },

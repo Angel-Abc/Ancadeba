@@ -1,0 +1,17 @@
+:root {
+  --ge-font-family: 'Trebuchet MS', sans-serif;
+  --ge-font-color: oklch(0.95 0.06 95);
+  --ge-font-size: calc(22 * var(--ge-unit-size));
+  --ge-background-color: oklch(0.22 0.03 240);
+}
+
+body {
+  background:
+    radial-gradient(circle at top, oklch(0.38 0.08 225), transparent 45%),
+    linear-gradient(180deg, oklch(0.3 0.04 245), oklch(0.16 0.02 240));
+}
+
+.layout-grid {
+  padding: calc(16 * var(--ge-unit-size));
+  box-sizing: border-box;
+}
