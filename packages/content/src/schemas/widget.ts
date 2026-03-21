@@ -6,6 +6,7 @@ const baseWidgetSchema = z.object({
 })
 
 export const progressWidgetSchema = baseWidgetSchema.extend({
+  showPercentage: z.boolean().optional().default(false),
   type: z.literal('progress'),
 })
 

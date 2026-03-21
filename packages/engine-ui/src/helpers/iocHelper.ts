@@ -32,6 +32,7 @@ export function registerLayoutsRegistry(
   container: IRegistrar,
   layouts: LayoutRegistryEntries,
 ): void {
+  console.log('Registering layouts:', Object.keys(layouts))
   container.register({
     token: layoutRegistryToken,
     useFactory: () => {
