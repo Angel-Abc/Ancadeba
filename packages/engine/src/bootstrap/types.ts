@@ -11,3 +11,7 @@ export interface IBootstrapBootSurface {
 export interface IBootstrapGameDefinition {
   execute(gameData: Game): Promise<void>
 }
+
+export interface IBootstrapGameData {
+  execute(gameData: Game): Promise<void>
+}

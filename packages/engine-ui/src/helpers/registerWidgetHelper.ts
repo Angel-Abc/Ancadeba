@@ -1,6 +1,6 @@
-import type { WidgetComponentMap } from '../registries/types'
+import type { WidgetRegistryEntries } from '../registries/types'
 import { ProgressWidget } from '../visuals/widgets/ProgressWidget'
 
-export const knownWidgets: WidgetComponentMap = {
+export const knownWidgets: WidgetRegistryEntries = {
   progress: ProgressWidget,
 }

@@ -1,6 +1,5 @@
 {
   "surfaceId": "boot-loader",
-  "requires": ["TODO"],
   "layout": {
     "type": "grid",
     "rows": 16,

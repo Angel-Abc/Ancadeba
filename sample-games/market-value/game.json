@@ -3,6 +3,7 @@
   "description": "GAME.DESCRIPTION",
   "version": "1.0.0",
   "bootSurfaceId": "boot-loader",
+  "startSurfaceId": "main-menu",
   "language": "en",
   "styles": ["styles/themeX.css"],
   "surfaces": {

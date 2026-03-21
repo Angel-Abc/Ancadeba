@@ -5,10 +5,12 @@ import { gameDefinitionProviderToken } from '../providers/definition/tokens'
 import {
   IBootstrapBootSurface,
   IBootstrapEngine,
+  IBootstrapGameData,
   IBootstrapGameDefinition,
 } from './types'
 import {
   bootstrapBootSurfaceToken,
+  bootstrapGameDataToken,
   bootstrapGameDefinitionToken,
 } from './tokens'
 import { MESSAGE_ENGINE_BOOT_SURFACE_PRELOADED } from './messages'
@@ -18,6 +20,7 @@ export const bootstrapEngineDependencies: Token<unknown>[] = [
   gameDefinitionProviderToken,
   bootstrapGameDefinitionToken,
   bootstrapBootSurfaceToken,
+  bootstrapGameDataToken,
   messageBusToken,
 ]
 export class BootstrapEngine implements IBootstrapEngine {
@@ -26,6 +29,7 @@ export class BootstrapEngine implements IBootstrapEngine {
     private readonly gameDefinitionProvider: IGameDefinitionProvider,
     private readonly bootstrapGameDefinition: IBootstrapGameDefinition,
     private readonly bootstrapBootSurface: IBootstrapBootSurface,
+    private readonly bootstrapGameData: IBootstrapGameData,
     private readonly messageBus: IMessageBus,
   ) {}
 
@@ -40,5 +44,9 @@ export class BootstrapEngine implements IBootstrapEngine {
 
     await this.uiReadySignal.ready
     this.messageBus.publish(MESSAGE_ENGINE_BOOT_SURFACE_PRELOADED)
+
+    await this.bootstrapGameData.execute(gameData)
+
+    // TODO: switch to the first game surface after preLoad is done. This is normally the menu screen.
   }
 }
