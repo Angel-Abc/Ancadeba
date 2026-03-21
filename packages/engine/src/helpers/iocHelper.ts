@@ -36,7 +36,10 @@ import {
   TranslationProvider,
   translationProviderDependencies,
 } from '../providers/definition/translationProvider'
-import { bootstrapEngineToken } from '../bootstrap/tokens'
+import {
+  bootstrapEngineToken,
+  bootstrapGameDataToken,
+} from '../bootstrap/tokens'
 import {
   BootstrapEngine,
   bootstrapEngineDependencies,
@@ -59,6 +62,10 @@ import {
   gameStyleLoaderDependencies,
 } from '../styling/gameStyleLoader'
 import { gameStyleLoaderToken } from '../styling/tokens'
+import {
+  BootstrapGameData,
+  bootstrapGameDataDependencies,
+} from '../bootstrap/bootstrapGameData'
 
 export function registerServices(container: IRegistrar): void {
   container.registerAll([
@@ -132,6 +139,12 @@ export function registerServices(container: IRegistrar): void {
       token: bootstrapEngineToken,
       useClass: BootstrapEngine,
       deps: bootstrapEngineDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: bootstrapGameDataToken,
+      useClass: BootstrapGameData,
+      deps: bootstrapGameDataDependencies,
       scope: 'singleton',
     },
   ])

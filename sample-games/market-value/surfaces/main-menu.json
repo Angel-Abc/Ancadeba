@@ -1,0 +1,57 @@
+{
+  "surfaceId": "main-menu",
+  "layout": {
+    "type": "grid",
+    "rows": 16,
+    "columns": 16,
+    "widgets": [
+      {
+        "widgetId": "title",
+        "position": {
+          "column": 0,
+          "row": 0
+        },
+        "size": {
+          "width": 16,
+          "height": 2
+        },
+        "border": false,
+        "title": "GAME.TITLE"
+      },
+      {
+        "widgetId": "button-bar",
+        "position": {
+          "column": 6,
+          "row": 7
+        },
+        "size": {
+          "width": 4,
+          "height": 2
+        },
+        "border": true,
+        "buttons": [
+          {
+            "label": "Start Game",
+            "action": {
+              "type": "navigate",
+              "targetSurfaceId": "game-surface"
+            }
+          },
+          {
+            "label": "Options",
+            "action": {
+              "type": "navigate",
+              "targetSurfaceId": "options-surface"
+            }
+          },
+          {
+            "label": "Exit",
+            "action": {
+              "type": "exit"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
