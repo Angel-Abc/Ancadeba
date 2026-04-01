@@ -5,6 +5,7 @@ export const gameSchema = z.object({
   description: z.string().optional(),
   version: z.string(),
   bootSurfaceId: z.string(),
+  startSurfaceId: z.string().optional(),
   language: z.string(),
   styles: z.array(z.string()).optional(),
   languages: z.record(z.string(), z.array(z.string())),

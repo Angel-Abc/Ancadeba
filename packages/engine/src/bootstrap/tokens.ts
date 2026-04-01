@@ -2,6 +2,7 @@ import { token } from '@ancadeba/utils'
 import {
   IBootstrapBootSurface,
   IBootstrapEngine,
+  IBootstrapFinalizer,
   IBootstrapGameData,
   IBootstrapGameDefinition,
 } from './types'
@@ -17,4 +18,7 @@ export const bootstrapGameDefinitionToken = token<IBootstrapGameDefinition>(
 )
 export const bootstrapGameDataToken = token<IBootstrapGameData>(
   'engine/bootstrap/gameData',
+)
+export const bootstrapFinalizerToken = token<IBootstrapFinalizer>(
+  'engine/bootstrap/finalizer',
 )

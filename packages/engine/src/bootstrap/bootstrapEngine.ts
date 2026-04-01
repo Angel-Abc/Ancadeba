@@ -5,11 +5,13 @@ import { gameDefinitionProviderToken } from '../providers/definition/tokens'
 import {
   IBootstrapBootSurface,
   IBootstrapEngine,
+  IBootstrapFinalizer,
   IBootstrapGameData,
   IBootstrapGameDefinition,
 } from './types'
 import {
   bootstrapBootSurfaceToken,
+  bootstrapFinalizerToken,
   bootstrapGameDataToken,
   bootstrapGameDefinitionToken,
 } from './tokens'
@@ -24,6 +26,7 @@ export const bootstrapEngineDependencies: Token<unknown>[] = [
   bootstrapGameDefinitionToken,
   bootstrapBootSurfaceToken,
   bootstrapGameDataToken,
+  bootstrapFinalizerToken,
   messageBusToken,
 ]
 export class BootstrapEngine implements IBootstrapEngine {
@@ -33,6 +36,7 @@ export class BootstrapEngine implements IBootstrapEngine {
     private readonly bootstrapGameDefinition: IBootstrapGameDefinition,
     private readonly bootstrapBootSurface: IBootstrapBootSurface,
     private readonly bootstrapGameData: IBootstrapGameData,
+    private readonly bootstrapFinalizer: IBootstrapFinalizer,
     private readonly messageBus: IMessageBus,
   ) {}
 
@@ -48,19 +52,19 @@ export class BootstrapEngine implements IBootstrapEngine {
     await this.uiReadySignal.ready
     this.messageBus.publish(MESSAGE_ENGINE_BOOT_SURFACE_PRELOADED)
 
-    // TODO: switch to the first game surface after preLoad is done. This is normally the menu screen.
     this.messageBus.publish(MESSAGE_ENGINE_PROGRESS, {
       message: 'GAME.PROGRESS.LOADING',
       progress: 10,
     })
 
-    // we can continue with the rest of the boot process, but for now we just want to show the progress widget working
+    // we can continue with the rest of the boot process
     await this.bootstrapGameData.execute(gameData)
 
-    // Simulate some loading time for the progress widget to show the progress
     this.messageBus.publish(MESSAGE_ENGINE_PROGRESS, {
       message: 'GAME.PROGRESS.LOADING',
       progress: 100,
     })
+
+    await this.bootstrapFinalizer.execute(gameData)
   }
 }

@@ -21,11 +21,11 @@
         "widgetId": "main-button-bar",
         "position": {
           "column": 6,
-          "row": 7
+          "row": 3
         },
         "size": {
           "width": 4,
-          "height": 2
+          "height": 8
         },
         "border": true
       }

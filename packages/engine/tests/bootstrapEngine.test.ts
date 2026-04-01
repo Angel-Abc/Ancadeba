@@ -5,6 +5,7 @@ import type { IUIReadySignal } from '../src/signals/UIReadySignal'
 import type { IGameDefinitionProvider } from '../src/providers/definition/types'
 import type {
   IBootstrapBootSurface,
+  IBootstrapFinalizer,
   IBootstrapGameData,
   IBootstrapGameDefinition,
 } from '../src/bootstrap/types'
@@ -32,6 +33,7 @@ describe('bootstrap engine', () => {
       title: 'GAME.TITLE',
       version: '1.0.0',
       bootSurfaceId: 'boot-loader',
+      startSurfaceId: 'main-menu',
       language: 'en',
       styles: ['styles/theme.css'],
       surfaces: { 'boot-loader': 'surfaces/boot-loader.json' },
@@ -56,6 +58,9 @@ describe('bootstrap engine', () => {
     const bootstrapGameData: IBootstrapGameData = {
       execute: vi.fn(async () => undefined),
     }
+    const bootstrapFinalizer: IBootstrapFinalizer = {
+      execute: vi.fn(async () => undefined),
+    }
     const messageBus = createMessageBus()
     const bootstrapEngine = new BootstrapEngine(
       createReadySignal(),
@@ -63,6 +68,7 @@ describe('bootstrap engine', () => {
       bootstrapGameDefinition,
       bootstrapBootSurface,
       bootstrapGameData,
+      bootstrapFinalizer,
       messageBus,
     )
 
@@ -81,6 +87,7 @@ describe('bootstrap engine', () => {
     expect(bootstrapGameDefinition.execute).toHaveBeenCalledWith(gameDefinition)
     expect(bootstrapBootSurface.execute).toHaveBeenCalledWith('boot-loader')
     expect(bootstrapGameData.execute).toHaveBeenCalledWith(gameDefinition)
+    expect(bootstrapFinalizer.execute).toHaveBeenCalledWith(gameDefinition)
     expect(messageBus.publish).toHaveBeenCalledWith(
       MESSAGE_ENGINE_BOOT_SURFACE_PRELOADED,
     )
