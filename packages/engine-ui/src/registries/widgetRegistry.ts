@@ -40,8 +40,16 @@ export class WidgetRegistry implements IWidgetRegistry {
 
   render(widget: Widget): React.JSX.Element | null {
     switch (widget.type) {
+      case 'button-bar': {
+        const component = this.get('button-bar')
+        return component ? createElement(component, { widget }) : null
+      }
       case 'progress': {
         const component = this.get('progress')
+        return component ? createElement(component, { widget }) : null
+      }
+      case 'title': {
+        const component = this.get('title')
         return component ? createElement(component, { widget }) : null
       }
     }

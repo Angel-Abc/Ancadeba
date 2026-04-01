@@ -9,7 +9,7 @@
         "widgetId": "main-title",
         "position": {
           "column": 0,
-          "row": 0
+          "row": 1
         },
         "size": {
           "width": 16,
@@ -21,7 +21,7 @@
         "widgetId": "main-button-bar",
         "position": {
           "column": 6,
-          "row": 3
+          "row": 4
         },
         "size": {
           "width": 4,

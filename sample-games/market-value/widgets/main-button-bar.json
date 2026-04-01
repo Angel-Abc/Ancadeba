@@ -3,21 +3,21 @@
   "type": "button-bar",
   "buttons": [
     {
-      "label": "Start Game",
+      "label": "GAME.START-BUTTON",
       "action": {
         "type": "navigate",
         "targetSurfaceId": "game-surface"
       }
     },
     {
-      "label": "Options",
+      "label": "GAME.OPTIONS-BUTTON",
       "action": {
         "type": "navigate",
         "targetSurfaceId": "options-surface"
       }
     },
     {
-      "label": "Exit",
+      "label": "GAME.EXIT-BUTTON",
       "action": {
         "type": "exit"
       }

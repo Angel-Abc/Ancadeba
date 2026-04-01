@@ -20,32 +20,79 @@ describe('engine-ui widget registry', () => {
   it('registers and resolves components by widget type', () => {
     // Arrange
     const registry = new WidgetRegistry()
-    const component: WidgetComponent<'progress'> = () => null
+    const component: WidgetComponent<'button-bar'> = () => null
 
     // Act
-    registry.register('progress', component)
-    const resolved = registry.get('progress')
+    registry.register('button-bar', component)
+    const resolved = registry.get('button-bar')
 
     // Assert
     expect(resolved).toBe(component)
-    expect(registry.has('progress')).toBe(true)
+    expect(registry.has('button-bar')).toBe(true)
   })
 
   it('resets registered widgets to support lifecycle boundaries', () => {
     // Arrange
     const registry = new WidgetRegistry()
-    const component: WidgetComponent<'progress'> = () => null
-    registry.register('progress', component)
+    const component: WidgetComponent<'button-bar'> = () => null
+    registry.register('button-bar', component)
 
     // Act
     registry.reset()
 
     // Assert
-    expect(registry.get('progress')).toBeUndefined()
-    expect(registry.has('progress')).toBe(false)
+    expect(registry.get('button-bar')).toBeUndefined()
+    expect(registry.has('button-bar')).toBe(false)
   })
 
-  it('renders the registered component with the matching widget data', () => {
+  it('renders the registered button-bar component with the matching widget data', () => {
+    // Arrange
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent<'button-bar'> = ({ widget }) =>
+      createElement('div', null, widget.widgetId)
+    const widget: Widget = {
+      widgetId: 'main-button-bar',
+      type: 'button-bar',
+      buttons: [
+        {
+          label: 'Start Game',
+          action: {
+            type: 'navigate',
+            targetSurfaceId: 'main-menu',
+          },
+        },
+      ],
+    }
+    registry.register('button-bar', component)
+
+    // Act
+    const rendered = registry.render(widget)
+
+    // Assert
+    expect(rendered).not.toBeNull()
+  })
+
+  it('renders the registered title component with the matching widget data', () => {
+    // Arrange
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent<'title'> = ({ widget }) =>
+      createElement('div', null, widget.widgetId)
+    const widget: Widget = {
+      widgetId: 'main-title',
+      type: 'title',
+      title: 'GAME.TITLE',
+      'font-size': 20,
+    }
+    registry.register('title', component)
+
+    // Act
+    const rendered = registry.render(widget)
+
+    // Assert
+    expect(rendered).not.toBeNull()
+  })
+
+  it('renders the registered progress component with the matching widget data', () => {
     // Arrange
     const registry = new WidgetRegistry()
     const component: WidgetComponent<'progress'> = ({ widget }) =>
@@ -53,7 +100,7 @@ describe('engine-ui widget registry', () => {
     const widget: Widget = {
       widgetId: 'boot-progress',
       type: 'progress',
-      requires: [],
+      showPercentage: false,
     }
     registry.register('progress', component)
 

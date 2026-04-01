@@ -1,6 +1,6 @@
 {
   "widgetId": "main-title",
   "type": "title",
-  "font-size": 20,
+  "font-size": 64,
   "title": "GAME.TITLE"
 }

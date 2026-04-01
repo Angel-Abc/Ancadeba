@@ -57,3 +57,26 @@ body {
     border-width: var(--border-size);
   }
 }
+
+.title-widget {
+  font-size: calc(var(--ge-widget-title-font-size) * var(--ge-unit-size));
+  font-weight: bold;
+  text-align: center;
+}
+
+.button-bar-widget {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--ge-unit-size) * 0.5);
+  width: 100%;
+  height: 100%;
+}
+
+.button-bar-widget-button {
+  flex: 1;
+  border: calc(var(--ge-unit-size) * 0.15) solid var(--ge-font-color);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

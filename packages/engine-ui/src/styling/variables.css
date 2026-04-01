@@ -13,4 +13,7 @@
   --ge-layout-grid-border: 5;
   --ge-layout-grid-padding: 5;
   --ge-layout-grid-margin: 5;
+
+  /* Widget specific variables */
+  --ge-widget-title-font-size: 16;
 }
