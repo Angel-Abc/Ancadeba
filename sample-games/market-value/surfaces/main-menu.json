@@ -6,7 +6,7 @@
     "columns": 16,
     "widgets": [
       {
-        "widgetId": "title",
+        "widgetId": "main-title",
         "position": {
           "column": 0,
           "row": 0
@@ -15,11 +15,10 @@
           "width": 16,
           "height": 2
         },
-        "border": false,
-        "title": "GAME.TITLE"
+        "border": false
       },
       {
-        "widgetId": "button-bar",
+        "widgetId": "main-button-bar",
         "position": {
           "column": 6,
           "row": 7
@@ -28,29 +27,7 @@
           "width": 4,
           "height": 2
         },
-        "border": true,
-        "buttons": [
-          {
-            "label": "Start Game",
-            "action": {
-              "type": "navigate",
-              "targetSurfaceId": "game-surface"
-            }
-          },
-          {
-            "label": "Options",
-            "action": {
-              "type": "navigate",
-              "targetSurfaceId": "options-surface"
-            }
-          },
-          {
-            "label": "Exit",
-            "action": {
-              "type": "exit"
-            }
-          }
-        ]
+        "border": true
       }
     ]
   }

@@ -7,10 +7,13 @@
   "language": "en",
   "styles": ["styles/themeX.css"],
   "surfaces": {
-    "boot-loader": "surfaces/boot-loader.json"
+    "boot-loader": "surfaces/boot-loader.json",
+    "main-menu": "surfaces/main-menu.json"
   },
   "widgets": {
-    "boot-progress": "widgets/boot-progress.json"
+    "boot-progress": "widgets/boot-progress.json",
+    "main-title": "widgets/main-title.json",
+    "main-button-bar": "widgets/main-button-bar.json"
   },
   "languages": {
     "en": ["languages/en/engine.json"]

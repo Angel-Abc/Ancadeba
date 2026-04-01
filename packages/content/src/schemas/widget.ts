@@ -3,7 +3,6 @@ import { buttonSchema } from './button'
 
 const baseWidgetSchema = z.object({
   widgetId: z.string(),
-  requires: z.array(z.string()),
 })
 
 export const progressWidgetSchema = baseWidgetSchema.extend({
@@ -14,6 +13,7 @@ export const progressWidgetSchema = baseWidgetSchema.extend({
 export const titleWidgetSchema = baseWidgetSchema.extend({
   type: z.literal('title'),
   title: z.string(),
+  'font-size': z.number().optional().default(16),
 })
 
 export const buttonBarWidgetSchema = baseWidgetSchema.extend({

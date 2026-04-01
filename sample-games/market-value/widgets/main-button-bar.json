@@ -1,0 +1,26 @@
+{
+  "widgetId": "main-button-bar",
+  "type": "button-bar",
+  "buttons": [
+    {
+      "label": "Start Game",
+      "action": {
+        "type": "navigate",
+        "targetSurfaceId": "game-surface"
+      }
+    },
+    {
+      "label": "Options",
+      "action": {
+        "type": "navigate",
+        "targetSurfaceId": "options-surface"
+      }
+    },
+    {
+      "label": "Exit",
+      "action": {
+        "type": "exit"
+      }
+    }
+  ]
+}
