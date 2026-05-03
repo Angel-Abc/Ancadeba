@@ -1,6 +1,8 @@
 import {
   ISurfaceDefinitionProvider,
+  ISurfaceDataStorage,
   MESSAGE_ENGINE_SURFACE_DATA_CHANGED,
+  surfaceDataStorageToken,
   surfaceDefinitionProviderToken,
 } from '@ancadeba/engine'
 import { useService } from '@ancadeba/ui'
@@ -17,11 +19,15 @@ const SurfaceVisual = (): React.JSX.Element => {
   const surfaceDefinitionProvider = useService<ISurfaceDefinitionProvider>(
     surfaceDefinitionProviderToken,
   )
+  const surfaceDataStorage =
+    useService<ISurfaceDataStorage>(surfaceDataStorageToken)
   const messageBus = useService<IMessageBus>(messageBusToken)
   const layoutRegistry = useService<ILayoutRegistry>(layoutRegistryToken)
   const [surface, setSurface] = useState<Surface | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [surfaceId, setSurfaceId] = useState<string | null>(null)
+  const [surfaceId, setSurfaceId] = useState<string | null>(
+    surfaceDataStorage.currentSurfaceId,
+  )
 
   useEffect(() => {
     return messageBus.subscribe(

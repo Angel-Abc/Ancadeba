@@ -38,4 +38,8 @@ export class SurfaceDataStorage implements ISurfaceDataStorage {
     }
     return this._surfaceId
   }
+
+  get currentSurfaceId(): string | null {
+    return this._surfaceId
+  }
 }

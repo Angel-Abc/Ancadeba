@@ -23,6 +23,9 @@ describe('bootstrap finalizer', () => {
       get surfaceId(): string {
         return currentSurfaceId ?? ''
       },
+      get currentSurfaceId(): string | null {
+        return currentSurfaceId
+      },
     }
     const bootstrapFinalizer = new BootstrapFinalizer(
       createLogger(),
