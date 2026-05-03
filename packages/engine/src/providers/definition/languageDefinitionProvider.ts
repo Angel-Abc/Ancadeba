@@ -59,8 +59,7 @@ export class LanguageDefinitionProvider implements ILanguageDefinitionProvider {
   }
 
   getKeyValue(key: string): string {
-    const value = this.languageData.get(key)
-    if (!value) {
+    if (!this.languageData.has(key)) {
       this.logger.warn(
         languageDefinitionProviderToken,
         'Key {0} not found in language data for language {1}',
@@ -69,6 +68,6 @@ export class LanguageDefinitionProvider implements ILanguageDefinitionProvider {
       )
       return key
     }
-    return value
+    return this.languageData.get(key) ?? ''
   }
 }
