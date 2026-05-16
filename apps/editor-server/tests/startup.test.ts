@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   bootstrapEditorServer,
   createApp,
@@ -23,11 +23,22 @@ function closeServer(server: Server): Promise<void> {
 
 describe('editor server startup', () => {
   let server: Server | undefined
+  let originalEditorServerPort: string | undefined
+
+  beforeEach(() => {
+    originalEditorServerPort = process.env.EDITOR_SERVER_PORT
+  })
 
   afterEach(async () => {
     if (server) {
       await closeServer(server)
       server = undefined
+    }
+
+    if (originalEditorServerPort === undefined) {
+      delete process.env.EDITOR_SERVER_PORT
+    } else {
+      process.env.EDITOR_SERVER_PORT = originalEditorServerPort
     }
   })
 
@@ -69,5 +80,26 @@ describe('editor server startup', () => {
     expect(logger.log).toHaveBeenCalledWith(
       'Resources Directory: fixtures/resources',
     )
+  })
+
+  it('uses the configured editor server port environment variable', async () => {
+    // Arrange
+    originalEditorServerPort = process.env.EDITOR_SERVER_PORT
+    process.env.EDITOR_SERVER_PORT = '0'
+    const logger = {
+      log: vi.fn(),
+    }
+
+    // Act
+    server = bootstrapEditorServer({
+      envPath: 'missing.env',
+      logger,
+      resourcesDir: 'fixtures/resources',
+    })
+    await once(server, 'listening')
+    const address = server.address() as AddressInfo
+
+    // Assert
+    expect(address.port).toBeGreaterThan(0)
   })
 })

@@ -21,12 +21,15 @@ Common values:
 
 ```text
 VITE_GAME_RESOURCES_DIR=sample-games/market-value
-PORT=3000
+VITE_GAME_CLIENT_PORT=5180
+EDITOR_SERVER_PORT=3080
 ```
 
 `VITE_GAME_RESOURCES_DIR` points at the active game resource root. The game client serves it at `/resources` in development and copies it to `apps/game-client/dist/resources` during production builds.
 
-`PORT` is used by the editor server when no explicit port is provided.
+`VITE_GAME_CLIENT_PORT` is used by the game client's Vite dev server.
+
+`EDITOR_SERVER_PORT` is used by the editor server when no explicit port is provided. The server still accepts `PORT` as a fallback for hosting environments that provide it.
 
 ## Common Commands
 

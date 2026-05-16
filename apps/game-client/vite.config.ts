@@ -26,10 +26,23 @@ function isPathInsideDirectory(
   )
 }
 
+function parsePort(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  const parsed = Number(value)
+
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 65535
+    ? parsed
+    : undefined
+}
+
 export default defineConfig(({ mode }) => {
   const envDir = path.resolve(__dirname, '../../')
   const env = loadEnv(mode, envDir)
   const resourcesDir = env.VITE_GAME_RESOURCES_DIR
+  const port = parsePort(env.VITE_GAME_CLIENT_PORT)
 
   return {
     plugins: [
@@ -134,6 +147,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      port,
       fs: {
         allow: [envDir],
       },

@@ -46,7 +46,8 @@ export function bootstrapEditorServer(options: EditorServerOptions = {}): Server
 
   const logger = options.logger ?? console
   const resourcesDir = options.resourcesDir ?? process.env.VITE_GAME_RESOURCES_DIR
-  const port = options.port ?? process.env.PORT ?? 3000
+  const port =
+    options.port ?? process.env.EDITOR_SERVER_PORT ?? process.env.PORT ?? 3000
 
   logger.log(`Resources Directory: ${resourcesDir}`)
 
