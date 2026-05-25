@@ -71,6 +71,15 @@ import {
   BootstrapFinalizer,
   bootstrapFinalizerDependencies,
 } from '../bootstrap/bootstrapFinalizer'
+import {
+  gameActionExecutorToken,
+  gameActionEnvironmentToken,
+} from '../actions/tokens'
+import {
+  GameActionExecutor,
+  gameActionExecutorDependencies,
+} from '../actions/gameActionExecutor'
+import { BrowserGameActionEnvironment } from '../actions/browserGameActionEnvironment'
 
 export function registerServices(container: IRegistrar): void {
   container.registerAll([
@@ -126,6 +135,18 @@ export function registerServices(container: IRegistrar): void {
       token: uiReadySignalToken,
       useClass: UIReadySignal,
       deps: [],
+      scope: 'singleton',
+    },
+    {
+      token: gameActionEnvironmentToken,
+      useClass: BrowserGameActionEnvironment,
+      deps: [],
+      scope: 'singleton',
+    },
+    {
+      token: gameActionExecutorToken,
+      useClass: GameActionExecutor,
+      deps: gameActionExecutorDependencies,
       scope: 'singleton',
     },
     {

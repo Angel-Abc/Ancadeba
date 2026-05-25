@@ -2,9 +2,9 @@ import type { Widget } from '@ancadeba/content'
 import type { WidgetProps } from '../../registries/types'
 import { useService } from '@ancadeba/ui'
 import {
+  gameActionExecutorToken,
+  IGameActionExecutor,
   ITranslationProvider,
-  ISurfaceDataStorage,
-  surfaceDataStorageToken,
   translationProviderToken,
 } from '@ancadeba/engine'
 
@@ -17,19 +17,12 @@ export function ButtonBarWidget({
   const translationProvider = useService<ITranslationProvider>(
     translationProviderToken,
   )
-  const surfaceDataStorage = useService<ISurfaceDataStorage>(
-    surfaceDataStorageToken,
+  const gameActionExecutor = useService<IGameActionExecutor>(
+    gameActionExecutorToken,
   )
 
   const handleButtonClick = (button: ButtonBarWidgetButton): void => {
-    switch (button.action.type) {
-      case 'navigate':
-        surfaceDataStorage.surfaceId = button.action.targetSurfaceId
-        return
-      case 'exit':
-        window.close()
-        return
-    }
+    gameActionExecutor.execute(button.action)
   }
 
   return (
