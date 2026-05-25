@@ -1,0 +1,13 @@
+{
+  "widgetId": "back-button-bar",
+  "type": "button-bar",
+  "buttons": [
+    {
+      "label": "GAME.BACK-BUTTON",
+      "action": {
+        "type": "navigate",
+        "targetSurfaceId": "main-menu"
+      }
+    }
+  ]
+}

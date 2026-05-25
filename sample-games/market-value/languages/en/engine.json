@@ -5,6 +5,9 @@
     "GAME.PROGRESS.LOADING": "Loading...",
     "GAME.START-BUTTON": "Start Game",
     "GAME.OPTIONS-BUTTON": "Options",
-    "GAME.EXIT-BUTTON": "Exit"
+    "GAME.EXIT-BUTTON": "Exit",
+    "GAME.BACK-BUTTON": "Back",
+    "GAME.GAME-SURFACE.TITLE": "Game",
+    "GAME.OPTIONS-SURFACE.TITLE": "Options"
   }
 }

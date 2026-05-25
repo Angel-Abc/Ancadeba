@@ -8,12 +8,17 @@
   "styles": ["styles/themeX.css"],
   "surfaces": {
     "boot-loader": "surfaces/boot-loader.json",
-    "main-menu": "surfaces/main-menu.json"
+    "main-menu": "surfaces/main-menu.json",
+    "game": "surfaces/game.json",
+    "options": "surfaces/options.json"
   },
   "widgets": {
     "boot-progress": "widgets/boot-progress.json",
     "main-title": "widgets/main-title.json",
-    "main-button-bar": "widgets/main-button-bar.json"
+    "main-button-bar": "widgets/main-button-bar.json",
+    "game-title": "widgets/game-title.json",
+    "options-title": "widgets/options-title.json",
+    "back-button-bar": "widgets/back-button-bar.json"
   },
   "languages": {
     "en": ["languages/en/engine.json"]

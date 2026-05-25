@@ -1,0 +1,34 @@
+{
+  "surfaceId": "game-surface",
+  "layout": {
+    "type": "grid",
+    "rows": 16,
+    "columns": 16,
+    "widgets": [
+      {
+        "widgetId": "game-title",
+        "position": {
+          "column": 0,
+          "row": 1
+        },
+        "size": {
+          "width": 16,
+          "height": 2
+        },
+        "border": false
+      },
+      {
+        "widgetId": "back-button-bar",
+        "position": {
+          "column": 6,
+          "row": 12
+        },
+        "size": {
+          "width": 4,
+          "height": 2
+        },
+        "border": true
+      }
+    ]
+  }
+}
