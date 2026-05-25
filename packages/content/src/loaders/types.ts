@@ -1,6 +1,8 @@
 import { Game } from '../schemas/game'
 import { Language } from '../schemas/language'
+import { GameMap } from '../schemas/map'
 import { Surface } from '../schemas/surface'
+import { TileSet } from '../schemas/tileSet'
 import { Widget } from '../schemas/widget'
 
 export interface IGameLoader {
@@ -14,4 +16,10 @@ export interface IWidgetLoader {
 }
 export interface ILanguageLoader {
   loadLanguage(languagePath: string): Promise<Language>
+}
+export interface IMapLoader {
+  loadMap(mapPath: string): Promise<GameMap>
+}
+export interface ITileSetLoader {
+  loadTileSet(tileSetPath: string): Promise<TileSet>
 }

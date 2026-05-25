@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ILogger } from '@ancadeba/utils'
 import type { IResourceConfiguration } from '../src/configuration/types'
 import { GameLoader } from '../src/loaders/gameLoader'
+import { MapLoader } from '../src/loaders/mapLoader'
 import { SurfaceLoader } from '../src/loaders/surfaceLoader'
+import { TileSetLoader } from '../src/loaders/tileSetLoader'
 import { WidgetLoader } from '../src/loaders/widgetLoader'
 
 type LoggerMocks = {
@@ -47,6 +49,8 @@ describe('content loaders', () => {
       styles: ['styles/theme.css'],
       surfaces: { boot: 'surfaces/boot.json' },
       widgets: { progress: 'widgets/progress.json' },
+      maps: { start: 'maps/start.json' },
+      tileSets: { outdoor: 'tileSets/outdoor.json' },
       languages: { en: ['languages/en.json'] },
     }
     const fetchMock = vi.fn(async () => ({
@@ -142,6 +146,120 @@ describe('content loaders', () => {
       'utils/utils/loadJsonResource',
       'Schema validation failed for resource {0} with error {1}',
       '/resources/widgets/widget-1.json',
+      expect.any(String),
+    )
+  })
+
+  it('loads maps from the expected path', async () => {
+    // Arrange
+    const { logger } = createLoggerMocks()
+    const map = {
+      id: 'start-beach',
+      width: 1,
+      height: 1,
+      tiles: [
+        {
+          key: 'g1',
+          tile: 'outdoor.grass',
+        },
+      ],
+      map: ['g1'],
+    }
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => map,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new MapLoader(logger, resourceConfiguration)
+
+    // Act
+    const result = await loader.loadMap('maps/start-beach.json')
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith('/resources/maps/start-beach.json')
+    expect(result).toEqual(map)
+  })
+
+  it('loads tile sets from the expected path', async () => {
+    // Arrange
+    const { logger } = createLoggerMocks()
+    const tileSet = {
+      id: 'outdoor',
+      tiles: [
+        {
+          id: 'grass',
+          description: 'tile.outdoor.grass',
+          color: 'lightgreen',
+          walkable: true,
+        },
+      ],
+    }
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => tileSet,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new TileSetLoader(logger, resourceConfiguration)
+
+    // Act
+    const result = await loader.loadTileSet('tileSets/outdoor.json')
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith('/resources/tileSets/outdoor.json')
+    expect(result).toEqual(tileSet)
+  })
+
+  it('throws when the map file cannot be fetched', async () => {
+    // Arrange
+    const { logger, errorMock } = createLoggerMocks()
+    const fetchMock = vi.fn(async () => ({
+      ok: false,
+      json: async () => ({}),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new MapLoader(logger, resourceConfiguration)
+
+    // Act
+    const resultPromise = loader.loadMap('maps/missing.json')
+
+    // Assert
+    await expect(resultPromise).rejects.toThrow('error')
+    expect(errorMock).toHaveBeenCalledWith(
+      'utils/utils/loadJsonResource',
+      'Failed to fetch resource {0} with response {1}',
+      '/resources/maps/missing.json',
+      expect.any(Object),
+    )
+  })
+
+  it('throws when the tile set JSON does not match the schema', async () => {
+    // Arrange
+    const { logger, errorMock } = createLoggerMocks()
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        id: 'outdoor',
+        tiles: [
+          {
+            id: 'grass',
+            description: 'tile.outdoor.grass',
+            color: 'lightgreen',
+          },
+        ],
+      }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new TileSetLoader(logger, resourceConfiguration)
+
+    // Act
+    const resultPromise = loader.loadTileSet('tileSets/outdoor.json')
+
+    // Assert
+    await expect(resultPromise).rejects.toThrow('error')
+    expect(errorMock).toHaveBeenCalledWith(
+      'utils/utils/loadJsonResource',
+      'Schema validation failed for resource {0} with error {1}',
+      '/resources/tileSets/outdoor.json',
       expect.any(String),
     )
   })

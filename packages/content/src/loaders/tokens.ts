@@ -2,7 +2,9 @@ import { token } from '@ancadeba/utils'
 import {
   IGameLoader,
   ILanguageLoader,
+  IMapLoader,
   ISurfaceLoader,
+  ITileSetLoader,
   IWidgetLoader,
 } from './types'
 
@@ -15,4 +17,8 @@ export const widgetLoaderToken = token<IWidgetLoader>(
 )
 export const languageLoaderToken = token<ILanguageLoader>(
   'content/loaders/languageLoader',
+)
+export const mapLoaderToken = token<IMapLoader>('content/loaders/mapLoader')
+export const tileSetLoaderToken = token<ITileSetLoader>(
+  'content/loaders/tileSetLoader',
 )

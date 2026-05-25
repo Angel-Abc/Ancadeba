@@ -2,7 +2,9 @@ import type { IRegistrar } from '@ancadeba/utils'
 import {
   gameDefinitionProviderToken,
   languageDefinitionProviderToken,
+  mapDefinitionProviderToken,
   surfaceDefinitionProviderToken,
+  tileSetDefinitionProviderToken,
   translationProviderToken,
   widgetDefinitionProviderToken,
 } from '../providers/definition/tokens'
@@ -28,6 +30,14 @@ import {
   WidgetDefinitionProvider,
   widgetDefinitionProviderDependencies,
 } from '../providers/definition/widgetDefinitionProvider'
+import {
+  MapDefinitionProvider,
+  mapDefinitionProviderDependencies,
+} from '../providers/definition/mapDefinitionProvider'
+import {
+  TileSetDefinitionProvider,
+  tileSetDefinitionProviderDependencies,
+} from '../providers/definition/tileSetDefinitionProvider'
 import {
   LanguageDefinitionProvider,
   languageDefinitionProviderDependencies,
@@ -111,6 +121,18 @@ export function registerServices(container: IRegistrar): void {
       token: widgetDefinitionProviderToken,
       useClass: WidgetDefinitionProvider,
       deps: widgetDefinitionProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: mapDefinitionProviderToken,
+      useClass: MapDefinitionProvider,
+      deps: mapDefinitionProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: tileSetDefinitionProviderToken,
+      useClass: TileSetDefinitionProvider,
+      deps: tileSetDefinitionProviderDependencies,
       scope: 'singleton',
     },
     {

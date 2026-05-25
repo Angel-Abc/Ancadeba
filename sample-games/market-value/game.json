@@ -20,6 +20,12 @@
     "options-title": "widgets/options-title.json",
     "back-button-bar": "widgets/back-button-bar.json"
   },
+  "maps": {
+    "start-beach": "maps/start-beach.json"
+  },
+  "tileSets": {
+    "outdoor": "tileSets/outdoor.json"
+  },
   "languages": {
     "en": ["languages/en/engine.json"]
   }

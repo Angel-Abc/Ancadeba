@@ -2,7 +2,9 @@ import { token } from '@ancadeba/utils'
 import {
   IGameDefinitionProvider,
   ILanguageDefinitionProvider,
+  IMapDefinitionProvider,
   ISurfaceDefinitionProvider,
+  ITileSetDefinitionProvider,
   ITranslationProvider,
   IWidgetDefinitionProvider,
 } from './types'
@@ -16,6 +18,13 @@ export const surfaceDefinitionProviderToken = token<ISurfaceDefinitionProvider>(
 export const widgetDefinitionProviderToken = token<IWidgetDefinitionProvider>(
   'engine/providers/definition/widgetDefinitionProvider',
 )
+export const mapDefinitionProviderToken = token<IMapDefinitionProvider>(
+  'engine/providers/definition/mapDefinitionProvider',
+)
+export const tileSetDefinitionProviderToken =
+  token<ITileSetDefinitionProvider>(
+    'engine/providers/definition/tileSetDefinitionProvider',
+  )
 export const languageDefinitionProviderToken =
   token<ILanguageDefinitionProvider>(
     'engine/providers/definition/languageDefinitionProvider',

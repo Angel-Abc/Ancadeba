@@ -11,8 +11,10 @@ A resource root should contain:
 ```text
 game.json
 languages/
+maps/
 surfaces/
 styles/
+tileSets/
 widgets/
 ```
 
@@ -37,6 +39,8 @@ Optional fields:
 - `description`: Translation key for the game description.
 - `startSurfaceId`: Surface shown after boot finishes.
 - `styles`: CSS files loaded before the game starts.
+- `maps`: Map of map IDs to map definition paths.
+- `tileSets`: Map of tile-set IDs to tile-set definition paths.
 
 Example:
 
@@ -56,6 +60,12 @@ Example:
   "widgets": {
     "boot-progress": "widgets/boot-progress.json",
     "main-title": "widgets/main-title.json"
+  },
+  "maps": {
+    "start-beach": "maps/start-beach.json"
+  },
+  "tileSets": {
+    "outdoor": "tileSets/outdoor.json"
   },
   "languages": {
     "en": ["languages/en/engine.json"]
@@ -186,6 +196,64 @@ Supported button actions:
 
 Navigation targets should point to surfaces declared in `game.json`. That relationship should be covered by cross-resource validation before content is considered complete.
 
+## Tile Sets
+
+A tile set defines reusable tile definitions for maps.
+
+```json
+{
+  "id": "outdoor",
+  "tiles": [
+    {
+      "id": "grass",
+      "description": "tile.outdoor.grass",
+      "color": "lightgreen",
+      "walkable": true
+    },
+    {
+      "id": "ocean",
+      "description": "tile.outdoor.ocean",
+      "image": "images/outdoor/waves.svg",
+      "color": "aqua",
+      "walkable": false
+    }
+  ]
+}
+```
+
+Tile IDs must be unique within a tile set. `description` should be a translation key. `image` is optional and no renderer consumes it yet.
+
+## Maps
+
+A map defines a rectangular tile grid. The `tiles` array maps short row keys to tile references in `tileSetId.tileId` format. The `map` array contains comma-separated row keys.
+
+```json
+{
+  "id": "start-beach",
+  "width": 2,
+  "height": 2,
+  "tiles": [
+    {
+      "key": "o1",
+      "tile": "outdoor.ocean"
+    },
+    {
+      "key": "g1",
+      "tile": "outdoor.grass"
+    }
+  ],
+  "map": ["o1,o1", "g1,g1"]
+}
+```
+
+Map validation requires:
+
+- `map.length` matches `height`.
+- Each row contains exactly `width` comma-separated tile keys.
+- Every row tile key is declared in `tiles`.
+- Tile keys are unique within the map.
+- Tile references use `tileSetId.tileId` format.
+
 ## Styles
 
 Styles listed in `game.json` are loaded by the engine before the game starts.
@@ -203,9 +271,9 @@ Each style path should exist under the resource root. Missing styles fail at run
 When adding or changing content:
 
 1. Add or update the JSON resource file.
-2. Register the resource path in `game.json` when it is a surface, widget, language, or style.
+2. Register the resource path in `game.json` when it is a surface, widget, language, style, map, or tile set.
 3. Use translation keys for user-facing strings.
-4. Keep IDs stable and unique within their map.
+4. Keep IDs stable and unique within their resource map.
 5. Run the required checks from `docs/development.md`.
 
 Future validation should verify cross-file references, including:

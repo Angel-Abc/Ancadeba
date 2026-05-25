@@ -4,7 +4,9 @@ import { ResourceConfiguration } from '../configuration/resourceConfiguration'
 import {
   gameLoaderToken,
   languageLoaderToken,
+  mapLoaderToken,
   surfaceLoaderToken,
+  tileSetLoaderToken,
   widgetLoaderToken,
 } from '../loaders/tokens'
 import { GameLoader, gameLoaderDependencies } from '../loaders/gameLoader'
@@ -17,6 +19,11 @@ import {
   LanguageLoader,
   languageLoaderDependencies,
 } from '../loaders/languageLoader'
+import { MapLoader, mapLoaderDependencies } from '../loaders/mapLoader'
+import {
+  TileSetLoader,
+  tileSetLoaderDependencies,
+} from '../loaders/tileSetLoader'
 
 export function registerServices(
   container: IRegistrar,
@@ -51,6 +58,18 @@ export function registerServices(
       token: languageLoaderToken,
       useClass: LanguageLoader,
       deps: languageLoaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: mapLoaderToken,
+      useClass: MapLoader,
+      deps: mapLoaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: tileSetLoaderToken,
+      useClass: TileSetLoader,
+      deps: tileSetLoaderDependencies,
       scope: 'singleton',
     },
   ])
