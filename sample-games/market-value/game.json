@@ -5,7 +5,7 @@
   "bootSurfaceId": "boot-loader",
   "startSurfaceId": "main-menu",
   "language": "en",
-  "styles": ["styles/themeX.css"],
+  "styles": ["styles/theme_skip_for_now.css"],
   "surfaces": {
     "boot-loader": "surfaces/boot-loader.json",
     "main-menu": "surfaces/main-menu.json",
@@ -19,6 +19,9 @@
     "game-title": "widgets/game-title.json",
     "options-title": "widgets/options-title.json",
     "back-button-bar": "widgets/back-button-bar.json"
+  },
+  "newGames": {
+    "default": "newGames/default.json"
   },
   "maps": {
     "start-beach": "maps/start-beach.json"

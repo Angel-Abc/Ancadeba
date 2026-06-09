@@ -11,6 +11,7 @@ export const gameSchema = z.object({
   languages: z.record(z.string(), z.array(z.string())),
   surfaces: z.record(z.string(), z.string()),
   widgets: z.record(z.string(), z.string()),
+  newGames: z.record(z.string(), z.string()).optional(),
   maps: z.record(z.string(), z.string()).optional(),
   tileSets: z.record(z.string(), z.string()).optional(),
 })

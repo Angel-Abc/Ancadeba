@@ -5,8 +5,8 @@
     {
       "label": "GAME.START-BUTTON",
       "action": {
-        "type": "navigate",
-        "targetSurfaceId": "game"
+        "type": "new-game",
+        "newGameId": "default"
       }
     },
     {

@@ -1,4 +1,11 @@
-import { Game, GameMap, Surface, TileSet, Widget } from '@ancadeba/content'
+import {
+  Game,
+  GameMap,
+  NewGame,
+  Surface,
+  TileSet,
+  Widget,
+} from '@ancadeba/content'
 
 export interface IGameDefinitionProvider {
   getGameDefinition(): Promise<Game>
@@ -8,6 +15,9 @@ export interface ISurfaceDefinitionProvider {
 }
 export interface IWidgetDefinitionProvider {
   getWidgetDefinition(widgetId: string): Promise<Widget>
+}
+export interface INewGameDefinitionProvider {
+  getNewGameDefinition(newGameId: string): Promise<NewGame>
 }
 export interface IMapDefinitionProvider {
   getMapDefinition(mapId: string): Promise<GameMap>

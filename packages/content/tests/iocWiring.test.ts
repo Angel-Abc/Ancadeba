@@ -2,8 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { Container, loggerToken, type ILogger } from '@ancadeba/utils'
 import { resourceConfigurationToken } from '../src/configuration/tokens'
 import { registerServices } from '../src/helpers/iocHelper'
-import { gameLoaderToken, surfaceLoaderToken, widgetLoaderToken } from '../src'
+import {
+  gameLoaderToken,
+  newGameLoaderToken,
+  surfaceLoaderToken,
+  widgetLoaderToken,
+} from '../src'
 import { GameLoader } from '../src/loaders/gameLoader'
+import { NewGameLoader } from '../src/loaders/newGameLoader'
 import { SurfaceLoader } from '../src/loaders/surfaceLoader'
 import { WidgetLoader } from '../src/loaders/widgetLoader'
 
@@ -32,6 +38,7 @@ describe('content IoC wiring', () => {
     const resourceConfiguration = container.resolve(resourceConfigurationToken)
     const gameLoaderA = container.resolve(gameLoaderToken)
     const gameLoaderB = container.resolve(gameLoaderToken)
+    const newGameLoader = container.resolve(newGameLoaderToken)
     const surfaceLoader = container.resolve(surfaceLoaderToken)
     const widgetLoader = container.resolve(widgetLoaderToken)
 
@@ -39,6 +46,7 @@ describe('content IoC wiring', () => {
     expect(resourceConfiguration.resourcePath).toBe('/game-data')
     expect(gameLoaderA).toBeInstanceOf(GameLoader)
     expect(gameLoaderA).toBe(gameLoaderB)
+    expect(newGameLoader).toBeInstanceOf(NewGameLoader)
     expect(surfaceLoader).toBeInstanceOf(SurfaceLoader)
     expect(widgetLoader).toBeInstanceOf(WidgetLoader)
   })

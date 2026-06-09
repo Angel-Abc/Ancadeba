@@ -5,6 +5,7 @@ import {
   gameLoaderToken,
   languageLoaderToken,
   mapLoaderToken,
+  newGameLoaderToken,
   surfaceLoaderToken,
   tileSetLoaderToken,
   widgetLoaderToken,
@@ -15,6 +16,10 @@ import {
   surfaceLoaderDependencies,
 } from '../loaders/surfaceLoader'
 import { WidgetLoader, widgetLoaderDependencies } from '../loaders/widgetLoader'
+import {
+  NewGameLoader,
+  newGameLoaderDependencies,
+} from '../loaders/newGameLoader'
 import {
   LanguageLoader,
   languageLoaderDependencies,
@@ -52,6 +57,12 @@ export function registerServices(
       token: widgetLoaderToken,
       useClass: WidgetLoader,
       deps: widgetLoaderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: newGameLoaderToken,
+      useClass: NewGameLoader,
+      deps: newGameLoaderDependencies,
       scope: 'singleton',
     },
     {

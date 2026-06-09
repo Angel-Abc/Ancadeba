@@ -22,7 +22,7 @@ export function ButtonBarWidget({
   )
 
   const handleButtonClick = (button: ButtonBarWidgetButton): void => {
-    gameActionExecutor.execute(button.action)
+    void gameActionExecutor.execute(button.action)
   }
 
   return (

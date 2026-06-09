@@ -3,6 +3,7 @@ import {
   IGameLoader,
   ILanguageLoader,
   IMapLoader,
+  INewGameLoader,
   ISurfaceLoader,
   ITileSetLoader,
   IWidgetLoader,
@@ -14,6 +15,9 @@ export const surfaceLoaderToken = token<ISurfaceLoader>(
 )
 export const widgetLoaderToken = token<IWidgetLoader>(
   'content/loaders/widgetLoader',
+)
+export const newGameLoaderToken = token<INewGameLoader>(
+  'content/loaders/newGameLoader',
 )
 export const languageLoaderToken = token<ILanguageLoader>(
   'content/loaders/languageLoader',

@@ -3,6 +3,7 @@ import {
   IGameDefinitionProvider,
   ILanguageDefinitionProvider,
   IMapDefinitionProvider,
+  INewGameDefinitionProvider,
   ISurfaceDefinitionProvider,
   ITileSetDefinitionProvider,
   ITranslationProvider,
@@ -18,6 +19,10 @@ export const surfaceDefinitionProviderToken = token<ISurfaceDefinitionProvider>(
 export const widgetDefinitionProviderToken = token<IWidgetDefinitionProvider>(
   'engine/providers/definition/widgetDefinitionProvider',
 )
+export const newGameDefinitionProviderToken =
+  token<INewGameDefinitionProvider>(
+    'engine/providers/definition/newGameDefinitionProvider',
+  )
 export const mapDefinitionProviderToken = token<IMapDefinitionProvider>(
   'engine/providers/definition/mapDefinitionProvider',
 )

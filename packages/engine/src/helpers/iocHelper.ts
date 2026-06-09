@@ -3,6 +3,7 @@ import {
   gameDefinitionProviderToken,
   languageDefinitionProviderToken,
   mapDefinitionProviderToken,
+  newGameDefinitionProviderToken,
   surfaceDefinitionProviderToken,
   tileSetDefinitionProviderToken,
   translationProviderToken,
@@ -12,16 +13,30 @@ import {
   GameDefinitionProvider,
   gameDefinitionProviderDependencies,
 } from '../providers/definition/gameDefinitionProvider'
-import { surfaceDataStorageToken } from '../storage/data/tokens'
+import {
+  gameSessionStorageToken,
+  surfaceDataStorageToken,
+} from '../storage/data/tokens'
 import {
   SurfaceDataStorage,
   surfaceDataStorageDependencies,
 } from '../storage/data/surfaceDataStorage'
-import { surfaceDataProviderToken } from '../providers/data/tokens'
+import {
+  gameSessionProviderToken,
+  surfaceDataProviderToken,
+} from '../providers/data/tokens'
 import {
   SurfaceDataProvider,
   surfaceDataProviderDependencies,
 } from '../providers/data/surfaceDataProvider'
+import {
+  GameSessionStorage,
+  gameSessionStorageDependencies,
+} from '../storage/data/gameSessionStorage'
+import {
+  GameSessionProvider,
+  gameSessionProviderDependencies,
+} from '../providers/data/gameSessionProvider'
 import {
   SurfaceDefinitionProvider,
   surfaceDefinitionProviderDependencies,
@@ -30,6 +45,10 @@ import {
   WidgetDefinitionProvider,
   widgetDefinitionProviderDependencies,
 } from '../providers/definition/widgetDefinitionProvider'
+import {
+  NewGameDefinitionProvider,
+  newGameDefinitionProviderDependencies,
+} from '../providers/definition/newGameDefinitionProvider'
 import {
   MapDefinitionProvider,
   mapDefinitionProviderDependencies,
@@ -112,15 +131,33 @@ export function registerServices(container: IRegistrar): void {
       scope: 'singleton',
     },
     {
+      token: gameSessionStorageToken,
+      useClass: GameSessionStorage,
+      deps: gameSessionStorageDependencies,
+      scope: 'singleton',
+    },
+    {
       token: surfaceDataProviderToken,
       useClass: SurfaceDataProvider,
       deps: surfaceDataProviderDependencies,
       scope: 'transient',
     },
     {
+      token: gameSessionProviderToken,
+      useClass: GameSessionProvider,
+      deps: gameSessionProviderDependencies,
+      scope: 'transient',
+    },
+    {
       token: widgetDefinitionProviderToken,
       useClass: WidgetDefinitionProvider,
       deps: widgetDefinitionProviderDependencies,
+      scope: 'singleton',
+    },
+    {
+      token: newGameDefinitionProviderToken,
+      useClass: NewGameDefinitionProvider,
+      deps: newGameDefinitionProviderDependencies,
       scope: 'singleton',
     },
     {

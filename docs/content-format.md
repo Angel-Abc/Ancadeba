@@ -39,6 +39,7 @@ Optional fields:
 - `description`: Translation key for the game description.
 - `startSurfaceId`: Surface shown after boot finishes.
 - `styles`: CSS files loaded before the game starts.
+- `newGames`: Map of new-game IDs to new-game definition paths.
 - `maps`: Map of map IDs to map definition paths.
 - `tileSets`: Map of tile-set IDs to tile-set definition paths.
 
@@ -61,6 +62,9 @@ Example:
     "boot-progress": "widgets/boot-progress.json",
     "main-title": "widgets/main-title.json"
   },
+  "newGames": {
+    "default": "newGames/default.json"
+  },
   "maps": {
     "start-beach": "maps/start-beach.json"
   },
@@ -74,6 +78,26 @@ Example:
 ```
 
 Keep all paths relative to the resource root.
+
+## New Games
+
+A new-game definition declares the initial runtime session state for starting a fresh playthrough.
+
+```json
+{
+  "id": "default",
+  "startSurfaceId": "game",
+  "mapId": "start-beach",
+  "player": {
+    "position": {
+      "row": 19,
+      "column": 2
+    }
+  }
+}
+```
+
+`row` and `column` are zero-based map coordinates. Runtime session data stores IDs and player position separately from immutable map and tile-set definitions.
 
 ## Languages
 
@@ -192,6 +216,7 @@ Widget files share a base `widgetId` field and use `type` as a discriminator.
 Supported button actions:
 
 - `navigate`: Switches the active surface to `targetSurfaceId`.
+- `new-game`: Initializes a new in-memory session from `newGameId`, then switches to that new-game definition's `startSurfaceId`.
 - `exit`: Calls `window.close()`.
 
 Navigation targets should point to surfaces declared in `game.json`. That relationship should be covered by cross-resource validation before content is considered complete.
@@ -282,5 +307,6 @@ Future validation should verify cross-file references, including:
 - `startSurfaceId`
 - layout widget IDs
 - button navigation targets
+- new-game IDs and start/map references
 - style paths
 - language resource paths

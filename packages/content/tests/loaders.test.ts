@@ -3,6 +3,7 @@ import type { ILogger } from '@ancadeba/utils'
 import type { IResourceConfiguration } from '../src/configuration/types'
 import { GameLoader } from '../src/loaders/gameLoader'
 import { MapLoader } from '../src/loaders/mapLoader'
+import { NewGameLoader } from '../src/loaders/newGameLoader'
 import { SurfaceLoader } from '../src/loaders/surfaceLoader'
 import { TileSetLoader } from '../src/loaders/tileSetLoader'
 import { WidgetLoader } from '../src/loaders/widgetLoader'
@@ -178,6 +179,35 @@ describe('content loaders', () => {
     // Assert
     expect(fetchMock).toHaveBeenCalledWith('/resources/maps/start-beach.json')
     expect(result).toEqual(map)
+  })
+
+  it('loads new games from the expected path', async () => {
+    // Arrange
+    const { logger } = createLoggerMocks()
+    const newGame = {
+      id: 'default',
+      startSurfaceId: 'game',
+      mapId: 'start-beach',
+      player: {
+        position: {
+          row: 19,
+          column: 2,
+        },
+      },
+    }
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => newGame,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const loader = new NewGameLoader(logger, resourceConfiguration)
+
+    // Act
+    const result = await loader.loadNewGame('newGames/default.json')
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith('/resources/newGames/default.json')
+    expect(result).toEqual(newGame)
   })
 
   it('loads tile sets from the expected path', async () => {

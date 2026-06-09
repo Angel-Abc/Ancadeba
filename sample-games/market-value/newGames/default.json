@@ -1,0 +1,11 @@
+{
+  "id": "default",
+  "startSurfaceId": "game",
+  "mapId": "start-beach",
+  "player": {
+    "position": {
+      "row": 19,
+      "column": 2
+    }
+  }
+}
