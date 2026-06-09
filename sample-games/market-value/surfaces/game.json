@@ -18,10 +18,34 @@
         "border": false
       },
       {
+        "widgetId": "full-map",
+        "position": {
+          "column": 0,
+          "row": 3
+        },
+        "size": {
+          "width": 12,
+          "height": 12
+        },
+        "border": true
+      },
+      {
+        "widgetId": "mini-map",
+        "position": {
+          "column": 12,
+          "row": 3
+        },
+        "size": {
+          "width": 4,
+          "height": 4
+        },
+        "border": true
+      },
+      {
         "widgetId": "back-button-bar",
         "position": {
-          "column": 6,
-          "row": 12
+          "column": 12,
+          "row": 13
         },
         "size": {
           "width": 4,

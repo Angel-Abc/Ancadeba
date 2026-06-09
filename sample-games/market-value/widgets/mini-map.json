@@ -1,0 +1,7 @@
+{
+  "widgetId": "mini-map",
+  "type": "squares-map",
+  "viewportWidth": 5,
+  "viewportHeight": 5,
+  "track": "player"
+}

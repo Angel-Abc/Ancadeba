@@ -111,6 +111,27 @@ describe('engine-ui widget registry', () => {
     expect(rendered).not.toBeNull()
   })
 
+  it('renders the registered squares-map component with the matching widget data', () => {
+    // Arrange
+    const registry = new WidgetRegistry()
+    const component: WidgetComponent<'squares-map'> = ({ widget }) =>
+      createElement('div', null, widget.widgetId)
+    const widget: Widget = {
+      widgetId: 'mini-map',
+      type: 'squares-map',
+      viewportWidth: 5,
+      viewportHeight: 5,
+      track: 'player',
+    }
+    registry.register('squares-map', component)
+
+    // Act
+    const rendered = registry.render(widget)
+
+    // Assert
+    expect(rendered).not.toBeNull()
+  })
+
   it('registers the registry service as a singleton in IoC wiring', () => {
     // Arrange
     const logger = createLogger()

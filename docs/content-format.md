@@ -221,6 +221,25 @@ Supported button actions:
 
 Navigation targets should point to surfaces declared in `game.json`. That relationship should be covered by cross-resource validation before content is considered complete.
 
+### Squares Map
+
+```json
+{
+  "widgetId": "mini-map",
+  "type": "squares-map",
+  "viewportWidth": 5,
+  "viewportHeight": 5,
+  "track": "player"
+}
+```
+
+`viewportWidth` and `viewportHeight` define how many square map cells render. `track` supports:
+
+- `player`: centers the viewport around the current player position and clamps to map bounds.
+- `free`: starts near the current player position, then lets the player pan the viewport with directional controls.
+
+The renderer uses the active game session's `mapId`, reads tile colors from tile-set definitions, and keeps every rendered cell square.
+
 ## Tile Sets
 
 A tile set defines reusable tile definitions for maps.

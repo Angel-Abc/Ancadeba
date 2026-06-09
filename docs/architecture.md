@@ -81,6 +81,7 @@ Current built-in widget types:
 - `progress`
 - `title`
 - `button-bar`
+- `squares-map`
 
 ## State And Communication
 

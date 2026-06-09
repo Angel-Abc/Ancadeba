@@ -17,6 +17,8 @@
     "main-title": "widgets/main-title.json",
     "main-button-bar": "widgets/main-button-bar.json",
     "game-title": "widgets/game-title.json",
+    "mini-map": "widgets/mini-map.json",
+    "full-map": "widgets/full-map.json",
     "options-title": "widgets/options-title.json",
     "back-button-bar": "widgets/back-button-bar.json"
   },

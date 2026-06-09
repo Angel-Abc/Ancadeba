@@ -1,0 +1,7 @@
+{
+  "widgetId": "full-map",
+  "type": "squares-map",
+  "viewportWidth": 12,
+  "viewportHeight": 12,
+  "track": "free"
+}

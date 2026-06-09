@@ -48,6 +48,10 @@ export class WidgetRegistry implements IWidgetRegistry {
         const component = this.get('progress')
         return component ? createElement(component, { widget }) : null
       }
+      case 'squares-map': {
+        const component = this.get('squares-map')
+        return component ? createElement(component, { widget }) : null
+      }
       case 'title': {
         const component = this.get('title')
         return component ? createElement(component, { widget }) : null

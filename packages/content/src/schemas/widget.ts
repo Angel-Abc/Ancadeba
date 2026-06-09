@@ -21,19 +21,29 @@ export const buttonBarWidgetSchema = baseWidgetSchema.extend({
   buttons: z.array(buttonSchema),
 })
 
+export const squaresMapWidgetSchema = baseWidgetSchema.extend({
+  type: z.literal('squares-map'),
+  viewportWidth: z.number().int().min(1),
+  viewportHeight: z.number().int().min(1),
+  track: z.enum(['player', 'free']),
+})
+
 export const widgetSchema = z.discriminatedUnion('type', [
   progressWidgetSchema,
   titleWidgetSchema,
   buttonBarWidgetSchema,
+  squaresMapWidgetSchema,
 ])
 
 export type ProgressWidget = z.infer<typeof progressWidgetSchema>
 export type TitleWidget = z.infer<typeof titleWidgetSchema>
 export type ButtonBarWidget = z.infer<typeof buttonBarWidgetSchema>
+export type SquaresMapWidget = z.infer<typeof squaresMapWidgetSchema>
 export interface WidgetByType {
   progress: ProgressWidget
   title: TitleWidget
   'button-bar': ButtonBarWidget
+  'squares-map': SquaresMapWidget
 }
 export type WidgetType = keyof WidgetByType
 export type Widget = WidgetByType[WidgetType]
