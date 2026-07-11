@@ -1,4 +1,9 @@
 {
+  "formatVersion": 1,
+  "id": "ash-arena",
   "title": "Ash Arena",
-  "description": "A compact sequence of three turn-based battles with character progression between fights. This tests combat, abilities, status effects, equipment, AI, rewards, and balancing."
+  "description": "A compact sequence of three turn-based battles with character progression between fights. This tests combat, abilities, status effects, equipment, AI, rewards, and balancing.",
+  "content": {
+    "locations": "data/locations.json"
+  }
 }

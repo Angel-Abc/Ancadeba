@@ -12,7 +12,10 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
+    "dev:web": "pnpm --filter @angelabc/ancadeba-web dev",
     "build": "pnpm -r build",
+    "build:web": "pnpm --filter @angelabc/ancadeba-web build",
+    "preview:web": "pnpm --filter @angelabc/ancadeba-web preview",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "tsc -b"
