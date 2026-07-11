@@ -16,11 +16,13 @@
     "build": "pnpm -r build",
     "build:web": "pnpm --filter @angelabc/ancadeba-web build",
     "preview:web": "pnpm --filter @angelabc/ancadeba-web preview",
-    "test": "pnpm -r test",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "pnpm -r lint",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b && tsc -p tsconfig.tests.json"
   },
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
