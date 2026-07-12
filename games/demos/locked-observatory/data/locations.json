@@ -1,9 +1,46 @@
 {
+  "startLocationId": "entrance-hall",
   "locations": [
     {
       "id": "entrance-hall",
       "name": "Entrance Hall",
-      "description": "Dusty brass doors lead deeper into the observatory."
+      "description": "Dusty brass doors lead deeper into the observatory.",
+      "exits": [
+        {
+          "id": "entrance-hall-to-main-hall",
+          "label": "Pass through the brass doors",
+          "targetLocationId": "main-hall"
+        }
+      ]
+    },
+    {
+      "id": "main-hall",
+      "name": "Main Hall",
+      "description": "A large hall with a high ceiling and a grand staircase.",
+      "exits": [
+        {
+          "id": "main-hall-to-entrance-hall",
+          "label": "Return to the entrance hall",
+          "targetLocationId": "entrance-hall"
+        },
+        {
+          "id": "main-hall-to-observatory",
+          "label": "Climb the staircase to the observatory",
+          "targetLocationId": "observatory"
+        }
+      ]
+    },
+    {
+      "id": "observatory",
+      "name": "Observatory",
+      "description": "A circular room with a domed ceiling and a telescope pointing towards the stars. Star charts and celestial maps adorn the walls, and a faint hum of machinery can be heard.",
+      "exits": [
+        {
+          "id": "observatory-to-main-hall",
+          "label": "Descend back to the main hall",
+          "targetLocationId": "main-hall"
+        }
+      ]
     }
   ]
 }

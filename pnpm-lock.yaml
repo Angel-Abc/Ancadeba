@@ -60,7 +60,11 @@ importers:
 
   packages/content: {}
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      '@angelabc/ancadeba-content':
+        specifier: workspace:*
+        version: link:../content
 
 packages:
 
