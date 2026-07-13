@@ -1,28 +1,17 @@
+import type { GameManifest } from '../authored/gameManifest'
 import {
   isGamePath,
   isIdentifier,
   isNonEmptyString,
   isRecord,
-} from './validation.js'
-
-export interface GameContent {
-  locations: string
-}
-
-export interface GameManifest {
-  formatVersion: 1
-  id: string
-  title: string
-  description: string
-  content: GameContent
-}
+} from '../validation'
 
 export function parseGameManifest(value: unknown): GameManifest {
   if (!isRecord(value)) {
     throw new Error('The game manifest must be a JSON object.')
   }
 
-  const { formatVersion, id, title, description, content } = value
+  const { formatVersion, id, title, description, content, start } = value
 
   if (formatVersion !== 1) {
     throw new Error(`Unsupported game format version: ${String(formatVersion)}`)
@@ -48,6 +37,16 @@ export function parseGameManifest(value: unknown): GameManifest {
     throw new Error('The game manifest must contain a valid locations path.')
   }
 
+  if (!isRecord(start)) {
+    throw new Error('The game manifest must contain a start object.')
+  }
+
+  if (!isIdentifier(start.locationId)) {
+    throw new Error(
+      'The game manifest must contain a start.locationId that is a lowercase identifier.',
+    )
+  }
+
   return {
     formatVersion,
     id,
@@ -55,6 +54,9 @@ export function parseGameManifest(value: unknown): GameManifest {
     description,
     content: {
       locations: content.locations,
+    },
+    start: {
+      locationId: start.locationId,
     },
   }
 }

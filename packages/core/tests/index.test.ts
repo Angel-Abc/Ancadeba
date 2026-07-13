@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import type { LocationsFile } from '@angelabc/ancadeba-content'
+import type { RuntimeGameContent } from '@angelabc/ancadeba-content'
 import {
   createInitialGameState,
+  followExit,
   getCurrentLocation,
-  moveToLocationUsingExit,
 } from '../src/index.js'
 
-function createLocationsFile(): LocationsFile {
+function createGame(): RuntimeGameContent {
   return {
-    startLocationId: 'entrance-hall',
-    locations: [
-      {
+    gameId: 'locked-observatory',
+    title: 'The Locked Observatory',
+    description: 'A mysterious observatory.',
+    start: {
+      locationId: 'entrance-hall',
+    },
+    locations: new Map([
+      ['entrance-hall', {
         id: 'entrance-hall',
         name: 'Entrance Hall',
         description: 'Dusty doors lead deeper into the observatory.',
@@ -21,8 +26,8 @@ function createLocationsFile(): LocationsFile {
             targetLocationId: 'main-hall',
           },
         ],
-      },
-      {
+      }],
+      ['main-hall', {
         id: 'main-hall',
         name: 'Main Hall',
         description: 'A large hall with a high ceiling and a grand staircase.',
@@ -33,49 +38,43 @@ function createLocationsFile(): LocationsFile {
             targetLocationId: 'entrance-hall',
           },
         ],
-      },
-    ],
+      }],
+    ]),
   }
 }
 
 describe('core location navigation', () => {
   it('starts at the configured start location', () => {
-    expect(createInitialGameState(createLocationsFile())).toEqual({
+    expect(createInitialGameState(createGame())).toEqual({
       currentLocationId: 'entrance-hall',
     })
   })
 
   it('returns the current location from game state', () => {
-    const locationsFile = createLocationsFile()
-    const state = createInitialGameState(locationsFile)
+    const game = createGame()
+    const state = createInitialGameState(game)
 
-    expect(getCurrentLocation(state, locationsFile)).toEqual(
-      locationsFile.locations[0],
+    expect(getCurrentLocation(game, state)).toEqual(
+      game.locations.get('entrance-hall'),
     )
   })
 
   it('moves to the target location for a valid exit', () => {
-    const locationsFile = createLocationsFile()
-    const state = createInitialGameState(locationsFile)
+    const game = createGame()
+    const state = createInitialGameState(game)
 
     expect(
-      moveToLocationUsingExit(
-        state,
-        locationsFile,
-        'entrance-hall-to-main-hall',
-      ),
+      followExit(game, state, 'entrance-hall-to-main-hall'),
     ).toEqual({
       currentLocationId: 'main-hall',
     })
   })
 
   it('rejects an exit id that does not exist on the current location', () => {
-    const locationsFile = createLocationsFile()
-    const state = createInitialGameState(locationsFile)
+    const game = createGame()
+    const state = createInitialGameState(game)
 
-    expect(() =>
-      moveToLocationUsingExit(state, locationsFile, 'missing-exit'),
-    ).toThrow(
+    expect(() => followExit(game, state, 'missing-exit')).toThrow(
       'Exit with id "missing-exit" not found in location "entrance-hall".',
     )
   })

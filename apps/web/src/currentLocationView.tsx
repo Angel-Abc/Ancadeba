@@ -1,18 +1,15 @@
-import type { LocationsFile } from '@angelabc/ancadeba-content'
+import type { RuntimeGameContent } from '@angelabc/ancadeba-content'
 import type { GameState } from '@angelabc/ancadeba-core'
-import {
-  getCurrentLocation,
-  moveToLocationUsingExit,
-} from '@angelabc/ancadeba-core'
+import { getCurrentLocation } from '@angelabc/ancadeba-core'
 
-export interface LocationProps {
-  locations: LocationsFile
+export interface CurrentLocationViewProps {
+  gameContent: RuntimeGameContent
   state: GameState
-  updateState: (newState: GameState) => void
+  onExitSelected: (exitId: string) => void
 }
 
-export function Location(props: LocationProps) {
-  const currentLocation = getCurrentLocation(props.state, props.locations)
+export function CurrentLocationView(props: CurrentLocationViewProps) {
+  const currentLocation = getCurrentLocation(props.gameContent, props.state)
   return (
     <div>
       <h2>{currentLocation.name}</h2>
@@ -26,8 +23,7 @@ export function Location(props: LocationProps) {
               type="button"
               onClick={(e) => {
                 e.preventDefault()
-                const newState = moveToLocationUsingExit(props.state, props.locations, exit.id)
-                props.updateState(newState)
+                props.onExitSelected(exit.id)
               }}
             >
               <strong>{exit.label}</strong>

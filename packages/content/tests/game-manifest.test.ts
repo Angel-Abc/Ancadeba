@@ -10,6 +10,9 @@ function createManifest(): Record<string, unknown> {
     content: {
       locations: 'data/locations.json',
     },
+    start: {
+      locationId: 'entrance-hall',
+    },
   }
 }
 
@@ -40,6 +43,28 @@ describe('parseGameManifest', () => {
         id: 'Locked-Observatory',
       }),
     ).toThrow('The game manifest must contain a lowercase game ID.')
+  })
+
+  it('rejects a missing start object', () => {
+    expect(() =>
+      parseGameManifest({
+        ...createManifest(),
+        start: undefined,
+      }),
+    ).toThrow('The game manifest must contain a start object.')
+  })
+
+  it('rejects an invalid start location ID', () => {
+    expect(() =>
+      parseGameManifest({
+        ...createManifest(),
+        start: {
+          locationId: 'Entrance-Hall',
+        },
+      }),
+    ).toThrow(
+      'The game manifest must contain a start.locationId that is a lowercase identifier.',
+    )
   })
 
   it.each([

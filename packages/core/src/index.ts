@@ -1,6 +1,6 @@
 import type {
-  LocationsFile,
-  LocationDefinition,
+  RuntimeGameContent,
+  RuntimeLocation,
 } from '@angelabc/ancadeba-content'
 
 export interface GameState {
@@ -8,43 +8,44 @@ export interface GameState {
 }
 
 export function createInitialGameState(
-  locationsFile: LocationsFile,
+  game: RuntimeGameContent,
 ): GameState {
   return {
-    currentLocationId: locationsFile.startLocationId,
+    currentLocationId: game.start.locationId,
   }
 }
 
 export function getCurrentLocation(
+  game: RuntimeGameContent,
   state: GameState,
-  locationsFile: LocationsFile,
-): LocationDefinition {
-  const location = locationsFile.locations.find(
-    (location) => location.id === state.currentLocationId,
-  )
+): RuntimeLocation {
+  const location = game.locations.get(state.currentLocationId)
 
   if (!location) {
-    throw new Error(`Location with id "${state.currentLocationId}" not found.`)
+    throw new Error(
+      `Location with id "${state.currentLocationId}" not found.`,
+    )
   }
+
   return location
 }
 
-export function moveToLocationUsingExit(
+export function followExit(
+  game: RuntimeGameContent,
   state: GameState,
-  locationsFile: LocationsFile,
   exitId: string,
 ): GameState {
-  const currentLocation = getCurrentLocation(state, locationsFile)
+  const currentLocation = getCurrentLocation(game, state)
   const exit = currentLocation.exits.find((exit) => exit.id === exitId)
+
   if (!exit) {
     throw new Error(
       `Exit with id "${exitId}" not found in location "${currentLocation.id}".`,
     )
   }
 
-  const newState = {
+  return {
     ...state,
     currentLocationId: exit.targetLocationId,
   }
-  return newState
 }
