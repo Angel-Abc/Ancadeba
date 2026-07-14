@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { GameState } from '@angelabc/ancadeba-core'
-import { createInitialGameState, followExit } from '@angelabc/ancadeba-core'
+import {
+  createInitialGameState,
+  followExit,
+  takeItem,
+} from '@angelabc/ancadeba-core'
 import type { RuntimeGameContent } from '@angelabc/ancadeba-content'
 import { loadGame } from './loadGame'
 import { CurrentLocationView } from './currentLocationView'
+import { CurrentInventory } from './currentInventory'
 
 export function App() {
   const [game, setGame] = useState<RuntimeGameContent | null>(null)
@@ -55,9 +60,11 @@ export function App() {
           setState(newState)
         }}
         onItemTaken={(itemId) => {
-            alert(`You have taken the item with ID: ${itemId}`)
+          const newState = takeItem(game, state, itemId)
+          setState(newState)
         }}
       />
+      <CurrentInventory gameContent={game} state={state} />
     </main>
   )
 }

@@ -16,4 +16,6 @@ export type {
 
 export type { RuntimeGameContent } from './runtime/gameContent.js'
 
-export type { RuntimeExit, RuntimeLocation } from './runtime/location.js'
+export type { RuntimeExit, RuntimeLocation, RuntimeItemPlacement } from './runtime/location.js'
+
+export type { RuntimeItem } from './runtime/item.js'

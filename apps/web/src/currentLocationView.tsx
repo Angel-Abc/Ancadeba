@@ -1,6 +1,10 @@
 import type { RuntimeGameContent } from '@angelabc/ancadeba-content'
 import type { GameState } from '@angelabc/ancadeba-core'
-import { getCurrentLocation } from '@angelabc/ancadeba-core'
+import {
+  getAvailableItemPlacements,
+  getCurrentLocation,
+  getItem,
+} from '@angelabc/ancadeba-core'
 
 export interface CurrentLocationViewProps {
   gameContent: RuntimeGameContent
@@ -11,18 +15,22 @@ export interface CurrentLocationViewProps {
 
 export function CurrentLocationView(props: CurrentLocationViewProps) {
   const currentLocation = getCurrentLocation(props.gameContent, props.state)
+  const availableItemPlacements = getAvailableItemPlacements(
+    props.gameContent,
+    props.state,
+  )
   return (
     <div>
       <h2>{currentLocation.name}</h2>
       <p>{currentLocation.description}</p>
 
-      {currentLocation.items.length > 0 && (
+      {availableItemPlacements.length > 0 && (
         <>
           <h3>Items</h3>
           <ul>
-            {currentLocation.items.map((itemPlacement) => (
+            {availableItemPlacements.map((itemPlacement) => (
               <li key={itemPlacement.itemId}>
-                {itemPlacement.itemId}
+                {getItem(props.gameContent, itemPlacement.itemId).name}
                 <button
                   type="button"
                   onClick={(e) => {
