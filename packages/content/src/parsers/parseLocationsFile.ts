@@ -1,5 +1,35 @@
-import type { ExitDefinition, LocationDefinition, LocationsFile } from '../authored/locationsFile'
+import type { ExitDefinition, ItemPlacementDefinition, LocationDefinition, LocationsFile } from '../authored/locationsFile'
 import { isIdentifier, isNonEmptyString, isRecord } from '../validation'
+
+function parseItemPlacement(
+  value: unknown,
+  index: number,
+  locationIndex: number
+): ItemPlacementDefinition {
+  if (!isRecord(value)) {
+    throw new Error(
+      `locations[${locationIndex}].items[${index}] must be an object.`,
+    )
+  }
+  const { itemId, takeLabel } = value
+
+  if (!isIdentifier(itemId)) {
+    throw new Error(
+      `locations[${locationIndex}].items[${index}].itemId must be a lowercase identifier.`,
+    )
+  }
+
+  if (!isNonEmptyString(takeLabel)) {
+    throw new Error(
+      `locations[${locationIndex}].items[${index}].takeLabel must be a non-empty string.`,
+    )
+  }
+
+  return {
+    itemId,
+    takeLabel,
+  }
+}
 
 function parseExit(
   value: unknown,
@@ -43,7 +73,7 @@ export function parseLocation(value: unknown, index: number): LocationDefinition
     throw new Error(`locations[${index}] must be an object.`)
   }
 
-  const { id, name, description, exits } = value
+  const { id, name, description, exits, items } = value
 
   if (!isIdentifier(id)) {
     throw new Error(`locations[${index}].id must be a lowercase identifier.`)
@@ -62,9 +92,16 @@ export function parseLocation(value: unknown, index: number): LocationDefinition
   if (!Array.isArray(exits)) {
     throw new Error(`locations[${index}].exits must be an array of objects.`)
   }
-  
+  if (!Array.isArray(items)) {
+    throw new Error(`locations[${index}].items must be an array of objects.`)
+  }
+
   const parsedExits = exits.map((exit, exitIndex) =>
     parseExit(exit, exitIndex, index),
+  )
+
+  const parsedItems = items.map((item, itemIndex) =>
+    parseItemPlacement(item, itemIndex, index),
   )
 
   return {
@@ -72,6 +109,7 @@ export function parseLocation(value: unknown, index: number): LocationDefinition
     name,
     description,
     exits: parsedExits,
+    items: parsedItems,
   }
 }
 

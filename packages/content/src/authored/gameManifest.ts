@@ -5,6 +5,7 @@ export interface GameManifest {
     description: string
     content: {
         locations: string
+        items: string
     }
     start: {
         locationId: string

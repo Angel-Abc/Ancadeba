@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { parseLocationsFile } from '../src/index.js'
+import {
+  parseLocationsFile,
+  type LocationDefinition,
+} from '../src/index.js'
 
 function createExit() {
   return {
@@ -9,16 +12,17 @@ function createExit() {
   }
 }
 
-function createLocation() {
+function createLocation(): LocationDefinition {
   return {
     id: 'entrance-hall',
     name: 'Entrance Hall',
     description: 'Dusty doors lead deeper into the observatory.',
     exits: [createExit()],
+    items: [],
   }
 }
 
-function createSecondLocation() {
+function createSecondLocation(): LocationDefinition {
   return {
     id: 'main-hall',
     name: 'Main Hall',
@@ -28,6 +32,12 @@ function createSecondLocation() {
         id: 'main-hall-to-entrance-hall',
         label: 'Return to the entrance hall',
         targetLocationId: 'entrance-hall',
+      },
+    ],
+    items: [
+      {
+        itemId: 'brass-key',
+        takeLabel: 'Pull the brass key from beneath the staircase',
       },
     ],
   }
@@ -64,10 +74,65 @@ describe('parseLocationsFile', () => {
             id: 'entrance-hall',
             name: 'Entrance Hall',
             description: 'Dusty doors lead deeper into the observatory.',
+            items: [],
           },
           createSecondLocation(),
         ],
       }),
     ).toThrow('locations[0].exits must be an array of objects.')
+  })
+
+  it('rejects a missing items array', () => {
+    const location = createLocation()
+    const { items: _items, ...locationWithoutItems } = location
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [locationWithoutItems],
+      }),
+    ).toThrow('locations[0].items must be an array of objects.')
+  })
+
+  it('reports the index of an invalid item placement', () => {
+    const location = createLocation()
+    location.items.push(null as never)
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow('locations[0].items[0] must be an object.')
+  })
+
+  it('rejects an invalid item placement ID', () => {
+    const location = createLocation()
+    location.items.push({
+      itemId: 'Brass-Key',
+      takeLabel: 'Take the brass key',
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].items[0].itemId must be a lowercase identifier.',
+    )
+  })
+
+  it('rejects an empty item placement label', () => {
+    const location = createLocation()
+    location.items.push({
+      itemId: 'brass-key',
+      takeLabel: ' ',
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].items[0].takeLabel must be a non-empty string.',
+    )
   })
 })

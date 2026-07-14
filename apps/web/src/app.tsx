@@ -54,6 +54,9 @@ export function App() {
           const newState = followExit(game, state, exitId)
           setState(newState)
         }}
+        onItemTaken={(itemId) => {
+            alert(`You have taken the item with ID: ${itemId}`)
+        }}
       />
     </main>
   )

@@ -9,6 +9,7 @@ function createManifest(): Record<string, unknown> {
     description: 'A mysterious observatory.',
     content: {
       locations: 'data/locations.json',
+      items: 'data/items.json',
     },
     start: {
       locationId: 'entrance-hall',
@@ -78,10 +79,28 @@ describe('parseGameManifest', () => {
         ...createManifest(),
         content: {
           locations,
+          items: 'data/items.json',
         },
       }),
     ).toThrow(
       'The game manifest must contain a valid locations path.',
     )
+  })
+
+  it.each([
+    'Data/items.json',
+    '../items.json',
+    '/data/items.json',
+    'data\\items.json',
+  ])('rejects the invalid items path %s', (items) => {
+    expect(() =>
+      parseGameManifest({
+        ...createManifest(),
+        content: {
+          locations: 'data/locations.json',
+          items,
+        },
+      }),
+    ).toThrow('The game manifest must contain a valid items path.')
   })
 })

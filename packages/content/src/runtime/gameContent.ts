@@ -1,3 +1,4 @@
+import type { RuntimeItem } from './item'
 import type { RuntimeLocation } from './location'
 
 interface Start {
@@ -9,6 +10,7 @@ export interface RuntimeGameContent {
   title: string
   description: string
   locations: Map<string, RuntimeLocation>
+  items: Map<string, RuntimeItem>
   start: Start
 }
 

@@ -14,6 +14,7 @@ function createGame(): RuntimeGameContent {
     start: {
       locationId: 'entrance-hall',
     },
+    items: new Map(),
     locations: new Map([
       ['entrance-hall', {
         id: 'entrance-hall',
@@ -26,6 +27,7 @@ function createGame(): RuntimeGameContent {
             targetLocationId: 'main-hall',
           },
         ],
+        items: [],
       }],
       ['main-hall', {
         id: 'main-hall',
@@ -38,6 +40,7 @@ function createGame(): RuntimeGameContent {
             targetLocationId: 'entrance-hall',
           },
         ],
+        items: [],
       }],
     ]),
   }

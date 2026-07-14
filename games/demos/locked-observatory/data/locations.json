@@ -10,7 +10,8 @@
           "label": "Pass through the brass doors",
           "targetLocationId": "main-hall"
         }
-      ]
+      ],
+      "items": []
     },
     {
       "id": "main-hall",
@@ -27,6 +28,12 @@
           "label": "Climb the staircase to the observatory",
           "targetLocationId": "observatory"
         }
+      ],
+      "items": [
+        {
+          "itemId": "brass-key",
+          "takeLabel": "Pull the brass key from beneath the staircase"
+        }
       ]
     },
     {
@@ -39,7 +46,8 @@
           "label": "Descend back to the main hall",
           "targetLocationId": "main-hall"
         }
-      ]
+      ],
+      "items": []
     }
   ]
 }

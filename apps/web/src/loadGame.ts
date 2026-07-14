@@ -1,6 +1,7 @@
 import {
   assembleGameContent,
   parseGameManifest,
+  parseItemsFile,
   parseLocationsFile,
   type RuntimeGameContent,
 } from '@angelabc/ancadeba-content'
@@ -24,5 +25,8 @@ export async function loadGame(): Promise<RuntimeGameContent> {
   const locationsValue = await loadJson(`/game/${manifest.content.locations}`)
   const locationsFile = parseLocationsFile(locationsValue)
 
-  return assembleGameContent(manifest, locationsFile)
+  const itemsValue = await loadJson(`/game/${manifest.content.items}`)
+  const itemsFile = parseItemsFile(itemsValue)
+
+  return assembleGameContent(manifest, locationsFile, itemsFile)
 }

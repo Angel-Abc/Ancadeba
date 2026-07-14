@@ -1,13 +1,30 @@
 import type { GameManifest } from '../authored/gameManifest'
+import type { ItemDefinition, ItemsFile } from '../authored/itemsFile'
 import type { LocationsFile } from '../authored/locationsFile'
 import type { RuntimeGameContent } from '../runtime/gameContent'
+import type { RuntimeItem } from '../runtime/item'
 import type { RuntimeLocation } from '../runtime/location'
 
 export function assembleGameContent(
   manifest: GameManifest,
   locationsFile: LocationsFile,
+  itemsFile: ItemsFile,
 ): RuntimeGameContent {
   const locations = new Map<string, RuntimeLocation>()
+  const items = new Map<string, RuntimeItem>()
+
+  for (const item of itemsFile.items) {
+    if (items.has(item.id)) {
+      throw new Error(`Duplicate item ID: ${item.id}`)
+    }
+    items.set(item.id, {
+      id: item.id,
+      name: item.name,
+      description: item.description,
+    })
+  }
+
+  const placedItemIds = new Set<string>()
 
   for (const location of locationsFile.locations) {
     if (locations.has(location.id)) {
@@ -26,6 +43,30 @@ export function assembleGameContent(
       exitIds.add(exit.id)
     }
 
+    const itemIds = new Set<string>()
+
+    for (const itemPlacement of location.items) {
+      if (!items.has(itemPlacement.itemId)) {
+        throw new Error(
+          `Item placement in location "${location.id}" references unknown item ID "${itemPlacement.itemId}".`,
+        )
+      }
+      if (itemIds.has(itemPlacement.itemId)) {
+        throw new Error(
+          `Duplicate item placement for item ID "${itemPlacement.itemId}" in location "${location.id}".`,
+        )
+      }
+
+      if (placedItemIds.has(itemPlacement.itemId)) {
+        throw new Error(
+          `Item ID "${itemPlacement.itemId}" is placed in multiple locations.`,
+        )
+      }
+
+      itemIds.add(itemPlacement.itemId)
+      placedItemIds.add(itemPlacement.itemId)
+    }
+
     locations.set(location.id, {
       id: location.id,
       name: location.name,
@@ -34,6 +75,10 @@ export function assembleGameContent(
         id: exit.id,
         label: exit.label,
         targetLocationId: exit.targetLocationId,
+      })),
+      items: location.items.map((itemPlacement) => ({
+        itemId: itemPlacement.itemId,
+        takeLabel: itemPlacement.takeLabel,
       })),
     })
   }
@@ -62,5 +107,6 @@ export function assembleGameContent(
       locationId: manifest.start.locationId,
     },
     locations,
+    items,
   }
 }

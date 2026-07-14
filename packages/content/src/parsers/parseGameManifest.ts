@@ -47,6 +47,10 @@ export function parseGameManifest(value: unknown): GameManifest {
     )
   }
 
+  if (!isGamePath(content.items)) {
+    throw new Error('The game manifest must contain a valid items path.')
+  }
+
   return {
     formatVersion,
     id,
@@ -54,6 +58,7 @@ export function parseGameManifest(value: unknown): GameManifest {
     description,
     content: {
       locations: content.locations,
+      items: content.items,
     },
     start: {
       locationId: start.locationId,

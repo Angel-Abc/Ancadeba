@@ -4,8 +4,10 @@ export { parseLocationsFile } from './parsers/parseLocationsFile.js'
 
 export { assembleGameContent } from './assemblers/assembleGameContent.js'
 
-export type { GameManifest } from './authored/gameManifest.js'
+export { parseItemsFile } from './parsers/parseItemsFile.js'
 
+export type { GameManifest } from './authored/gameManifest.js'
+export type { ItemDefinition, ItemsFile } from './authored/itemsFile.js'
 export type {
   ExitDefinition,
   LocationDefinition,
