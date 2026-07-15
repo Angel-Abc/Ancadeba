@@ -14,7 +14,7 @@ export function App() {
   const [game, setGame] = useState<RuntimeGameContent | null>(null)
   const [state, setState] = useState<GameState | null>(null)
   const [error, setError] = useState<string | null>(null)
-
+  
   useEffect(() => {
     void loadGame()
       .then((loadedGame) => {

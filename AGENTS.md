@@ -10,3 +10,5 @@ Default Codex behavior in this repository:
 - Read-only inspection commands are acceptable when needed to answer a question.
 - Codex may create and edit automated tests, test fixtures, and test configuration without separate approval when testing agreed project behavior.
 - Codex must still ask before changing production code to make a test pass.
+- When the user explicitly asks for a commit or push, use the currently active working branch. Do not create or switch branches unless the user explicitly asks.
+- Do not create a pull request unless the user explicitly asks for one.
