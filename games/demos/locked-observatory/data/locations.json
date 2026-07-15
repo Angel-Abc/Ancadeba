@@ -16,12 +16,17 @@
     {
       "id": "main-hall",
       "name": "Main Hall",
-      "description": "A large hall with a high ceiling and a grand staircase.",
+      "description": "A large hall with a high ceiling and a grand staircase. A narrow door beneath the landing bears a tarnished caretaker's plaque.",
       "exits": [
         {
           "id": "main-hall-to-entrance-hall",
           "label": "Return to the entrance hall",
           "targetLocationId": "entrance-hall"
+        },
+        {
+          "id": "main-hall-to-caretakers-study",
+          "label": "Enter the caretaker's study",
+          "targetLocationId": "caretakers-study"
         },
         {
           "id": "main-hall-to-observatory",
@@ -33,10 +38,27 @@
           }
         }
       ],
+      "items": []
+    },
+    {
+      "id": "caretakers-study",
+      "name": "Caretaker's Study",
+      "description": "Dusty ledgers cover a cramped desk. Beneath the staircase mechanism, something brass glints among a ring of old keys.",
+      "exits": [
+        {
+          "id": "caretakers-study-to-main-hall",
+          "label": "Return to the main hall",
+          "targetLocationId": "main-hall"
+        }
+      ],
       "items": [
         {
           "itemId": "brass-key",
-          "takeLabel": "Pull the brass key from beneath the staircase"
+          "takeLabel": "Take the engraved brass key"
+        },
+        {
+          "itemId": "caretakers-journal",
+          "takeLabel": "Take the caretaker's journal from the desk"
         }
       ]
     },
@@ -51,7 +73,12 @@
           "targetLocationId": "main-hall"
         }
       ],
-      "items": []
+      "items": [
+        {
+          "itemId": "telescope-lens",
+          "takeLabel": "Lift the telescope lens from its protective case"
+        }
+      ]
     }
   ]
 }

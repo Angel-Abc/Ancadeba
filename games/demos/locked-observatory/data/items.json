@@ -4,6 +4,16 @@
             "id": "brass-key",
             "name": "Brass Key",
             "description": "A small brass key with intricate engravings. It looks like it could open a door or a chest."
+        },
+        {
+            "id": "caretakers-journal",
+            "name": "Caretaker's Journal",
+            "description": "A weathered journal filled with maintenance notes. One marked page describes removing the telescope's focusing lens during the observatory's final night of operation."
+        },
+        {
+            "id": "telescope-lens",
+            "name": "Telescope Lens",
+            "description": "A heavy glass lens held in a brass frame. Its edge is engraved with the same celestial pattern as the observatory telescope."
         }
     ]
 }
