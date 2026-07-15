@@ -26,7 +26,11 @@
         {
           "id": "main-hall-to-observatory",
           "label": "Climb the staircase to the observatory",
-          "targetLocationId": "observatory"
+          "targetLocationId": "observatory",
+          "requirement": {
+            "itemId": "brass-key",
+            "failureMessage": "The staircase is locked. You need a key to proceed."
+          }
         }
       ],
       "items": [

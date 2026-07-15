@@ -5,6 +5,7 @@ import {
   followExit,
   getAvailableItemPlacements,
   getCurrentLocation,
+  getExitAvailability,
   getItem,
   getInventoryItems,
   takeItem,
@@ -64,6 +65,15 @@ function createGame(): RuntimeGameContent {
   }
 }
 
+function requireBrassKeyForEntranceExit(game: RuntimeGameContent) {
+  const exit = game.locations.get('entrance-hall')!.exits[0]!
+  exit.requirement = {
+    itemId: 'brass-key',
+    failureMessage: 'The brass doors are locked.',
+  }
+  return exit
+}
+
 describe('core location navigation', () => {
   it('starts at the configured start location', () => {
     expect(createInitialGameState(createGame())).toEqual({
@@ -100,6 +110,58 @@ describe('core location navigation', () => {
     expect(() => followExit(game, state, 'missing-exit')).toThrow(
       'Exit with id "missing-exit" not found in location "entrance-hall".',
     )
+  })
+})
+
+describe('core exit requirements', () => {
+  it('reports an unrestricted exit as available', () => {
+    const game = createGame()
+    const state = createInitialGameState(game)
+    const exit = game.locations.get('entrance-hall')!.exits[0]!
+
+    expect(getExitAvailability(exit, state)).toEqual({ available: true })
+  })
+
+  it('reports a required item and failure message when an exit is locked', () => {
+    const game = createGame()
+    const state = createInitialGameState(game)
+    const exit = requireBrassKeyForEntranceExit(game)
+
+    expect(getExitAvailability(exit, state)).toEqual({
+      available: false,
+      failureMessage: 'The brass doors are locked.',
+    })
+  })
+
+  it('rejects following a locked exit without changing the old state', () => {
+    const game = createGame()
+    const state = createInitialGameState(game)
+    requireBrassKeyForEntranceExit(game)
+
+    expect(() =>
+      followExit(game, state, 'entrance-hall-to-main-hall'),
+    ).toThrow('The brass doors are locked.')
+    expect(state).toEqual({
+      currentLocationId: 'entrance-hall',
+      inventoryItemIds: [],
+    })
+  })
+
+  it('follows a required-item exit and preserves the item in inventory', () => {
+    const game = createGame()
+    const state = {
+      ...createInitialGameState(game),
+      inventoryItemIds: ['brass-key'],
+    }
+    const exit = requireBrassKeyForEntranceExit(game)
+
+    expect(getExitAvailability(exit, state)).toEqual({ available: true })
+    expect(
+      followExit(game, state, 'entrance-hall-to-main-hall'),
+    ).toEqual({
+      currentLocationId: 'main-hall',
+      inventoryItemIds: ['brass-key'],
+    })
   })
 })
 

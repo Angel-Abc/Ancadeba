@@ -146,6 +146,43 @@ describe('assembleGameContent', () => {
     )
   })
 
+  it('preserves an exit item requirement in runtime content', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.exits[0]!.requirement = {
+      itemId: 'brass-key',
+      failureMessage: 'The door is locked.',
+    }
+
+    const game = assembleGameContent(
+      createManifest(),
+      locationsFile,
+      createItemsFile(),
+    )
+
+    expect(game.locations.get('entrance-hall')?.exits[0]?.requirement).toEqual({
+      itemId: 'brass-key',
+      failureMessage: 'The door is locked.',
+    })
+  })
+
+  it('rejects an exit requirement that references an unknown item', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.exits[0]!.requirement = {
+      itemId: 'missing-item',
+      failureMessage: 'The door is locked.',
+    }
+
+    expect(() =>
+      assembleGameContent(
+        createManifest(),
+        locationsFile,
+        createItemsFile(),
+      ),
+    ).toThrow(
+      'Exit "entrance-hall-to-main-hall" in location "entrance-hall" has a requirement for unknown item ID "missing-item".',
+    )
+  })
+
   it('rejects duplicate item IDs', () => {
     const itemsFile = createItemsFile()
     itemsFile.items.push({

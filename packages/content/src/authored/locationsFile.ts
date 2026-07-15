@@ -1,7 +1,13 @@
+export interface ExitRequirementDefinition {
+  itemId: string
+  failureMessage: string
+}
+
 export interface ExitDefinition {
   id: string
   label: string
   targetLocationId: string
+  requirement?: ExitRequirementDefinition | undefined
 }
 
 export interface ItemPlacementDefinition {

@@ -1,18 +1,24 @@
+export interface RuntimeExitRequirement {
+  itemId: string
+  failureMessage: string
+}
+
 export interface RuntimeExit {
-    id: string
-    label: string
-    targetLocationId: string
+  id: string
+  label: string
+  targetLocationId: string
+  requirement?: RuntimeExitRequirement | undefined
 }
 
 export interface RuntimeItemPlacement {
-    itemId: string
-    takeLabel: string
+  itemId: string
+  takeLabel: string
 }
 
 export interface RuntimeLocation {
-    id: string
-    name: string
-    description: string
-    exits: RuntimeExit[]
-    items: RuntimeItemPlacement[]
+  id: string
+  name: string
+  description: string
+  exits: RuntimeExit[]
+  items: RuntimeItemPlacement[]
 }

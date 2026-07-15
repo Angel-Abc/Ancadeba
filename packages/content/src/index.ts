@@ -10,12 +10,18 @@ export type { GameManifest } from './authored/gameManifest.js'
 export type { ItemDefinition, ItemsFile } from './authored/itemsFile.js'
 export type {
   ExitDefinition,
+  ExitRequirementDefinition,
   LocationDefinition,
   LocationsFile,
 } from './authored/locationsFile.js'
 
 export type { RuntimeGameContent } from './runtime/gameContent.js'
 
-export type { RuntimeExit, RuntimeLocation, RuntimeItemPlacement } from './runtime/location.js'
+export type {
+  RuntimeExit,
+  RuntimeExitRequirement,
+  RuntimeLocation,
+  RuntimeItemPlacement,
+} from './runtime/location.js'
 
 export type { RuntimeItem } from './runtime/item.js'

@@ -52,6 +52,91 @@ describe('parseLocationsFile', () => {
     expect(parseLocationsFile(value)).toEqual(value)
   })
 
+  it('parses a valid exit item requirement', () => {
+    const value = {
+      locations: [
+        {
+          ...createLocation(),
+          exits: [
+            {
+              ...createExit(),
+              requirement: {
+                itemId: 'brass-key',
+                failureMessage: 'The door is locked.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(parseLocationsFile(value)).toEqual(value)
+  })
+
+  it('rejects an exit requirement that is not an object', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: 'brass-key',
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow('locations[0].exits[0].requirement must be an object.')
+  })
+
+  it('rejects an invalid exit requirement item ID', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: {
+                  itemId: 'Brass-Key',
+                  failureMessage: 'The door is locked.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].exits[0].requirement.itemId must be a lowercase identifier.',
+    )
+  })
+
+  it('rejects an empty exit requirement failure message', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: {
+                  itemId: 'brass-key',
+                  failureMessage: ' ',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].exits[0].requirement.failureMessage must be a non-empty string.',
+    )
+  })
+
   it('rejects a missing locations array', () => {
     expect(() => parseLocationsFile({})).toThrow(
       'The locations file must contain a locations array.',

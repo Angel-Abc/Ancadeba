@@ -40,6 +40,12 @@ export function assembleGameContent(
         )
       }
 
+      if (exit.requirement && !items.has(exit.requirement.itemId)) {
+        throw new Error(
+          `Exit "${exit.id}" in location "${location.id}" has a requirement for unknown item ID "${exit.requirement.itemId}".`,
+        )
+      }
+
       exitIds.add(exit.id)
     }
 
@@ -75,6 +81,12 @@ export function assembleGameContent(
         id: exit.id,
         label: exit.label,
         targetLocationId: exit.targetLocationId,
+        requirement: exit.requirement
+          ? {
+              itemId: exit.requirement.itemId,
+              failureMessage: exit.requirement.failureMessage,
+            }
+          : undefined,
       })),
       items: location.items.map((itemPlacement) => ({
         itemId: itemPlacement.itemId,

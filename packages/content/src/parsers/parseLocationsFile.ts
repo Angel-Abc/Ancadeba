@@ -1,10 +1,16 @@
-import type { ExitDefinition, ItemPlacementDefinition, LocationDefinition, LocationsFile } from '../authored/locationsFile'
+import type {
+  ExitDefinition,
+  ExitRequirementDefinition,
+  ItemPlacementDefinition,
+  LocationDefinition,
+  LocationsFile,
+} from '../authored/locationsFile'
 import { isIdentifier, isNonEmptyString, isRecord } from '../validation'
 
 function parseItemPlacement(
   value: unknown,
   index: number,
-  locationIndex: number
+  locationIndex: number,
 ): ItemPlacementDefinition {
   if (!isRecord(value)) {
     throw new Error(
@@ -28,6 +34,41 @@ function parseItemPlacement(
   return {
     itemId,
     takeLabel,
+  }
+}
+
+function parseExitRequirement(
+  value: unknown,
+  index: number,
+  locationIndex: number,
+): ExitRequirementDefinition | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      `locations[${locationIndex}].exits[${index}].requirement must be an object.`,
+    )
+  }
+
+  const { itemId, failureMessage } = value
+
+  if (!isIdentifier(itemId)) {
+    throw new Error(
+      `locations[${locationIndex}].exits[${index}].requirement.itemId must be a lowercase identifier.`,
+    )
+  }
+
+  if (!isNonEmptyString(failureMessage)) {
+    throw new Error(
+      `locations[${locationIndex}].exits[${index}].requirement.failureMessage must be a non-empty string.`,
+    )
+  }
+
+  return {
+    itemId,
+    failureMessage,
   }
 }
 
@@ -61,14 +102,24 @@ function parseExit(
     )
   }
 
+  const requirement = parseExitRequirement(
+    value.requirement,
+    index,
+    locationIndex,
+  )
+
   return {
     id,
     label,
     targetLocationId,
+    requirement,
   }
 }
 
-export function parseLocation(value: unknown, index: number): LocationDefinition {
+export function parseLocation(
+  value: unknown,
+  index: number,
+): LocationDefinition {
   if (!isRecord(value)) {
     throw new Error(`locations[${index}] must be an object.`)
   }
@@ -125,6 +176,6 @@ export function parseLocationsFile(value: unknown): LocationsFile {
   const locations = value.locations.map(parseLocation)
 
   return {
-    locations
+    locations,
   }
 }

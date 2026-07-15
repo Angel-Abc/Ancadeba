@@ -3,8 +3,10 @@ import type { GameState } from '@angelabc/ancadeba-core'
 import {
   getAvailableItemPlacements,
   getCurrentLocation,
+  getExitAvailability,
   getItem,
 } from '@angelabc/ancadeba-core'
+import { useState } from 'react'
 
 export interface CurrentLocationViewProps {
   gameContent: RuntimeGameContent
@@ -14,6 +16,8 @@ export interface CurrentLocationViewProps {
 }
 
 export function CurrentLocationView(props: CurrentLocationViewProps) {
+  const [message, setMessage] = useState<string | null>(null)
+
   const currentLocation = getCurrentLocation(props.gameContent, props.state)
   const availableItemPlacements = getAvailableItemPlacements(
     props.gameContent,
@@ -35,6 +39,7 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
                   type="button"
                   onClick={(e) => {
                     e.preventDefault()
+                    setMessage(null)
                     props.onItemTaken(itemPlacement.itemId)
                   }}
                 >
@@ -48,20 +53,29 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
 
       <h3>Exits</h3>
       <ul>
-        {currentLocation.exits.map((exit) => (
-          <li key={exit.id}>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                props.onExitSelected(exit.id)
-              }}
-            >
-              <strong>{exit.label}</strong>
-            </button>
-          </li>
-        ))}
+        {currentLocation.exits.map((exit) => {
+          const exitAvailability = getExitAvailability(exit, props.state)
+          return (
+            <li key={exit.id}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (!exitAvailability.available) {
+                    setMessage(exitAvailability.failureMessage)
+                    return
+                  }
+                  setMessage(null)
+                  props.onExitSelected(exit.id)
+                }}
+              >
+                <strong>{exit.label}</strong>
+              </button>
+            </li>
+          )
+        })}
       </ul>
+      {message && <p>{message}</p>}
     </div>
   )
 }
