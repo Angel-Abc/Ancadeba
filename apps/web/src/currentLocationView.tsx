@@ -17,12 +17,16 @@ export interface CurrentLocationViewProps {
 
 export function CurrentLocationView(props: CurrentLocationViewProps) {
   const [message, setMessage] = useState<string | null>(null)
+  const [inspectedItemId, setInspectedItemId] = useState<string | null>(null)
 
   const currentLocation = getCurrentLocation(props.gameContent, props.state)
   const availableItemPlacements = getAvailableItemPlacements(
     props.gameContent,
     props.state,
   )
+  const inspectedItem = inspectedItemId
+    ? getItem(props.gameContent, inspectedItemId)
+    : null
   return (
     <div>
       <h2>{currentLocation.name}</h2>
@@ -40,6 +44,17 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
                   onClick={(e) => {
                     e.preventDefault()
                     setMessage(null)
+                    setInspectedItemId(itemPlacement.itemId)
+                  }}
+                >
+                  <strong>Inspect</strong>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setMessage(null)
+                    setInspectedItemId(null)
                     props.onItemTaken(itemPlacement.itemId)
                   }}
                 >
@@ -48,6 +63,12 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
               </li>
             ))}
           </ul>
+          {inspectedItem && (
+            <div>
+              <h4>Inspect: {inspectedItem.name}</h4>
+              <p>{inspectedItem.description}</p>
+            </div>
+          )}
         </>
       )}
 
@@ -61,6 +82,7 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
                 type="button"
                 onClick={(e) => {
                   e.preventDefault()
+                  setInspectedItemId(null)
                   if (!exitAvailability.available) {
                     setMessage(exitAvailability.failureMessage)
                     return
