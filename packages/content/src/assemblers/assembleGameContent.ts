@@ -1,5 +1,5 @@
 import type { GameManifest } from '../authored/gameManifest'
-import type { ItemDefinition, ItemsFile } from '../authored/itemsFile'
+import type { ItemsFile } from '../authored/itemsFile'
 import type { LocationsFile } from '../authored/locationsFile'
 import type { RuntimeGameContent } from '../runtime/gameContent'
 import type { RuntimeItem } from '../runtime/item'
@@ -25,6 +25,7 @@ export function assembleGameContent(
   }
 
   const placedItemIds = new Set<string>()
+  const interactionIds = new Set<string>()
 
   for (const location of locationsFile.locations) {
     if (locations.has(location.id)) {
@@ -73,6 +74,25 @@ export function assembleGameContent(
       placedItemIds.add(itemPlacement.itemId)
     }
 
+    for (const interaction of location.interactions) {
+      if (interactionIds.has(interaction.id)) {
+        throw new Error(
+          `Duplicate interaction ID "${interaction.id}" in location "${location.id}".`,
+        )
+      }
+
+      if (
+        interaction.requirement &&
+        !items.has(interaction.requirement.itemId)
+      ) {
+        throw new Error(
+          `Interaction "${interaction.id}" in location "${location.id}" has a requirement for unknown item ID "${interaction.requirement.itemId}".`,
+        )
+      }
+
+      interactionIds.add(interaction.id)
+    }
+
     locations.set(location.id, {
       id: location.id,
       name: location.name,
@@ -91,6 +111,17 @@ export function assembleGameContent(
       items: location.items.map((itemPlacement) => ({
         itemId: itemPlacement.itemId,
         takeLabel: itemPlacement.takeLabel,
+      })),
+      interactions: location.interactions.map((interaction) => ({
+        id: interaction.id,
+        label: interaction.label,
+        completionMessage: interaction.completionMessage,
+        requirement: interaction.requirement
+          ? {
+              itemId: interaction.requirement.itemId,
+              failureMessage: interaction.requirement.failureMessage,
+            }
+          : undefined,
       })),
     })
   }

@@ -11,6 +11,9 @@ export type { ItemDefinition, ItemsFile } from './authored/itemsFile.js'
 export type {
   ExitDefinition,
   ExitRequirementDefinition,
+  InteractionDefinition,
+  InteractionRequirementDefinition,
+  ItemPlacementDefinition,
   LocationDefinition,
   LocationsFile,
 } from './authored/locationsFile.js'
@@ -22,6 +25,8 @@ export type {
   RuntimeExitRequirement,
   RuntimeLocation,
   RuntimeItemPlacement,
+  RuntimeInteraction,
+  RuntimeInteractionRequirement,
 } from './runtime/location.js'
 
 export type { RuntimeItem } from './runtime/item.js'

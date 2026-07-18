@@ -19,6 +19,7 @@ function createLocation(): LocationDefinition {
     description: 'Dusty doors lead deeper into the observatory.',
     exits: [createExit()],
     items: [],
+    interactions: [],
   }
 }
 
@@ -40,6 +41,7 @@ function createSecondLocation(): LocationDefinition {
         takeLabel: 'Pull the brass key from beneath the staircase',
       },
     ],
+    interactions: [],
   }
 }
 
@@ -63,6 +65,29 @@ describe('parseLocationsFile', () => {
               requirement: {
                 itemId: 'brass-key',
                 failureMessage: 'The door is locked.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(parseLocationsFile(value)).toEqual(value)
+  })
+
+  it('parses a valid interaction with an item requirement', () => {
+    const value = {
+      locations: [
+        {
+          ...createLocation(),
+          interactions: [
+            {
+              id: 'repair-observatory-telescope',
+              label: 'Repair the telescope',
+              completionMessage: 'The telescope is repaired.',
+              requirement: {
+                itemId: 'telescope-lens',
+                failureMessage: 'You need the telescope lens.',
               },
             },
           ],
@@ -178,6 +203,18 @@ describe('parseLocationsFile', () => {
     ).toThrow('locations[0].items must be an array of objects.')
   })
 
+  it('rejects a missing interactions array', () => {
+    const location = createLocation()
+    const { interactions: _interactions, ...locationWithoutInteractions } =
+      location
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [locationWithoutInteractions],
+      }),
+    ).toThrow('locations[0].interactions must be an array of objects.')
+  })
+
   it('reports the index of an invalid item placement', () => {
     const location = createLocation()
     location.items.push(null as never)
@@ -218,6 +255,134 @@ describe('parseLocationsFile', () => {
       }),
     ).toThrow(
       'locations[0].items[0].takeLabel must be a non-empty string.',
+    )
+  })
+
+  it('reports the index of an invalid interaction', () => {
+    const location = createLocation()
+    location.interactions.push(null as never)
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow('locations[0].interactions[0] must be an object.')
+  })
+
+  it('rejects an invalid interaction ID', () => {
+    const location = createLocation()
+    location.interactions.push({
+      id: 'Repair-Telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].id must be a lowercase identifier.',
+    )
+  })
+
+  it('rejects an empty interaction label', () => {
+    const location = createLocation()
+    location.interactions.push({
+      id: 'repair-telescope',
+      label: ' ',
+      completionMessage: 'The telescope is repaired.',
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].label must be a non-empty string.',
+    )
+  })
+
+  it('rejects an empty interaction completion message', () => {
+    const location = createLocation()
+    location.interactions.push({
+      id: 'repair-telescope',
+      label: 'Repair the telescope',
+      completionMessage: ' ',
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].completionMessage must be a non-empty string.',
+    )
+  })
+
+  it('rejects an interaction requirement that is not an object', () => {
+    const location = createLocation()
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...location,
+            interactions: [
+              {
+                id: 'repair-telescope',
+                label: 'Repair the telescope',
+                completionMessage: 'The telescope is repaired.',
+                requirement: 'telescope-lens',
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].requirement must be an object.',
+    )
+  })
+
+  it('rejects an invalid interaction requirement item ID', () => {
+    const location = createLocation()
+    location.interactions.push({
+      id: 'repair-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+      requirement: {
+        itemId: 'Telescope-Lens',
+        failureMessage: 'You need the telescope lens.',
+      },
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].requirement.itemId must be a lowercase identifier.',
+    )
+  })
+
+  it('rejects an empty interaction requirement failure message', () => {
+    const location = createLocation()
+    location.interactions.push({
+      id: 'repair-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+      requirement: {
+        itemId: 'telescope-lens',
+        failureMessage: ' ',
+      },
+    })
+
+    expect(() =>
+      parseLocationsFile({
+        locations: [location],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].requirement.failureMessage must be a non-empty string.',
     )
   })
 })

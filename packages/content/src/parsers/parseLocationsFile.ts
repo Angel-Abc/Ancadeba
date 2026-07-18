@@ -1,6 +1,8 @@
 import type {
   ExitDefinition,
   ExitRequirementDefinition,
+  InteractionDefinition,
+  InteractionRequirementDefinition,
   ItemPlacementDefinition,
   LocationDefinition,
   LocationsFile,
@@ -72,6 +74,84 @@ function parseExitRequirement(
   }
 }
 
+function parseInteractionRequirement(
+  value: unknown,
+  index: number,
+  locationIndex: number,
+): InteractionRequirementDefinition | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+  if (!isRecord(value)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].requirement must be an object.`,
+    )
+  }
+
+  const { itemId, failureMessage } = value
+
+  if (!isIdentifier(itemId)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].requirement.itemId must be a lowercase identifier.`,
+    )
+  }
+
+  if (!isNonEmptyString(failureMessage)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].requirement.failureMessage must be a non-empty string.`,
+    )
+  }
+
+  return {
+    itemId,
+    failureMessage,
+  }
+}
+
+function parseInteraction(
+  value: unknown,
+  index: number,
+  locationIndex: number,
+): InteractionDefinition {
+  if (!isRecord(value)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}] must be an object.`,
+    )
+  }
+  const { id, label, completionMessage } = value
+
+  if (!isIdentifier(id)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].id must be a lowercase identifier.`,
+    )
+  }
+
+  if (!isNonEmptyString(label)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].label must be a non-empty string.`,
+    )
+  }
+
+  if (!isNonEmptyString(completionMessage)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].completionMessage must be a non-empty string.`,
+    )
+  }
+
+  const requirement = parseInteractionRequirement(
+    value.requirement,
+    index,
+    locationIndex,
+  )
+
+  return {
+    id,
+    label,
+    completionMessage,
+    requirement,
+  }
+}
+
 function parseExit(
   value: unknown,
   index: number,
@@ -124,7 +204,7 @@ export function parseLocation(
     throw new Error(`locations[${index}] must be an object.`)
   }
 
-  const { id, name, description, exits, items } = value
+  const { id, name, description, exits, items, interactions } = value
 
   if (!isIdentifier(id)) {
     throw new Error(`locations[${index}].id must be a lowercase identifier.`)
@@ -146,6 +226,11 @@ export function parseLocation(
   if (!Array.isArray(items)) {
     throw new Error(`locations[${index}].items must be an array of objects.`)
   }
+  if (!Array.isArray(interactions)) {
+    throw new Error(
+      `locations[${index}].interactions must be an array of objects.`,
+    )
+  }
 
   const parsedExits = exits.map((exit, exitIndex) =>
     parseExit(exit, exitIndex, index),
@@ -155,12 +240,17 @@ export function parseLocation(
     parseItemPlacement(item, itemIndex, index),
   )
 
+  const parsedInteractions = interactions.map((interaction, interactionIndex) =>
+    parseInteraction(interaction, interactionIndex, index),
+  )
+
   return {
     id,
     name,
     description,
     exits: parsedExits,
     items: parsedItems,
+    interactions: parsedInteractions,
   }
 }
 

@@ -42,6 +42,7 @@ function createGame(): RuntimeGameContent {
           },
         ],
         items: [],
+        interactions: [],
       }],
       ['main-hall', {
         id: 'main-hall',
@@ -60,6 +61,7 @@ function createGame(): RuntimeGameContent {
             takeLabel: 'Pull the brass key from beneath the staircase',
           },
         ],
+        interactions: [],
       }],
     ]),
   }

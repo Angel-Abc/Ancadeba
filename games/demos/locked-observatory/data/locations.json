@@ -11,7 +11,8 @@
           "targetLocationId": "main-hall"
         }
       ],
-      "items": []
+      "items": [],
+      "interactions": []
     },
     {
       "id": "main-hall",
@@ -38,7 +39,8 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "interactions": []
     },
     {
       "id": "caretakers-study",
@@ -60,7 +62,8 @@
           "itemId": "caretakers-journal",
           "takeLabel": "Take the caretaker's journal from the desk"
         }
-      ]
+      ],
+      "interactions": []
     },
     {
       "id": "observatory",
@@ -77,6 +80,17 @@
         {
           "itemId": "telescope-lens",
           "takeLabel": "Lift the telescope lens from its protective case"
+        }
+      ],
+      "interactions": [
+        {
+          "id": "repair-observatory-telescope",
+          "label": "Repair the telescope",
+          "completionMessage": "You carefully fit the lens into the telescope, restoring its functionality.",
+          "requirement": {
+            "itemId": "telescope-lens",
+            "failureMessage": "You need the telescope lens to repair the telescope."
+          }
         }
       ]
     }

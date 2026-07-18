@@ -37,6 +37,7 @@ function createLocationsFile(): LocationsFile {
           },
         ],
         items: [],
+        interactions: [],
       },
       {
         id: 'main-hall',
@@ -55,6 +56,7 @@ function createLocationsFile(): LocationsFile {
             takeLabel: 'Pull the brass key from beneath the staircase',
           },
         ],
+        interactions: [],
       },
     ],
   }
@@ -180,6 +182,81 @@ describe('assembleGameContent', () => {
       ),
     ).toThrow(
       'Exit "entrance-hall-to-main-hall" in location "entrance-hall" has a requirement for unknown item ID "missing-item".',
+    )
+  })
+
+  it('preserves an interaction and its item requirement in runtime content', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.interactions.push({
+      id: 'repair-observatory-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+      requirement: {
+        itemId: 'brass-key',
+        failureMessage: 'You need the brass key.',
+      },
+    })
+
+    const game = assembleGameContent(
+      createManifest(),
+      locationsFile,
+      createItemsFile(),
+    )
+
+    expect(game.locations.get('entrance-hall')?.interactions).toEqual([
+      {
+        id: 'repair-observatory-telescope',
+        label: 'Repair the telescope',
+        completionMessage: 'The telescope is repaired.',
+        requirement: {
+          itemId: 'brass-key',
+          failureMessage: 'You need the brass key.',
+        },
+      },
+    ])
+  })
+
+  it('rejects an interaction requirement that references an unknown item', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.interactions.push({
+      id: 'repair-observatory-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+      requirement: {
+        itemId: 'missing-item',
+        failureMessage: 'You need the telescope lens.',
+      },
+    })
+
+    expect(() =>
+      assembleGameContent(
+        createManifest(),
+        locationsFile,
+        createItemsFile(),
+      ),
+    ).toThrow(
+      'Interaction "repair-observatory-telescope" in location "entrance-hall" has a requirement for unknown item ID "missing-item".',
+    )
+  })
+
+  it('rejects duplicate interaction IDs across locations', () => {
+    const locationsFile = createLocationsFile()
+    const interaction = {
+      id: 'repair-observatory-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+    }
+    locationsFile.locations[0]!.interactions.push(interaction)
+    locationsFile.locations[1]!.interactions.push(interaction)
+
+    expect(() =>
+      assembleGameContent(
+        createManifest(),
+        locationsFile,
+        createItemsFile(),
+      ),
+    ).toThrow(
+      'Duplicate interaction ID "repair-observatory-telescope" in location "main-hall".',
     )
   })
 
