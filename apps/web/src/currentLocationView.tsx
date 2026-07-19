@@ -4,7 +4,9 @@ import {
   getAvailableItemPlacements,
   getCurrentLocation,
   getExitAvailability,
+  getInteractionAvailability,
   getItem,
+  isInteractionCompleted,
 } from '@angelabc/ancadeba-core'
 import { useState } from 'react'
 
@@ -13,6 +15,7 @@ export interface CurrentLocationViewProps {
   state: GameState
   onExitSelected: (exitId: string) => void
   onItemTaken: (itemId: string) => void
+  onInteractionSelected: (interactionId: string) => void
 }
 
 export function CurrentLocationView(props: CurrentLocationViewProps) {
@@ -27,6 +30,14 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
   const inspectedItem = inspectedItemId
     ? getItem(props.gameContent, inspectedItemId)
     : null
+
+  const interactions = currentLocation.interactions
+    .map((interaction) => ({
+      interaction,
+      availability: getInteractionAvailability(interaction, props.state),
+      completed: isInteractionCompleted(props.state, interaction.id),
+    }))
+
   return (
     <div>
       <h2>{currentLocation.name}</h2>
@@ -97,6 +108,38 @@ export function CurrentLocationView(props: CurrentLocationViewProps) {
           )
         })}
       </ul>
+
+      {interactions.length > 0 && (
+        <>
+          <h3>Interactions</h3>
+          <ul>
+            {interactions.map(({ interaction, availability, completed }) => (
+              <li key={interaction.id}>
+                {completed ? (
+                  <p>{interaction.completionMessage}</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setInspectedItemId(null)
+                      if (!availability.available) {
+                        setMessage(availability.failureMessage)
+                        return
+                      }
+                      setMessage(null)
+                      props.onInteractionSelected(interaction.id)
+                    }}
+                  >
+                    <strong>{interaction.label}</strong>
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       {message && <p>{message}</p>}
     </div>
   )

@@ -3,6 +3,7 @@ import type { GameState } from '@angelabc/ancadeba-core'
 import {
   createInitialGameState,
   followExit,
+  performInteraction,
   takeItem,
 } from '@angelabc/ancadeba-core'
 import type { RuntimeGameContent } from '@angelabc/ancadeba-content'
@@ -61,6 +62,10 @@ export function App() {
         }}
         onItemTaken={(itemId) => {
           const newState = takeItem(game, state, itemId)
+          setState(newState)
+        }}
+        onInteractionSelected={(interactionId) => {
+          const newState = performInteraction(game, state, interactionId)
           setState(newState)
         }}
       />

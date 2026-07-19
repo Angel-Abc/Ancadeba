@@ -13,3 +13,10 @@ export {
   getInventoryItems,
   takeItem,
 } from './inventory.js'
+
+export {
+  type InteractionAvailability,
+  getInteractionAvailability,
+  isInteractionCompleted,
+  performInteraction,
+} from './interactions.js'
