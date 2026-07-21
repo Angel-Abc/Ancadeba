@@ -63,8 +63,31 @@ describe('parseLocationsFile', () => {
             {
               ...createExit(),
               requirement: {
+                type: 'item',
                 itemId: 'brass-key',
                 failureMessage: 'The door is locked.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(parseLocationsFile(value)).toEqual(value)
+  })
+
+  it('parses a valid completed-interaction exit requirement', () => {
+    const value = {
+      locations: [
+        {
+          ...createLocation(),
+          exits: [
+            {
+              ...createExit(),
+              requirement: {
+                type: 'completed-interaction',
+                interactionId: 'repair-observatory-telescope',
+                failureMessage: 'The telescope must be repaired.',
               },
             },
           ],
@@ -126,6 +149,7 @@ describe('parseLocationsFile', () => {
               {
                 ...createExit(),
                 requirement: {
+                  type: 'item',
                   itemId: 'Brass-Key',
                   failureMessage: 'The door is locked.',
                 },
@@ -149,6 +173,7 @@ describe('parseLocationsFile', () => {
               {
                 ...createExit(),
                 requirement: {
+                  type: 'item',
                   itemId: 'brass-key',
                   failureMessage: ' ',
                 },
@@ -159,6 +184,53 @@ describe('parseLocationsFile', () => {
       }),
     ).toThrow(
       'locations[0].exits[0].requirement.failureMessage must be a non-empty string.',
+    )
+  })
+
+  it('rejects an invalid completed-interaction requirement ID', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: {
+                  type: 'completed-interaction',
+                  interactionId: 'Repair-Telescope',
+                  failureMessage: 'The telescope must be repaired.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].exits[0].requirement.interactionId must be a lowercase identifier.',
+    )
+  })
+
+  it('rejects an unknown exit requirement type', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: {
+                  type: 'quest',
+                  failureMessage: 'Complete the quest first.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].exits[0].requirement.type must be either "item" or "completed-interaction".',
     )
   })
 

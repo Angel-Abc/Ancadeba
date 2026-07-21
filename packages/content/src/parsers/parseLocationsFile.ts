@@ -54,24 +54,55 @@ function parseExitRequirement(
     )
   }
 
-  const { itemId, failureMessage } = value
+  const { type } = value
 
-  if (!isIdentifier(itemId)) {
-    throw new Error(
-      `locations[${locationIndex}].exits[${index}].requirement.itemId must be a lowercase identifier.`,
-    )
+  if (type === 'item') {
+    const { itemId, failureMessage } = value
+
+    if (!isIdentifier(itemId)) {
+      throw new Error(
+        `locations[${locationIndex}].exits[${index}].requirement.itemId must be a lowercase identifier.`,
+      )
+    }
+
+    if (!isNonEmptyString(failureMessage)) {
+      throw new Error(
+        `locations[${locationIndex}].exits[${index}].requirement.failureMessage must be a non-empty string.`,
+      )
+    }
+
+    return {
+      type: 'item',
+      itemId,
+      failureMessage,
+    }
   }
 
-  if (!isNonEmptyString(failureMessage)) {
-    throw new Error(
-      `locations[${locationIndex}].exits[${index}].requirement.failureMessage must be a non-empty string.`,
-    )
+  if (type === 'completed-interaction') {
+    const { interactionId, failureMessage } = value
+
+    if (!isIdentifier(interactionId)) {
+      throw new Error(
+        `locations[${locationIndex}].exits[${index}].requirement.interactionId must be a lowercase identifier.`,
+      )
+    }
+
+    if (!isNonEmptyString(failureMessage)) {
+      throw new Error(
+        `locations[${locationIndex}].exits[${index}].requirement.failureMessage must be a non-empty string.`,
+      )
+    }
+
+    return {
+      type: 'completed-interaction',
+      interactionId,
+      failureMessage,
+    }
   }
 
-  return {
-    itemId,
-    failureMessage,
-  }
+  throw new Error(
+    `locations[${locationIndex}].exits[${index}].requirement.type must be either "item" or "completed-interaction".`,
+  )
 }
 
 function parseInteractionRequirement(

@@ -1,7 +1,14 @@
-export interface RuntimeExitRequirement {
-  itemId: string
-  failureMessage: string
-}
+export type RuntimeExitRequirement =
+  | {
+      type: 'item'
+      itemId: string
+      failureMessage: string
+    }
+  | {
+      type: 'completed-interaction'
+      interactionId: string
+      failureMessage: string
+    }
 
 export interface RuntimeExit {
   id: string

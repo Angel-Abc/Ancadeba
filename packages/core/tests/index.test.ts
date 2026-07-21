@@ -73,6 +73,7 @@ function createGame(): RuntimeGameContent {
 function requireBrassKeyForEntranceExit(game: RuntimeGameContent) {
   const exit = game.locations.get('entrance-hall')!.exits[0]!
   exit.requirement = {
+    type: 'item',
     itemId: 'brass-key',
     failureMessage: 'The brass doors are locked.',
   }
@@ -190,6 +191,45 @@ describe('core exit requirements', () => {
       currentLocationId: 'main-hall',
       inventoryItemIds: ['brass-key'],
       completedInteractionIds: [],
+    })
+  })
+
+  it('reports a completed-interaction exit as unavailable before completion', () => {
+    const game = createGame()
+    const state = createInitialGameState(game)
+    const exit = game.locations.get('entrance-hall')!.exits[0]!
+    exit.requirement = {
+      type: 'completed-interaction',
+      interactionId: 'repair-observatory-telescope',
+      failureMessage: 'The telescope must be repaired.',
+    }
+
+    expect(getExitAvailability(exit, state)).toEqual({
+      available: false,
+      failureMessage: 'The telescope must be repaired.',
+    })
+  })
+
+  it('follows a completed-interaction exit after completion', () => {
+    const game = createGame()
+    const state = {
+      ...createInitialGameState(game),
+      completedInteractionIds: ['repair-observatory-telescope'],
+    }
+    const exit = game.locations.get('entrance-hall')!.exits[0]!
+    exit.requirement = {
+      type: 'completed-interaction',
+      interactionId: 'repair-observatory-telescope',
+      failureMessage: 'The telescope must be repaired.',
+    }
+
+    expect(getExitAvailability(exit, state)).toEqual({ available: true })
+    expect(
+      followExit(game, state, 'entrance-hall-to-main-hall'),
+    ).toEqual({
+      currentLocationId: 'main-hall',
+      inventoryItemIds: [],
+      completedInteractionIds: ['repair-observatory-telescope'],
     })
   })
 })

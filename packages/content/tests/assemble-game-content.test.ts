@@ -151,6 +151,7 @@ describe('assembleGameContent', () => {
   it('preserves an exit item requirement in runtime content', () => {
     const locationsFile = createLocationsFile()
     locationsFile.locations[0]!.exits[0]!.requirement = {
+      type: 'item',
       itemId: 'brass-key',
       failureMessage: 'The door is locked.',
     }
@@ -162,6 +163,7 @@ describe('assembleGameContent', () => {
     )
 
     expect(game.locations.get('entrance-hall')?.exits[0]?.requirement).toEqual({
+      type: 'item',
       itemId: 'brass-key',
       failureMessage: 'The door is locked.',
     })
@@ -170,6 +172,7 @@ describe('assembleGameContent', () => {
   it('rejects an exit requirement that references an unknown item', () => {
     const locationsFile = createLocationsFile()
     locationsFile.locations[0]!.exits[0]!.requirement = {
+      type: 'item',
       itemId: 'missing-item',
       failureMessage: 'The door is locked.',
     }
@@ -182,6 +185,51 @@ describe('assembleGameContent', () => {
       ),
     ).toThrow(
       'Exit "entrance-hall-to-main-hall" in location "entrance-hall" has a requirement for unknown item ID "missing-item".',
+    )
+  })
+
+  it('preserves a forward completed-interaction exit requirement', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.exits[0]!.requirement = {
+      type: 'completed-interaction',
+      interactionId: 'repair-observatory-telescope',
+      failureMessage: 'The telescope must be repaired.',
+    }
+    locationsFile.locations[1]!.interactions.push({
+      id: 'repair-observatory-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+    })
+
+    const game = assembleGameContent(
+      createManifest(),
+      locationsFile,
+      createItemsFile(),
+    )
+
+    expect(game.locations.get('entrance-hall')?.exits[0]?.requirement).toEqual({
+      type: 'completed-interaction',
+      interactionId: 'repair-observatory-telescope',
+      failureMessage: 'The telescope must be repaired.',
+    })
+  })
+
+  it('rejects an exit requirement that references an unknown interaction', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.exits[0]!.requirement = {
+      type: 'completed-interaction',
+      interactionId: 'missing-interaction',
+      failureMessage: 'The interaction must be completed.',
+    }
+
+    expect(() =>
+      assembleGameContent(
+        createManifest(),
+        locationsFile,
+        createItemsFile(),
+      ),
+    ).toThrow(
+      'Exit "entrance-hall-to-main-hall" in location "entrance-hall" has a requirement for unknown interaction ID "missing-interaction".',
     )
   })
 

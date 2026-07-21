@@ -39,10 +39,18 @@ export function getExitAvailability(
   exit: RuntimeExit,
   state: GameState,
 ): ExitAvailability {
-  if (
-    exit.requirement &&
-    !state.inventoryItemIds.includes(exit.requirement.itemId)
-  ) {
+  if (!exit.requirement) {
+    return { available: true }
+  }
+
+  const requirementMet =
+    exit.requirement.type === 'item'
+      ? state.inventoryItemIds.includes(exit.requirement.itemId)
+      : state.completedInteractionIds.includes(
+          exit.requirement.interactionId,
+        )
+
+  if (!requirementMet) {
     return {
       available: false,
       failureMessage: exit.requirement.failureMessage,

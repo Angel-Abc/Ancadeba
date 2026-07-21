@@ -1,7 +1,14 @@
-export interface ExitRequirementDefinition {
-  itemId: string
-  failureMessage: string
-}
+export type ExitRequirementDefinition =
+  | {
+      type: 'item'
+      itemId: string
+      failureMessage: string
+    }
+  | {
+      type: 'completed-interaction'
+      interactionId: string
+      failureMessage: string
+    }
 
 export interface ExitDefinition {
   id: string

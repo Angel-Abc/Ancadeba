@@ -34,6 +34,7 @@
           "label": "Climb the staircase to the observatory",
           "targetLocationId": "observatory",
           "requirement": {
+            "type": "item",
             "itemId": "brass-key",
             "failureMessage": "The staircase is locked. You need a key to proceed."
           }
@@ -74,6 +75,16 @@
           "id": "observatory-to-main-hall",
           "label": "Descend back to the main hall",
           "targetLocationId": "main-hall"
+        },
+        {
+          "id": "observatory-to-star-chamber",
+          "label": "Open the sealed door to the star chamber",
+          "targetLocationId": "star-chamber",
+          "requirement": {
+            "type": "completed-interaction",
+            "interactionId": "repair-observatory-telescope",
+            "failureMessage": "The star chamber remains sealed. Its mechanism appears to be connected to the telescope."
+          }
         }
       ],
       "items": [
@@ -86,13 +97,27 @@
         {
           "id": "repair-observatory-telescope",
           "label": "Repair the telescope",
-          "completionMessage": "You carefully fit the lens into the telescope, restoring its functionality.",
+          "completionMessage": "You carefully fit the lens into the telescope. As its mechanism returns to life, gears turn within the wall and release the seal on the star chamber.",
           "requirement": {
             "itemId": "telescope-lens",
             "failureMessage": "You need the telescope lens to repair the telescope."
           }
         }
       ]
+    },
+    {
+      "id": "star-chamber",
+      "name": "Star Chamber",
+      "description": "A hidden chamber lies beneath a domed ceiling of dark glass. Silver lines trace unfamiliar constellations across the floor, converging on an empty pedestal at the room's center.",
+      "exits": [
+        {
+          "id": "star-chamber-to-observatory",
+          "label": "Return to the observatory",
+          "targetLocationId": "observatory"
+        }
+      ],
+      "items": [],
+      "interactions": []
     }
   ]
 }

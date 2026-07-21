@@ -41,7 +41,11 @@ export function assembleGameContent(
         )
       }
 
-      if (exit.requirement && !items.has(exit.requirement.itemId)) {
+      if (
+        exit.requirement &&
+        exit.requirement.type === 'item' &&
+        !items.has(exit.requirement.itemId)
+      ) {
         throw new Error(
           `Exit "${exit.id}" in location "${location.id}" has a requirement for unknown item ID "${exit.requirement.itemId}".`,
         )
@@ -102,10 +106,17 @@ export function assembleGameContent(
         label: exit.label,
         targetLocationId: exit.targetLocationId,
         requirement: exit.requirement
-          ? {
-              itemId: exit.requirement.itemId,
-              failureMessage: exit.requirement.failureMessage,
-            }
+          ? exit.requirement.type === 'item'
+            ? {
+                type: 'item',
+                itemId: exit.requirement.itemId,
+                failureMessage: exit.requirement.failureMessage,
+              }
+            : {
+                type: 'completed-interaction',
+                interactionId: exit.requirement.interactionId,
+                failureMessage: exit.requirement.failureMessage,
+              }
           : undefined,
       })),
       items: location.items.map((itemPlacement) => ({
@@ -137,6 +148,15 @@ export function assembleGameContent(
       if (!locations.has(exit.targetLocationId)) {
         throw new Error(
           `The exit "${exit.id}" in location "${location.id}" has a targetLocationId "${exit.targetLocationId}" that does not match any location ID.`,
+        )
+      }
+
+      if (
+        exit.requirement?.type === 'completed-interaction' &&
+        !interactionIds.has(exit.requirement.interactionId)
+      ) {
+        throw new Error(
+          `Exit "${exit.id}" in location "${location.id}" has a requirement for unknown interaction ID "${exit.requirement.interactionId}".`,
         )
       }
     }
