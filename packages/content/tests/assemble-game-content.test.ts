@@ -165,6 +165,30 @@ describe('assembleGameContent', () => {
     expect(game.locations.get('entrance-hall')?.exits[0]?.requirement).toEqual({
       type: 'item',
       itemId: 'brass-key',
+      consumesItem: false,
+      failureMessage: 'The door is locked.',
+    })
+  })
+
+  it('preserves item consumption in a runtime exit requirement', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.exits[0]!.requirement = {
+      type: 'item',
+      itemId: 'brass-key',
+      consumesItem: true,
+      failureMessage: 'The door is locked.',
+    }
+
+    const game = assembleGameContent(
+      createManifest(),
+      locationsFile,
+      createItemsFile(),
+    )
+
+    expect(game.locations.get('entrance-hall')?.exits[0]?.requirement).toEqual({
+      type: 'item',
+      itemId: 'brass-key',
+      consumesItem: true,
       failureMessage: 'The door is locked.',
     })
   })
@@ -258,10 +282,39 @@ describe('assembleGameContent', () => {
         completionMessage: 'The telescope is repaired.',
         requirement: {
           itemId: 'brass-key',
+          consumesItem: false,
           failureMessage: 'You need the brass key.',
         },
       },
     ])
+  })
+
+  it('preserves item consumption in a runtime interaction requirement', () => {
+    const locationsFile = createLocationsFile()
+    locationsFile.locations[0]!.interactions.push({
+      id: 'repair-observatory-telescope',
+      label: 'Repair the telescope',
+      completionMessage: 'The telescope is repaired.',
+      requirement: {
+        itemId: 'brass-key',
+        consumesItem: true,
+        failureMessage: 'You need the brass key.',
+      },
+    })
+
+    const game = assembleGameContent(
+      createManifest(),
+      locationsFile,
+      createItemsFile(),
+    )
+
+    expect(
+      game.locations.get('entrance-hall')?.interactions[0]?.requirement,
+    ).toEqual({
+      itemId: 'brass-key',
+      consumesItem: true,
+      failureMessage: 'You need the brass key.',
+    })
   })
 
   it('rejects an interaction requirement that references an unknown item', () => {

@@ -100,6 +100,7 @@
           "completionMessage": "You carefully fit the lens into the telescope. As its mechanism returns to life, gears turn within the wall and release the seal on the star chamber.",
           "requirement": {
             "itemId": "telescope-lens",
+            "consumesItem": true,
             "failureMessage": "You need the telescope lens to repair the telescope."
           }
         }

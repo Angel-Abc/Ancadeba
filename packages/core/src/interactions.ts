@@ -59,8 +59,14 @@ export function performInteraction(
     throw new Error(availability.failureMessage)
   }
 
+  const consumesItem = interaction.requirement?.consumesItem ?? false
+  const itemId = interaction.requirement?.itemId
   return {
     ...state,
+    inventoryItemIds:
+      consumesItem && itemId
+        ? state.inventoryItemIds.filter((id) => id !== itemId)
+        : state.inventoryItemIds,
     completedInteractionIds: [...state.completedInteractionIds, interactionId],
   }
 }

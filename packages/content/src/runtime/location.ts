@@ -2,6 +2,7 @@ export type RuntimeExitRequirement =
   | {
       type: 'item'
       itemId: string
+      consumesItem: boolean
       failureMessage: string
     }
   | {
@@ -24,6 +25,7 @@ export interface RuntimeItemPlacement {
 
 export interface RuntimeInteractionRequirement {
   itemId: string
+  consumesItem: boolean
   failureMessage: string
 }
 

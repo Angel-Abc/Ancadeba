@@ -70,11 +70,15 @@ function createGame(): RuntimeGameContent {
   }
 }
 
-function requireBrassKeyForEntranceExit(game: RuntimeGameContent) {
+function requireBrassKeyForEntranceExit(
+  game: RuntimeGameContent,
+  consumesBrassKey = false,
+) {
   const exit = game.locations.get('entrance-hall')!.exits[0]!
   exit.requirement = {
     type: 'item',
     itemId: 'brass-key',
+    consumesItem: consumesBrassKey,
     failureMessage: 'The brass doors are locked.',
   }
   return exit
@@ -83,6 +87,7 @@ function requireBrassKeyForEntranceExit(game: RuntimeGameContent) {
 function addEntranceInteraction(
   game: RuntimeGameContent,
   requiresBrassKey = false,
+  consumesBrassKey = false,
 ) {
   const interaction = {
     id: 'repair-observatory-telescope',
@@ -91,6 +96,7 @@ function addEntranceInteraction(
     requirement: requiresBrassKey
       ? {
           itemId: 'brass-key',
+          consumesItem: consumesBrassKey,
           failureMessage: 'You need the brass key.',
         }
       : undefined,
@@ -105,6 +111,7 @@ describe('core location navigation', () => {
     expect(createInitialGameState(createGame())).toEqual({
       currentLocationId: 'entrance-hall',
       inventoryItemIds: [],
+      collectedItemIds: [],
       completedInteractionIds: [],
     })
   })
@@ -127,6 +134,7 @@ describe('core location navigation', () => {
     ).toEqual({
       currentLocationId: 'main-hall',
       inventoryItemIds: [],
+      collectedItemIds: [],
       completedInteractionIds: [],
     })
   })
@@ -172,6 +180,7 @@ describe('core exit requirements', () => {
     expect(state).toEqual({
       currentLocationId: 'entrance-hall',
       inventoryItemIds: [],
+      collectedItemIds: [],
       completedInteractionIds: [],
     })
   })
@@ -181,6 +190,7 @@ describe('core exit requirements', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
     }
     const exit = requireBrassKeyForEntranceExit(game)
 
@@ -190,6 +200,36 @@ describe('core exit requirements', () => {
     ).toEqual({
       currentLocationId: 'main-hall',
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
+      completedInteractionIds: [],
+    })
+  })
+
+  it('follows a consuming-item exit without mutating the old state', () => {
+    const game = createGame()
+    const state = {
+      ...createInitialGameState(game),
+      inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
+    }
+    requireBrassKeyForEntranceExit(game, true)
+
+    const nextState = followExit(
+      game,
+      state,
+      'entrance-hall-to-main-hall',
+    )
+
+    expect(nextState).toEqual({
+      currentLocationId: 'main-hall',
+      inventoryItemIds: [],
+      collectedItemIds: ['brass-key'],
+      completedInteractionIds: [],
+    })
+    expect(state).toEqual({
+      currentLocationId: 'entrance-hall',
+      inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: [],
     })
   })
@@ -229,6 +269,7 @@ describe('core exit requirements', () => {
     ).toEqual({
       currentLocationId: 'main-hall',
       inventoryItemIds: [],
+      collectedItemIds: [],
       completedInteractionIds: ['repair-observatory-telescope'],
     })
   })
@@ -280,9 +321,11 @@ describe('core inventory', () => {
     expect(nextState).toEqual({
       currentLocationId: 'main-hall',
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: [],
     })
     expect(state.inventoryItemIds).toEqual([])
+    expect(state.collectedItemIds).toEqual([])
     expect(getAvailableItemPlacements(game, nextState)).toEqual([])
   })
 
@@ -291,6 +334,7 @@ describe('core inventory', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
     }
 
     expect(getInventoryItems(game, state)).toEqual([
@@ -328,6 +372,7 @@ describe('core inventory', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
     }
 
     expect(() => takeItem(game, state, 'brass-key')).toThrow(
@@ -340,6 +385,7 @@ describe('core inventory', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: ['repair-observatory-telescope'],
     }
 
@@ -348,6 +394,7 @@ describe('core inventory', () => {
     ).toEqual({
       currentLocationId: 'main-hall',
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: ['repair-observatory-telescope'],
     })
   })
@@ -380,6 +427,7 @@ describe('core interactions', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
     }
     const interaction = addEntranceInteraction(game, true)
 
@@ -405,6 +453,7 @@ describe('core interactions', () => {
     const state = {
       ...createInitialGameState(game),
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
     }
     addEntranceInteraction(game, true)
 
@@ -417,13 +466,60 @@ describe('core interactions', () => {
     expect(nextState).toEqual({
       currentLocationId: 'entrance-hall',
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: ['repair-observatory-telescope'],
     })
     expect(state).toEqual({
       currentLocationId: 'entrance-hall',
       inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
       completedInteractionIds: [],
     })
+  })
+
+  it('consumes a required item without making its placement available again', () => {
+    const game = createGame()
+    addEntranceInteraction(game, true, true)
+    const mainHallState = followExit(
+      game,
+      createInitialGameState(game),
+      'entrance-hall-to-main-hall',
+    )
+    const carryingState = takeItem(game, mainHallState, 'brass-key')
+    const entranceState = followExit(
+      game,
+      carryingState,
+      'main-hall-to-entrance-hall',
+    )
+
+    const completedState = performInteraction(
+      game,
+      entranceState,
+      'repair-observatory-telescope',
+    )
+
+    expect(completedState).toEqual({
+      currentLocationId: 'entrance-hall',
+      inventoryItemIds: [],
+      collectedItemIds: ['brass-key'],
+      completedInteractionIds: ['repair-observatory-telescope'],
+    })
+    expect(entranceState).toEqual({
+      currentLocationId: 'entrance-hall',
+      inventoryItemIds: ['brass-key'],
+      collectedItemIds: ['brass-key'],
+      completedInteractionIds: [],
+    })
+
+    const revisitedMainHallState = followExit(
+      game,
+      completedState,
+      'entrance-hall-to-main-hall',
+    )
+    expect(getAvailableItemPlacements(game, revisitedMainHallState)).toEqual([])
+    expect(() =>
+      takeItem(game, revisitedMainHallState, 'brass-key'),
+    ).toThrow('Item with id "brass-key" has already been collected.')
   })
 
   it('rejects an interaction outside the current location', () => {
@@ -449,6 +545,22 @@ describe('core interactions', () => {
       performInteraction(game, state, 'repair-observatory-telescope'),
     ).toThrow('You need the brass key.')
     expect(state.completedInteractionIds).toEqual([])
+  })
+
+  it('uses the authored failure message when a consumed item is missing', () => {
+    const game = createGame()
+    const state = createInitialGameState(game)
+    addEntranceInteraction(game, true, true)
+
+    expect(() =>
+      performInteraction(game, state, 'repair-observatory-telescope'),
+    ).toThrow('You need the brass key.')
+    expect(state).toEqual({
+      currentLocationId: 'entrance-hall',
+      inventoryItemIds: [],
+      collectedItemIds: [],
+      completedInteractionIds: [],
+    })
   })
 
   it('rejects completing the same interaction twice', () => {

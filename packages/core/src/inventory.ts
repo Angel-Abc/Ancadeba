@@ -12,7 +12,7 @@ export function getAvailableItemPlacements(
 ): RuntimeItemPlacement[] {
   const currentLocation = getCurrentLocation(game, state)
   const availableItemPlacements = currentLocation.items.filter(
-    (item) => !state.inventoryItemIds.includes(item.itemId),
+    (item) => !state.collectedItemIds.includes(item.itemId),
   )
   return availableItemPlacements
 }
@@ -43,6 +43,9 @@ export function takeItem(
   if (state.inventoryItemIds.includes(itemId)) {
     throw new Error(`Item with id "${itemId}" is already in the inventory.`)
   }
+  if (state.collectedItemIds.includes(itemId)) {
+    throw new Error(`Item with id "${itemId}" has already been collected.`)
+  }
   const availableItemPlacements = getAvailableItemPlacements(game, state)
   const itemPlacement = availableItemPlacements.find(
     (item) => item.itemId === itemId,
@@ -56,5 +59,6 @@ export function takeItem(
   return {
     ...state,
     inventoryItemIds: [...state.inventoryItemIds, itemId],
+    collectedItemIds: [...state.collectedItemIds, itemId],
   }
 }

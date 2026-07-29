@@ -29,9 +29,17 @@ export function followExit(
     throw new Error(exitAvailability.failureMessage)
   }
 
+  const consumedItemId =
+    exit.requirement?.type === 'item' && exit.requirement.consumesItem
+      ? exit.requirement.itemId
+      : undefined
+
   return {
     ...state,
     currentLocationId: exit.targetLocationId,
+    inventoryItemIds: consumedItemId
+      ? state.inventoryItemIds.filter((id) => id !== consumedItemId)
+      : state.inventoryItemIds,
   }
 }
 
@@ -46,9 +54,7 @@ export function getExitAvailability(
   const requirementMet =
     exit.requirement.type === 'item'
       ? state.inventoryItemIds.includes(exit.requirement.itemId)
-      : state.completedInteractionIds.includes(
-          exit.requirement.interactionId,
-        )
+      : state.completedInteractionIds.includes(exit.requirement.interactionId)
 
   if (!requirementMet) {
     return {

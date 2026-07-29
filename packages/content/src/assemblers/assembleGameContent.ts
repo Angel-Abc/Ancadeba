@@ -110,6 +110,7 @@ export function assembleGameContent(
             ? {
                 type: 'item',
                 itemId: exit.requirement.itemId,
+                consumesItem: exit.requirement.consumesItem ?? false,
                 failureMessage: exit.requirement.failureMessage,
               }
             : {
@@ -130,6 +131,7 @@ export function assembleGameContent(
         requirement: interaction.requirement
           ? {
               itemId: interaction.requirement.itemId,
+              consumesItem: interaction.requirement.consumesItem ?? false,
               failureMessage: interaction.requirement.failureMessage,
             }
           : undefined,

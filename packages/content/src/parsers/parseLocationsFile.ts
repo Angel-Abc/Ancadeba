@@ -7,7 +7,12 @@ import type {
   LocationDefinition,
   LocationsFile,
 } from '../authored/locationsFile'
-import { isIdentifier, isNonEmptyString, isRecord } from '../validation'
+import {
+  isIdentifier,
+  isNonEmptyString,
+  isOptionalBoolean,
+  isRecord,
+} from '../validation'
 
 function parseItemPlacement(
   value: unknown,
@@ -57,7 +62,7 @@ function parseExitRequirement(
   const { type } = value
 
   if (type === 'item') {
-    const { itemId, failureMessage } = value
+    const { itemId, consumesItem, failureMessage } = value
 
     if (!isIdentifier(itemId)) {
       throw new Error(
@@ -71,9 +76,16 @@ function parseExitRequirement(
       )
     }
 
+    if (!isOptionalBoolean(consumesItem)) {
+      throw new Error(
+        `locations[${locationIndex}].exits[${index}].requirement.consumesItem must be a boolean or undefined.`,
+      )
+    }
+
     return {
       type: 'item',
       itemId,
+      consumesItem,
       failureMessage,
     }
   }
@@ -119,7 +131,7 @@ function parseInteractionRequirement(
     )
   }
 
-  const { itemId, failureMessage } = value
+  const { itemId, consumesItem, failureMessage } = value
 
   if (!isIdentifier(itemId)) {
     throw new Error(
@@ -133,8 +145,15 @@ function parseInteractionRequirement(
     )
   }
 
+  if (!isOptionalBoolean(consumesItem)) {
+    throw new Error(
+      `locations[${locationIndex}].interactions[${index}].requirement.consumesItem must be a boolean or undefined.`,
+    )
+  }
+
   return {
     itemId,
+    consumesItem,
     failureMessage,
   }
 }

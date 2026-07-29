@@ -76,6 +76,29 @@ describe('parseLocationsFile', () => {
     expect(parseLocationsFile(value)).toEqual(value)
   })
 
+  it('parses an exit item requirement that consumes its item', () => {
+    const value = {
+      locations: [
+        {
+          ...createLocation(),
+          exits: [
+            {
+              ...createExit(),
+              requirement: {
+                type: 'item',
+                itemId: 'brass-key',
+                consumesItem: true,
+                failureMessage: 'The door is locked.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(parseLocationsFile(value)).toEqual(value)
+  })
+
   it('parses a valid completed-interaction exit requirement', () => {
     const value = {
       locations: [
@@ -110,6 +133,30 @@ describe('parseLocationsFile', () => {
               completionMessage: 'The telescope is repaired.',
               requirement: {
                 itemId: 'telescope-lens',
+                failureMessage: 'You need the telescope lens.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(parseLocationsFile(value)).toEqual(value)
+  })
+
+  it('parses an interaction requirement that consumes its item', () => {
+    const value = {
+      locations: [
+        {
+          ...createLocation(),
+          interactions: [
+            {
+              id: 'repair-observatory-telescope',
+              label: 'Repair the telescope',
+              completionMessage: 'The telescope is repaired.',
+              requirement: {
+                itemId: 'telescope-lens',
+                consumesItem: true,
                 failureMessage: 'You need the telescope lens.',
               },
             },
@@ -184,6 +231,31 @@ describe('parseLocationsFile', () => {
       }),
     ).toThrow(
       'locations[0].exits[0].requirement.failureMessage must be a non-empty string.',
+    )
+  })
+
+  it('rejects a non-boolean exit consumesItem value', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            exits: [
+              {
+                ...createExit(),
+                requirement: {
+                  type: 'item',
+                  itemId: 'brass-key',
+                  consumesItem: 'yes',
+                  failureMessage: 'The door is locked.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].exits[0].requirement.consumesItem must be a boolean or undefined.',
     )
   })
 
@@ -455,6 +527,32 @@ describe('parseLocationsFile', () => {
       }),
     ).toThrow(
       'locations[0].interactions[0].requirement.failureMessage must be a non-empty string.',
+    )
+  })
+
+  it('rejects a non-boolean consumesItem value', () => {
+    expect(() =>
+      parseLocationsFile({
+        locations: [
+          {
+            ...createLocation(),
+            interactions: [
+              {
+                id: 'repair-telescope',
+                label: 'Repair the telescope',
+                completionMessage: 'The telescope is repaired.',
+                requirement: {
+                  itemId: 'telescope-lens',
+                  consumesItem: 'yes',
+                  failureMessage: 'You need the telescope lens.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(
+      'locations[0].interactions[0].requirement.consumesItem must be a boolean or undefined.',
     )
   })
 })

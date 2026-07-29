@@ -2,6 +2,7 @@ export type ExitRequirementDefinition =
   | {
       type: 'item'
       itemId: string
+      consumesItem?: boolean | undefined
       failureMessage: string
     }
   | {
@@ -24,6 +25,7 @@ export interface ItemPlacementDefinition {
 
 export interface InteractionRequirementDefinition {
   itemId: string
+  consumesItem?: boolean | undefined
   failureMessage: string
 }
 
