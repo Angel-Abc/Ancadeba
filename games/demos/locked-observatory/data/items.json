@@ -1,19 +1,29 @@
 {
     "items": [
         {
+            "id": "guild-dispatch",
+            "name": "Guild Dispatch",
+            "description": "An urgent commission signed by Archivist Mara Venn. The abandoned observatory has begun transmitting an obsolete distress signal bearing the cipher of Dr. Elian Rook, who vanished there thirty-two years ago. You are to identify the source before tonight's conjunction and determine whether the signal is a warning."
+        },
+        {
             "id": "brass-key",
             "name": "Brass Key",
-            "description": "A small brass key with intricate engravings. It looks like it could open a door or a chest."
+            "description": "A heavy brass key engraved with the observatory's seven-star seal. One tooth is darkened by years of contact with an oiled lock."
         },
         {
             "id": "caretakers-journal",
             "name": "Caretaker's Journal",
-            "description": "A weathered journal filled with maintenance notes. One marked page describes removing the telescope's focusing lens during the observatory's final night of operation."
+            "description": "The final page is written in a hurried hand: \"Rook says the signal is an answer. He will not shut the telescope down. I removed the focusing lens and locked it in the chart room. If the beacon wakes again, do not let it finish the observation.\""
         },
         {
             "id": "telescope-lens",
             "name": "Telescope Lens",
-            "description": "A heavy glass lens held in a brass frame. Its edge is engraved with the same celestial pattern as the observatory telescope."
+            "description": "A heavy glass lens held in a brass frame. Its surface remains unnaturally cold, and the engraved constellations around its edge do not match the modern sky."
+        },
+        {
+            "id": "rook-observation-log",
+            "name": "Rook's Observation Log",
+            "description": "Dr. Rook's calculations track an absence rather than a star: a moving region where every instrument records less light than empty space should contain. His final entry reads, \"Tonight it looked back.\""
         }
     ]
 }

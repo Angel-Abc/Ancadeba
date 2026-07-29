@@ -1,10 +1,83 @@
 {
   "locations": [
     {
+      "id": "astronomers-guild",
+      "name": "Astronomers' Guild Outpost",
+      "description": "Morning rain taps against the outpost windows. Maps of the northern sky cover one wall, while a brass receiver on the central table repeats three pale flashes: the obsolete distress code of the Locked Observatory. Archivist Mara Venn waits beside a sealed dispatch.",
+      "exits": [
+        {
+          "id": "astronomers-guild-to-hillside-path",
+          "label": "Take the old road toward the observatory",
+          "targetLocationId": "hillside-path",
+          "requirement": {
+            "type": "item",
+            "itemId": "guild-dispatch",
+            "failureMessage": "You have no reason to investigate the observatory without accepting Mara Venn's sealed dispatch."
+          }
+        }
+      ],
+      "items": [
+        {
+          "itemId": "guild-dispatch",
+          "takeLabel": "Take Mara Venn's sealed dispatch"
+        }
+      ],
+      "interactions": []
+    },
+    {
+      "id": "hillside-path",
+      "name": "Hillside Path",
+      "description": "The abandoned road climbs through wet pines toward the ridge. Above them, the observatory dome catches no daylight, yet a narrow slit in its roof pulses with a cold blue glow.",
+      "exits": [
+        {
+          "id": "hillside-path-to-astronomers-guild",
+          "label": "Return to the Guild outpost",
+          "targetLocationId": "astronomers-guild"
+        },
+        {
+          "id": "hillside-path-to-observatory-grounds",
+          "label": "Follow the signal up the ridge",
+          "targetLocationId": "observatory-grounds"
+        }
+      ],
+      "items": [],
+      "interactions": [
+        {
+          "id": "observe-distress-signal",
+          "label": "Watch the observatory's signal",
+          "completionMessage": "Three short flashes repeat against the clouds. The interval is exact, but every seventh sequence ends with a fourth pulse that is not part of any Guild distress code."
+        }
+      ]
+    },
+    {
+      "id": "observatory-grounds",
+      "name": "Observatory Grounds",
+      "description": "An iron fence leans around an overgrown courtyard. No footprints disturb the moss, but the great entrance doors stand slightly open. A weathered plaque names Dr. Elian Rook as director and Tomas Venn as caretaker.",
+      "exits": [
+        {
+          "id": "observatory-grounds-to-hillside-path",
+          "label": "Descend the hillside path",
+          "targetLocationId": "hillside-path"
+        },
+        {
+          "id": "observatory-grounds-to-entrance-hall",
+          "label": "Push through the observatory doors",
+          "targetLocationId": "entrance-hall"
+        }
+      ],
+      "items": [],
+      "interactions": []
+    },
+    {
       "id": "entrance-hall",
       "name": "Entrance Hall",
-      "description": "Dusty brass doors lead deeper into the observatory.",
+      "description": "Dust lies thick across the black-and-white floor. Brass doors lead deeper into the observatory, and a row of memorial portraits watches from the walls. Dr. Rook's portrait has been turned to face the stone.",
       "exits": [
+        {
+          "id": "entrance-hall-to-observatory-grounds",
+          "label": "Step back into the courtyard",
+          "targetLocationId": "observatory-grounds"
+        },
         {
           "id": "entrance-hall-to-main-hall",
           "label": "Pass through the brass doors",
@@ -17,7 +90,7 @@
     {
       "id": "main-hall",
       "name": "Main Hall",
-      "description": "A large hall with a high ceiling and a grand staircase. A narrow door beneath the landing bears a tarnished caretaker's plaque.",
+      "description": "A grand staircase curves beneath a ceiling painted with constellations. The mechanical clock above it stopped at 2:17, though something inside the walls continues to count. A narrow door beneath the landing bears a tarnished caretaker's plaque.",
       "exits": [
         {
           "id": "main-hall-to-entrance-hall",
@@ -38,6 +111,16 @@
             "itemId": "brass-key",
             "failureMessage": "The staircase is locked. You need a key to proceed."
           }
+        },
+        {
+          "id": "main-hall-to-chart-room",
+          "label": "Enter the chart room",
+          "targetLocationId": "chart-room",
+          "requirement": {
+            "type": "item",
+            "itemId": "brass-key",
+            "failureMessage": "The chart room is locked with the same seven-star mechanism as the staircase."
+          }
         }
       ],
       "items": [],
@@ -46,7 +129,7 @@
     {
       "id": "caretakers-study",
       "name": "Caretaker's Study",
-      "description": "Dusty ledgers cover a cramped desk. Beneath the staircase mechanism, something brass glints among a ring of old keys.",
+      "description": "Maintenance ledgers cover a cramped desk beneath the staircase mechanism. A cot remains neatly made in the corner. Among a ring of ordinary iron keys, one piece of engraved brass catches the light.",
       "exits": [
         {
           "id": "caretakers-study-to-main-hall",
@@ -67,9 +150,32 @@
       "interactions": []
     },
     {
+      "id": "chart-room",
+      "name": "Chart Room",
+      "description": "Tall cabinets divide the room into narrow aisles. Most charts show familiar constellations, but the final season of observations has been scraped from the catalogue. A padded case rests beneath the central table.",
+      "exits": [
+        {
+          "id": "chart-room-to-main-hall",
+          "label": "Return to the main hall",
+          "targetLocationId": "main-hall"
+        }
+      ],
+      "items": [
+        {
+          "itemId": "telescope-lens",
+          "takeLabel": "Lift the telescope lens from its padded case"
+        },
+        {
+          "itemId": "rook-observation-log",
+          "takeLabel": "Take Rook's uncatalogued observation log"
+        }
+      ],
+      "interactions": []
+    },
+    {
       "id": "observatory",
       "name": "Observatory",
-      "description": "A circular room with a domed ceiling and a telescope pointing towards the stars. Star charts and celestial maps adorn the walls, and a faint hum of machinery can be heard.",
+      "description": "A vast telescope fills the circular chamber, fixed on a patch of apparently empty sky. Its focusing assembly stands open, missing a lens. Beneath the floor, machinery keeps pace with the signal flashing from the dome.",
       "exits": [
         {
           "id": "observatory-to-main-hall",
@@ -87,12 +193,7 @@
           }
         }
       ],
-      "items": [
-        {
-          "itemId": "telescope-lens",
-          "takeLabel": "Lift the telescope lens from its protective case"
-        }
-      ],
+      "items": [],
       "interactions": [
         {
           "id": "repair-observatory-telescope",
@@ -109,7 +210,7 @@
     {
       "id": "star-chamber",
       "name": "Star Chamber",
-      "description": "A hidden chamber lies beneath a domed ceiling of dark glass. Silver lines trace unfamiliar constellations across the floor, converging on an empty pedestal at the room's center.",
+      "description": "A hidden chamber lies beneath a dome of dark glass. Silver lines trace unfamiliar constellations across the floor, converging on an empty pedestal. In the glass overhead, one patch of darkness remains fixed while the stars move around it.",
       "exits": [
         {
           "id": "star-chamber-to-observatory",
@@ -118,7 +219,13 @@
         }
       ],
       "items": [],
-      "interactions": []
+      "interactions": [
+        {
+          "id": "examine-star-chamber-pedestal",
+          "label": "Examine the empty pedestal",
+          "completionMessage": "The pedestal is not truly empty. A shallow impression in its surface matches the seven-star seal, and fresh warmth rises from the silver channels around it. Whatever completed the circuit was removed recently."
+        }
+      ]
     }
   ]
 }

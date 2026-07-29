@@ -2,12 +2,12 @@
   "formatVersion": 1,
   "id": "locked-observatory",
   "title": "The Locked Observatory",
-  "description": "A 15–20 minute exploration RPG: several rooms, conversations, inventory, locked paths, skill checks, and two endings. This tests JSON-defined locations, characters, dialogue, quests, items, conditions, and saved state.",
+  "description": "A 15–20 minute exploration RPG about an abandoned observatory, a signal that should not exist, and the truth hidden behind its final night of operation.",
   "content": {
     "locations": "data/locations.json",
     "items": "data/items.json"
   },
   "start": {
-    "locationId": "entrance-hall"
+    "locationId": "astronomers-guild"
   }
 }
