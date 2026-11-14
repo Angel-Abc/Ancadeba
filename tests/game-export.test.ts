@@ -1,5 +1,6 @@
 import {
   cp,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
@@ -12,7 +13,7 @@ import {
 import type { AddressInfo } from 'node:net'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { preview } from 'vite-plus'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
@@ -20,6 +21,8 @@ import { loadRuntimeConfig } from '../apps/engine/src/config.js'
 import { ContainerBuilder } from '../apps/engine/src/ioc/containerBuilder.js'
 import { HttpGameResources } from '../apps/engine/src/gameResources.js'
 import { exportGame } from '../tooling/game-export.js'
+import { writeGameArchive } from '../apps/editor-server/src/gameArchive.js'
+import { unzipSync } from 'fflate'
 import {
   Engine,
   GameLoader,
@@ -128,6 +131,59 @@ describe('standalone game export', () => {
   afterAll(async () => {
     await rm(temp, { recursive: true, force: true })
   })
+
+  it.each(['', 'assets/cache/'])(
+    'excludes private entries at %j from both the playable directory and ZIP',
+    async (prefix) => {
+      const gameDirectory = join(temp, prefix ? 'nested-private-source' : 'private-source')
+      const output = join(temp, prefix ? 'nested-private-output' : 'private-output')
+      await mkdir(gameDirectory)
+      await writeFile(
+        join(gameDirectory, 'game.json'),
+        JSON.stringify({ ...gameDefinition('Private files'), scenes: [] }),
+      )
+
+      const privatePaths = [
+        '.codex/session.json',
+        '.agents/private.md',
+        '.ENV',
+        '.ENV.production',
+        '.GIT/config',
+        '.HG/store',
+        '.SVN/entries',
+        'Node_Modules/vendor.js',
+        '.GAME-EXPORT-stale/trace.log',
+        '.ANCADEBA-workspace/metadata.json',
+        'Thumbs.DB',
+        '.ds_store',
+      ].map((path) => prefix + path)
+
+      for (const path of privatePaths) {
+        await mkdir(dirname(join(gameDirectory, path)), { recursive: true })
+        await writeFile(join(gameDirectory, path), 'HARMLESS_PRIVATE_MARKER')
+      }
+
+      await mkdir(join(gameDirectory, 'notes'))
+      await writeFile(join(gameDirectory, 'notes/readme.txt'), 'Publish these notes')
+      await writeFile(join(gameDirectory, 'notes/sprite.bin'), bytes)
+      await writeFile(join(gameDirectory, '.gitignore'), 'Keep this ordinary source file')
+      const result = await exportGame({ gameDirectory, outputDirectory: output })
+      expect(result.fileCount).toBe(4)
+      const archive = join(temp, prefix ? 'nested-private.zip' : 'private.zip')
+      await writeGameArchive(output, archive)
+      const files = unzipSync(new Uint8Array(await readFile(archive)))
+
+      for (const path of privatePaths) {
+        await expect(lstat(join(output, 'game', path))).rejects.toHaveProperty('code', 'ENOENT')
+        expect(files[`game/${path}`]).toBeUndefined()
+      }
+
+      expect(new TextDecoder().decode(files['game/notes/readme.txt'])).toBe('Publish these notes')
+      expect(files['game/notes/sprite.bin']).toEqual(bytes)
+      expect(files['game/.gitignore']).toBeDefined()
+      expect(files['game/game.json']).toBeDefined()
+    },
+  )
 
   it('packages language catalogs and validates languages beyond the configured default', async () => {
     const localized = join(temp, 'localized')

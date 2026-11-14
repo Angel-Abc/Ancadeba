@@ -297,6 +297,46 @@ describe('editor server', () => {
     expect(isTrustedRequest(headers, 'studio.example')).toBe(trusted)
   })
 
+  it.each([
+    ['http://203.0.113.77', false],
+    ['http://[2001:db8::77]', false],
+    ['http://192.168.1.77:5274', false],
+    ['http://[::ffff:203.0.113.77]', false],
+    ['http://localhost:5274', true],
+    ['http://editor.localhost:5274', true],
+    ['http://127.0.0.1:5274', true],
+    ['http://127.2.3.4:5274', true],
+    ['http://[::1]:5274', true],
+    ['http://[::ffff:127.0.0.1]:5274', true],
+    ['https://studio.example:5274', true],
+    ['http://localhost.attacker.example', false],
+    ['null', false],
+    ['', false],
+    ['file://localhost', false],
+    ['ftp://localhost', false],
+    ['http://user@localhost', false],
+    ['http://localhost/path', false],
+    ['http://localhost?query=yes', false],
+    ['http://localhost#fragment', false],
+  ] as const)('applies the browser origin policy to %s', (origin, trusted) => {
+    expect(isTrustedRequest({ host: '127.0.0.1:3100', origin }, 'studio.example')).toBe(trusted)
+  })
+
+  it.each([
+    ['192.168.1.20:3100', 'http://192.168.1.20:5274', '0.0.0.0', true],
+    ['192.168.1.20:3100', 'http://192.168.1.77:5274', '0.0.0.0', false],
+    ['[2001:db8::20]:3100', 'http://[2001:db8::20]:5274', '::', true],
+    ['[2001:db8::20]:3100', 'http://[2001:db8::77]:5274', '::', false],
+    ['127.0.0.1:3100', 'http://192.168.1.20:5274', '192.168.1.20', true],
+    ['localhost:3100', 'http://[0:0:0:0:0:0:0:1]:5274', '::1', true],
+    ['localhost:3100', 'http://STUDIO.example:5274', 'STUDIO.EXAMPLE', true],
+  ] as const)(
+    'checks origin identity for host %s, origin %s and bind host %s',
+    (host, origin, configuredHost, trusted) => {
+      expect(isTrustedRequest({ host, origin }, configuredHost)).toBe(trusted)
+    },
+  )
+
   it('refuses rebinding hosts and cross-site origins before reading the workspace', async () => {
     const status = (headers: Record<string, string>) =>
       new Promise<number | undefined>((resolve, reject) => {

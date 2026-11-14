@@ -71,7 +71,7 @@ describe('revision-checked graphics authoring', () => {
       body: JSON.stringify({ path: 'game', expectedRevision: revision, command }),
     })
 
-  const upload = (revision: string, source = artwork, id = 'art') => {
+  const upload = (revision: string, source = artwork, id = 'art', origin?: string) => {
     const form = new FormData()
     form.set(
       'metadata',
@@ -79,8 +79,46 @@ describe('revision-checked graphics authoring', () => {
     )
     form.set('file', new Blob([source], { type: 'image/svg+xml' }), 'art.svg')
 
-    return fetch(`${base}/api/editor/assets/import`, { method: 'POST', body: form })
+    return fetch(`${base}/api/editor/assets/import`, {
+      method: 'POST',
+      body: form,
+      ...(origin === undefined ? {} : { headers: { Origin: origin } }),
+    })
   }
+
+  it.each([
+    'http://203.0.113.77',
+    'http://[2001:db8::77]',
+    'http://192.168.1.77:5274',
+    'http://[::ffff:203.0.113.77]',
+  ])('rejects an asset upload from foreign origin %s without publishing files', async (origin) => {
+    const initial = await inspect()
+    const before = await readFile(join(root, 'game/game.json'))
+    const response = await upload(initial.revision, artwork, 'foreign', origin)
+    expect(response.status).toBe(403)
+    await response.arrayBuffer()
+    expect(await readFile(join(root, 'game/game.json'))).toEqual(before)
+    expect(await readdir(join(root, 'game'))).toEqual(['game.json'])
+    const current = await inspect()
+    expect(current.revision).toBe(initial.revision)
+    expect(current.history?.canUndo).toBe(false)
+    expect(current.assets).toBeUndefined()
+  })
+
+  it.each(['http://localhost:5274', 'http://127.0.0.1:5274', 'http://[::1]:5274'])(
+    'permits an asset upload from local origin %s',
+    async (origin) => {
+      const initial = await inspect()
+      const response = await upload(initial.revision, artwork, 'local', origin)
+      expect(response.status).toBe(200)
+      await response.arrayBuffer()
+      const current = await inspect()
+      const source = current.assets?.images.local?.source
+      expect(source).toBeDefined()
+      expect(await readFile(join(root, 'game', source!), 'utf8')).toBe(artwork)
+      expect(current.history?.canUndo).toBe(true)
+    },
+  )
 
   it('imports and replaces without overwriting artwork, and detects external byte edits', async () => {
     const initial = await inspect()

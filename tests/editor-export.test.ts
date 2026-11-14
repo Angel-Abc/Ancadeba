@@ -113,6 +113,24 @@ describe('editor game export API', () => {
     await vi.waitFor(async () => expect(await readdir(scratch)).toEqual([]))
   }, 20_000)
 
+  it('excludes private case variants and nested agent files from the HTTP playable ZIP', async () => {
+    const folder = join(root, 'private-game')
+    await mkdir(join(folder, 'assets/.CoDeX'), { recursive: true })
+    await mkdir(join(folder, '.AgEnTs'))
+    await writeFile(join(folder, 'game.json'), JSON.stringify(gameDefinition('Private game')))
+    await writeFile(join(folder, 'assets/.CoDeX/session.json'), 'HARMLESS_PRIVATE_MARKER')
+    await writeFile(join(folder, '.AgEnTs/private.md'), 'HARMLESS_PRIVATE_MARKER')
+    await writeFile(join(folder, '.ENV.production'), 'HARMLESS_PRIVATE_MARKER')
+    await writeFile(join(folder, 'assets/sprite.bin'), bytes)
+    const response = await request({ path: 'private-game' })
+    expect(response.status).toBe(200)
+    const files = unzipSync(new Uint8Array(await response.arrayBuffer()))
+    expect(Object.keys(files).some((path) => /\.codex|\.agents|\.env/i.test(path))).toBe(false)
+    expect(files['game/assets/sprite.bin']).toEqual(bytes)
+    expect(files['game/game.json']).toBeDefined()
+    await vi.waitFor(async () => expect(await readdir(scratch)).toEqual([]))
+  }, 20_000)
+
   it.each(['../outside', '/outside', 'C:/outside', 'second game/../invalid', 'second game\\file'])(
     'rejects an unsafe source %j without exposing filesystem paths',
     async (path) => {
