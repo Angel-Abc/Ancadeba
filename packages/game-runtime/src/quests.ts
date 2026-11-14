@@ -5,6 +5,7 @@ import {
   type QuestOperation,
   type StoryEffect,
   type RuleText,
+  type InventoryItem,
 } from '@ancadeba/schemas'
 import type { GameInstance, IGameLifecycle, SceneInstance } from './gameLifecycle.js'
 import type { IGameBindings, BindingValue } from './gameBindings.js'
@@ -151,11 +152,13 @@ export class GameQuests implements IGameQuests {
     scene: SceneInstance | undefined,
     records = this.records,
     values?: ReadonlyMap<string, BindingValue>,
+    inventory?: ReadonlyMap<string, InventoryItem>,
   ) {
     return {
       game: this.game,
       scene,
       ...(values && { values }),
+      ...(inventory && { inventory }),
       quest: (id: string) => {
         const definition = this.definition(id)
         const record = records.get(id)
@@ -168,7 +171,7 @@ export class GameQuests implements IGameQuests {
                   : record
                     ? 'active'
                     : 'not-started'
-                : this.status(definition, records, scene, values),
+                : this.status(definition, records, scene, values, inventory),
               stage: record && definition.stages[record.index]?.id,
             }
           : undefined
@@ -182,6 +185,7 @@ export class GameQuests implements IGameQuests {
     scene?: SceneInstance,
     records = this.records,
     values?: ReadonlyMap<string, BindingValue>,
+    inventory?: ReadonlyMap<string, InventoryItem>,
   ) {
     return (definition.stages[record.index]?.objectives ?? []).map((objective) => {
       const result = objective.progress && this.bindings.read(objective.progress.binding)
@@ -202,7 +206,7 @@ export class GameQuests implements IGameQuests {
         id: objective.id,
         label: objective.label,
         complete:
-          matchesConditions(objective.when, this.facts(scene, records, values)) &&
+          matchesConditions(objective.when, this.facts(scene, records, values, inventory)) &&
           (!objective.progress || (current !== undefined && current >= objective.progress.target)),
         ...(objective.progress && { current, target: objective.progress.target }),
       })
@@ -214,18 +218,19 @@ export class GameQuests implements IGameQuests {
     records = this.records,
     scene = this.lifecycle.activeScene,
     values?: ReadonlyMap<string, BindingValue>,
+    inventory?: ReadonlyMap<string, InventoryItem>,
   ): QuestSnapshot['status'] {
     const record = records.get(definition.id)
 
     if (!record) return 'not-started'
 
     if (record.completed) return 'completed'
-    const items = new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
+    const items = inventory ?? new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
     this.evaluating.add(definition.id)
 
     try {
       return record.index === definition.stages.length - 1 &&
-        this.objectives(definition, record, scene, records, values).every(
+        this.objectives(definition, record, scene, records, values, items).every(
           (entry) => entry.complete,
         ) &&
         definition.handIns.every((entry) => inventoryOwner(items, entry.item) === entry.owner)
@@ -408,6 +413,7 @@ export class GameQuests implements IGameQuests {
     if (!this.validScene(scene)) return
     const records = new Map(this.records)
     const values = new Map<string, BindingValue>()
+    const items = new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
     const paths = new Map<string, readonly string[]>()
     const originals = new Map<string, BindingValue>()
     const create: InventoryItemSnapshot[] = []
@@ -451,45 +457,50 @@ export class GameQuests implements IGameQuests {
         const quest = this.definition(effect.quest)
 
         if (!quest) return
+        // Effect-order checks may inspect provisional progress without retaining its cursors.
+        const provisional = new Map(records)
+        this.advance(provisional, scene, values, items)
 
         if (effect.type === 'start-quest') {
           if (
             records.has(quest.id) ||
-            !matchesConditions(quest.when, this.facts(scene, records, values))
+            !matchesConditions(quest.when, this.facts(scene, provisional, values, items))
           )
             return
           records.set(quest.id, { index: 0, completed: false })
-          this.advance(records, scene, values)
           continue
         }
 
         if (
-          this.status(quest, records, scene, values) !== 'ready' ||
-          !matchesConditions(quest.turnInWhen, this.facts(scene, records, values))
+          this.status(quest, provisional, scene, values, items) !== 'ready' ||
+          !matchesConditions(quest.turnInWhen, this.facts(scene, provisional, values, items))
         )
           return
-        const inventory = new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
 
         for (const entry of quest.handIns) {
-          const item = inventory.get(entry.item)
+          const item = items.get(entry.item)
 
           if (
             !item ||
-            inventoryOwner(inventory, entry.item) !== entry.owner ||
+            inventoryOwner(items, entry.item) !== entry.owner ||
             item.placement.type === 'equipped' ||
             this.game.inventory?.isReserved?.(item.id) ||
-            [...inventory.values()].some(
+            [...items.values()].some(
               (child) => child.placement.type === 'inside' && child.placement.container === item.id,
             )
           )
             return
 
-          if (entry.operation === 'consume') remove.push(item.id)
-          else if (entry.recipient)
+          if (entry.operation === 'consume') {
+            remove.push(item.id)
+            items.delete(item.id)
+          } else if (entry.recipient) {
             transfers.push({
               item: item.id,
               destination: { type: 'carried', owner: entry.recipient },
             })
+            items.set(item.id, { ...item, placement: { type: 'carried', owner: entry.recipient } })
+          }
         }
 
         for (const reward of quest.rewards.numeric) {
@@ -509,19 +520,22 @@ export class GameQuests implements IGameQuests {
 
         for (const reward of quest.rewards.items) {
           if (!quest.rewards.recipient) return
-          create.push({
+
+          const item: InventoryItemSnapshot = {
             id: questRewardItemId(quest.id, reward.id),
             itemType: reward.itemType,
             colors: { ...reward.colors },
             placement: { type: 'carried', owner: quest.rewards.recipient },
-          })
+          }
+
+          if (items.has(item.id)) return
+          create.push(item)
+          items.set(item.id, item)
         }
 
         records.set(quest.id, { index: quest.stages.length - 1, completed: true })
       }
     }
-
-    this.advance(records, scene, values)
 
     const numeric = [...values].flatMap(([key, value]) =>
       typeof value === 'number' && typeof originals.get(key) === 'number'
@@ -558,6 +572,11 @@ export class GameQuests implements IGameQuests {
       (changedInventory && !inventory)
     )
       return
+    const finalValues = new Map(values)
+
+    for (const [path, value] of state?.values ?? []) finalValues.set(path, value)
+    // Only completed transaction facts can advance the cursors that will be committed.
+    this.advance(records, scene, finalValues, items)
     const signature = this.capture(scene).signature
     let committed = false
     let notified = false
@@ -571,7 +590,7 @@ export class GameQuests implements IGameQuests {
       (inventory?.isCurrent() ?? true)
 
     return {
-      values,
+      values: finalValues,
       isCurrent: current,
       commit: () => {
         if (!current()) return
@@ -594,6 +613,7 @@ export class GameQuests implements IGameQuests {
     records: Map<string, QuestRecord>,
     scene?: SceneInstance,
     values?: ReadonlyMap<string, BindingValue>,
+    inventory?: ReadonlyMap<string, InventoryItem>,
   ): void {
     for (const [id, original] of records) {
       const definition = this.definition(id)
@@ -603,9 +623,14 @@ export class GameQuests implements IGameQuests {
 
       while (
         index < definition.stages.length - 1 &&
-        this.objectives(definition, { index, completed: false }, scene, records, values).every(
-          (entry) => entry.complete,
-        )
+        this.objectives(
+          definition,
+          { index, completed: false },
+          scene,
+          records,
+          values,
+          inventory,
+        ).every((entry) => entry.complete)
       )
         index++
 

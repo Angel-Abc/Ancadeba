@@ -295,6 +295,7 @@ export class GameLeveling implements IGameLeveling, IStateTransactions {
     let committed = false
 
     return {
+      values: new Map([...writes].map(([path, write]) => [path, write.value])),
       isCurrent: () => !this.disposed && !committed && prepared.isCurrent(),
       commit: () => {
         if (this.disposed || committed || !prepared.isCurrent()) return

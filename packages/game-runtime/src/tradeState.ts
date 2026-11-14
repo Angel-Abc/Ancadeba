@@ -6,6 +6,8 @@ export interface TradeStateWrite {
 
 /** Prepared commits must be synchronous, infallible, and invoke no observers. */
 export interface PreparedTradeState {
+  /** Final numeric values keyed by serialized paths, including any derived writes. */
+  readonly values?: ReadonlyMap<string, number>
   isCurrent(): boolean
   commit(): void
 }

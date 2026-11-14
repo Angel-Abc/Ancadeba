@@ -1926,6 +1926,12 @@ are satisfied. Readiness can revert to `active` before turn-in. Completion is
 explicit and terminal. Existing facts can satisfy objectives when accepting a
 quest; authors maintain counters through existing rules.
 
+Intermediate stage advancement uses the completed transaction's inventory and
+state, including consumed or transferred hand-ins, newly created rewards, and
+level gains. Temporary values overwritten later in the same batch do not advance
+other quests. Ordered acceptance and completion checks can inspect provisional
+facts without retaining those provisional stage cursors.
+
 `handIns` name exact `item` instances and their required `owner`. Use
 `operation: "consume"`, or `operation: "transfer"` with a distinct `recipient`.
 Nested items are supported. Equipped items, nonempty containers, and items
@@ -1963,8 +1969,11 @@ Custom hosts can supply `createStateTransactions` and
 `createStoryStateTransactions`; `MapStoryState` supports declared Map fields and
 an optional staged log adapter. Preparation must be pure, and commits synchronous,
 infallible, and observer-free. Custom inventories can implement
-`prepareTransaction` to stage creation, removal, and transfers together. Missing
-capabilities disable the affected operation with a reason; bindings stay read-only.
+`prepareTransaction` to stage creation, removal, and transfers together. Numeric
+adapters that derive additional writes can expose a prepared `values` map keyed
+by `JSON.stringify(path)`, so dependent objectives see those final numeric values
+during preparation. Missing capabilities disable the affected operation with a
+reason; bindings stay read-only.
 
 The basic sample demonstrates a localized curator survey. The graphics sample's
 ranger post demonstrates an exact-letter transfer, XP/level gains, and a dyed

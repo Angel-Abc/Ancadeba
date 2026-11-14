@@ -1,4 +1,4 @@
-import { inventoryOwner, type WorldCondition } from '@ancadeba/schemas'
+import { inventoryOwner, type InventoryItem, type WorldCondition } from '@ancadeba/schemas'
 import type { GameInstance, SceneInstance } from './gameLifecycle.js'
 import type { BindingValue } from './gameBindings.js'
 
@@ -6,6 +6,7 @@ export interface WorldFacts {
   readonly game: GameInstance
   readonly scene?: SceneInstance | undefined
   readonly values?: ReadonlyMap<string, BindingValue>
+  readonly inventory?: ReadonlyMap<string, InventoryItem>
   readonly quest?: (id: string) => { status: string; stage?: string | undefined } | undefined
 }
 
@@ -46,7 +47,9 @@ export function matchesConditions(
       }
 
       case 'item-carried-by': {
-        const item = facts.game.inventory?.snapshot.find((item) => item.id === condition.item)
+        const item = facts.inventory
+          ? facts.inventory.get(condition.item)
+          : facts.game.inventory?.snapshot.find((item) => item.id === condition.item)
 
         return item?.placement.type === 'carried' && item.placement.owner === condition.owner
       }
@@ -54,7 +57,8 @@ export function matchesConditions(
       case 'item-owned-by':
         return (
           inventoryOwner(
-            new Map(facts.game.inventory?.snapshot.map((item) => [item.id, item])),
+            facts.inventory ??
+              new Map(facts.game.inventory?.snapshot.map((item) => [item.id, item])),
             condition.item,
           ) === condition.owner
         )
