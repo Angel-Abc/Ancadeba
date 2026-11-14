@@ -35,6 +35,18 @@ interface StartingConditions {
   cooldowns: CombatCooldowns
 }
 
+function createScenarioDraftState(): CombatScenarioDraftState {
+  return {
+    encounter: '',
+    selected: '',
+    dirty: false,
+    creating: false,
+    newId: 'scenario',
+    error: '',
+    results: {},
+  }
+}
+
 /** Simulation is isolated; only explicit scenario saves issue authoring commands. */
 export function bindCombatSimulationPanel(
   root: HTMLElement,
@@ -67,15 +79,7 @@ export function bindCombatSimulationPanel(
   let error = ''
   let sourceAtStart: CombatSource | undefined
 
-  const scenarioState: CombatScenarioDraftState = {
-    encounter: '',
-    selected: '',
-    dirty: false,
-    creating: false,
-    newId: 'scenario',
-    error: '',
-    results: {},
-  }
+  let scenarioState = createScenarioDraftState()
 
   const invalidateResults = () => {
     scenarioState.results = {}
@@ -759,6 +763,15 @@ export function bindCombatSimulationPanel(
   return {
     hasDrafts: () => scenarioState.dirty,
     invalidateResults,
+    reset() {
+      scenarioState = createScenarioDraftState()
+      simulation = undefined
+      config = undefined
+      sourceAtStart = undefined
+      inspectIndex = -1
+      signature = ''
+      error = ''
+    },
     render(nextView: ProjectView | undefined, nextSource: CombatSource | undefined) {
       view = nextView
       source = nextSource

@@ -4922,6 +4922,210 @@ describe('editor draft workflows', () => {
     expect(ui.read().diagnostics).toEqual([])
   })
 
+  async function scenarioProjects(destinationEncounter = true) {
+    const original = await simulationProject()
+    const first = structuredClone(original)
+    const manifest = object(first.documents['game.json'])
+    const scenes = manifest.scenes
+
+    if (!Array.isArray(scenes)) throw new Error('Expected scene IDs')
+    first.documents['game.json'] = {
+      ...manifest,
+      scenes: ['water', ...scenes.filter((id) => id !== 'water')],
+    }
+
+    const projects = new Map<string, ProjectSnapshot>([
+      ['first', first],
+      ['second', structuredClone(destinationEncounter ? first : original)],
+    ])
+
+    const snapshot = (path: string) => {
+      const value = projects.get(path)
+
+      if (!value) throw new Error(`Missing project: ${path}`)
+
+      return value
+    }
+
+    const ui = panel()
+    let pending = Promise.resolve()
+    let revision = 0
+    let rejectNext = false
+
+    const controller = new ProjectEditorController(
+      {
+        inspect: async (path) => inspectProject(snapshot(path)),
+        apply: async ({ path, command }) => {
+          if (rejectNext) {
+            rejectNext = false
+            throw new EditorClientError('revision_conflict', 'Conflict')
+          }
+
+          const result = {
+            ...applyCommand(snapshot(path), command).project,
+            revision: String(++revision),
+          }
+
+          projects.set(path, result)
+
+          return inspectProject(result)
+        },
+      },
+      (state, replace) => editor.render(state, replace),
+    )
+
+    const editor = bindCombatEditor(ui.root.asElement(), (command) => {
+      ui.commands.push(structuredClone(command))
+      pending = controller.save(command)
+    })
+
+    await controller.load('first')
+
+    return {
+      ...ui,
+      editor,
+      controller,
+      flush: () => pending,
+      read: (path: string) => inspectProject(snapshot(path)),
+      rejectNext: () => {
+        rejectNext = true
+      },
+    }
+  }
+
+  it.each([true, false])(
+    'discards scenario drafts on project switching with an initial destination encounter: %s',
+    async (destinationEncounter) => {
+      const ui = await scenarioProjects(destinationEncounter)
+      ui.edit('Simulation seed', '777')
+      ui.edit('New scenario ID', 'project-a')
+      ui.click('Capture simulation as new scenario')
+      ui.edit('Scenario name', 'Draft from project A')
+      ui.rejectNext()
+      ui.click('Save simulation scenario')
+      await ui.flush()
+      expect(ui.editor.hasDrafts()).toBe(true)
+      await ui.controller.load('second')
+      expect(ui.editor.hasDrafts()).toBe(false)
+      expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
+      ui.edit('Combat encounter', 'water')
+      expect(ui.field('Combat encounter').value).toBe('water')
+      expect(ui.field('New scenario ID').value).toBe('scenario')
+      expect(ui.field('Simulation seed').value).toBe('1024')
+      expect(
+        ui.root.all().some((node) => node.tagName === 'label' && node.ownText === 'Scenario name'),
+      ).toBe(false)
+      ui.edit('New scenario ID', 'project-b')
+      ui.click('Capture simulation as new scenario')
+      ui.edit('Scenario name', 'Scenario from project B')
+      ui.click('Save simulation scenario')
+      await ui.flush()
+      expect(ui.editor.hasDrafts()).toBe(false)
+      expect(
+        ui.read('second').combatSources?.water?.simulationScenarios?.['project-b']?.label,
+      ).toBe('Scenario from project B')
+      expect(ui.read('second').combatSources?.water?.simulationScenarios).not.toHaveProperty(
+        'project-a',
+      )
+      expect(ui.read('first').combatSources?.water?.simulationScenarios).not.toHaveProperty(
+        'project-b',
+      )
+    },
+  )
+
+  it('discards scenario drafts and starting conditions on a non-preserving same-project reload', async () => {
+    const ui = await scenarioProjects()
+    ui.edit('Simulation seed', '777')
+    ui.edit('New scenario ID', 'discard-me')
+    ui.click('Capture simulation as new scenario')
+    ui.edit('Scenario name', 'Discarded draft')
+    await ui.controller.load('first')
+    expect(ui.editor.hasDrafts()).toBe(false)
+    expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
+    expect(ui.field('New scenario ID').value).toBe('scenario')
+    expect(ui.field('Simulation seed').value).toBe('1024')
+    ui.edit('Combat encounter', 'boss')
+    expect(ui.field('Combat encounter').value).toBe('boss')
+  })
+
+  it('preserves scenario and encounter drafts through unrelated saves and a draft-preserving reload', async () => {
+    const ui = await scenarioProjects()
+    ui.edit('Encounter name', 'Unsaved encounter')
+    ui.edit('New scenario ID', 'keep-me')
+    ui.click('Capture simulation as new scenario')
+    ui.edit('Scenario name', 'Preserved scenario')
+    await ui.controller.save({
+      type: 'game.updateMetadata',
+      title: 'Changed',
+      description: '',
+      version: '1',
+    })
+    await ui.controller.load('first', true)
+    expect(ui.field('Scenario name').value).toBe('Preserved scenario')
+    expect(ui.field('Encounter name').value).toBe('Unsaved encounter')
+    expect(ui.editor.hasDrafts()).toBe(true)
+    ui.click('Save simulation scenario')
+    await ui.flush()
+    expect(ui.read('first').combatSources?.water?.simulationScenarios?.['keep-me']?.label).toBe(
+      'Preserved scenario',
+    )
+    expect(ui.read('first').combatSources?.water?.label).not.toBe('Unsaved encounter')
+    expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
+    expect(ui.editor.hasDrafts()).toBe(true)
+  })
+
+  it('discards a failed scenario submission independently of an encounter draft', async () => {
+    const ui = await scenarioProjects()
+    ui.edit('Encounter name', 'Unsaved encounter')
+    ui.click('Capture simulation as new scenario')
+    ui.rejectNext()
+    ui.click('Save simulation scenario')
+    await ui.flush()
+    ui.click('Discard scenario draft')
+    expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
+    expect(ui.field('Encounter name').value).toBe('Unsaved encounter')
+    expect(ui.editor.hasDrafts()).toBe(true)
+    await ui.controller.load('second')
+    expect(ui.editor.hasDrafts()).toBe(false)
+    expect(ui.commands).toHaveLength(1)
+  })
+
+  it('clears a failed deletion when a scenario draft is discarded', async () => {
+    const ui = await scenarioProjects()
+    ui.edit('New scenario ID', 'saved-scenario')
+    ui.click('Capture simulation as new scenario')
+    ui.click('Save simulation scenario')
+    await ui.flush()
+    ui.rejectNext()
+    ui.click('Delete simulation scenario')
+    await ui.flush()
+    ui.click('Discard scenario draft')
+    expect(ui.editor.hasDrafts()).toBe(false)
+    ui.edit('Scenario name', 'Draft after discard')
+    await ui.controller.save({
+      type: 'combat.removeSimulationScenario',
+      encounterId: 'water',
+      scenarioId: 'saved-scenario',
+    })
+    expect(ui.field('Scenario name').value).toBe('Draft after discard')
+    expect(ui.editor.hasDrafts()).toBe(true)
+  })
+
+  it('clears scenario results and selection when identical encounter data belongs to a new project', async () => {
+    const ui = await scenarioProjects()
+    const scenarios = ui.read('first').combatSources?.water?.simulationScenarios ?? {}
+    const id = Object.keys(scenarios)[0]
+
+    if (!id) throw new Error('Expected a saved scenario')
+    ui.edit('Simulation scenario', id)
+    ui.click('Replay scenario')
+    expect(ui.root.textContent).toContain(`${id}: Passed`)
+    await ui.controller.load('second')
+    expect(ui.field('Simulation scenario').value).toBe('')
+    expect(ui.root.textContent).not.toContain(`${id}: Passed`)
+    expect(ui.editor.hasDrafts()).toBe(false)
+  })
+
   it('captures water conditions and plans, saves scenarios independently, and recovers scenario drafts', async () => {
     const source = await simulationProject()
     const ui = await connected(bindCombatEditor, source)

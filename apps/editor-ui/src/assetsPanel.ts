@@ -43,7 +43,11 @@ export function bindAssetsPanel(
 ) {
   const panel = root.querySelector<HTMLElement>('#assets-panel')
   const dirty = new Set<string>()
-  let submittedForm: string | undefined
+
+  let submission:
+    | { form: string; type: EditorCommand['type']; path: string; selection: string }
+    | undefined
+
   let controlLanguage = t('assets.defaults')
   let state: ProjectEditorState | undefined
   let resources: BrowserGraphicResources | undefined
@@ -131,9 +135,6 @@ export function bindAssetsPanel(
     find(id).addEventListener(
       event,
       (event) => {
-        if (event.type === 'submit' || event.type === 'click')
-          submittedForm = find(id).closest('form')?.id
-
         if (event.type === 'submit') event.preventDefault()
         const error = find('asset-error')
         error.hidden = true
@@ -147,6 +148,37 @@ export function bindAssetsPanel(
       { signal: abort.signal },
     )
   }
+
+  const submit = async (
+    form: string,
+    type: EditorCommand['type'],
+    operation: () => Promise<void>,
+  ) => {
+    if (!state?.view || state.busy || abort.signal.aborted) return
+
+    const pending = {
+      form,
+      type,
+      path: state.path,
+      selection:
+        form === 'asset-image'
+          ? value('asset-image-id')
+          : form === 'asset-definition'
+            ? value('asset-definition-id')
+            : '',
+    }
+
+    submission = pending
+
+    try {
+      await operation()
+    } finally {
+      if (submission === pending) submission = undefined
+    }
+  }
+
+  const save = (form: string, command: EditorCommand) =>
+    submit(form, command.type, () => actions.save(command))
 
   const option = (value: string, text = value) => {
     const node = document.createElement('option')
@@ -388,13 +420,17 @@ export function bindAssetsPanel(
     const next = { ...asset, colors: mode === 'defaults' ? colors : asset.colors, palettes }
 
     if (Object.hasOwn(catalog().images, selected))
-      await actions.save({
+      await save('asset-palettes', {
         type: 'assets.upsertImage',
         id: selected,
         image: imageAssetSchema.parse(next),
       })
     else
-      await actions.save({ type: 'assets.upsertPart', id: selected, part: partSchema.parse(next) })
+      await save('asset-palettes', {
+        type: 'assets.upsertPart',
+        id: selected,
+        part: partSchema.parse(next),
+      })
   }
 
   on('asset-empty-action', 'click', () => {
@@ -413,7 +449,9 @@ export function bindAssetsPanel(
     const file = find<HTMLInputElement>('asset-file').files?.[0]
 
     if (file) {
-      await actions.importAsset(value('asset-image-id'), format, file)
+      await submit('asset-image', 'assets.upsertImage', () =>
+        actions.importAsset(value('asset-image-id'), format, file),
+      )
 
       return
     }
@@ -439,7 +477,7 @@ export function bindAssetsPanel(
 
     for (const slot of Object.keys(colors))
       if (previous?.colors[slot]) colors[slot] = previous.colors[slot]!
-    await actions.save({
+    await save('asset-image', {
       type: 'assets.upsertImage',
       id,
       image: {
@@ -469,22 +507,26 @@ export function bindAssetsPanel(
     const id = value('asset-definition-id')
 
     if (value('asset-kind') === 'images')
-      await actions.save({
+      await save('asset-definition', {
         type: 'assets.upsertImage',
         id,
         image: imageAssetSchema.parse(definition),
       })
     else if (value('asset-kind') === 'parts')
-      await actions.save({ type: 'assets.upsertPart', id, part: partSchema.parse(definition) })
+      await save('asset-definition', {
+        type: 'assets.upsertPart',
+        id,
+        part: partSchema.parse(definition),
+      })
     else
-      await actions.save({
+      await save('asset-definition', {
         type: 'assets.upsertComposition',
         id,
         composition: compositionSchema.parse(definition),
       })
   })
   on('asset-remove', 'click', () =>
-    actions.save({ type: 'assets.remove', kind: kindOf(selected), id: selected }),
+    save('asset-definition', { type: 'assets.remove', kind: kindOf(selected), id: selected }),
   )
   on('asset-palettes', 'submit', (event) => {
     event.preventDefault()
@@ -617,23 +659,32 @@ export function bindAssetsPanel(
         renderSlotControls()
       }
 
-      const requestedSelection =
-        submittedForm === 'asset-image'
-          ? value('asset-image-id')
-          : submittedForm === 'asset-definition'
-            ? value('asset-definition-id')
-            : ''
+      const saved =
+        submission &&
+        submission.path === next.path &&
+        replace &&
+        !next.busy &&
+        !next.error &&
+        next.preserveDrafts &&
+        next.lastCommand === submission.type
+          ? submission
+          : undefined
+
+      const requestedSelection = saved?.selection
 
       for (const node of panel.querySelectorAll<HTMLElement>('[data-i18n]'))
         node.textContent = t(node.dataset.i18n!)
 
       if (replace) {
-        if (!next.preserveDrafts) dirty.clear()
-        else if (submittedForm && next.lastCommand?.startsWith('assets.')) {
-          dirty.delete(submittedForm)
+        if (!next.preserveDrafts) {
+          dirty.clear()
+          set('asset-file', '')
+          submission = undefined
+        } else if (saved) {
+          dirty.delete(saved.form)
 
-          if (submittedForm === 'asset-image') set('asset-file', '')
-          submittedForm = undefined
+          if (saved.form === 'asset-image') set('asset-file', '')
+          submission = undefined
         }
       }
 

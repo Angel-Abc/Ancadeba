@@ -641,6 +641,9 @@ export function combatScenarioForm(
           state.draft = saved[state.selected] ? cloneCombatRules(saved[state.selected]) : undefined
           state.dirty = false
           state.creating = false
+          state.submitted = undefined
+          state.deleting = undefined
+          state.results = {}
           state.error = ''
         }),
       ),

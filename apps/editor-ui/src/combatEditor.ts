@@ -458,6 +458,7 @@ export function bindCombatEditor(
       const resetFields = projectChanged || (replaceFields && !state.preserveDrafts)
 
       if (resetFields) {
+        simulation.reset()
         sceneId = view?.scenes.find((scene) => scene.type === 'game')?.id ?? ''
         encounterId = ''
       }
