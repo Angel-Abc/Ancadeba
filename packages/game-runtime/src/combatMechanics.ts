@@ -13,7 +13,11 @@ import {
   type CombatPendingEffect,
 } from './combatInterception.js'
 import type { CombatEffectEventData } from '@ancadeba/schemas'
-import { bindCombatPassiveTrigger, type CombatPassiveSource } from '@ancadeba/schemas'
+import {
+  bindCombatPassiveTrigger,
+  cloneCombatRules,
+  type CombatPassiveSource,
+} from '@ancadeba/schemas'
 import {
   combatPassiveGrants,
   combatPassiveActive,
@@ -276,12 +280,31 @@ export class CombatMechanics {
     this.emit({ type: 'resource-changed', resource, actor: authored.actor })
   }
 
-  pay(move: CombatMoveDefinition): void {
+  /** Restore a provisional action, including trigger receipts and the operation budget. */
+  checkpoint(): () => void {
+    if (this.processing) throw new Error('Cannot checkpoint active combat mechanics')
+    const state = cloneCombatRules(this.state)
+    const events = cloneCombatRules(this.events)
+    const operations = this.operations
+
+    return () => {
+      if (this.state && state) {
+        for (const key of Object.keys(this.state)) Reflect.deleteProperty(this.state, key)
+        Object.assign(this.state, state)
+      }
+
+      this.events.splice(0, this.events.length, ...events)
+      this.operations = operations
+    }
+  }
+
+  pay(move: CombatMoveDefinition, afterPayment?: () => void): void {
     // All costs are checked together before any trigger can change another resource.
     this.processing = true
 
     try {
       for (const [id, amount] of Object.entries(move.resourceCosts ?? {})) this.change(id, -amount)
+      afterPayment?.()
     } finally {
       this.processing = false
     }

@@ -1,4 +1,4 @@
-import type { CombatObservationSink } from './combatObservations.js'
+import type { CombatObservation, CombatObservationSink } from './combatObservations.js'
 import { resolveCombatEffectValues, resolveCombatStatusValues } from './combatEffectValues.js'
 import { combatInterceptionDetails } from './combatInterception.js'
 import { combatMoveRequirements } from './combatRequirements.js'
@@ -247,6 +247,25 @@ export function resolveCombatRound(
   if (!outcome && current.escape) outcome = 'escaped'
   let tracing = Boolean(debug)
   let traceEntryCursor = 0
+  let actionNotifications: (() => void)[] | undefined
+
+  const notify = (callback: () => void) => {
+    if (actionNotifications) actionNotifications.push(callback)
+    else callback()
+  }
+
+  const emitObservation = (observation: CombatObservation) => {
+    if (!observe) return
+    const snapshot = actionNotifications ? cloneCombatRules(observation) : observation
+    notify(() => observe(snapshot))
+  }
+
+  const commitNotifications = () => {
+    const notifications = actionNotifications
+    actionNotifications = undefined
+
+    for (const notification of notifications ?? []) notification()
+  }
 
   const capture = (
     details: Pick<
@@ -271,7 +290,9 @@ export function resolveCombatRound(
 
     traceEntryCursor = entries.length
 
-    if (debug?.(frame) === false) tracing = false
+    notify(() => {
+      if (tracing && debug?.(frame) === false) tracing = false
+    })
   }
 
   const finish = () => {
@@ -297,7 +318,7 @@ export function resolveCombatRound(
     current.mechanics,
     {
       health,
-      observe,
+      observe: observe ? emitObservation : undefined,
       round,
       values: (self, target) => valueContext(self, target),
       equipment: current.equipment,
@@ -378,7 +399,11 @@ export function resolveCombatRound(
     move?: string,
     status?: string,
   ) => {
-    observe?.({ kind: kind === 'damage' ? 'damage-total' : 'healing-total', effect: data, move })
+    emitObservation({
+      kind: kind === 'damage' ? 'damage-total' : 'healing-total',
+      effect: data,
+      move,
+    })
     const effect = Object.freeze(data)
     const common = { source: data.source, target: data.target, move, status, effect }
     mechanics.lifecycle(
@@ -887,7 +912,7 @@ export function resolveCombatRound(
                       )?.rule
 
                       if (decision.choice)
-                        observe?.({
+                        emitObservation({
                           kind: 'action-choices',
                           actor: actor.id,
                           ...decision.choice,
@@ -903,7 +928,7 @@ export function resolveCombatRound(
           if (!queued) break
 
           if (!actor.ai)
-            observe?.({
+            emitObservation({
               kind: 'action-choices',
               actor: actor.id,
               move: queued.move,
@@ -1034,16 +1059,47 @@ export function resolveCombatRound(
           }
 
           const entryStart = entries.length
+          let paymentEnd = entryStart
+
+          const rollback = queued.item
+            ? (() => {
+                const previous = cloneCombatRules({ health, guard, statuses, seed })
+                const refreshed = [...refreshedThisTurn]
+                const cursor = traceEntryCursor
+                const restoreMechanics = mechanics.checkpoint()
+
+                return () => {
+                  restoreRecord(health, previous.health)
+                  restoreRecord(guard, previous.guard)
+                  restoreRecord(statuses, previous.statuses)
+                  seed = previous.seed
+                  refreshedThisTurn.clear()
+
+                  for (const id of refreshed) refreshedThisTurn.add(id)
+                  restoreMechanics()
+                  traceEntryCursor = cursor
+                  actionNotifications = undefined
+                }
+              })()
+            : undefined
+
+          if (queued.item && (debug || observe)) actionNotifications = []
           spentAp += cost
 
-          mechanics.pay({
-            ...move,
-            resourceCosts: combatResourceCosts(move, valueContext(actor.id, queued.target)),
-          })
+          mechanics.pay(
+            {
+              ...move,
+              resourceCosts: combatResourceCosts(move, valueContext(actor.id, queued.target)),
+            },
+            () => {
+              // Fees alone do not make an item effective; reactions to them still can.
+              paymentEnd = entries.length
+            },
+          )
 
           if (outcome) {
             if (queued.item) {
-              observe?.({
+              emitObservation({
                 kind: 'item-use',
                 item: queued.item,
                 itemType: queued.itemType ?? queued.item,
@@ -1055,6 +1111,7 @@ export function resolveCombatRound(
                 actor: actor.id,
                 item: queued.itemType ?? queued.item,
               })
+              commitNotifications()
             }
 
             break
@@ -1079,23 +1136,26 @@ export function resolveCombatRound(
             }
 
           if (queued.item) {
-            const meaningful = entries
-              .slice(entryStart)
-              .some(
-                (entry) =>
-                  entry.type === 'statusApplied' ||
-                  entry.type === 'statusRefreshed' ||
-                  entry.type === 'statusRemoved' ||
-                  entry.type === 'statusReduced' ||
-                  entry.type === 'resourceChanged' ||
-                  entry.type === 'phaseChanged' ||
-                  entry.type === 'effectIntercepted' ||
-                  (entry.type === 'healed' && Boolean(entry.amount)) ||
-                  (entry.type === 'guarded' && Boolean(entry.guard)) ||
-                  (entry.type === 'attack' && Boolean(entry.damage || entry.blocked)),
-              )
+            const meaningful =
+              outcome !== undefined ||
+              entries
+                .slice(paymentEnd)
+                .some(
+                  (entry) =>
+                    entry.type === 'statusApplied' ||
+                    entry.type === 'statusRefreshed' ||
+                    entry.type === 'statusRemoved' ||
+                    entry.type === 'statusReduced' ||
+                    entry.type === 'resourceChanged' ||
+                    entry.type === 'phaseChanged' ||
+                    entry.type === 'effectIntercepted' ||
+                    (entry.type === 'healed' && Boolean(entry.amount)) ||
+                    (entry.type === 'guarded' && Boolean(entry.guard)) ||
+                    (entry.type === 'attack' && Boolean(entry.damage || entry.blocked)),
+                )
 
             if (!meaningful) {
+              rollback!()
               spentAp -= cost
               entries.splice(entryStart)
               entries.push({
@@ -1107,7 +1167,7 @@ export function resolveCombatRound(
               continue
             }
 
-            observe?.({
+            emitObservation({
               kind: 'item-use',
               item: queued.item,
               itemType: queued.itemType ?? queued.item,
@@ -1119,9 +1179,10 @@ export function resolveCombatRound(
               actor: actor.id,
               item: queued.itemType ?? queued.item,
             })
+            commitNotifications()
           }
 
-          observe?.({
+          emitObservation({
             kind: 'action-choices',
             actor: actor.id,
             move: queued.move,
@@ -1202,6 +1263,11 @@ export interface CombatDamagePreview {
   readonly resistance?: number
   readonly vulnerability?: number
   readonly immune?: boolean
+}
+
+function restoreRecord<T>(target: Record<string, T>, previous: Record<string, T>): void {
+  for (const key of Object.keys(target)) delete target[key]
+  Object.assign(target, previous)
 }
 
 function typedDamageDetails(

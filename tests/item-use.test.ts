@@ -249,12 +249,44 @@ const keys = inputSchema.parse({
 })
 
 async function setup(
-  options: { enemy?: 'guard' | 'poison' | 'stun'; readonly?: boolean; fail?: boolean } = {},
+  options: {
+    enemy?: 'guard' | 'poison' | 'stun'
+    readonly?: boolean
+    fail?: boolean
+    paidItems?: boolean
+  } = {},
 ) {
-  const fight = {
+  const fight = combatSourceSchema.parse({
     ...encounter,
     enemies: encounter.enemies.map((enemy) => ({ ...enemy, rotation: [options.enemy ?? 'guard'] })),
-  }
+    ...(options.paidItems
+      ? { mechanics: { resources: { mana: { initial: 10, maximum: 10 } } } }
+      : {}),
+  })
+
+  const itemLibrary = options.paidItems
+    ? combatLibrarySchema.parse({
+        ...library,
+        moves: {
+          ...library.moves,
+          heal: { ...library.moves.heal, resourceCosts: { mana: 3 } },
+        },
+      })
+    : library
+
+  const items = options.paidItems
+    ? inventorySchema.parse({
+        ...inventory,
+        itemTypes: Object.fromEntries(
+          Object.entries(inventory.itemTypes).map(([id, item]) => [
+            id,
+            item.use?.ability.id === 'heal'
+              ? { ...item, use: { ...item.use, contexts: ['combat'] } }
+              : item,
+          ]),
+        ),
+      })
+    : inventory
 
   const mapped = new Map(
     [...scenes].map(([id, scene]) => [
@@ -274,12 +306,12 @@ async function setup(
     keys,
     undefined,
     new Map(),
-    new Map([['items', inventory]]),
+    new Map([['items', items]]),
     undefined,
     new Map([['state', rules]]),
     new Map([['fight', fight]]),
     new Map(),
-    new Map([['items', library]]),
+    new Map([['items', itemLibrary]]),
   )
 
   let fail = false
@@ -558,18 +590,39 @@ describe('combat item planning', () => {
     t.command('end-turn')
     expect(t.game().inventory!.isReserved!('potion')).toBe(false)
   })
-  it('keeps items when earlier healing makes their use ineffective', async () => {
-    const t = await setup()
+  it.each([false, true])(
+    'keeps ineffective items after earlier healing, paid costs: %s',
+    async (paidItems) => {
+      const t = await setup({ paidItems })
+      t.enter()
+      t.select('quick')
+      t.activate()
+      t.select('potion')
+      t.activate()
+      t.command('end-turn')
+      expect(t.game().inventory!.snapshot.some((item) => item.id === 'quick')).toBe(false)
+      expect(t.game().inventory!.snapshot.some((item) => item.id === 'potion')).toBe(true)
+      expect(t.snapshot().cooldowns.player?.heal).toBeUndefined()
+      expect(t.snapshot().log.some((entry) => entry.type === 'itemSkipped')).toBe(true)
+
+      if (paidItems) {
+        expect(t.snapshot().resources.mana).toBe(10)
+        expect(t.snapshot().log.some((entry) => entry.type === 'resourceChanged')).toBe(false)
+      }
+
+      expect(t.game().inventory!.isReserved!('potion')).toBe(false)
+    },
+  )
+  it('consumes an effective paid potion and commits its resource cost and cooldown', async () => {
+    const t = await setup({ paidItems: true })
     t.enter()
-    t.select('quick')
-    t.activate()
     t.select('potion')
     t.activate()
     t.command('end-turn')
-    expect(t.game().inventory!.snapshot.some((item) => item.id === 'quick')).toBe(false)
-    expect(t.game().inventory!.snapshot.some((item) => item.id === 'potion')).toBe(true)
-    expect(t.snapshot().cooldowns.player?.heal).toBeUndefined()
-    expect(t.snapshot().log.some((entry) => entry.type === 'itemSkipped')).toBe(true)
+    expect(t.snapshot().health.player).toBe(30)
+    expect(t.game().inventory!.snapshot.some((item) => item.id === 'potion')).toBe(false)
+    expect(t.snapshot().resources.mana).toBe(7)
+    expect(t.snapshot().cooldowns.player?.heal).toBe(3)
   })
   it('does not consume or cool down a plan skipped by stun', async () => {
     const t = await setup({ enemy: 'stun' })

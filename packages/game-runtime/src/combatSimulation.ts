@@ -305,7 +305,7 @@ export class CombatSimulation {
               combatMoveTarget(move) === 'self' ? player.id : (target ?? player.id),
               { ...state, maximumHealth: this.setup.maximumHealth, stats: this.setup.stats },
             ).stats ?? {},
-          baseStats: this.setup.stats,
+          baseStats: this.setup.stats ?? {},
           bossPhase: state.mechanics?.phase,
           equipment: this.setup.equipment,
         },
