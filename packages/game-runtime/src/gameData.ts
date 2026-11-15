@@ -76,6 +76,8 @@ export interface ButtonComponentData {
   readonly id: string
   readonly type: 'button'
   readonly label: string
+  readonly description?: string | undefined
+  readonly unavailableText?: string | undefined
   readonly placement: Readonly<ButtonComponentDefinition['placement']>
   readonly action?: Readonly<NonNullable<ButtonComponentDefinition['action']>> | undefined
 }
@@ -88,7 +90,10 @@ export interface LanguageSelectComponentData {
 }
 
 export type SceneComponentData =
-  | Extract<SceneComponentDefinition, { type: 'save-slots' | 'save-status' | 'save-point' }>
+  | Extract<
+      SceneComponentDefinition,
+      { type: 'save-slots' | 'save-status' | 'save-point' | 'action-info' }
+    >
   | Extract<
       SceneDefinition['components'][number],
       { type: 'combat' | 'character-progression' | 'quest-log' }

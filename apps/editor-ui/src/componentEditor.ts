@@ -1,6 +1,7 @@
 import { registerEditorDraft } from './editorDraftState.js'
 import { sceneEntranceFields } from './sceneEntranceFields.js'
 import { mapInteractFields } from './mapInteractFields.js'
+import { actionDescriptionFields } from './actionDescriptionFields.js'
 import { z } from 'zod'
 import {
   basicComponentSchema,
@@ -38,6 +39,7 @@ export const editableComponentTypes: readonly string[] = [
   'save-point',
   'text',
   'button',
+  'action-info',
   'language-select',
   'map-view',
   'nearby',
@@ -48,6 +50,7 @@ const isBasic = (component: { type: string }): component is BasicComponent =>
   [
     'text',
     'button',
+    'action-info',
     'language-select',
     'map-view',
     'quest-log',
@@ -452,6 +455,28 @@ function componentFields(
     literal(t('form.labelTranslation'), t('form.literalLabel')),
   ]
 
+  if (draft.type === 'action-info') {
+    const help = create('p')
+    help.className = 'help'
+    help.textContent = t('actionInfo.help')
+
+    return [
+      ...label,
+      input(t('items.emptyText'), draft.emptyText, (value) => {
+        draft.emptyText = value
+      }),
+      translation(
+        t('items.emptyTextTranslation'),
+        draft.emptyTextKey ?? '',
+        translationChoices(view, t('form.literalText')),
+        (value) => {
+          draft.emptyTextKey = value || undefined
+        },
+      ),
+      help,
+    ]
+  }
+
   if (draft.type === 'quest-log')
     return [
       ...label,
@@ -679,6 +704,7 @@ function componentFields(
 
   return [
     ...label,
+    ...actionDescriptionFields(controls, view, draft),
     select(
       t('form.action'),
       action?.type ?? '',

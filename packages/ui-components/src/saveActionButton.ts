@@ -2,6 +2,8 @@ import { maxGameSaveBytes, type ButtonComponentData } from '@ancadeba/game-runti
 import type { ComponentRenderContext, RenderedComponent } from './componentRendering.js'
 import { BrowserGameSaveDownload } from './browserGameSaveDownload.js'
 import { componentRuntimeText } from './runtimeText.js'
+import { bindActionInfo, isActionDisabled } from './actionInfoBinding.js'
+import { actionUnavailableReason } from './actionUnavailableReason.js'
 
 /** Portable-file actions own their native file input and cancel stale asynchronous reads. */
 export function renderSaveActionButton(
@@ -27,6 +29,7 @@ export function renderSaveActionButton(
 
   const download = new BrowserGameSaveDownload(document)
   const t = componentRuntimeText(context)
+  const information = bindActionInfo(element, context)
   let disposed = false
   let reading = false
   let epoch = 0
@@ -53,13 +56,21 @@ export function renderSaveActionButton(
               : saves?.canLoad
 
     element.disabled = reading || !allowed
+    information.update({
+      label: component.label,
+      description: component.description ?? '',
+      reason: element.disabled
+        ? component.unavailableText ||
+          (reading ? t('save.reading') : actionUnavailableReason(component.action, context))
+        : '',
+    })
   }
 
   const onClick = (event: Event) => {
     if (event.target === file) return
     update()
 
-    if (disposed || element.disabled || !saves) return
+    if (disposed || isActionDisabled(element) || !saves) return
 
     if (action === 'save-game') saves.save()
     else if (action === 'load-game') {
@@ -150,6 +161,7 @@ export function renderSaveActionButton(
       cancelConfirmation?.()
       releaseRead?.()
       unsubscribe?.()
+      information.dispose()
       element.removeEventListener('click', onClick)
       file.removeEventListener('change', onFile)
       download.dispose()

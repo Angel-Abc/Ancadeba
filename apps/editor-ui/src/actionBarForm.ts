@@ -15,6 +15,7 @@ import {
 import { questChoices, sceneChoices } from './choiceLabels.js'
 import { sceneEntranceFields } from './sceneEntranceFields.js'
 import { mapInteractFields } from './mapInteractFields.js'
+import { actionDescriptionFields } from './actionDescriptionFields.js'
 
 function shortcut(view: ProjectView, binding: ActionBarSlotDefinition['inputBinding']): string {
   if (!binding || !view.input) return ''
@@ -181,6 +182,7 @@ export function actionBarForm(
       ),
     )
     const action = slot.action
+    detail.append(...actionDescriptionFields(controls, view, slot))
 
     if (action.type === 'dialogue-action') {
       detail.append(

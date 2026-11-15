@@ -1,6 +1,8 @@
 import type { ActionBarComponentDefinition } from '@ancadeba/schemas'
 import { cooldownRemaining } from '@ancadeba/game-runtime'
 import { componentRuntimeText } from './runtimeText.js'
+import { bindActionInfo, isActionDisabled } from './actionInfoBinding.js'
+import { actionUnavailableReason } from './actionUnavailableReason.js'
 import type {
   ComponentRenderContext,
   IComponentRenderer,
@@ -30,6 +32,7 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
         badge: HTMLElement
         lock: HTMLElement
         empty: HTMLElement | undefined
+        information: ReturnType<typeof bindActionInfo>
       }
     >()
 
@@ -39,7 +42,7 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
     const update = () => {
       if (!active) return
 
-      for (const [id, { button, label, badge, lock, empty }] of buttons) {
+      for (const [id, { button, label, badge, lock, empty, information }] of buttons) {
         const focused = document.activeElement === button
 
         const available =
@@ -141,11 +144,27 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
             ? (context.navigationUnavailableMessage?.() ??
               componentRuntimeText(context)('navigation.blocked'))
             : (storyIssue ?? itemIssue ?? moveIssue ?? equipmentIssue ?? lock.textContent)
-        button.setAttribute('aria-description', button.title)
+
+        const move =
+          action.type === 'combat-action' && action.command.type === 'queue-move'
+            ? definition?.moves[action.command.move]
+            : undefined
+
+        const slot = component.slots[id]!
+
+        const reason = button.disabled
+          ? slot.unavailableText || button.title || actionUnavailableReason(action, context)
+          : ''
+
+        if (focused && (button.hidden || (button.disabled && !context.actionInfo)))
+          context.onActionBarFocusLost?.()
+        information.update({
+          label: label.textContent ?? slot.label,
+          description: slot.description || move?.description || '',
+          reason,
+        })
 
         if (empty) empty.hidden = available
-
-        if (focused && button.disabled) context.onActionBarFocusLost?.()
 
         const binding = component.slots[id]!.inputBinding
 
@@ -202,8 +221,12 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
         button.append(label, badge, lock)
 
         const activate = () => {
-          if (active && scene) actionBar?.activate(scene, component.id, id)
+          if (active && scene && !isActionDisabled(button))
+            actionBar?.activate(scene, component.id, id)
         }
+
+        const information = bindActionInfo(button, context)
+        cleanups.push(() => information.dispose())
 
         button.addEventListener('click', activate)
         cleanups.push(() => button.removeEventListener('click', activate))
@@ -222,7 +245,7 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
           cell.append(button, empty)
           root.append(cell)
         } else root.append(button)
-        buttons.set(id, { button, label, badge, lock, empty })
+        buttons.set(id, { button, label, badge, lock, empty, information })
       }
 
       update()

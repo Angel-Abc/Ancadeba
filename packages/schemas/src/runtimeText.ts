@@ -1,6 +1,12 @@
 import type { GameTranslation } from './localization.js'
 
 const en = {
+  'action.unavailable': 'This action is currently unavailable.',
+  'action.requirements': 'The requirements for this action are not met.',
+  'action.noAction': 'No action has been assigned to this button.',
+  'action.noTarget': 'There is no available target to interact with.',
+  'action.movementBlocked': 'Movement in this direction is currently blocked.',
+  'action.unavailableReason': 'Unavailable: {reason}',
   'confirmation.title': 'Confirm action',
   'confirmation.confirm': 'Confirm',
   'confirmation.cancel': 'Cancel',
@@ -95,6 +101,12 @@ export type RuntimeTextValues = Readonly<Record<string, string | number>>
 export type RuntimeTranslator = (key: RuntimeTextKey, values?: RuntimeTextValues) => string
 
 const nl: Record<RuntimeTextKey, string> = {
+  'action.unavailable': 'Deze actie is momenteel niet beschikbaar.',
+  'action.requirements': 'Er is niet voldaan aan de voorwaarden voor deze actie.',
+  'action.noAction': 'Er is geen actie aan deze knop toegewezen.',
+  'action.noTarget': 'Er is geen beschikbaar doel voor interactie.',
+  'action.movementBlocked': 'Beweging in deze richting is momenteel geblokkeerd.',
+  'action.unavailableReason': 'Niet beschikbaar: {reason}',
   'confirmation.title': 'Actie bevestigen',
   'confirmation.confirm': 'Bevestigen',
   'confirmation.cancel': 'Annuleren',

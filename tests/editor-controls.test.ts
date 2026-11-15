@@ -1096,6 +1096,32 @@ describe('scene controls', () => {
 })
 
 describe('adding scene components', () => {
+  it('creates and edits action information panels and ordinary button descriptions', () => {
+    const { editor, edit, field, submit, persist } = addingComponentPanel()
+    edit('Component type', 'action-info')
+    edit('Label', 'Action help')
+    edit('Empty selection text', 'Choose a command.')
+    submit('Create component')
+    const created = persist()
+    expect(
+      created.scenes[0]!.components.find((component) => component.type === 'action-info'),
+    ).toMatchObject({ label: 'Action help', emptyText: 'Choose a command.' })
+    edit('Empty selection text', 'Hover or tab to an action.')
+    submit('Save component')
+    expect(persist().diagnostics).toEqual([])
+    editor.navigate('shop', undefined, true)
+    edit('Component type', 'button')
+    edit('Description', 'Travel to the next location.\nYour progress is kept.')
+    edit('Unavailable explanation (optional override)', 'Finish your conversation first.')
+    edit('Action', 'enter-scene')
+    expect(field('Description').value).toContain('Your progress is kept.')
+    submit('Create component')
+    const button = persist().scenes[0]!.components.find((component) => component.type === 'button')!
+    expect(button).toMatchObject({
+      description: 'Travel to the next location.\nYour progress is kept.',
+      unavailableText: 'Finish your conversation first.',
+    })
+  })
   it('suggests unused IDs and placements that fit even a small scene', () => {
     const { editor, submit, persist, field } = addingComponentPanel()
     expect(field('Component ID').value).toBe('text')
@@ -2229,6 +2255,8 @@ describe('action bar editor controls', () => {
     const { controls, commands, root, initial, field, edit, submit } = panel()
     expect(root.all().filter((node) => node.className === 'action-bar-slot')).toHaveLength(15)
     edit('Slot label', 'Changed')
+    edit('Description', 'Perform the selected action.')
+    edit('Unavailable explanation (optional override)', 'Select a target first.')
     edit('Virtual input', 'slot-2')
     expect(controls.hasDrafts()).toBe(true)
     edit('Game scene', 'other')
@@ -2243,7 +2271,16 @@ describe('action bar editor controls', () => {
     expect(commands[0]).toMatchObject({
       type: 'scene.setActionBar',
       sceneId: 'shop',
-      component: { slots: { '1': { label: 'Changed', inputBinding: { input: 'slot-2' } } } },
+      component: {
+        slots: {
+          '1': {
+            label: 'Changed',
+            description: 'Perform the selected action.',
+            unavailableText: 'Select a target first.',
+            inputBinding: { input: 'slot-2' },
+          },
+        },
+      },
     })
   })
 

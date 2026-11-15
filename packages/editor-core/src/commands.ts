@@ -24,6 +24,7 @@ import {
   buttonComponentSchema,
   requestActionSchema,
   actionBarComponentSchema,
+  actionInfoComponentSchema,
   inputSchema,
   inventoryItemActionSchema,
   nearbyComponentSchema,
@@ -64,6 +65,7 @@ export const basicComponentSchema = z.discriminatedUnion('type', [
   textComponentSchema,
   buttonComponentSchema,
   languageSelectComponentSchema,
+  actionInfoComponentSchema,
   mapViewComponentSchema,
 ])
 

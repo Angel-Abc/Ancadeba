@@ -87,15 +87,46 @@
   cursor: pointer;
 }
 
-.ancadeba-button:hover:enabled,
+.ancadeba-button:hover:enabled:not([aria-disabled='true']),
 .ancadeba-button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
 
-.ancadeba-button:disabled {
+.ancadeba-button:disabled,
+.ancadeba-button[aria-disabled='true'] {
   opacity: 0.5;
   cursor: default;
+}
+
+.ancadeba-action-info {
+  padding: var(--ge-scene-text-padding);
+  overflow: auto;
+  overflow-wrap: anywhere;
+  line-height: var(--ge-scene-line-height);
+  color: var(--ge-scene-text-color);
+  background: var(--ge-scene-text-background);
+}
+
+.ancadeba-action-info :is(h2, h3, p) {
+  margin-block: 0 0.6em;
+}
+
+.ancadeba-action-info h2 {
+  font-size: 1em;
+}
+
+.ancadeba-action-info h3 {
+  font-size: 1.1em;
+}
+
+.ancadeba-action-info-description,
+.ancadeba-action-info-reason {
+  white-space: pre-wrap;
+}
+
+.ancadeba-action-info-reason {
+  font-style: italic;
 }
 
 .ancadeba-action-bar {

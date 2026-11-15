@@ -1,5 +1,6 @@
 import type { IGameLifecycle, SceneInstance } from '@ancadeba/game-runtime'
 import { ComponentRenderer } from './componentRenderer.js'
+import { ActionInfo } from './actionInfo.js'
 import type {
   ComponentRenderContext,
   ComponentRendererOptions,
@@ -131,6 +132,9 @@ export class SceneRenderer {
       ...this.options,
       document,
       scene,
+      actionInfo: data.components.some((component) => component.type === 'action-info')
+        ? new ActionInfo()
+        : undefined,
       onActionBarFocusLost: this.options.onActionBarFocusLost,
       bindings: scene.type === 'game' ? scene.game.bindings : undefined,
       actions: scene.type === 'game' ? scene.game.actions : undefined,

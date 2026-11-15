@@ -116,6 +116,10 @@ export function editControls(
               ...previousSlot,
               ...slot,
               labelKey: slot.labelKey,
+              description: slot.description,
+              descriptionKey: slot.descriptionKey,
+              unavailableText: slot.unavailableText,
+              unavailableTextKey: slot.unavailableTextKey,
               action: {
                 // Keep extension data while replacing all schema-defined action fields.
                 ...Object.fromEntries(

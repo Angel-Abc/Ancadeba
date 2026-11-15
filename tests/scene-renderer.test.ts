@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises'
 import { createStarterProject } from '@ancadeba/editor-core'
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test'
 import {
+  actionInfoComponentSchema,
+  buttonComponentSchema,
+  sceneSchema,
   gameSchema,
   gameSaveSchema,
   gameRulesSchema,
@@ -748,6 +751,183 @@ function flush(engine: Engine): void {
 
 describe('scene renderer', () => {
   it.each([false, true])(
+    'shows action information on hover and focus, including live unavailable reasons in preview=%s',
+    async (preview) => {
+      const resources: IResourceSource = {
+        ...source,
+        async readText(path) {
+          const raw = await source.readText(path)
+
+          if (path.startsWith('languages/')) {
+            const catalog = languageCatalogSchema.parse(JSON.parse(raw))
+            catalog['test.actionDescription'] = path.includes('/nl/')
+              ? 'Neem de brief mee.'
+              : 'Take the letter with you.'
+
+            return JSON.stringify(catalog)
+          }
+
+          if (path !== 'scenes/standard.json') return raw
+          const scene = sceneSchema.parse(JSON.parse(raw))
+          const bar = scene.components.find((component) => component.type === 'action-bar')!
+          bar.slots['1']!.description = 'Walk to the harbour.'
+          bar.slots['2']!.descriptionKey = 'test.actionDescription'
+          bar.slots['2']!.unavailableText = 'You have already taken the letter.'
+          scene.components.push(
+            actionInfoComponentSchema.parse({
+              id: 'action-information',
+              type: 'action-info',
+              placement: { row: 1, column: 1 },
+            }),
+            buttonComponentSchema.parse({
+              id: 'take-again',
+              type: 'button',
+              label: 'Take letter again',
+              description: 'Pick up <the letter>.',
+              placement: { row: 1, column: 2 },
+              action: {
+                type: 'request-action',
+                action: 'take-letter',
+                enabledWhen: { source: 'game.state', path: ['canTakeLetter'] },
+              },
+            }),
+          )
+
+          return JSON.stringify(scene)
+        },
+      }
+
+      const document = new TestDocument()
+      const target = document.createElement('main')
+
+      const engine = new Engine(
+        new GameLoader(new JsonResourceLoader(resources, logger)),
+        preview ? new EditorPreviewHost(target.asElement()) : new DomEngineHost(target.asElement()),
+        logger,
+        () => new MessageBus<EngineMessages>(),
+        timing,
+      )
+
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      startSampleGame(target)
+      const info = () => target.find((node) => node.dataset.componentId === 'action-information')!
+      const slot = (id: string) => target.find((node) => node.dataset.actionBarSlot === id)!
+      const take = slot('2')
+      const request = vi.spyOn(engine.lifecycle!.currentGame!.actions!, 'request')
+      expect(info().textContent).toContain('Hover over or focus an action')
+      take.focus()
+      take.dispatchEvent(new Event('focus'))
+      expect(info().textContent).toContain('Take the letter with you.')
+      slot('1').dispatchEvent(new Event('mouseenter'))
+      expect(info().textContent).toContain('Walk to the harbour.')
+      slot('1').dispatchEvent(new Event('mouseleave'))
+      expect(info().textContent).toContain('Take the letter with you.')
+      expect(request).not.toHaveBeenCalled()
+      take.click()
+      flush(engine)
+      expect(take.disabled).toBe(false)
+      expect(take.getAttribute('aria-disabled')).toBe('true')
+      expect(document.activeElement).toBe(take)
+      expect(info().textContent).toContain('Unavailable: You have already taken the letter.')
+      request.mockClear()
+      take.click()
+      flush(engine)
+      expect(request).not.toHaveBeenCalled()
+      const ordinary = target.find((node) => node.dataset.componentId === 'take-again')!
+      ordinary.dispatchEvent(new Event('mouseenter'))
+      expect(info().textContent).toContain('Pick up <the letter>.')
+      expect(info().textContent).toContain('The requirements for this action are not met.')
+      ordinary.click()
+      expect(request).not.toHaveBeenCalled()
+      ordinary.dispatchEvent(new Event('mouseleave'))
+      take.dispatchEvent(new Event('blur'))
+      expect(info().textContent).toContain('Hover over or focus an action')
+      engine.lifecycle!.currentGame!.data.localization?.select('nl')
+      slot('2').dispatchEvent(new Event('focus'))
+      expect(info().textContent).toContain('Neem de brief mee.')
+      expect(info().textContent).toContain('Niet beschikbaar:')
+      engine.lifecycle!.enterScene('old-harbour')
+      take.dispatchEvent(new Event('mouseenter'))
+      expect(
+        target.find((node) => node.dataset.componentId === 'action-information'),
+      ).toBeUndefined()
+      expect(target.textContent).not.toContain('Take the letter with you.')
+    },
+  )
+
+  it('reuses combat move descriptions and reports the runtime AP reason without activating the move', async () => {
+    const resources: IResourceSource = {
+      async readText(path) {
+        const raw = await readFile(
+          new URL(`../sample-games/combat-mechanics/${path}`, import.meta.url),
+          'utf8',
+        )
+
+        if (path !== 'scenes/water.json') return raw
+        const scene = sceneSchema.parse(JSON.parse(raw))
+        scene.components.push(
+          actionInfoComponentSchema.parse({
+            id: 'info',
+            type: 'action-info',
+            placement: { row: 1, column: 1 },
+          }),
+        )
+
+        return JSON.stringify(scene)
+      },
+      readBytes: async (path) =>
+        new Uint8Array(
+          await readFile(new URL(`../sample-games/combat-mechanics/${path}`, import.meta.url)),
+        ),
+    }
+
+    const document = new TestDocument()
+    const target = document.createElement('main')
+
+    const engine = new Engine(
+      new GameLoader(new JsonResourceLoader(resources, logger)),
+      new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      timing,
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    engine.lifecycle!.startGame()
+    engine.lifecycle!.enterScene('water')
+    const scene = engine.lifecycle!.activeScene!
+
+    if (scene.type !== 'game') throw new Error('Expected game scene')
+    const definition = scene.game.combat!.definition(scene, 'combat')!
+    const commands = scene.data.components.find((component) => component.type === 'action-bar')!
+
+    const entry = Object.entries(commands.slots).find(
+      ([, slot]) =>
+        slot.action.type === 'combat-action' &&
+        slot.action.command.type === 'queue-move' &&
+        slot.action.command.move === 'heavy',
+    )!
+
+    const heavy = target.find((node) => node.dataset.actionBarSlot === entry[0])!
+    const info = target.find((node) => node.dataset.componentId === 'info')!
+    heavy.dispatchEvent(new Event('focus'))
+    expect(info.textContent).toContain(definition.moves.heavy!.description)
+    expect(scene.game.combat!.snapshot(scene, 'combat')!.plan).toHaveLength(0)
+    heavy.click()
+    flush(engine)
+    expect(heavy.getAttribute('aria-disabled')).toBe('true')
+    const issue = scene.game.combat!.moveIssue(scene, 'combat', 'heavy')!
+    expect(issue).toBeTruthy()
+    expect(info.textContent).toContain(issue)
+    const before = scene.game.combat!.snapshot(scene, 'combat')!.plan.length
+    heavy.click()
+    flush(engine)
+    expect(scene.game.combat!.snapshot(scene, 'combat')!.plan).toHaveLength(before)
+  })
+
+  it.each([false, true])(
     'previews live dynamic status and healing values and restores their round context in preview=%s',
     async (preview) => {
       const resources: IResourceSource = {
@@ -1140,7 +1320,8 @@ describe('scene renderer', () => {
       expect(slot('7').disabled).toBe(true)
       expect(slot('7').title).toContain('Rhythm dive unavailable')
       expect(slot('7').title).toContain('current 0')
-      expect(slot('7').attributes.get('aria-description')).toBe(slot('7').title)
+      expect(slot('7').attributes.get('aria-description')).toContain(slot('7').title)
+      expect(slot('7').attributes.get('aria-description')).toContain('Requires at least 20%')
 
       for (let i = 0; i < 3; i++) click('6')
       expect(slot('7').disabled).toBe(true)

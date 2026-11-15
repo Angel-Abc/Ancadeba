@@ -14,6 +14,7 @@ export const creatableComponentTypes = [
   'save-point',
   'text',
   'button',
+  'action-info',
   'map-view',
   'language-select',
   'quest-log',
@@ -25,6 +26,7 @@ export type BasicComponent =
   | Extract<SceneComponentDefinition, { type: 'save-slots' | 'save-status' | 'save-point' }>
   | TextComponentDefinition
   | ButtonComponentDefinition
+  | Extract<SceneComponentDefinition, { type: 'action-info' }>
   | MapViewComponentDefinition
   | LanguageSelectComponentDefinition
   | QuestLogComponentDefinition
@@ -60,6 +62,15 @@ export function createComponentDraft(
     }
 
   if (type === 'button') return { id, type, label: 'Button', placement }
+
+  if (type === 'action-info')
+    return {
+      id,
+      type,
+      label: 'Action information',
+      emptyText: 'Hover over or focus an action to see its description.',
+      placement,
+    }
 
   if (type === 'save-slots') return { id, type, label: 'Save slots', placement, showName: true }
 

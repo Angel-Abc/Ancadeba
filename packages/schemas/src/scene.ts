@@ -148,6 +148,10 @@ export const buttonComponentSchema = z
     placement: gridPlacementSchema,
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
+    description: z.string().optional(),
+    descriptionKey: translationKeySchema.optional(),
+    unavailableText: z.string().optional(),
+    unavailableTextKey: translationKeySchema.optional(),
     /** Buttons without an action are rendered disabled. */
     action: buttonActionSchema.optional(),
   })
@@ -160,6 +164,10 @@ export const actionBarSlotSchema = z
   .object({
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
+    description: z.string().optional(),
+    descriptionKey: translationKeySchema.optional(),
+    unavailableText: z.string().optional(),
+    unavailableTextKey: translationKeySchema.optional(),
     action: z.discriminatedUnion('type', [
       ...gameplayButtonActions,
       z.object({
@@ -242,6 +250,19 @@ export const actionBarComponentSchema = z
 export type ActionBarComponentDefinition = z.infer<typeof actionBarComponentSchema>
 
 export type ActionBarSlotDefinition = z.infer<typeof actionBarSlotSchema>
+
+/** Observes action presentation within its scene without changing gameplay state. */
+export const actionInfoComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('action-info'),
+  placement: gridPlacementSchema,
+  label: z.string().default('Action information'),
+  labelKey: translationKeySchema.optional(),
+  emptyText: z.string().default('Hover over or focus an action to see its description.'),
+  emptyTextKey: translationKeySchema.optional(),
+})
+
+export type ActionInfoComponentDefinition = z.infer<typeof actionInfoComponentSchema>
 
 export const languageSelectComponentSchema = z
   .object({
@@ -585,6 +606,7 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   mapViewComponentSchema,
   inventoryComponentSchema,
   actionBarComponentSchema,
+  actionInfoComponentSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
   itemDetailsComponentSchema,

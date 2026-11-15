@@ -60,7 +60,7 @@ export function localizeDefinitions(
                       ]),
                     ),
                   }
-                : component.type === 'item-details'
+                : component.type === 'item-details' || component.type === 'action-info'
                   ? {
                       ...component,
                       label: text(component.labelKey, component.label, true),
@@ -102,18 +102,39 @@ export function localizeDefinitions(
                             slots: Object.fromEntries(
                               Object.entries(component.slots).map(([id, slot]) => [
                                 id,
-                                { ...slot, label: text(slot.labelKey, slot.label, true) },
+                                {
+                                  ...slot,
+                                  label: text(slot.labelKey, slot.label, true),
+                                  description: text(slot.descriptionKey, slot.description ?? ''),
+                                  unavailableText: text(
+                                    slot.unavailableTextKey,
+                                    slot.unavailableText ?? '',
+                                  ),
+                                },
                               ]),
                             ),
                           }
-                        : component.type === 'graphic'
-                          ? { ...component, alt: text(component.altKey, component.alt) }
-                          : component.type === 'text'
-                            ? { ...component, text: text(component.textKey, component.text) }
-                            : {
-                                ...component,
-                                label: text(component.labelKey, component.label, true),
-                              },
+                        : component.type === 'button'
+                          ? {
+                              ...component,
+                              label: text(component.labelKey, component.label, true),
+                              description: text(
+                                component.descriptionKey,
+                                component.description ?? '',
+                              ),
+                              unavailableText: text(
+                                component.unavailableTextKey,
+                                component.unavailableText ?? '',
+                              ),
+                            }
+                          : component.type === 'graphic'
+                            ? { ...component, alt: text(component.altKey, component.alt) }
+                            : component.type === 'text'
+                              ? { ...component, text: text(component.textKey, component.text) }
+                              : {
+                                  ...component,
+                                  label: text(component.labelKey, component.label, true),
+                                },
           ),
         }),
       ]),
@@ -149,7 +170,7 @@ export function assertGameLanguages(
               ? component.labelKey !== undefined ||
                 component.currencyKey !== undefined ||
                 Object.keys(component.messageKeys).length > 0
-              : component.type === 'item-details'
+              : component.type === 'item-details' || component.type === 'action-info'
                 ? component.labelKey !== undefined || component.emptyTextKey !== undefined
                 : component.type === 'status-panel'
                   ? component.labelKey !== undefined ||
@@ -166,12 +187,21 @@ export function assertGameLanguages(
                           entry.labelKey !== undefined || entry.descriptionKey !== undefined,
                       )
                     : component.type === 'action-bar'
-                      ? Object.values(component.slots).some((slot) => slot.labelKey !== undefined)
-                      : component.type === 'graphic'
-                        ? component.altKey !== undefined
-                        : component.type === 'text'
-                          ? component.textKey !== undefined
-                          : component.labelKey !== undefined,
+                      ? Object.values(component.slots).some(
+                          (slot) =>
+                            slot.labelKey !== undefined ||
+                            slot.descriptionKey !== undefined ||
+                            slot.unavailableTextKey !== undefined,
+                        )
+                      : component.type === 'button'
+                        ? component.labelKey !== undefined ||
+                          component.descriptionKey !== undefined ||
+                          component.unavailableTextKey !== undefined
+                        : component.type === 'graphic'
+                          ? component.altKey !== undefined
+                          : component.type === 'text'
+                            ? component.textKey !== undefined
+                            : component.labelKey !== undefined,
         ),
     )
 

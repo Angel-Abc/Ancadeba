@@ -1299,6 +1299,19 @@ requested action or scene navigation, boolean enable condition, and context/inpu
 binding. Choose **Empty slot** to clear a position. Bars can be added to game
 scenes and removed using the panel's controls.
 
+To show contextual action help, use **Add component → Action information** in a
+scene. Set its label, empty selection text, translations, and grid placement.
+It automatically observes regular scene buttons and action-bar slots in that
+scene on mouse hover or keyboard focus. Unavailable buttons remain focusable
+for inspection and cannot be activated.
+
+The button and slot forms include **Description**, **Description translation**,
+and an optional **Unavailable explanation** override with its translation.
+Combat move slots use their move description when no slot description is set.
+The panel updates descriptions and runtime reasons as availability changes;
+an override is useful for explaining custom enable conditions. Restart the
+preview after saving these settings.
+
 Choose **Move on map** as a slot's action type to expose directional movement.
 Select **Target map view** from the interactive maps in that scene and choose
 **Direction** (`north`, `east`, `south`, or `west`). The map must have a player

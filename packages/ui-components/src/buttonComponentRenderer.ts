@@ -2,6 +2,8 @@ import type { ButtonComponentData } from '@ancadeba/game-runtime'
 import { canEnterScene } from '@ancadeba/game-runtime'
 import { componentRuntimeText } from './runtimeText.js'
 import { renderSaveActionButton } from './saveActionButton.js'
+import { bindActionInfo, isActionDisabled } from './actionInfoBinding.js'
+import { actionUnavailableReason } from './actionUnavailableReason.js'
 import type {
   ComponentRenderContext,
   IComponentRenderer,
@@ -32,8 +34,11 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
     const movement = scene?.type === 'game' ? scene.game.mapMovement : undefined
     const objects = scene?.type === 'game' ? scene.game.mapObjects : undefined
     let active = true
+    const information = bindActionInfo(element, context)
 
-    const update = () => {
+    const updateAvailability = () => {
+      element.title = ''
+
       if (action?.type === 'resume-game') {
         element.disabled = !context.canResumeGame?.()
 
@@ -85,13 +90,24 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
         Boolean(action.enabledWhen && (enabled?.status !== 'resolved' || enabled.value !== true))
     }
 
+    const update = () => {
+      updateAvailability()
+      information.update({
+        label: component.label,
+        description: component.description ?? '',
+        reason: element.disabled
+          ? component.unavailableText || element.title || actionUnavailableReason(action, context)
+          : '',
+      })
+    }
+
     const onClick = () => {
       if (!active || !action) return
 
       // Recheck at activation even if a state change has not notified this button yet.
-      if (action.type === 'enter-scene') update()
+      update()
 
-      if (element.disabled) return
+      if (isActionDisabled(element)) return
 
       if (action.type === 'interact-map') {
         if (scene) objects?.interact(scene, action.mapView, action.object)
@@ -146,6 +162,7 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
         unsubscribeNavigation?.()
         unsubscribeMovement?.()
         unsubscribeSaves?.()
+        information.dispose()
         element.removeEventListener('click', onClick)
         element.remove()
       },

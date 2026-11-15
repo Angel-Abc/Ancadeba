@@ -15,6 +15,7 @@ import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancade
 import type { IGraphicResources } from './graphicResources.js'
 import type { KeyboardInputSink } from './keyboardInput.js'
 import type { GameConfirmation } from './gameConfirmationDialog.js'
+import type { ActionInfo } from './actionInfo.js'
 
 type SceneNavigation = Extract<
   NonNullable<ButtonComponentData['action']>,
@@ -43,6 +44,7 @@ export interface ComponentRendererOptions {
 }
 
 export interface ComponentRenderContext extends ComponentRendererOptions {
+  readonly actionInfo?: ActionInfo | undefined
   readonly scene?: SceneInstance | undefined
   readonly onActionBarFocusLost?: (() => void) | undefined
   readonly document: Document

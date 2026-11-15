@@ -19,6 +19,7 @@ const presentationFields = new Set([
   'currencyKey',
   'speaker',
   'unavailableText',
+  'unavailableTextKey',
   'messages',
   'messageKeys',
   'equipmentSlotKeys',

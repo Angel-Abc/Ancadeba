@@ -20,6 +20,10 @@ export { SavePointComponentRenderer } from './savePointComponentRenderer.js'
 
 export { ActionBarComponentRenderer } from './actionBarComponentRenderer.js'
 
+export { ActionInfoComponentRenderer } from './actionInfoComponentRenderer.js'
+
+export { ActionInfo, type ActionInformation } from './actionInfo.js'
+
 export { NearbyComponentRenderer } from './nearbyComponentRenderer.js'
 
 export { StatusPanelComponentRenderer } from './statusPanelComponentRenderer.js'

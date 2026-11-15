@@ -2091,6 +2091,36 @@ and Space retaining native button activation.
 Leaving a focused game button through a scene transition returns focus to the game surface.
 Project diagnostics, startup, and export validate the component and its references.
 
+Add an **Action information** component to a scene to show the description of the
+most recently hovered or keyboard-focused action. It observes ordinary scene
+buttons (including save controls) and action-bar slots automatically. Place and
+size the panel with the normal scene grid:
+
+```json
+{
+  "id": "action-help",
+  "type": "action-info",
+  "label": "Action information",
+  "emptyText": "Hover over or focus an action for details.",
+  "placement": { "row": 6, "column": 11, "rowSpan": 3, "columnSpan": 2 }
+}
+```
+
+Buttons and action-bar slots accept optional `description` and `descriptionKey`
+fields. Combat `queue-move` slots use the move's description when their own
+description is empty. Unavailable actions show runtime explanations such as AP
+costs, cooldowns, level requirements, blocked movement and trade restrictions.
+Optional `unavailableText` and `unavailableTextKey` override the explanation,
+which is useful for game-specific boolean requirements. The panel accepts
+`labelKey` and `emptyTextKey` translations. Built-in reason text uses the normal
+`runtime.*` catalog overrides.
+
+In scenes with this panel, unavailable actions use `aria-disabled` so keyboard
+users can still focus and inspect them; clicks and Enter/Space cannot activate
+them. The panel returns to its empty text when hover and focus leave all actions,
+and refreshes when an inspected action's availability changes. Inspection is
+scene-local UI state and does not publish gameplay messages.
+
 Slots can also use `{ "type": "inventory-action", "inventory": "items", "action": "inspect" }`.
 Here `items` identifies an inventory component in the same scene. Selecting an item
 in that panel populates the slot when the item supports its action. The `inspect`

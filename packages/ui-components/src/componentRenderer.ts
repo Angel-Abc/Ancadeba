@@ -11,6 +11,7 @@ import { GraphicComponentRenderer } from './graphicComponentRenderer.js'
 import { MapViewComponentRenderer } from './mapViewComponentRenderer.js'
 import { InventoryComponentRenderer } from './inventoryComponentRenderer.js'
 import { ActionBarComponentRenderer } from './actionBarComponentRenderer.js'
+import { ActionInfoComponentRenderer } from './actionInfoComponentRenderer.js'
 import { NearbyComponentRenderer } from './nearbyComponentRenderer.js'
 import { StatusPanelComponentRenderer } from './statusPanelComponentRenderer.js'
 import { ItemDetailsComponentRenderer } from './itemDetailsComponentRenderer.js'
@@ -39,6 +40,7 @@ export class ComponentRenderer implements IComponentRenderer {
       'map-view': new MapViewComponentRenderer(),
       inventory: new InventoryComponentRenderer(),
       'action-bar': new ActionBarComponentRenderer(),
+      'action-info': new ActionInfoComponentRenderer(),
       nearby: new NearbyComponentRenderer(),
       'status-panel': new StatusPanelComponentRenderer(),
       'item-details': new ItemDetailsComponentRenderer(),
@@ -77,6 +79,8 @@ export class ComponentRenderer implements IComponentRenderer {
         return this.renderers.nearby.render(component, context)
       case 'action-bar':
         return this.renderers['action-bar'].render(component, context)
+      case 'action-info':
+        return this.renderers['action-info'].render(component, context)
       case 'graphic':
         return this.renderers.graphic.render(component, context)
       case 'text':
