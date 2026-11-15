@@ -20,8 +20,8 @@ export interface WorkspaceLayoutPreferences {
 const layoutKey = 'ancadeba.editor.layout'
 const previewSizeKey = 'ancadeba.editor.previewSize'
 
-/** Preview width as a percentage of the editor workspace. */
-export const previewSizeRange = { minimum: 25, maximum: 80, initial: 50, step: 5 }
+/** Preview width as a percentage of the editor workspace; forms get the larger share by default. */
+export const previewSizeRange = { minimum: 25, maximum: 80, initial: 40, step: 5 }
 
 export function clampPreviewSize(size: number): number {
   return Math.min(previewSizeRange.maximum, Math.max(previewSizeRange.minimum, size))

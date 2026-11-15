@@ -234,12 +234,14 @@ code {
 .app-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
 }
 
+/* One row on desktop widths: the project title truncates before any control wraps. */
 .top-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
   min-height: 3rem;
@@ -276,23 +278,85 @@ code {
 .project-bar {
   display: flex;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
+.top-bar :is(button, select, .segmented, .preview-actions) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.top-bar .preview-actions {
+  flex-wrap: nowrap;
+}
+
 .project-title {
+  flex: 0 1 auto;
+  min-width: 3rem;
   padding-left: 0.75rem;
+  overflow: hidden;
   border-left: 1px solid var(--ed-border);
   font-weight: 600;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #project-open-toggle {
   min-height: 1.75rem;
+  padding-inline: 0.5rem;
   border-color: transparent;
   color: var(--ed-muted);
+}
+
+#editor-undo,
+#editor-redo {
+  padding-inline: 0.6rem;
+}
+
+/*
+ * On narrower windows the brand name hides and these three buttons show icons, keeping their
+ * text as the accessible name and tooltip, so the toolbar stays on one row in every language.
+ */
+@media (max-width: 1279px) {
+  .brand h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  :is(#project-open-toggle, #editor-undo, #editor-redo) {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    padding: 0;
+    font-size: 0;
+  }
+
+  :is(#project-open-toggle, #editor-undo, #editor-redo)::before {
+    content: '' / '';
+    width: 1.1rem;
+    height: 1.1rem;
+    background: currentColor;
+    mask: var(--icon) center / contain no-repeat;
+  }
+
+  #project-open-toggle {
+    border-color: var(--ed-border-strong);
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h6l2 2h10v11H3zM3 10h18'/%3E%3C/svg%3E");
+  }
+
+  #editor-undo {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3'/%3E%3C/svg%3E");
+  }
+
+  #editor-redo {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3'/%3E%3C/svg%3E");
+  }
 }
 
 .segmented {
@@ -356,21 +420,24 @@ code {
   gap: 2px;
   /* Wide enough for the longest one-word label in either language, such as "Voorwerpen". */
   width: 4.75rem;
-  padding: 0.5rem 0;
-  overflow-y: auto;
+  padding: 0.375rem 0;
+  overflow: hidden auto;
+  scrollbar-width: thin;
   border-right: 1px solid var(--ed-border);
   background: var(--ed-panel);
 }
 
+/* Fifteen sections fit a 768px-high window without the rail scrolling. */
 .section-rail button {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  width: 4.25rem;
-  min-height: 2.75rem;
-  padding: 0.2rem 0;
+  gap: 0.125rem;
+  width: calc(100% - 0.5rem);
+  min-height: 2.5rem;
+  padding: 0.15rem 0;
   border: 0;
   border-radius: 0.5rem;
   color: var(--ed-muted);
@@ -398,7 +465,7 @@ code {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 16.5rem;
+  width: 15rem;
   min-width: 12rem;
   max-width: 28rem;
   padding: 0.75rem;
@@ -428,6 +495,31 @@ code {
 .editor-actions {
   display: grid;
   gap: 0.5rem;
+}
+
+.project-actions {
+  flex: 0 0 auto;
+  border: 1px solid var(--ed-border);
+  border-radius: var(--ed-radius);
+}
+
+.project-actions > summary {
+  padding: 0.35rem 0.6rem;
+  color: var(--ed-text-soft);
+  font-weight: 600;
+}
+
+.project-actions > summary:hover {
+  background: var(--ed-panel-raised);
+}
+
+.project-actions[open] > summary {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.project-actions > :not(summary) {
+  margin: 0 0.5rem 0.5rem;
 }
 
 #project-create-fields {
@@ -548,10 +640,26 @@ code {
   background: var(--ed-sunken);
 }
 
+/* The breadcrumb always sits above the title, so the header keeps one shape on every page. */
+.editor-pane > .pane-header {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.05rem;
+}
+
+.editor-pane > .pane-header > :is(h2, h3) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #workspace-heading {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1.3;
 }
 
 .editor-pane-body {
@@ -1001,8 +1109,6 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 0.6rem;
-  max-height: 250px;
-  overflow: auto;
 }
 
 .asset-empty {
@@ -1204,9 +1310,9 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 
 .preview-pane {
   display: flex;
-  flex: 0 0 var(--preview-size, 50%);
+  flex: 0 0 var(--preview-size, 40%);
   flex-direction: column;
-  min-width: 20rem;
+  min-width: 17rem;
   min-height: 0;
   background: var(--ed-stage);
 }
@@ -1331,8 +1437,27 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     overflow: auto;
   }
 
+  .top-bar,
+  .project-bar {
+    flex-wrap: wrap;
+  }
+
+  /* The rail becomes a pinned strip, so sections stay one tap away while the page scrolls. */
   .section-rail {
-    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-direction: row;
+    grid-column: 1 / -1;
+    width: auto;
+    padding: 0.25rem;
+    overflow: auto hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--ed-border);
+  }
+
+  .section-rail button {
+    width: 4.5rem;
   }
 
   .project-sidebar {

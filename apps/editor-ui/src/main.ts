@@ -33,7 +33,7 @@ function translatePage(): void {
     node.textContent = t(node.dataset.i18n!)
   }
 
-  for (const attribute of ['placeholder', 'aria-label']) {
+  for (const attribute of ['placeholder', 'aria-label', 'title']) {
     for (const node of document.querySelectorAll<HTMLElement>(`[data-i18n-${attribute}]`)) {
       node.setAttribute(attribute, t(node.getAttribute(`data-i18n-${attribute}`)!))
     }

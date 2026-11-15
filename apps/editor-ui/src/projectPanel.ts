@@ -1296,7 +1296,9 @@ export function bindProjectPanel(
     )
 
     if (railElement)
-      rail = bindSectionRail(railElement, sections, t, (sectionId) => tree?.select(sectionId))
+      rail = bindSectionRail(railElement, sections, t, (sectionId) =>
+        tree?.select(sectionId, { expand: true }),
+      )
     tree.render(undefined, false)
     showSelection()
   }

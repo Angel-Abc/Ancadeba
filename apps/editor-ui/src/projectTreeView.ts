@@ -212,14 +212,27 @@ export function bindProjectTree(
     reveal(nodes)
   }
 
+  /** Scrolls only the tree, so the search box and sidebar stay where they are. */
+  const scrollSelectedToTop = () => {
+    const row = rows.find((row) => row.node.key === selected)?.element
+
+    if (row)
+      container.scrollTop += row.getBoundingClientRect().top - container.getBoundingClientRect().top
+  }
+
   return {
-    select(key: string) {
+    /** `expand` opens the selected branch and brings it to the top, as the section rail does. */
+    select(key: string, { expand = false } = {}) {
       const node = flattenProjectTree(nodes).find((node) => node.key === key)
 
       if (node) {
         select(node)
         revealSelected()
+
+        if (expand && node.children?.length) expanded.add(node.key)
         render()
+
+        if (expand) scrollSelectedToTop()
       }
     },
     render(view: ProjectView | undefined, working: boolean, selection = selected) {
