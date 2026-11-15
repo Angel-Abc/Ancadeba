@@ -59,7 +59,7 @@ describe('project repairs', () => {
     ])
     expect(JSON.parse(missing.recoveryManifest!)).toMatchObject({
       id: 'demo',
-      scenes: ['adventure', 'start'],
+      scenes: ['adventure', 'game-menu', 'load', 'save', 'settings', 'start'],
       stylesheet: 'theme.css',
     })
     const request = { path, file: 'game.json', expectedRevision: missing.revision, text: original }
@@ -114,7 +114,14 @@ describe('project repairs', () => {
     }
 
     expect((await service.checkRepair(request)).diagnostics).toEqual([])
-    expect((await service.repair(request)).game?.scenes).toEqual(['adventure', 'start'])
+    expect((await service.repair(request)).game?.scenes).toEqual([
+      'adventure',
+      'game-menu',
+      'load',
+      'save',
+      'settings',
+      'start',
+    ])
   })
 
   it('discovers missing-manifest projects over HTTP and returns them to normal discovery after recovery', async () => {
@@ -384,7 +391,7 @@ describe('project repairs', () => {
       'missing'
     await write(file, JSON.stringify(source))
     const initial = await service.inspect(path)
-    expect(initial.diagnostics.some((issue) => issue.code === 'invalid_button_target')).toBe(true)
+    expect(initial.diagnostics.some((issue) => issue.code === 'invalid_menu_target')).toBe(true)
     source.components.find((component: { id: string }) => component.id === 'menu').action.scene =
       'start'
     const text = JSON.stringify(source, null, 4)

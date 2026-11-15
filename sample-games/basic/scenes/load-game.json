@@ -1,0 +1,152 @@
+{
+  "schema-version": "1.0.0",
+  "id": "load-game",
+  "type": "stand-alone",
+  "titleKey": "menu.loadGame",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 12
+    }
+  },
+  "components": [
+    {
+      "id": "title",
+      "type": "text",
+      "textKey": "menu.loadGame",
+      "placement": {
+        "row": 1,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      },
+      "presentation": {
+        "variant": "heading",
+        "align": "center"
+      }
+    },
+    {
+      "id": "save-slots",
+      "type": "save-slots",
+      "labelKey": "menu.saveSlots",
+      "showName": false,
+      "placement": {
+        "row": 3,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      }
+    },
+    {
+      "id": "load-game",
+      "type": "button",
+      "labelKey": "menu.loadGame",
+      "placement": {
+        "row": 5,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "load-game"
+      }
+    },
+    {
+      "id": "load-autosave",
+      "type": "button",
+      "labelKey": "menu.loadAutosave",
+      "placement": {
+        "row": 5,
+        "column": 7,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "load-autosave"
+      }
+    },
+    {
+      "id": "import-save",
+      "type": "button",
+      "labelKey": "menu.importSave",
+      "placement": {
+        "row": 7,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 3
+      },
+      "action": {
+        "type": "import-save"
+      }
+    },
+    {
+      "id": "export-save",
+      "type": "button",
+      "labelKey": "menu.exportSave",
+      "placement": {
+        "row": 7,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 3
+      },
+      "action": {
+        "type": "export-save"
+      }
+    },
+    {
+      "id": "delete-save",
+      "type": "button",
+      "labelKey": "menu.deleteSave",
+      "placement": {
+        "row": 7,
+        "column": 8,
+        "rowSpan": 1,
+        "columnSpan": 3
+      },
+      "action": {
+        "type": "delete-save"
+      }
+    },
+    {
+      "id": "save-status",
+      "type": "save-status",
+      "labelKey": "menu.saveStatus",
+      "placement": {
+        "row": 8,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      }
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "labelKey": "menu.mainMenu",
+      "placement": {
+        "row": 11,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "main-menu",
+        "scene": "start-screen"
+      }
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "labelKey": "menu.resume",
+      "placement": {
+        "row": 11,
+        "column": 7,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "resume-game"
+      }
+    }
+  ]
+}

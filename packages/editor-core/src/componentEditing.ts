@@ -55,6 +55,18 @@ export function editComponent(
             : undefined,
         }
       : {}),
+    ...(component.type === 'save-point' && component.location
+      ? {
+          location: {
+            ...object(previous.location),
+            ...component.location,
+            position: {
+              ...object(object(previous.location).position),
+              ...component.location.position,
+            },
+          },
+        }
+      : {}),
     ...(component.type === 'button' && component.action
       ? {
           action: {

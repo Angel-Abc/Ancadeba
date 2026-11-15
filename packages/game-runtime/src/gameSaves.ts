@@ -29,6 +29,8 @@ export interface GameSaveStore {
 }
 
 export type SaveError =
+  | 'fileError'
+  | 'downloadError'
   | 'unavailable'
   | 'storage'
   | 'invalid-save'
@@ -39,6 +41,11 @@ export type SaveError =
   | 'delete-unavailable'
 
 export interface IGameSaves {
+  readonly readingFile?: boolean
+  beginFileRead?(): () => void
+  reportError?(error: SaveError): void
+  readonly draftName?: string
+  setName?(name: string): void
   readonly selectedSlot: GameSaveSlotId
   readonly slots: readonly GameSaveSlot[]
   readonly canSave: boolean
@@ -82,11 +89,40 @@ function saveByteLength(text: string): number {
 
 /** Independent named slots and portable snapshots; failed imports never replace saved or live progress. */
 export class GameSaves implements IGameSaves {
+  readingFile = false
+
+  beginFileRead(): () => void {
+    this.readingFile = true
+    this.notify()
+    let active = true
+
+    return () => {
+      if (!active) return
+      active = false
+      this.readingFile = false
+
+      if (!this.disposed) this.notify()
+    }
+  }
+  reportError(error: SaveError): void {
+    if (!this.disposed && !this.working) this.fail(error)
+  }
   private readonly listeners = new Set<() => void>()
   private disposed = false
   private working = false
   private notifying = false
   private slot: GameSaveSlotId = '1'
+  private pendingName: string | undefined
+
+  get draftName(): string {
+    return this.pendingName ?? this.slots.find(({ id }) => id === this.slot)?.name ?? ''
+  }
+
+  setName(name: string): void {
+    if (this.disposed || this.working || this.notifying) return
+    this.pendingName = name
+    this.notify()
+  }
   status: IGameSaves['status'] = 'idle'
   error: SaveError | undefined
   autosaveStatus: IGameSaves['autosaveStatus'] = 'idle'
@@ -101,6 +137,8 @@ export class GameSaves implements IGameSaves {
     private readonly compatible: (save: GameSave) => boolean,
     private readonly validate: (save: GameSave) => void,
     private readonly onObserverError: (error: unknown) => void,
+    private readonly manualAllowed: () => boolean = () => true,
+    private readonly autosaveAllowed: () => boolean = () => true,
   ) {}
 
   get selectedSlot(): GameSaveSlotId {
@@ -129,7 +167,7 @@ export class GameSaves implements IGameSaves {
   }
 
   get canImport(): boolean {
-    return !this.disposed && !this.working
+    return !this.disposed && !this.working && !this.readingFile
   }
 
   selectSlot(id: string): boolean {
@@ -140,6 +178,7 @@ export class GameSaves implements IGameSaves {
 
     if (this.slot === slot) return true
     this.slot = slot
+    this.pendingName = undefined
     this.status = 'idle'
     this.error = undefined
     this.notify()
@@ -148,7 +187,13 @@ export class GameSaves implements IGameSaves {
   }
 
   get canSave(): boolean {
-    return !this.disposed && !this.working && this.available()
+    return (
+      !this.disposed &&
+      !this.working &&
+      !this.readingFile &&
+      this.available() &&
+      this.manualAllowed()
+    )
   }
 
   get canLoad(): boolean {
@@ -164,7 +209,7 @@ export class GameSaves implements IGameSaves {
   }
 
   private hasSave(location: GameSaveLocation): boolean {
-    if (this.disposed || this.working) return false
+    if (this.disposed || this.working || this.readingFile) return false
 
     try {
       return this.store.read(this.gameId, location) !== undefined
@@ -180,9 +225,10 @@ export class GameSaves implements IGameSaves {
     if (!this.canSave) return this.fail('unavailable')
 
     return this.perform(() => {
-      const slotName = this.name(name ?? this.slots.find(({ id }) => id === this.slot)?.name)
+      const slotName = this.name(name ?? this.draftName)
       const save = gameSaveSchema.parse({ ...this.capture(), slotName })
       this.write(save)
+      this.pendingName = undefined
 
       this.status = 'saved'
     })
@@ -206,6 +252,7 @@ export class GameSaves implements IGameSaves {
       }
 
       this.status = 'deleted'
+      this.pendingName = undefined
     })
   }
 
@@ -215,7 +262,14 @@ export class GameSaves implements IGameSaves {
 
   /** Background checkpoints have separate feedback and never change the selected manual slot. */
   autosave(): boolean {
-    if (this.disposed || this.working || this.notifying || !this.available()) return false
+    if (
+      this.disposed ||
+      this.working ||
+      this.notifying ||
+      !this.available() ||
+      !this.autosaveAllowed()
+    )
+      return false
     this.working = true
 
     try {
@@ -270,6 +324,7 @@ export class GameSaves implements IGameSaves {
       if (!this.compatible(save)) throw new GameSaveError('incompatible-save')
       this.validate(save)
       this.write({ ...save, slotName: this.name(name ?? save.slotName) })
+      this.pendingName = undefined
       this.status = 'imported'
     })
   }

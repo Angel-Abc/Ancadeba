@@ -6,13 +6,13 @@ import type {
   GameSaveFile,
 } from '@ancadeba/game-runtime'
 import { canEnterScene, runtimeText } from '@ancadeba/game-runtime'
-import { mountGameSaveControls, gameSaveMessages } from './gameSaveControls.js'
 import { bindKeyboardInput, type KeyboardInputSink } from './keyboardInput.js'
 import { SceneRenderer, type SceneRendererOptions } from './sceneRenderer.js'
 import { mountGameStylesheet } from './gameStylesheet.js'
 import type { SceneEntrance } from '@ancadeba/schemas'
 
 export interface GameViewSession {
+  readonly prepareMenu?: () => boolean
   readonly saves?: IGameSaves | undefined
   readonly lifecycle: IGameLifecycle
   readonly input: KeyboardInputSink | undefined
@@ -79,19 +79,50 @@ export function mountGameView(
     session.lifecycle.enterScene(scene.id, entrance)
   }
 
+  const openMenu = (id: string) => {
+    session.input?.reset()
+
+    if (session.prepareMenu?.() === false) return
+    session.lifecycle.openMenu?.(id)
+    root.focus()
+  }
+
+  const resume = () => {
+    session.input?.reset()
+    session.lifecycle.resumeGame?.()
+    root.focus()
+  }
+
+  const onMenuKey = (event: KeyboardEvent) => {
+    if (
+      event.code !== 'Escape' ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey
+    )
+      return
+
+    if (
+      !session.lifecycle.suspendedScene &&
+      (!game.menuScene || session.lifecycle.activeScene?.type !== 'game')
+    )
+      return
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (event.repeat) return
+
+    if (session.lifecycle.suspendedScene) resume()
+    else openMenu(game.menuScene!)
+  }
+
   try {
     if (localization) cleanups.push(localization.subscribe(syncMetadata))
 
-    if (session.saves)
-      cleanups.push(
-        mountGameSaveControls(
-          root,
-          game,
-          session.saves,
-          () => Boolean(session.lifecycle.currentGame),
-          options.downloadSave,
-        ),
-      )
+    root.addEventListener('keydown', onMenuKey, true)
+    cleanups.push(() => root.removeEventListener('keydown', onMenuKey, true))
 
     if (options.scenePicker) {
       const label = document.createElement('label')
@@ -168,14 +199,31 @@ export function mountGameView(
 
     const renderer = new SceneRenderer(viewport, session.lifecycle, {
       ...options,
+      game,
+      onOpenMenu: openMenu,
+      canOpenMenu: () =>
+        Boolean(
+          session.lifecycle.currentGame &&
+          session.lifecycle.openMenu &&
+          (session.lifecycle.activeScene?.type === 'game' || session.lifecycle.suspendedScene),
+        ),
+      canResumeGame: () => Boolean(session.lifecycle.suspendedScene),
       saves: session.saves,
       onLoadGame: () => {
         if (
           session.lifecycle.currentGame &&
-          document.defaultView?.confirm(gameSaveMessages(game).confirm) !== true
+          document.defaultView?.confirm(runtimeText(game, 'save.confirm')) !== true
         )
           return
         session.saves?.load()
+      },
+      onLoadAutosave: () => {
+        if (
+          session.lifecycle.currentGame &&
+          document.defaultView?.confirm(runtimeText(game, 'save.confirm')) !== true
+        )
+          return
+        session.saves?.loadAutosave()
       },
       input: session.input,
       onActionBarFocusLost: () => root.focus(),
@@ -189,6 +237,18 @@ export function mountGameView(
       onButtonActivate: (action) => {
         if (disposed) return
 
+        if (action.type === 'resume-game') {
+          resume()
+
+          return
+        }
+
+        if (action.type === 'open-menu') {
+          openMenu(action.scene)
+
+          return
+        }
+
         if (
           action.type === 'enter-scene' &&
           !canEnterScene(game, action, session.lifecycle.currentGame?.mapMovement)
@@ -197,6 +257,14 @@ export function mountGameView(
         const scene = game.scenes.get(action.scene)
 
         if (!scene) throw new Error(`Missing button target scene: ${action.scene}`)
+
+        if (action.type === 'main-menu') session.lifecycle.endGame()
+
+        if (session.lifecycle.suspendedScene && scene.type === 'stand-alone') {
+          openMenu(scene.id)
+
+          return
+        }
 
         if (action.type === 'new-game') session.lifecycle.startGame()
         enter(

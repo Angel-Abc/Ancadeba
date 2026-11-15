@@ -1,5 +1,6 @@
 import { bindLevelingEditor } from './levelingEditor.js'
 import { z } from 'zod'
+import { savingPolicySchema } from '@ancadeba/schemas'
 import {
   registerEditorDraft,
   captureEditorDrafts,
@@ -968,6 +969,32 @@ export function bindProjectPanel(
       set('editor-title', view.game.title)
       set('editor-description', view.game.description)
       set('editor-version', view.game.version)
+
+      if (root.querySelector('#editor-manual-saving')) {
+        set('editor-manual-saving', view.game.saving?.manual ?? 'anywhere')
+        set('editor-autosave', view.game.saving?.autosave ?? 'automatic')
+      }
+
+      const menu = root.querySelector<HTMLSelectElement>('#editor-menu-scene')
+
+      if (menu) {
+        menu.replaceChildren(
+          ...[
+            ['', t('saving.disabled')],
+            ...view.scenes
+              .filter((scene) => scene.type === 'stand-alone')
+              .map((scene) => [scene.id, scene.title || scene.id]),
+          ].map(([id, title]) => {
+            const option = root.ownerDocument.createElement('option')
+            option.value = id!
+            option.textContent = title!
+
+            return option
+          }),
+        )
+        menu.value = view.game['menu-scene'] ?? ''
+      }
+
       projectTranslations.render(view, view.game, true)
     }
 
@@ -1663,6 +1690,15 @@ export function bindProjectPanel(
       title: value('editor-title'),
       description: value('editor-description'),
       version: value('editor-version'),
+      ...(root.querySelector('#editor-manual-saving')
+        ? {
+            saving: savingPolicySchema.parse({
+              manual: value('editor-manual-saving'),
+              autosave: value('editor-autosave'),
+            }),
+            menuScene: value('editor-menu-scene') || null,
+          }
+        : {}),
       ...projectTranslations.read(),
     })
   })

@@ -34,24 +34,24 @@ Each request contains one command. Metadata commands supply all listed fields.
 The table below highlights core operations; `GET /api/editor/capabilities` supplies
 the complete command list, schemas, and examples, including gameplay authoring.
 
-| Command                    | Fields                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------ |
-| `game.updateMetadata`      | `title`, `description`, `version`; optional `titleKey`, `descriptionKey`             |
-| `scene.create`             | A complete `scene` matching the current scene schema                                 |
-| `scene.updateMetadata`     | `sceneId`, `title`, `description`; optional `titleKey`, `descriptionKey`             |
-| `scene.updateLayout`       | `sceneId`, positive integer `rows` and `columns`                                     |
-| `assets.upsertImage`       | `id`, complete `image` definition                                                    |
-| `assets.upsertPart`        | `id`, complete `part` definition                                                     |
-| `assets.upsertComposition` | `id`, complete `composition` definition                                              |
-| `assets.remove`            | `kind` (`images`, `parts`, or `compositions`), `id`                                  |
-| `scene.upsertGraphic`      | `sceneId`, complete graphic `component`                                              |
-| `scene.removeGraphic`      | `sceneId`, `componentId`                                                             |
-| `scene.setActionBar`       | `sceneId`, complete action-bar `component`, or `null` to remove it                   |
-| `game.updateInput`         | `inputId`, complete input `input` definition                                         |
-| `inventory.setItemActions` | `itemType`, map of item action IDs to requested actions and optional enable bindings |
-| `scene.upsertNearby`       | `sceneId`, complete nearby `component` with entries and a description text target    |
-| `scene.upsertStatusPanel`  | `sceneId`, complete status-panel `component`                                         |
-| `scene.removeStatusPanel`  | `sceneId`, status `componentId`                                                      |
+| Command                    | Fields                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `game.updateMetadata`      | `title`, `description`, `version`; optional `titleKey`, `descriptionKey`, `saving`, `menuScene` (`null` clears it) |
+| `scene.create`             | A complete `scene` matching the current scene schema                                                               |
+| `scene.updateMetadata`     | `sceneId`, `title`, `description`; optional `titleKey`, `descriptionKey`                                           |
+| `scene.updateLayout`       | `sceneId`, positive integer `rows` and `columns`                                                                   |
+| `assets.upsertImage`       | `id`, complete `image` definition                                                                                  |
+| `assets.upsertPart`        | `id`, complete `part` definition                                                                                   |
+| `assets.upsertComposition` | `id`, complete `composition` definition                                                                            |
+| `assets.remove`            | `kind` (`images`, `parts`, or `compositions`), `id`                                                                |
+| `scene.upsertGraphic`      | `sceneId`, complete graphic `component`                                                                            |
+| `scene.removeGraphic`      | `sceneId`, `componentId`                                                                                           |
+| `scene.setActionBar`       | `sceneId`, complete action-bar `component`, or `null` to remove it                                                 |
+| `game.updateInput`         | `inputId`, complete input `input` definition                                                                       |
+| `inventory.setItemActions` | `itemType`, map of item action IDs to requested actions and optional enable bindings                               |
+| `scene.upsertNearby`       | `sceneId`, complete nearby `component` with entries and a description text target                                  |
+| `scene.upsertStatusPanel`  | `sceneId`, complete status-panel `component`                                                                       |
+| `scene.removeStatusPanel`  | `sceneId`, status `componentId`                                                                                    |
 
 Scene creation updates both the scene document and the manifest reference.
 Metadata commands accept translation-key strings to assign them, or `null` to
@@ -573,7 +573,7 @@ failures. An uncertain result asks for inspection before retrying. This protects
 same-server commands; it does not add a cross-process transaction or crash journal.
 
 Expand a scene and choose **Add component** to create text, buttons, map views,
-language selectors, or quest logs. Choose a type, set its unique ID, edit its
+language selectors, quest logs, save slots, save status, or save points. Choose a type, set its unique ID, edit its
 settings, and choose **Create component**. Suggested placements fit the scene's
 grid; edit Row, Column, and spans to position the component. Saving selects the new
 component in the explorer, where **Save component** updates it in place. New saves
@@ -1404,8 +1404,10 @@ leveling, and combat libraries. Unchanged reads and external changes held back b
 unsaved drafts leave the preview running. Neither preview loading nor export is
 pinned to an editor revision across its individual file reads.
 
-The preview provides five named save slots, with **Save progress** and **Load
-progress** operating on the selected **Save slot**. **Export save** downloads that
+The preview renders the save controls authored in the selected scene. Add **Save
+slots** and **Save status** components and buttons with the save/load actions.
+There are five named slots, with **Save progress** and **Load progress** operating
+on the selected **Save slot**. **Export save** downloads that
 slot as JSON; **Import save** validates a file into the selected slot without
 loading it. Occupied slots require confirmation before import.
 **Delete save** clears the selected manual slot after confirmation, including
@@ -1413,8 +1415,10 @@ damaged or incompatible saves, while preserving the active game and autosave. Em
 slots disable deletion. Saves use durable browser
 storage scoped to the project folder and game ID. They preserve progress across preview
 restarts and page reloads. Autosave writes a separate checkpoint after gameplay
-changes and periodically while a playthrough is open, without replacing manual
-slots. **Load autosave** resumes it. Preview restarts cancel pending autosaves;
+changes and periodically while gameplay is running, without replacing manual
+slots. Game properties independently configure manual saving and autosave,
+including save-point-only and disabled modes. Save points can apply to an entire
+gameplay scene or a position and tile radius in an interactive map view. **Load autosave** resumes its checkpoint. Preview restarts cancel pending autosaves;
 the last completed checkpoint remains available. Gameplay-definition or stylesheet changes make older
 saves incompatible; loading reports this before replacing the current playthrough.
 Translation catalogs, key assignments and displayed text can change while keeping
@@ -1422,8 +1426,13 @@ saves compatible. Available/default language changes also preserve saves; a save
 language that was removed falls back to the current/default language. Older
 full-content fingerprints are incompatible and have no upgrade path. See the README
 for the compatibility boundary.
-The component editor also offers **Save progress** and **Load saved progress** as
-ordinary button actions (`save-game` and `load-game`), without a scene target.
+The component editor offers `save-game`, `load-game`, `load-autosave`, `delete-save`,
+`import-save`, and `export-save` button actions without a scene target.
+Choose a stand-alone **Escape menu scene** in game properties. `open-menu` pauses
+gameplay and retains its scene, `resume-game` returns to it, and `main-menu` ends
+the playthrough before entering its target. Ordinary navigation between stand-alone
+menu scenes stays paused; Escape resumes gameplay from any of these submenus.
+Save policy checks use the retained gameplay scene and position.
 The Basic Game's main-menu Load Game button is enabled when a slot exists.
 See [Save and load](../README.md#save-and-load) for saved systems, storage behavior,
 compatibility checks, and limitations.

@@ -94,7 +94,14 @@ describe('new project creation', () => {
       title: request.title,
       'initial-scene': 'start',
     })
-    expect(view.scenes.map(({ id }) => id)).toEqual(['start', 'adventure'])
+    expect(view.scenes.map(({ id }) => id)).toEqual([
+      'start',
+      'adventure',
+      'game-menu',
+      'save',
+      'load',
+      'settings',
+    ])
     expect(view.scenes[0]!.components.find(({ id }) => id === 'play')).toMatchObject({
       action: { type: 'new-game', scene: 'adventure' },
     })

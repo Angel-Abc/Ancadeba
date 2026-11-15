@@ -39,6 +39,7 @@ import type {
   ItemDetailsComponentDefinition,
   EquipmentComponentDefinition,
   ShopComponentDefinition,
+  SceneComponentDefinition,
   CombatDefinition,
 } from '@ancadeba/schemas'
 import type { TextTemplate } from './textBindings.js'
@@ -87,6 +88,7 @@ export interface LanguageSelectComponentData {
 }
 
 export type SceneComponentData =
+  | Extract<SceneComponentDefinition, { type: 'save-slots' | 'save-status' | 'save-point' }>
   | Extract<
       SceneDefinition['components'][number],
       { type: 'combat' | 'character-progression' | 'quest-log' }
@@ -153,6 +155,8 @@ export interface GameData {
   readonly description: string
   readonly version: string
   readonly initialScene?: string
+  readonly saving?: GameDefinition['saving']
+  readonly menuScene?: string
   /** Contents of the optional game stylesheet. */
   readonly stylesheet?: string
   readonly input?: InputData
@@ -517,6 +521,16 @@ export function assembleGameData(
             map: resolveMapView(maps, component.map, component.viewport, component.playerSpawn),
           }
 
+        if (component.type === 'save-point' && component.location)
+          return {
+            ...component,
+            placement: { ...component.placement },
+            location: {
+              ...component.location,
+              position: { ...component.location.position },
+            },
+          }
+
         if (component.type === 'button' && component.action) {
           const action = { ...component.action }
 
@@ -550,6 +564,31 @@ export function assembleGameData(
   if (sceneDefinitions.size !== scenes.size) {
     throw new Error('Scene definitions contain unreferenced scenes')
   }
+
+  if (definition['menu-scene'] && scenes.get(definition['menu-scene'])?.type !== 'stand-alone')
+    throw new Error('The Escape menu must be a stand-alone scene')
+
+  for (const scene of scenes.values())
+    for (const component of scene.components) {
+      const menu =
+        component.type === 'save-point'
+          ? component.menuScene
+          : component.type === 'button' &&
+              (component.action?.type === 'open-menu' || component.action?.type === 'main-menu')
+            ? component.action.scene
+            : undefined
+
+      if (menu && scenes.get(menu)?.type !== 'stand-alone')
+        throw new Error(`Component ${component.id} must target a stand-alone menu scene`)
+
+      if (component.type === 'save-point' && component.location) {
+        const view = scene.components.find((entry) => entry.id === component.location?.mapView)
+        const { x, y } = component.location.position
+
+        if (view?.type !== 'map-view' || x >= view.map.width || y >= view.map.height)
+          throw new Error(`Save point ${component.id} is outside its map`)
+      }
+    }
 
   if (definition['initial-scene'] !== undefined && !scenes.has(definition['initial-scene'])) {
     throw new Error('Initial scene must reference a scene in the manifest')
@@ -674,6 +713,8 @@ export function assembleGameData(
     title: definition.title,
     description: definition.description,
     version: definition.version,
+    ...(definition.saving && { saving: { ...definition.saving } }),
+    ...(definition['menu-scene'] && { menuScene: definition['menu-scene'] }),
     ...(definition['initial-scene'] === undefined
       ? {}
       : { initialScene: definition['initial-scene'] }),

@@ -33,6 +33,9 @@ type ButtonAction = NonNullable<ButtonComponentDefinition['action']>
 
 /** Component types this editor authors; other types keep their own editors or stay read-only. */
 export const editableComponentTypes: readonly string[] = [
+  'save-slots',
+  'save-status',
+  'save-point',
   'text',
   'button',
   'language-select',
@@ -42,7 +45,16 @@ export const editableComponentTypes: readonly string[] = [
 ]
 
 const isBasic = (component: { type: string }): component is BasicComponent =>
-  ['text', 'button', 'language-select', 'map-view', 'quest-log'].includes(component.type)
+  [
+    'text',
+    'button',
+    'language-select',
+    'map-view',
+    'quest-log',
+    'save-slots',
+    'save-status',
+    'save-point',
+  ].includes(component.type)
 
 /** Edits one scene component selected in the project explorer. */
 export function bindComponentEditor(
@@ -477,6 +489,81 @@ function componentFields(
 
   if (draft.type === 'language-select') return label
 
+  if (draft.type === 'save-status') return label
+
+  if (draft.type === 'save-slots')
+    return [
+      ...label,
+      select(t('saving.showName'), String(draft.showName), ['true', 'false'], (value) => {
+        draft.showName = value === 'true'
+      }),
+    ]
+
+  if (draft.type === 'save-point') {
+    const mapViews =
+      view.scenes
+        .find((scene) => scene.id === sceneId)
+        ?.components.filter(
+          (component) =>
+            component.type === 'map-view' &&
+            component.playerSpawn &&
+            component.interactive !== false,
+        ) ?? []
+
+    return [
+      ...label,
+      select(
+        t('saving.saveMenu'),
+        draft.menuScene ?? '',
+        [
+          ['', t('saving.directSave')],
+          ...view.scenes
+            .filter((scene) => scene.type === 'stand-alone')
+            .map((scene) => [scene.id, scene.title || scene.id] as const),
+        ],
+        (value) => {
+          draft.menuScene = value || undefined
+        },
+      ),
+      select(
+        t('saving.pointLocation'),
+        draft.location?.mapView ?? '',
+        [
+          ['', t('saving.wholeScene')],
+          ...mapViews.map((component) => [component.id, component.id] as const),
+        ],
+        (value) => {
+          draft.location = value
+            ? { mapView: value, position: { x: 0, y: 0 }, radius: 0 }
+            : undefined
+          render()
+        },
+      ),
+      ...(draft.location
+        ? [
+            ...(['x', 'y'] as const).map((axis) =>
+              input(
+                axis === 'x' ? t('component.playerColumn') : t('component.playerRow'),
+                String(draft.location!.position[axis]),
+                (value) => {
+                  draft.location!.position[axis] = Number(value)
+                },
+                'number',
+              ),
+            ),
+            input(
+              t('saving.radius'),
+              String(draft.location.radius),
+              (value) => {
+                draft.location!.radius = Number(value)
+              },
+              'number',
+            ),
+          ]
+        : []),
+    ]
+  }
+
   if (draft.type === 'map-view') {
     const viewport = draft.viewport
 
@@ -570,17 +657,25 @@ function componentFields(
   const action = draft.action
 
   const defaults = (type: string): ButtonAction | undefined =>
-    type === 'save-game' || type === 'load-game'
+    type === 'save-game' ||
+    type === 'load-game' ||
+    type === 'resume-game' ||
+    type === 'load-autosave' ||
+    type === 'delete-save' ||
+    type === 'export-save' ||
+    type === 'import-save'
       ? { type }
-      : type === 'new-game' || type === 'enter-scene'
-        ? { type, scene: (type === 'new-game' ? gameScenes : scenes)[0] ?? '' }
-        : type === 'request-action'
-          ? { type, action: actions[0] ?? '' }
-          : type === 'interact-map'
-            ? { type, mapView: mapViews[0] ?? '' }
-            : type === 'move-map'
-              ? { type, mapView: mapViews[0] ?? '', direction: 'north' }
-              : undefined
+      : type === 'open-menu' || type === 'main-menu'
+        ? { type, scene: view.scenes.find((scene) => scene.type === 'stand-alone')?.id ?? '' }
+        : type === 'new-game' || type === 'enter-scene'
+          ? { type, scene: (type === 'new-game' ? gameScenes : scenes)[0] ?? '' }
+          : type === 'request-action'
+            ? { type, action: actions[0] ?? '' }
+            : type === 'interact-map'
+              ? { type, mapView: mapViews[0] ?? '' }
+              : type === 'move-map'
+                ? { type, mapView: mapViews[0] ?? '', direction: 'north' }
+                : undefined
 
   return [
     ...label,
@@ -596,18 +691,39 @@ function componentFields(
         ['interact-map', t('maps.interact')],
         ['save-game', t('component.saveProgress')],
         ['load-game', t('component.loadProgress')],
+        ...(
+          [
+            'load-autosave',
+            'delete-save',
+            'export-save',
+            'import-save',
+            'open-menu',
+            'resume-game',
+            'main-menu',
+          ] as const
+        ).map((type) => [type, t(`saving.${type}`)] as const),
       ],
       (value) => {
         draft.action = defaults(value)
         render()
       },
     ),
-    ...(action?.type === 'new-game' || action?.type === 'enter-scene'
+    ...(action?.type === 'new-game' ||
+    action?.type === 'enter-scene' ||
+    action?.type === 'open-menu' ||
+    action?.type === 'main-menu'
       ? [
           select(
             t('form.targetScene'),
             action.scene,
-            sceneChoices(view, action.type === 'new-game' ? 'game' : undefined),
+            sceneChoices(
+              view,
+              action.type === 'new-game'
+                ? 'game'
+                : action.type === 'open-menu' || action.type === 'main-menu'
+                  ? 'stand-alone'
+                  : undefined,
+            ),
             (value) => {
               action.scene = value
 

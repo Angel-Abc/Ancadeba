@@ -1,5 +1,6 @@
 /// <reference lib="dom" />
 import { readFile } from 'node:fs/promises'
+import { createStarterProject } from '@ancadeba/editor-core'
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test'
 import {
   gameSchema,
@@ -19,6 +20,7 @@ import {
   type EngineRuntimeServices,
   type GameSaveFile,
   maxGameSaveBytes,
+  runtimeText,
 } from '@ancadeba/game-runtime'
 import {
   JsonResourceLoader,
@@ -220,6 +222,137 @@ const squareMapSource: IResourceSource = {
 }
 
 const loader = new GameLoader(new JsonResourceLoader(source, logger))
+
+// Save controls are authored scene content, including in this regression fixture.
+const saveActions = [
+  ['save-game', 'save.save'],
+  ['load-game', 'save.load'],
+  ['load-autosave', 'save.loadAutosave'],
+  ['delete-save', 'save.delete'],
+  ['export-save', 'save.export'],
+  ['import-save', 'save.import'],
+] as const
+
+function withSaveComponents(resources: IResourceSource): IResourceSource {
+  return {
+    ...resources,
+    async readText(path) {
+      const text = await resources.readText(path)
+
+      if (path.startsWith('scenes/') && path.endsWith('.json')) {
+        const scene = JSON.parse(text)
+        const placement = { row: 1, column: 1 }
+        scene.components.push(
+          { id: 'test-save-slots', type: 'save-slots', placement },
+          { id: 'test-save-status', type: 'save-status', placement },
+          ...saveActions.map(([type]) => ({
+            id: `test-${type}`,
+            type: 'button',
+            labelKey: `test.${type}`,
+            placement,
+            action: { type },
+          })),
+        )
+
+        return JSON.stringify(scene)
+      }
+
+      const language = path.match(/^languages\/(en|nl)\/messages.json$/)?.[1]
+
+      if (language) {
+        const catalog = JSON.parse(text)
+
+        for (const [type, key] of saveActions)
+          catalog[`test.${type}`] = catalog[`runtime.${key}`] ?? runtimeText({ language }, key)
+
+        return JSON.stringify(catalog)
+      }
+
+      return text
+    },
+  }
+}
+
+const saveLoader = new GameLoader(new JsonResourceLoader(withSaveComponents(source), logger))
+
+describe('authored game menus', () => {
+  it('opens with Escape, navigates submenus, saves gameplay, and resumes the same scene', async () => {
+    const files = createStarterProject({ path: 'menus', title: 'Menus', description: '' })
+    const document = new TestDocument()
+    const target = document.createElement('main')
+    const storage = new Map<string, string>()
+
+    const engine = new Engine(
+      new GameLoader(
+        new JsonResourceLoader(
+          {
+            readText: async (path) => {
+              const source = files[path]
+
+              return typeof source === 'string' ? source : JSON.stringify(source)
+            },
+            readBytes: async () => new Uint8Array(),
+          },
+          logger,
+        ),
+      ),
+      new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      {
+        ...timing,
+        saveStore: {
+          read: (id) => storage.get(id),
+          write: (id, value) => {
+            storage.set(id, value)
+          },
+        },
+      },
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    expect(target.find((node) => node.className.includes('ancadeba-save-slots'))).toBeUndefined()
+    target.find((node) => node.dataset.componentId === 'play')!.click()
+    const gameplay = engine.lifecycle!.activeScene!
+    const root = target.find((node) => node.className === 'ancadeba-game')!
+
+    const escape = () => {
+      const event = new Event('keydown', { cancelable: true })
+      Object.defineProperty(event, 'code', { value: 'Escape' })
+      root.dispatchEvent(event)
+
+      return event.defaultPrevented
+    }
+
+    expect(escape()).toBe(true)
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('game-menu')
+    expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
+    target.find((node) => node.dataset.componentId === 'save')!.click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('save')
+    const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
+    name.value = 'Camp'
+    name.dispatchEvent(new Event('input'))
+    target.find((node) => node.dataset.componentId === 'save')!.click()
+    expect(JSON.parse(storage.get('menus')!)).toMatchObject({
+      scene: 'adventure',
+      slotName: 'Camp',
+    })
+    expect(escape()).toBe(true)
+    expect(engine.lifecycle!.activeScene).toBe(gameplay)
+    escape()
+    target.find((node) => node.dataset.componentId === 'settings')!.click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('settings')
+    target.find((node) => node.dataset.componentId === 'resume')!.click()
+    expect(engine.lifecycle!.activeScene).toBe(gameplay)
+    escape()
+    target.find((node) => node.dataset.componentId === 'main-menu')!.click()
+    expect(engine.lifecycle!.currentGame).toBeUndefined()
+    expect(gameplay.disposed).toBe(true)
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('start')
+    expect(escape()).toBe(false)
+  })
+})
 
 // Keep text-binding regressions independent of the sample's optional status presentation.
 const textBindingLoader = new GameLoader(
@@ -1184,7 +1317,7 @@ describe('scene renderer', () => {
       vi.useFakeTimers()
 
       const engine = new Engine(
-        loader,
+        saveLoader,
         host === 'preview'
           ? new EditorPreviewHost(target.asElement())
           : new DomEngineHost(target.asElement()),
@@ -1230,6 +1363,7 @@ describe('scene renderer', () => {
       const manual = storage.get('basic-game:1')
       const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
       name.value = 'Name draft'
+      name.dispatchEvent(new Event('input'))
       vi.advanceTimersByTime(500)
       expect(button('Load autosave').disabled).toBe(false)
       expect(feedback()).toBe('Progress autosaved on this device.')
@@ -1274,7 +1408,7 @@ describe('scene renderer', () => {
       let blocked = false
 
       const engine = new Engine(
-        loader,
+        saveLoader,
         host === 'preview'
           ? new EditorPreviewHost(target.asElement())
           : new DomEngineHost(target.asElement()),
@@ -1311,9 +1445,10 @@ describe('scene renderer', () => {
       const scene = engine.lifecycle!.activeScene
       engine.saves!.save('First save')
       engine.saves!.selectSlot('2')
-      const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
-      const select = target.find((node) => node.attributes.get('aria-label') === 'Save slot')!
+      let name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
+      let select = target.find((node) => node.attributes.get('aria-label') === 'Save slot')!
       name.value = 'Museum'
+      name.dispatchEvent(new Event('input'))
       button('Save progress').click()
       const first = storage.get('basic-game:1')!
       storage.set('basic-game:autosave', first)
@@ -1334,6 +1469,8 @@ describe('scene renderer', () => {
       blocked = false
       engine.game!.localization!.select('nl')
       button('Opslag verwijderen').click()
+      select = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
+      name = target.find((node) => node.attributes.get('aria-label') === 'Opslagnaam')!
       expect(document.defaultView.confirm).toHaveBeenLastCalledWith(
         'De opslag in vak 2 (Museum) verwijderen? Dit kan niet ongedaan worden gemaakt.',
       )
@@ -1351,6 +1488,7 @@ describe('scene renderer', () => {
       expect(storage.has('basic-game:2')).toBe(false)
       engine.lifecycle!.enterScene('start-screen')
       expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(true)
+      select = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
       select.value = '1'
       select.dispatchEvent(new Event('change'))
       expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(false)
@@ -1369,7 +1507,7 @@ describe('scene renderer', () => {
     const download = vi.fn<(file: GameSaveFile) => void>()
 
     const engine = new Engine(
-      loader,
+      saveLoader,
       {
         mount: (game, session) =>
           mountGameView(target.asElement(), game, session, { downloadSave: download }),
@@ -1404,8 +1542,9 @@ describe('scene renderer', () => {
     engine.lifecycle!.startGame()
     engine.lifecycle!.enterScene('standard')
     const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
-    const slot = target.find((node) => node.attributes.get('aria-label') === 'Save slot')!
+    let slot = target.find((node) => node.attributes.get('aria-label') === 'Save slot')!
     name.value = 'Museum'
+    name.dispatchEvent(new Event('input'))
     button('Save progress').click()
     expect(slot.children[0]?.textContent).toBe('Slot 1: Museum')
     button('Export save').click()
@@ -1457,6 +1596,7 @@ describe('scene renderer', () => {
     engine.game!.localization!.select('nl')
     expect(button('Opslag exporteren')).toBeDefined()
     expect(button('Opslag importeren')).toBeDefined()
+    slot = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
     expect(slot.attributes.get('aria-label')).toBe('Opslagvak')
     expect(slot.children[2]?.textContent).toBe('Vak 3: Leeg')
     download.mockImplementationOnce(() => {
@@ -1472,7 +1612,7 @@ describe('scene renderer', () => {
     const storage = new Map<string, string>()
 
     const engine = new Engine(
-      loader,
+      saveLoader,
       new DomEngineHost(target.asElement()),
       logger,
       () => new MessageBus<EngineMessages>(),
@@ -1531,7 +1671,7 @@ describe('scene renderer', () => {
 
     const create = () =>
       new Engine(
-        loader,
+        saveLoader,
         new DomEngineHost(target.asElement()),
         logger,
         () => new MessageBus<EngineMessages>(),
@@ -1758,7 +1898,11 @@ describe('scene renderer', () => {
         },
       }
 
-      const game = await new GameLoader(new JsonResourceLoader(resources, logger), ['en']).load()
+      const game = await new GameLoader(
+        new JsonResourceLoader(withSaveComponents(resources), logger),
+        ['en'],
+      ).load()
+
       const { target } = setup(game)
       const slots = new Map<string, string>()
 

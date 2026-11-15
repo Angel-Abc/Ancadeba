@@ -199,6 +199,7 @@ describe('engine session input', () => {
       input,
       messages: engine.messages,
       timers: engine.timers,
+      prepareMenu: expect.any(Function),
       actions: engine.actions,
       lifecycle: engine.lifecycle,
     })

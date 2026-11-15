@@ -7,6 +7,8 @@ import type {
   IGameLocalization,
   IGameInventory,
   IGameSaves,
+  GameData,
+  GameSaveFile,
   SceneInstance,
 } from '@ancadeba/game-runtime'
 import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancadeba/schemas'
@@ -15,10 +17,16 @@ import type { KeyboardInputSink } from './keyboardInput.js'
 
 type SceneNavigation = Extract<
   NonNullable<ButtonComponentData['action']>,
-  { type: 'new-game' | 'enter-scene' }
+  { type: 'new-game' | 'enter-scene' | 'open-menu' | 'resume-game' | 'main-menu' }
 >
 
 export interface ComponentRendererOptions {
+  readonly game?: GameData | undefined
+  readonly downloadSave?: ((file: GameSaveFile) => void) | undefined
+  readonly onOpenMenu?: ((scene: string) => void) | undefined
+  readonly canOpenMenu?: (() => boolean) | undefined
+  readonly canResumeGame?: (() => boolean) | undefined
+  readonly onLoadAutosave?: (() => void) | undefined
   readonly saves?: IGameSaves | undefined
   readonly onLoadGame?: (() => void) | undefined
   readonly input?: KeyboardInputSink | undefined

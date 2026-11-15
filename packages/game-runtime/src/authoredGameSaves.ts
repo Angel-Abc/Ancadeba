@@ -8,6 +8,7 @@ import { GameInventory } from './inventory.js'
 import { GameSaves, GameSaveError, type GameSaveStore } from './gameSaves.js'
 import { GameAutosave } from './gameAutosave.js'
 import type { ITaskScheduler } from '@ancadeba/utilities'
+import { hasSavePoint } from './savePoints.js'
 
 interface AuthoredSaveDependencies {
   game: GameData
@@ -65,7 +66,7 @@ export function bindAuthoredGameSaves({
     () => {
       if (!settleMessages()) throw new GameSaveError('busy')
       const instance = lifecycle.currentGame
-      const scene = lifecycle.activeScene
+      const scene = lifecycle.suspendedScene ?? lifecycle.activeScene
       const runtime = instance && runtimeFor(instance)
       const playthrough = instance ? playthroughFor(instance) : undefined
 
@@ -207,9 +208,28 @@ export function bindAuthoredGameSaves({
       )
     },
     onObserverError,
+    () =>
+      game.saving?.manual !== 'disabled' &&
+      (game.saving?.manual !== 'save-points' || hasSavePoint(lifecycle)),
+    () =>
+      !lifecycle.suspendedScene &&
+      game.saving?.autosave !== 'disabled' &&
+      (game.saving?.autosave !== 'save-points' || hasSavePoint(lifecycle)),
   )
 
+  let policyGame: GameInstance | undefined
+  let policySubscriptions: (() => void)[] = []
+
   const unsubscribe = lifecycle.subscribeSceneChanges(({ current }) => {
+    if (policyGame !== lifecycle.currentGame) {
+      for (const release of policySubscriptions) release()
+      policyGame = lifecycle.currentGame
+      policySubscriptions = [
+        policyGame?.mapMovement?.subscribeChanges(() => saves.notify()),
+        policyGame?.bindings?.subscribeChanges(() => saves.notify()),
+      ].filter((release) => release !== undefined)
+    }
+
     if (current?.type === 'game') {
       lastScene = current.data.id
       lastGame = current.game
@@ -221,12 +241,22 @@ export function bindAuthoredGameSaves({
     saves.notify()
   })
 
-  const autosave = new GameAutosave(lifecycle, scheduler, () => {
-    saves.autosave()
-  })
+  const autosave =
+    game.saving?.autosave === 'disabled'
+      ? undefined
+      : new GameAutosave(
+          lifecycle,
+          scheduler,
+          () => {
+            saves.autosave()
+          },
+          game.saving?.autosave === 'save-points' ? 0 : 500,
+        )
 
   const dispose = () => {
-    autosave.dispose()
+    autosave?.dispose()
+
+    for (const release of policySubscriptions) release()
     unsubscribe()
   }
 

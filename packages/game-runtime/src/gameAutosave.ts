@@ -15,6 +15,7 @@ export class GameAutosave {
     private readonly lifecycle: IGameLifecycle,
     private readonly scheduler: ITaskScheduler,
     private readonly save: () => void,
+    private readonly checkpointDelayMs = 500,
   ) {
     this.unsubscribe = lifecycle.subscribeSceneChanges(() => this.refresh())
     this.refresh()
@@ -61,7 +62,7 @@ export class GameAutosave {
       }
 
       this.save()
-    }, 500)
+    }, this.checkpointDelayMs)
   }
 
   private scheduleInterval(): void {

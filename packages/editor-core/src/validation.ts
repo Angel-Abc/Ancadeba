@@ -161,6 +161,14 @@ export function validateProject(
 
   const maps = new Map<string, MapDefinition>()
 
+  if (game.data['menu-scene'] && scenes.get(game.data['menu-scene'])?.type !== 'stand-alone')
+    diagnostics.push({
+      code: 'invalid_menu_target',
+      file: 'game.json',
+      path: ['menu-scene'],
+      message: 'Choose a stand-alone Escape menu scene',
+    })
+
   for (const id of game.data.maps ?? []) {
     const map = check(`maps/${id}.json`, mapDefinitionSchema)
 
@@ -199,6 +207,36 @@ export function validateProject(
 
   for (const [id, scene] of scenes) {
     scene.components.forEach((component, index) => {
+      const menu =
+        component.type === 'save-point'
+          ? component.menuScene
+          : component.type === 'button' &&
+              (component.action?.type === 'open-menu' || component.action?.type === 'main-menu')
+            ? component.action.scene
+            : undefined
+
+      if (menu && scenes.get(menu)?.type !== 'stand-alone')
+        diagnostics.push({
+          code: 'invalid_menu_target',
+          file: `scenes/${id}.json`,
+          path: ['components', index],
+          message: 'Choose a stand-alone menu scene',
+        })
+
+      if (component.type === 'save-point' && component.location) {
+        const view = scene.components.find((entry) => entry.id === component.location?.mapView)
+        const map = view?.type === 'map-view' ? maps.get(view.map) : undefined
+        const { x, y } = component.location.position
+
+        if (!map || x >= map.width || y >= map.height)
+          diagnostics.push({
+            code: 'invalid_save_point',
+            file: `scenes/${id}.json`,
+            path: ['components', index, 'location'],
+            message: 'Choose a position inside the save point map',
+          })
+      }
+
       if (component.type === 'equipment')
         for (const issue of equipmentIssues(component, inventory))
           diagnostics.push({

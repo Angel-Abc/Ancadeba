@@ -98,7 +98,48 @@ export const buttonActionSchema = z.discriminatedUnion('type', [
   ...gameplayButtonActions,
   z.object({ type: z.literal('save-game') }),
   z.object({ type: z.literal('load-game') }),
+  z.object({ type: z.literal('load-autosave') }),
+  z.object({ type: z.literal('delete-save') }),
+  z.object({ type: z.literal('export-save') }),
+  z.object({ type: z.literal('import-save') }),
+  z.object({ type: z.literal('open-menu'), scene: gameIdSchema }),
+  z.object({ type: z.literal('resume-game') }),
+  z.object({ type: z.literal('main-menu'), scene: gameIdSchema }),
 ])
+
+export const saveSlotsComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('save-slots'),
+  placement: gridPlacementSchema,
+  label: z.string().default('Save slots'),
+  labelKey: translationKeySchema.optional(),
+  showName: z.boolean().default(true),
+})
+
+export const saveStatusComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('save-status'),
+  placement: gridPlacementSchema,
+  label: z.string().default('Save status'),
+  labelKey: translationKeySchema.optional(),
+})
+
+/** With no map target, the whole gameplay scene acts as a save point. */
+export const savePointComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('save-point'),
+  placement: gridPlacementSchema,
+  label: z.string().default('Save game'),
+  labelKey: translationKeySchema.optional(),
+  location: z
+    .object({
+      mapView: gameIdSchema,
+      position: mapPositionSchema,
+      radius: z.number().int().nonnegative().default(0),
+    })
+    .optional(),
+  menuScene: gameIdSchema.optional(),
+})
 
 export const buttonComponentSchema = z
   .object({
@@ -531,6 +572,9 @@ export const questLogComponentSchema = z.object({
 export type QuestLogComponentDefinition = z.infer<typeof questLogComponentSchema>
 
 export const sceneComponentSchema = z.discriminatedUnion('type', [
+  saveSlotsComponentSchema,
+  saveStatusComponentSchema,
+  savePointComponentSchema,
   combatComponentSchema,
   questLogComponentSchema,
   characterProgressionComponentSchema,
@@ -581,6 +625,23 @@ export const sceneSchema = z
     let hasCombat = false
     const descriptionTargets = new Set<string>()
     scene.components.forEach((component, index) => {
+      if (component.type === 'save-point') {
+        const target =
+          component.location &&
+          scene.components.find((entry) => entry.id === component.location?.mapView)
+
+        if (
+          scene.type !== 'game' ||
+          (component.location &&
+            (target?.type !== 'map-view' || !target.playerSpawn || target.interactive === false))
+        )
+          context.addIssue({
+            code: 'custom',
+            path: ['components', index],
+            message: 'Save points require a game scene and an interactive map view with a player',
+          })
+      }
+
       if (
         component.type === 'character-progression' &&
         (scene.type !== 'game' ||

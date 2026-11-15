@@ -1,6 +1,7 @@
 import type { ButtonComponentData } from '@ancadeba/game-runtime'
 import { canEnterScene } from '@ancadeba/game-runtime'
 import { componentRuntimeText } from './runtimeText.js'
+import { renderSaveActionButton } from './saveActionButton.js'
 import type {
   ComponentRenderContext,
   IComponentRenderer,
@@ -10,6 +11,18 @@ import type {
 /** Owns a native button and its activation listener. */
 export class ButtonComponentRenderer implements IComponentRenderer<ButtonComponentData> {
   render(component: ButtonComponentData, context: ComponentRenderContext): RenderedComponent {
+    if (
+      component.action &&
+      [
+        'save-game',
+        'load-game',
+        'load-autosave',
+        'delete-save',
+        'export-save',
+        'import-save',
+      ].includes(component.action.type)
+    )
+      return renderSaveActionButton(component, context)
     const element = context.document.createElement('button')
     element.type = 'button'
     element.className = 'ancadeba-button'
@@ -21,6 +34,18 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
     let active = true
 
     const update = () => {
+      if (action?.type === 'resume-game') {
+        element.disabled = !context.canResumeGame?.()
+
+        return
+      }
+
+      if (action?.type === 'open-menu') {
+        element.disabled = !context.canOpenMenu?.()
+
+        return
+      }
+
       if (action?.type === 'enter-scene') {
         const available =
           context.canEnterScene?.(action) ??
@@ -38,14 +63,6 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
 
       if (action?.type === 'interact-map') {
         element.disabled = !scene || !objects?.getTarget(scene, action.mapView, action.object)
-
-        return
-      }
-
-      if (action?.type === 'save-game' || action?.type === 'load-game') {
-        element.disabled = !(action.type === 'save-game'
-          ? context.saves?.canSave
-          : context.saves?.canLoad)
 
         return
       }
@@ -82,19 +99,6 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
         return
       }
 
-      if (action.type === 'save-game') {
-        context.saves?.save()
-
-        return
-      }
-
-      if (action.type === 'load-game') {
-        if (context.onLoadGame) context.onLoadGame()
-        else context.saves?.load()
-
-        return
-      }
-
       if (action.type === 'move-map') {
         if (scene) movement?.move(scene, action.mapView, action.direction)
 
@@ -102,7 +106,14 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
       }
 
       if (action.type === 'request-action') context.actions?.request(action.action)
-      else context.onButtonActivate?.(action)
+      else if (
+        action.type === 'new-game' ||
+        action.type === 'enter-scene' ||
+        action.type === 'open-menu' ||
+        action.type === 'resume-game' ||
+        action.type === 'main-menu'
+      )
+        context.onButtonActivate?.(action)
     }
 
     update()

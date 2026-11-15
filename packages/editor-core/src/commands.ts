@@ -49,10 +49,17 @@ import {
   languageCatalogSchema,
   translationKeySchema,
   stylesheetPathSchema,
+  savingPolicySchema,
+  saveSlotsComponentSchema,
+  saveStatusComponentSchema,
+  savePointComponentSchema,
 } from '@ancadeba/schemas'
 
 /** Scene components without a dedicated authoring command are saved whole. */
 export const basicComponentSchema = z.discriminatedUnion('type', [
+  saveSlotsComponentSchema,
+  saveStatusComponentSchema,
+  savePointComponentSchema,
   questLogComponentSchema,
   textComponentSchema,
   buttonComponentSchema,
@@ -74,6 +81,8 @@ export const commandSchema = z.discriminatedUnion('type', [
     type: z.literal('game.updateMetadata'),
     ...metadata,
     version: z.string().trim().min(1),
+    saving: savingPolicySchema.optional(),
+    menuScene: gameIdSchema.nullable().optional(),
   }),
   z.strictObject({
     type: z.literal('scene.create'),

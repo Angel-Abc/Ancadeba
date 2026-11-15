@@ -10,6 +10,12 @@ export { TextComponentRenderer } from './textComponentRenderer.js'
 
 export { ButtonComponentRenderer } from './buttonComponentRenderer.js'
 
+export { SaveSlotsComponentRenderer } from './saveSlotsComponentRenderer.js'
+
+export { SaveStatusComponentRenderer } from './saveStatusComponentRenderer.js'
+
+export { SavePointComponentRenderer } from './savePointComponentRenderer.js'
+
 export { ActionBarComponentRenderer } from './actionBarComponentRenderer.js'
 
 export { NearbyComponentRenderer } from './nearbyComponentRenderer.js'

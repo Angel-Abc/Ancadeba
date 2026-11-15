@@ -69,6 +69,37 @@ function createLifecycle(data = content()) {
 }
 
 describe('game and scene lifetimes', () => {
+  it('retains scene-local state through menus and releases both scenes on disposal', () => {
+    const { lifecycle, factories } = createLifecycle()
+    lifecycle.startGame()
+    const gameplay = lifecycle.enterScene('standard')
+    gameplay.state!.selected = 7
+    lifecycle.openMenu('settings')
+    const menu = lifecycle.activeScene!
+    expect(gameplay.disposed).toBe(false)
+    expect(lifecycle.suspendedScene).toBe(gameplay)
+    lifecycle.resumeGame()
+    expect(lifecycle.activeScene).toBe(gameplay)
+    expect(gameplay.state!.selected).toBe(7)
+    expect(menu.disposed).toBe(true)
+    expect(factories.createSceneState).toHaveBeenCalledTimes(2)
+    lifecycle.openMenu('settings')
+    const next = lifecycle.activeScene!
+    lifecycle.dispose()
+    expect(gameplay.disposed).toBe(true)
+    expect(next.disposed).toBe(true)
+    expect(lifecycle.suspendedScene).toBeUndefined()
+  })
+
+  it('rejects invalid menus without suspending or replacing gameplay', () => {
+    const { lifecycle } = createLifecycle()
+    lifecycle.startGame()
+    const gameplay = lifecycle.enterScene('standard')
+    expect(() => lifecycle.openMenu('inventory')).toThrow('stand-alone')
+    expect(lifecycle.activeScene).toBe(gameplay)
+    expect(lifecycle.suspendedScene).toBeUndefined()
+  })
+
   it('loads both game scenes and the stand-alone scene through the JSON pipeline', async () => {
     const files = new Map<string, unknown>([
       ['game.json', manifest],

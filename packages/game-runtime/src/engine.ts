@@ -20,6 +20,7 @@ import type { IStoryStateTransactions } from './storyState.js'
 import type { IStateTransactions } from './stateTransactions.js'
 import type { GameSaves, GameSaveStore, IGameSaves } from './gameSaves.js'
 import { bindAuthoredGameSaves } from './authoredGameSaves.js'
+import { gameplayLifecycle } from './gameplayLifecycle.js'
 
 export type EngineState = 'stopped' | 'starting' | 'running'
 
@@ -38,6 +39,7 @@ export interface EngineRuntimeServices {
 }
 
 export interface EngineHostSession {
+  readonly prepareMenu?: () => boolean
   readonly saves?: IGameSaves | undefined
   readonly lifecycle: IGameLifecycle
   readonly actions: IGameActions | undefined
@@ -149,7 +151,9 @@ export class Engine implements IEngine {
       (error) => this.logger.error('Engine', 'Message dispatch failed', error),
       (topic, payload) =>
         topic.startsWith('engine.') ||
-        (this.session === session && session.game !== undefined && scopes.shouldDeliver(payload)),
+        (this.session === session &&
+          session.game !== undefined &&
+          scopes.shouldDeliver(topic, payload)),
     )
 
     const session: EngineSession = {
@@ -236,6 +240,7 @@ export class Engine implements IEngine {
       }
 
       session.lifecycle = lifecycle
+      const gameplay = gameplayLifecycle(lifecycle)
       lifecycle.bindGameRuntime((instance) => {
         const playthrough =
           instance.state instanceof Map ? playthroughs.get(instance.state) : undefined
@@ -268,7 +273,7 @@ export class Engine implements IEngine {
           () => session.input?.reset(),
           () => ++session.nextTimerId,
           () => session.gameRuntimes.delete(instance),
-          lifecycle,
+          gameplay,
           this.runtime.createTradeState?.(instance) ?? stateTransactions,
           stateTransactions,
           playthrough ? (time) => playthrough.updateClock(time) : undefined,
@@ -349,6 +354,7 @@ export class Engine implements IEngine {
       }
 
       const cleanup = this.host.mount(game, {
+        prepareMenu: () => session.messages.settle(),
         ...(session.saves ? { saves: session.saves } : {}),
         lifecycle,
         get actions() {

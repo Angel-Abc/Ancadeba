@@ -6,6 +6,7 @@ export function componentRuntimeText(context: ComponentRenderContext): RuntimeTr
   return (key, values) =>
     runtimeText(
       context.localization?.current ??
+        context.game ??
         (context.scene?.type === 'game' ? context.scene.game.data : undefined),
       key,
       values,

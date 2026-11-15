@@ -853,6 +853,7 @@ describe('standalone game export', () => {
         input: expect.objectContaining({ context: 'gameplay' }),
         messages: expect.anything(),
         timers: expect.anything(),
+        prepareMenu: expect.any(Function),
         actions: undefined,
         lifecycle: expect.anything(),
       })

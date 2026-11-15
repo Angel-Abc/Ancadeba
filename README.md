@@ -1311,8 +1311,15 @@ live in game-runtime; utilities remain generic.
 
 ## Save and load
 
-The standalone engine, exported games, and editor preview provide five manual save
-slots. Choose a **Save slot**, optionally enter a **Save name** (up to 80 characters),
+Saving controls are authored scene components in the standalone engine, exported
+games, and editor preview. There is no automatic save bar. Add **Save slots** and
+**Save status** through the scene editor, and use button actions for Save game,
+Load game, Load autosave, Delete save, Import save, and Export save. Components
+share one save service and selected slot, so save and load screens can be separate.
+Existing games can add these components wherever saving should be offered.
+
+There are five manual save slots. Choose a **Save slot**, optionally enter a
+**Save name** (up to 80 characters),
 then use **Save progress** or **Load progress**. Saving replaces only the selected
 slot on this browser and device. Reloading preserves all slots and initially selects
 slot 1; existing single-slot saves remain in slot 1. Loading resumes the saved
@@ -1326,18 +1333,52 @@ empty and reusable. Deletion preserves the active playthrough, autosave, other
 slots and downloaded save files. Damaged or incompatible saves can also be deleted.
 Empty slots disable Delete, Load and Export. A storage failure reports an error.
 
+Game properties configure manual saving (`anywhere`, `save-points`, `disabled`)
+and autosave (`automatic`, `save-points`, `disabled`) independently. In `game.json`:
+
+```json
+{
+  "saving": { "manual": "save-points", "autosave": "disabled" },
+  "menu-scene": "game-menu"
+}
+```
+
+Omitting `saving` preserves anywhere manual saving and automatic autosave. The
+runtime enforces manual permissions for every save request, including buttons.
+Load, import, export, and delete remain independent of manual-saving permission.
+
+Add a **Save point** component to a gameplay scene to allow saving there. Leave
+its location empty to make the entire scene a save point. For a map save point,
+choose an interactive map view, zero-based tile coordinates, and a distance in
+tiles (Manhattan distance, zero for the exact tile). Its optional menu scene opens
+a paused save screen; without one, its button saves directly to the selected slot.
+Other save buttons use the same permission checks. A paused menu evaluates save
+points against the retained gameplay scene and position. Save-point autosave
+requests a deferred checkpoint immediately on progress changes at a save point.
+
 Autosave uses a separate checkpoint and never overwrites the five manual slots.
-It saves about half a second after gameplay changes or scene transitions, coalescing
+Automatic mode saves about half a second after gameplay changes or scene transitions, coalescing
 bursts of updates, with a 30-second fallback for changes without notifications.
 An active map step defers autosave until movement completes. **Load autosave**
 resumes that checkpoint, asking before replacing an active playthrough, and leaves
 the selected manual slot unchanged. Autosave starts after entering a gameplay scene;
 starting a new game replaces the previous autosave when its first checkpoint is
-ready. It also runs in menus while a playthrough remains open. Closing or restarting
+ready. Opening a paused menu suppresses background autosave until gameplay resumes. Closing or restarting
 the preview cancels pending checkpoints; changes made immediately before closing
 may not have reached storage yet. Autosave failures have separate feedback and keep
 the previous checkpoint intact. Autosave uses the same validation and compatibility
 checks as manual saves.
+
+Set **Escape menu scene** in game properties to a stand-alone scene. Escape opens
+it from gameplay and returns from it or its submenus. The gameplay scene instance,
+scene-local selections, map movement, pending action delays, and elapsed gameplay
+clock are retained while paused. Menus remain interactive. Use `open-menu` to open
+a menu from a button, `resume-game` to return, and `enter-scene` to navigate between
+stand-alone submenus while staying paused. The `main-menu` action explicitly ends
+the playthrough before entering its target. Saving in a menu records the retained
+gameplay scene. A save taken during a paused map step records its last completed
+tile; Resume continues the unfinished live step. Loading replaces the suspended playthrough and resumes the saved
+gameplay scene. New starter games include these menu, save, load, and settings scenes.
 
 **Export save** downloads the selected slot as a `.save.json` file, including its
 name. Save your current progress first if you want to export it. **Import save**

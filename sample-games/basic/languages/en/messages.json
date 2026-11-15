@@ -311,5 +311,18 @@
   "inventory.owner.trainingLoot": "Training loot",
   "inventory.owner.advancedLoot": "Advanced training loot",
   "inventory.owner.opponent": "Advanced opponent",
-  "inventory.owner.displayCase": "Display case"
+  "inventory.owner.displayCase": "Display case",
+  "menu.title": "Game menu",
+  "menu.mainMenu": "Main menu",
+  "menu.saveGame": "Save game",
+  "menu.loadGame": "Load game",
+  "menu.resume": "Resume game",
+  "menu.resumeHint": "Press Escape to resume your game.",
+  "menu.back": "Back to game menu",
+  "menu.saveSlots": "Save slots",
+  "menu.saveStatus": "Save status",
+  "menu.loadAutosave": "Load autosave",
+  "menu.importSave": "Import save",
+  "menu.exportSave": "Export save",
+  "menu.deleteSave": "Delete save"
 }

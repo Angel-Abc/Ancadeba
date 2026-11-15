@@ -108,6 +108,219 @@ async function launch(
 }
 
 describe('persistent player progress', () => {
+  async function savingFixtures(
+    manual: 'anywhere' | 'save-points' | 'disabled',
+    autosave: 'automatic' | 'save-points' | 'disabled',
+  ) {
+    const manifest = JSON.parse(
+      await readFile(new URL('../sample-games/basic/game.json', import.meta.url), 'utf8'),
+    )
+
+    const standard = JSON.parse(
+      await readFile(
+        new URL('../sample-games/basic/scenes/standard.json', import.meta.url),
+        'utf8',
+      ),
+    )
+
+    return {
+      'game.json': { ...manifest, saving: { manual, autosave }, 'menu-scene': 'settings' },
+      'scenes/standard.json': {
+        ...standard,
+        components: [
+          ...standard.components,
+          {
+            id: 'camp',
+            type: 'save-point',
+            placement: { row: 1, column: 1 },
+          },
+        ],
+      },
+    }
+  }
+
+  it.each(['anywhere', 'save-points', 'disabled'] as const)(
+    'enforces the %s manual policy in gameplay and paused menus',
+    async (manual) => {
+      const store = new MemorySaves()
+      const { engine, start } = await launch(store, await savingFixtures(manual, 'disabled'))
+      start()
+      const gameplay = engine.lifecycle!.activeScene!
+      expect(engine.saves!.canSave).toBe(manual !== 'disabled')
+      engine.lifecycle!.openMenu!('settings')
+      expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
+      expect(engine.saves!.canSave).toBe(manual !== 'disabled')
+      expect(engine.saves!.save()).toBe(manual !== 'disabled')
+
+      if (manual !== 'disabled')
+        expect(JSON.parse(store.read('basic-game')!).scene).toBe('standard')
+      engine.lifecycle!.resumeGame!()
+      engine.lifecycle!.enterScene('gallery')
+      expect(engine.saves!.canSave).toBe(manual === 'anywhere')
+      expect(engine.saves!.save()).toBe(manual === 'anywhere')
+    },
+  )
+
+  it.each(['automatic', 'save-points', 'disabled'] as const)(
+    'runs the %s autosave policy independently of manual saving',
+    async (autosave) => {
+      const store = new MemorySaves()
+
+      const { engine, start, advance } = await launch(
+        store,
+        await savingFixtures('disabled', autosave),
+      )
+
+      start('gallery')
+      advance(500)
+      expect(store.read('basic-game', 'autosave') !== undefined).toBe(autosave === 'automatic')
+      engine.lifecycle!.enterScene('standard')
+      advance(500)
+      const saved = store.read('basic-game', 'autosave')
+      expect(saved !== undefined).toBe(autosave !== 'disabled')
+      expect(engine.saves!.canSave).toBe(false)
+      engine.lifecycle!.openMenu!('settings')
+      advance(60_000)
+      expect(store.read('basic-game', 'autosave')).toBe(saved)
+      engine.lifecycle!.resumeGame!()
+      engine.lifecycle!.enterScene('gallery')
+      advance(500)
+
+      if (autosave === 'save-points') expect(store.read('basic-game', 'autosave')).toBe(saved)
+    },
+  )
+
+  it('rechecks map save points after movement and retains their eligibility in menus', async () => {
+    const manifest = JSON.parse(
+      await readFile(new URL('../sample-games/square-map/game.json', import.meta.url), 'utf8'),
+    )
+
+    const coast = JSON.parse(
+      await readFile(
+        new URL('../sample-games/square-map/scenes/coast.json', import.meta.url),
+        'utf8',
+      ),
+    )
+
+    const view = coast.components.find(
+      (component: { type: string }) => component.type === 'map-view',
+    )
+
+    const store = new MemorySaves()
+
+    const { engine, start, advance } = await launch(
+      store,
+      {
+        'game.json': {
+          ...manifest,
+          scenes: [...manifest.scenes, 'menu'],
+          'menu-scene': 'menu',
+          saving: { manual: 'save-points', autosave: 'save-points' },
+        },
+        'scenes/menu.json': {
+          'schema-version': '1.0.0',
+          id: 'menu',
+          title: 'Menu',
+          type: 'stand-alone',
+          screen: { type: 'grid', grid: { rows: 2, columns: 2 } },
+          components: [],
+        },
+        'scenes/coast.json': {
+          ...coast,
+          components: [
+            ...coast.components,
+            {
+              id: 'camp',
+              type: 'save-point',
+              placement: { row: 1, column: 1 },
+              location: { mapView: view.id, position: view.playerSpawn },
+            },
+          ],
+        },
+      },
+      'square-map',
+    )
+
+    const game = start('coast')
+    const scene = engine.lifecycle!.activeScene!
+    expect(engine.saves!.canSave).toBe(true)
+    advance(500)
+    expect(store.read(game.data.id, 'autosave')).toBeDefined()
+    engine.lifecycle!.openMenu!('menu')
+    expect(engine.saves!.save()).toBe(true)
+    expect(JSON.parse(store.read(game.data.id)!).scene).toBe('coast')
+    engine.lifecycle!.resumeGame!()
+    const changes = vi.fn()
+    engine.saves!.subscribe(changes)
+
+    const direction = (['north', 'east', 'south', 'west'] as const).find((direction) =>
+      game.mapMovement!.canMove(scene, view.id, direction),
+    )!
+
+    game.mapMovement!.move(scene, view.id, direction)
+    expect(game.mapMovement!.isMoving(scene, view.id)).toBe(true)
+    engine.lifecycle!.openMenu!('menu')
+    advance(5000)
+    expect(game.mapMovement!.isMoving(scene, view.id)).toBe(true)
+    expect(engine.saves!.save()).toBe(true)
+    expect(JSON.parse(store.read(game.data.id)!).mapPositions.coast[view.id]).toEqual(
+      view.playerSpawn,
+    )
+    engine.lifecycle!.resumeGame!()
+    advance(1000)
+    expect(changes).toHaveBeenCalled()
+    expect(engine.saves!.canSave).toBe(false)
+    expect(engine.saves!.save()).toBe(false)
+    engine.lifecycle!.openMenu!('menu')
+    expect(engine.saves!.canSave).toBe(false)
+    expect(engine.saves!.load()).toBe(true)
+    const loaded = engine.lifecycle!.activeScene!
+    expect(engine.lifecycle!.currentGame!.mapMovement!.getPosition(loaded, view.id)).toEqual(
+      view.playerSpawn,
+    )
+    expect(engine.lifecycle!.currentGame!.mapMovement!.isMoving(loaded, view.id)).toBe(false)
+  })
+
+  it('retains the scene and remaining action delay while a menu is open', async () => {
+    const { engine, start, advance } = await launch(
+      new MemorySaves(),
+      await savingFixtures('anywhere', 'disabled'),
+    )
+
+    const game = start()
+    const scene = engine.lifecycle!.activeScene!
+    game.actions!.schedule('walk-east', 1000)
+    advance(400)
+    engine.lifecycle!.openMenu!('settings')
+    advance(5000)
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('settings')
+    expect(engine.lifecycle!.currentGame).toBe(game)
+    expect(scene.disposed).toBe(false)
+    engine.lifecycle!.resumeGame!()
+    expect(engine.lifecycle!.activeScene).toBe(scene)
+    advance(599)
+    expect(engine.lifecycle!.activeScene).toBe(scene)
+    advance(1)
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('gallery')
+  })
+
+  it('loads the gameplay snapshot from a menu and releases the suspended playthrough', async () => {
+    const { engine, start } = await launch(
+      new MemorySaves(),
+      await savingFixtures('anywhere', 'disabled'),
+    )
+
+    const game = start()
+    const scene = engine.lifecycle!.activeScene!
+    engine.lifecycle!.openMenu!('settings')
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    expect(game.disposed).toBe(true)
+    expect(scene.disposed).toBe(true)
+    expect(engine.lifecycle!.suspendedScene).toBeUndefined()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('standard')
+  })
+
   it.each(['1', '2', '3', '4', '5'] as const)(
     'deletes only manual slot %s and keeps the active game, autosave and other slots intact',
     async (selected) => {

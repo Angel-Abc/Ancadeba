@@ -24,6 +24,7 @@ import type { GameMessageScope } from './gameMessageScope.js'
 import { TimerService, type TimerId } from './timers.js'
 import type { GameSave } from '@ancadeba/schemas'
 import type { PreparedProgression } from './progression.js'
+import { GameTiming } from './gameTiming.js'
 
 /** Owns actions, bindings, and private host timers for one playthrough. */
 export class GameActionRuntime implements IGameRuntime {
@@ -46,6 +47,14 @@ export class GameActionRuntime implements IGameRuntime {
   private readonly timers: TimerService
   private started = false
   private disposed = false
+  private paused = false
+  private readonly timing: GameTiming
+
+  setPaused(paused: boolean): void {
+    this.paused = paused
+    this.timing.setPaused(paused)
+    this.messages.setPaused(paused)
+  }
 
   save(): Pick<
     GameSave,
@@ -56,8 +65,8 @@ export class GameActionRuntime implements IGameRuntime {
       rewards: this.combatRewards?.save() ?? {},
       quests: this.quests?.save() ?? { records: {} },
       dialogue: this.dialogue?.save() ?? {},
-      maps: this.mapMovement?.save() ?? {},
-      mapPositions: this.mapMovement?.savePositions() ?? {},
+      maps: this.mapMovement?.save(this.paused) ?? {},
+      mapPositions: this.mapMovement?.savePositions(this.paused) ?? {},
       leveling: this.leveling.save(),
     }
   }
@@ -111,6 +120,9 @@ export class GameActionRuntime implements IGameRuntime {
     updateAuthoredClock?: (worldTimeMs: number) => void,
     storyState?: IStoryStateTransactions,
   ) {
+    this.timing = new GameTiming(scheduler, clock)
+    scheduler = this.timing
+    clock = this.timing
     this.timers = new TimerService(messages, scheduler, clock, allocateTimerId)
     this.bindings = new GameBindings(
       {
@@ -349,6 +361,7 @@ export class GameActionRuntime implements IGameRuntime {
   dispose(): void {
     if (this.disposed) return
     this.disposed = true
+    this.timing.dispose()
     this.dialogue?.dispose()
     this.quests?.dispose()
     this.itemUse?.dispose()

@@ -302,6 +302,7 @@ describe('engine game resources', () => {
       input: undefined,
       messages: expect.anything(),
       timers: expect.anything(),
+      prepareMenu: expect.any(Function),
       actions: undefined,
       lifecycle: expect.anything(),
     })
@@ -361,6 +362,7 @@ describe('engine game resources', () => {
       input: undefined,
       messages: expect.anything(),
       timers: expect.anything(),
+      prepareMenu: expect.any(Function),
       actions: undefined,
       lifecycle: expect.anything(),
     })
@@ -368,6 +370,7 @@ describe('engine game resources', () => {
       input: undefined,
       messages: expect.anything(),
       timers: expect.anything(),
+      prepareMenu: expect.any(Function),
       actions: undefined,
       lifecycle: expect.anything(),
     })

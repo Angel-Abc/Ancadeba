@@ -19,15 +19,38 @@ export class GameMessageScopes {
     return new GameMessageScope(messages, this.owners, isCurrent, acceptsInput)
   }
 
-  shouldDeliver(payload: EngineMessages[keyof EngineMessages]): boolean {
+  shouldDeliver<Topic extends MessageTopic<EngineMessages>>(
+    topic: Topic,
+    payload: EngineMessages[Topic],
+  ): boolean {
     if (typeof payload !== 'object' || payload === null) return true
 
-    return this.owners.get(payload)?.active ?? true
+    return this.owners.get(payload)?.shouldDeliver(topic, payload) ?? true
   }
 }
 
 export class GameMessageScope implements IMessageBus<EngineMessages> {
   private disposed = false
+  private paused = false
+  private readonly deferred: (() => void)[] = []
+
+  setPaused(paused: boolean): void {
+    this.paused = paused
+
+    if (!paused) for (const deliver of this.deferred.splice(0)) deliver()
+  }
+
+  shouldDeliver<Topic extends MessageTopic<EngineMessages>>(
+    topic: Topic,
+    payload: EngineMessages[Topic],
+  ): boolean {
+    if (!this.active) return false
+
+    if (!this.paused) return true
+    this.deferred.push(() => this.messages.publish(topic, payload))
+
+    return false
+  }
 
   constructor(
     private readonly messages: IMessageBus<EngineMessages>,
@@ -77,5 +100,6 @@ export class GameMessageScope implements IMessageBus<EngineMessages> {
 
   dispose(): void {
     this.disposed = true
+    this.deferred.length = 0
   }
 }

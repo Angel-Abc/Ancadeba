@@ -311,7 +311,14 @@ describe('scene structure commands', () => {
     const docs = renamed.project.documents
     expect(validateProject(docs)).toEqual([])
     expect(Object.hasOwn(docs, 'scenes/adventure.json')).toBe(false)
-    expect(object(docs['game.json']).scenes).toEqual(['start', 'journey'])
+    expect(object(docs['game.json']).scenes).toEqual([
+      'start',
+      'journey',
+      'game-menu',
+      'save',
+      'load',
+      'settings',
+    ])
     expect(object(docs['scenes/journey.json']).custom).toEqual({ scene: 'adventure' })
     expect(JSON.stringify(docs['scenes/journey.json'])).toContain('"label":"adventure"')
     expect(JSON.stringify(docs['scenes/journey.json'])).toContain(
@@ -436,7 +443,11 @@ describe('scene structure commands', () => {
       revision: 'one',
       documents: {
         ...documents,
-        'game.json': { ...object(documents['game.json']), scenes: ['start'] },
+        'game.json': {
+          ...object(documents['game.json']),
+          'menu-scene': undefined,
+          scenes: ['start'],
+        },
         'scenes/start.json': { ...object(documents['scenes/start.json']), components: [] },
       },
     }
@@ -608,7 +619,14 @@ describe('scene management persistence and API', () => {
     ).load()
 
     expect(game.initialScene).toBe('copy')
-    expect([...game.scenes.keys()]).toEqual(['start', 'copy'])
+    expect([...game.scenes.keys()]).toEqual([
+      'start',
+      'game-menu',
+      'save',
+      'load',
+      'settings',
+      'copy',
+    ])
     await exportGame({ gameDirectory: join(root, 'game'), outputDirectory: join(root, 'exported') })
     expect(await readFile(join(root, 'exported/game/game.json'), 'utf8')).toContain('copy')
     // Multiple persisted edits and a standalone build share the full suite's worker pool.
@@ -680,7 +698,7 @@ describe('scene management persistence and API', () => {
 
       if (failure === 'after-removal')
         await expect(saving).resolves.toMatchObject({
-          view: { game: { scenes: ['start', 'journey'] } },
+          view: { game: { scenes: ['start', 'journey', 'game-menu', 'save', 'load', 'settings'] } },
         })
       else {
         await expect(saving).rejects.toThrow('Injected failure')

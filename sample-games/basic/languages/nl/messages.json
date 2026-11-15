@@ -311,5 +311,18 @@
   "inventory.owner.trainingLoot": "Trainingsbuit",
   "inventory.owner.advancedLoot": "Gevorderde trainingsbuit",
   "inventory.owner.opponent": "Gevorderde tegenstander",
-  "inventory.owner.displayCase": "Vitrine"
+  "inventory.owner.displayCase": "Vitrine",
+  "menu.title": "Spelmenu",
+  "menu.mainMenu": "Hoofdmenu",
+  "menu.saveGame": "Spel opslaan",
+  "menu.loadGame": "Spel laden",
+  "menu.resume": "Spel hervatten",
+  "menu.resumeHint": "Druk op Escape om je spel te hervatten.",
+  "menu.back": "Terug naar spelmenu",
+  "menu.saveSlots": "Opslagvakken",
+  "menu.saveStatus": "Opslagstatus",
+  "menu.loadAutosave": "Automatische opslag laden",
+  "menu.importSave": "Opslag importeren",
+  "menu.exportSave": "Opslag exporteren",
+  "menu.deleteSave": "Opslag verwijderen"
 }

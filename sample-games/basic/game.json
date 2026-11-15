@@ -14,7 +14,10 @@
     "north-cliff-landing",
     "shop",
     "training",
-    "advanced-training"
+    "advanced-training",
+    "game-menu",
+    "save-game",
+    "load-game"
   ],
   "input": "controls",
   "stylesheet": "museum.css",
@@ -22,14 +25,45 @@
   "descriptionKey": "game.description",
   "languages": {
     "default": "en",
-    "available": ["en", "nl"]
+    "available": [
+      "en",
+      "nl"
+    ]
   },
-  "maps": ["museum", "harbour"],
-  "inventory": ["museum", "harbour"],
-  "rules": ["rules", "museum-puzzle", "harbour-route", "shop", "combat"],
-  "combat": ["training", "advanced-training"],
-  "leveling": ["player"],
-  "combatLibraries": ["common"],
-  "dialogues": ["curator"],
-  "quests": ["harbour-survey"]
+  "maps": [
+    "museum",
+    "harbour"
+  ],
+  "inventory": [
+    "museum",
+    "harbour"
+  ],
+  "rules": [
+    "rules",
+    "museum-puzzle",
+    "harbour-route",
+    "shop",
+    "combat"
+  ],
+  "combat": [
+    "training",
+    "advanced-training"
+  ],
+  "leveling": [
+    "player"
+  ],
+  "combatLibraries": [
+    "common"
+  ],
+  "dialogues": [
+    "curator"
+  ],
+  "quests": [
+    "harbour-survey"
+  ],
+  "menu-scene": "game-menu",
+  "saving": {
+    "manual": "anywhere",
+    "autosave": "automatic"
+  }
 }

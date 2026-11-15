@@ -394,7 +394,14 @@ describe('MCP and shared editor integration', () => {
         stylesheet: 'theme.css',
         'initial-scene': 'start',
       },
-      scenes: [{ id: 'start' }, { id: 'adventure' }],
+      scenes: [
+        { id: 'start' },
+        { id: 'adventure' },
+        { id: 'game-menu' },
+        { id: 'save' },
+        { id: 'load' },
+        { id: 'settings' },
+      ],
       diagnostics: [],
     })
 
@@ -408,7 +415,7 @@ describe('MCP and shared editor integration', () => {
       ),
     ).load()
 
-    expect(loaded.scenes.size).toBe(2)
+    expect(loaded.scenes.size).toBe(6)
     expect(await readFile(join(root, 'basic/game.json'))).toEqual(before)
     expect((await game()).game?.title).toBe('Game')
     const updatedList = await client.callTool({ name: 'ancadeba_list_projects', arguments: {} })

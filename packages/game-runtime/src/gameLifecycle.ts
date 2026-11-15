@@ -20,6 +20,7 @@ import { canEnterScene } from './sceneNavigation.js'
 import { runtimeText } from './runtimeText.js'
 
 export interface IGameRuntime {
+  setPaused?(paused: boolean): void
   readonly mapObjects?: IGameMapObjects | undefined
   readonly quests?: IGameQuests | undefined
   readonly dialogue?: IGameDialogue | undefined
@@ -99,6 +100,9 @@ export interface GameLifecycleFactories<TGameState, TSceneState> {
 }
 
 export interface IGameLifecycle<TGameState = unknown, TSceneState = unknown> {
+  readonly suspendedScene?: SceneInstance<TGameState, TSceneState> | undefined
+  openMenu?(id: string): void
+  resumeGame?(): void
   readonly currentGame: GameInstance<TGameState> | undefined
   readonly activeScene: SceneInstance<TGameState, TSceneState> | undefined
   readonly disposed: boolean
@@ -153,6 +157,10 @@ class OwnedInstance<TData, TState> {
 class OwnedGameInstance<TState> extends OwnedInstance<GameData, TState> {
   private runtime: IGameRuntime | undefined
   private inventoryState: GameInventory | undefined
+
+  setPaused(paused: boolean): void {
+    this.runtime?.setPaused?.(paused)
+  }
 
   get quests(): IGameQuests | undefined {
     return this.runtime?.quests
@@ -290,8 +298,71 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
     | undefined
   private isDisposed = false
   private transitioning = false
+  private suspended: typeof this.scene
   private disposalRequested = false
   private readonly sceneSubscribers = new Set<SceneChangeHandler<TGameState, TSceneState>>()
+
+  get suspendedScene(): SceneInstance<TGameState, TSceneState> | undefined {
+    return this.suspended?.context
+  }
+
+  openMenu(id: string): void {
+    const data = this.data.scenes.get(id)
+
+    if (data?.type !== 'stand-alone') throw new Error('Menus require a stand-alone scene')
+
+    if (!this.game || (!this.suspended && this.scene?.context.type !== 'game')) return
+    this.transition(() => {
+      if (this.scene?.context.data.id === id) return
+
+      const instance = new OwnedInstance(
+        data,
+        this.factories.createSceneState(data),
+        this.factories.disposeSceneState,
+      )
+
+      const previous = this.suspended ? this.scene : undefined
+
+      if (!this.suspended) {
+        this.suspended = this.scene
+        this.game!.setPaused(true)
+      }
+
+      this.scene = {
+        instance,
+        context: Object.freeze({
+          type: 'stand-alone' as const,
+          data,
+          get state() {
+            return instance.state
+          },
+          get disposed() {
+            return instance.disposed
+          },
+        }),
+      }
+      release(previous?.instance)
+    })
+  }
+
+  resumeGame(): void {
+    if (!this.suspended) return
+    this.transition(() => {
+      const menu = this.scene
+      this.scene = this.suspended
+      this.suspended = undefined
+      this.game?.setPaused(false)
+      release(menu?.instance)
+    })
+  }
+
+  private releaseMenu(game = this.game): void {
+    if (!this.suspended) return
+    const suspended = this.suspended
+    this.suspended = undefined
+    game?.setPaused(false)
+    release(suspended.instance)
+  }
 
   constructor(
     private readonly data: GameData,
@@ -352,6 +423,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
         throw error
       }
 
+      this.releaseMenu(previous)
       const scene = this.detachGameScene()
       release(scene, previous)
 
@@ -444,6 +516,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
       })
 
       const previous = this.scene
+      this.releaseMenu()
       this.scene = { instance, context }
 
       try {
@@ -460,12 +533,14 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
     this.transition(() => {
       const previous = this.scene
       this.scene = undefined
+      this.releaseMenu()
       release(previous?.instance)
     })
   }
 
   endGame(): void {
     this.transition(() => {
+      this.releaseMenu()
       const previous = this.game
       const scene = this.detachGameScene()
       this.game = undefined
@@ -490,9 +565,11 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
     this.isDisposed = true
     const scene = this.scene
     const game = this.game
+    const suspended = this.suspended
+    this.suspended = undefined
     this.scene = undefined
     this.game = undefined
-    release(scene?.instance, game)
+    release(scene?.instance, suspended?.instance, game)
   }
 
   private detachGameScene(): OwnedInstance<SceneData, TSceneState> | undefined {

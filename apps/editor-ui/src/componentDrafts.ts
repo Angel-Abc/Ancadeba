@@ -5,9 +5,13 @@ import {
   type MapViewComponentDefinition,
   type QuestLogComponentDefinition,
   type TextComponentDefinition,
+  type SceneComponentDefinition,
 } from '@ancadeba/schemas'
 
 export const creatableComponentTypes = [
+  'save-slots',
+  'save-status',
+  'save-point',
   'text',
   'button',
   'map-view',
@@ -18,6 +22,7 @@ export const creatableComponentTypes = [
 export type CreatableComponentType = (typeof creatableComponentTypes)[number]
 
 export type BasicComponent =
+  | Extract<SceneComponentDefinition, { type: 'save-slots' | 'save-status' | 'save-point' }>
   | TextComponentDefinition
   | ButtonComponentDefinition
   | MapViewComponentDefinition
@@ -55,6 +60,12 @@ export function createComponentDraft(
     }
 
   if (type === 'button') return { id, type, label: 'Button', placement }
+
+  if (type === 'save-slots') return { id, type, label: 'Save slots', placement, showName: true }
+
+  if (type === 'save-status') return { id, type, label: 'Save status', placement }
+
+  if (type === 'save-point') return { id, type, label: 'Save game', placement }
 
   if (type === 'language-select') return { id, type, label: 'Language', placement }
 

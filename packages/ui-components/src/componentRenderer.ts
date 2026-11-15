@@ -1,4 +1,7 @@
 import { QuestLogComponentRenderer } from './questLogComponentRenderer.js'
+import { SaveSlotsComponentRenderer } from './saveSlotsComponentRenderer.js'
+import { SaveStatusComponentRenderer } from './saveStatusComponentRenderer.js'
+import { SavePointComponentRenderer } from './savePointComponentRenderer.js'
 import { CharacterProgressionComponentRenderer } from './characterProgressionComponentRenderer.js'
 import type { SceneComponentData } from '@ancadeba/game-runtime'
 import { ButtonComponentRenderer } from './buttonComponentRenderer.js'
@@ -26,6 +29,9 @@ export class ComponentRenderer implements IComponentRenderer {
   private readonly renderers: ComponentRenderers
   constructor(renderers: Partial<ComponentRenderers> = {}) {
     this.renderers = {
+      'save-slots': new SaveSlotsComponentRenderer(),
+      'save-status': new SaveStatusComponentRenderer(),
+      'save-point': new SavePointComponentRenderer(),
       text: new TextComponentRenderer(),
       graphic: new GraphicComponentRenderer(),
       button: new ButtonComponentRenderer(),
@@ -47,6 +53,12 @@ export class ComponentRenderer implements IComponentRenderer {
 
   render(component: SceneComponentData, context: ComponentRenderContext): RenderedComponent {
     switch (component.type) {
+      case 'save-slots':
+        return this.renderers['save-slots'].render(component, context)
+      case 'save-status':
+        return this.renderers['save-status'].render(component, context)
+      case 'save-point':
+        return this.renderers['save-point'].render(component, context)
       case 'quest-log':
         return this.renderers['quest-log'].render(component, context)
       case 'character-progression':

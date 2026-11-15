@@ -8,6 +8,11 @@ export const stylesheetPathSchema = z.string().regex(/^(?:[a-zA-Z0-9_-]+\/)*[a-z
 const uniqueFileIds = (ids: string[]) =>
   new Set(ids.map((id) => id.toLowerCase())).size === ids.length
 
+export const savingPolicySchema = z.object({
+  manual: z.enum(['anywhere', 'save-points', 'disabled']).default('anywhere'),
+  autosave: z.enum(['automatic', 'save-points', 'disabled']).default('automatic'),
+})
+
 export const gameSchema = z
   .object({
     'schema-version': z.literal('1.0.0'),
@@ -30,6 +35,8 @@ export const gameSchema = z
       .refine(uniqueFileIds, { message: 'Quest references must be unique' })
       .optional(),
     version: z.string().trim().min(1),
+    saving: savingPolicySchema.optional(),
+    'menu-scene': gameIdSchema.optional(),
     'initial-scene': gameIdSchema.optional(),
     stylesheet: stylesheetPathSchema.optional(),
     assets: gameIdSchema.optional(),
@@ -71,6 +78,10 @@ export const gameSchema = z
       message: 'Initial scene must reference a scene in the manifest',
     },
   )
+  .refine((game) => !game['menu-scene'] || game.scenes.includes(game['menu-scene']), {
+    path: ['menu-scene'],
+    message: 'Menu scene must reference a scene in the manifest',
+  })
 
 export type GameDefinition = z.infer<typeof gameSchema>
 

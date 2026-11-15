@@ -155,6 +155,10 @@ export function applyCommand(project: ProjectSnapshot, input: EditorCommand): Co
       title: command.title,
       description: command.description,
       version: command.version,
+      ...(command.saving !== undefined
+        ? { saving: { ...object(object(documents['game.json']).saving), ...command.saving } }
+        : {}),
+      ...(command.menuScene !== undefined ? { 'menu-scene': command.menuScene ?? undefined } : {}),
       ...(command.titleKey !== undefined ? { titleKey: command.titleKey ?? undefined } : {}),
       ...(command.descriptionKey !== undefined
         ? { descriptionKey: command.descriptionKey ?? undefined }

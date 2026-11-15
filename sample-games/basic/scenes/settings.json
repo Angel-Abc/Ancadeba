@@ -52,14 +52,29 @@
       "type": "button",
       "placement": {
         "row": 11,
-        "column": 5,
+        "column": 2,
+        "rowSpan": 1,
         "columnSpan": 4
       },
       "action": {
-        "type": "enter-scene",
+        "type": "main-menu",
         "scene": "start-screen"
       },
-      "labelKey": "scenes.settings.components.back.label"
+      "labelKey": "menu.mainMenu"
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "labelKey": "menu.resume",
+      "placement": {
+        "row": 11,
+        "column": 7,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "resume-game"
+      }
     }
   ],
   "titleKey": "scenes.settings.title",

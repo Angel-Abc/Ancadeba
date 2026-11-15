@@ -1,0 +1,119 @@
+{
+  "schema-version": "1.0.0",
+  "id": "game-menu",
+  "type": "stand-alone",
+  "titleKey": "menu.title",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 12
+    }
+  },
+  "components": [
+    {
+      "id": "title",
+      "type": "text",
+      "textKey": "menu.title",
+      "placement": {
+        "row": 1,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      },
+      "presentation": {
+        "variant": "heading",
+        "align": "center"
+      }
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "labelKey": "menu.mainMenu",
+      "placement": {
+        "row": 4,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "main-menu",
+        "scene": "start-screen"
+      }
+    },
+    {
+      "id": "save-game",
+      "type": "button",
+      "labelKey": "menu.saveGame",
+      "placement": {
+        "row": 6,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "enter-scene",
+        "scene": "save-game"
+      }
+    },
+    {
+      "id": "load-game",
+      "type": "button",
+      "labelKey": "menu.loadGame",
+      "placement": {
+        "row": 8,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "enter-scene",
+        "scene": "load-game"
+      }
+    },
+    {
+      "id": "settings",
+      "type": "button",
+      "labelKey": "scenes.start-screen.components.settings.label",
+      "placement": {
+        "row": 10,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "enter-scene",
+        "scene": "settings"
+      }
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "labelKey": "menu.resume",
+      "placement": {
+        "row": 11,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "resume-game"
+      }
+    },
+    {
+      "id": "resume-hint",
+      "type": "text",
+      "textKey": "menu.resumeHint",
+      "placement": {
+        "row": 12,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 10
+      },
+      "presentation": {
+        "variant": "body",
+        "align": "center"
+      }
+    }
+  ]
+}

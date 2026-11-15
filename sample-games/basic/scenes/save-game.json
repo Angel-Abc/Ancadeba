@@ -1,0 +1,96 @@
+{
+  "schema-version": "1.0.0",
+  "id": "save-game",
+  "type": "stand-alone",
+  "titleKey": "menu.saveGame",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 12
+    }
+  },
+  "components": [
+    {
+      "id": "title",
+      "type": "text",
+      "textKey": "menu.saveGame",
+      "placement": {
+        "row": 1,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      },
+      "presentation": {
+        "variant": "heading",
+        "align": "center"
+      }
+    },
+    {
+      "id": "save-slots",
+      "type": "save-slots",
+      "labelKey": "menu.saveSlots",
+      "showName": true,
+      "placement": {
+        "row": 3,
+        "column": 2,
+        "rowSpan": 3,
+        "columnSpan": 10
+      }
+    },
+    {
+      "id": "save-game",
+      "type": "button",
+      "labelKey": "menu.saveGame",
+      "placement": {
+        "row": 7,
+        "column": 4,
+        "rowSpan": 1,
+        "columnSpan": 6
+      },
+      "action": {
+        "type": "save-game"
+      }
+    },
+    {
+      "id": "save-status",
+      "type": "save-status",
+      "labelKey": "menu.saveStatus",
+      "placement": {
+        "row": 8,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 10
+      }
+    },
+    {
+      "id": "back",
+      "type": "button",
+      "labelKey": "menu.back",
+      "placement": {
+        "row": 11,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "enter-scene",
+        "scene": "game-menu"
+      }
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "labelKey": "menu.resume",
+      "placement": {
+        "row": 11,
+        "column": 7,
+        "rowSpan": 1,
+        "columnSpan": 4
+      },
+      "action": {
+        "type": "resume-game"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { gameIdSchema, gameSchema, sceneSchema } from '@ancadeba/schemas'
+import { buttonComponentSchema, gameIdSchema, gameSchema, sceneSchema } from '@ancadeba/schemas'
 import { z } from 'zod'
 import type { ProjectDocuments } from './project.js'
 
@@ -16,7 +16,7 @@ export function createStarterProject(request: CreateProjectRequest): ProjectDocu
   const { path, title, description } = createProjectRequestSchema.parse(request)
   const screen = { type: 'grid', grid: { rows: 12, columns: 16 } }
 
-  return {
+  const documents = {
     'game.json': gameSchema.parse({
       'schema-version': '1.0.0',
       id: path,
@@ -25,7 +25,9 @@ export function createStarterProject(request: CreateProjectRequest): ProjectDocu
       version: '1.0.0',
       stylesheet: 'theme.css',
       'initial-scene': 'start',
-      scenes: ['start', 'adventure'],
+      'menu-scene': 'game-menu',
+      saving: { manual: 'anywhere', autosave: 'automatic' },
+      scenes: ['start', 'adventure', 'game-menu', 'save', 'load', 'settings'],
     }),
     'scenes/start.json': sceneSchema.parse({
       'schema-version': '1.0.0',
@@ -82,11 +84,80 @@ export function createStarterProject(request: CreateProjectRequest): ProjectDocu
         {
           id: 'menu',
           type: 'button',
-          label: 'Main menu',
+          label: 'Game menu (Escape)',
           placement: { row: 9, column: 5, rowSpan: 2, columnSpan: 8 },
-          action: { type: 'enter-scene', scene: 'start' },
+          action: { type: 'open-menu', scene: 'game-menu' },
         },
       ],
     }),
+  }
+
+  const button = (id: string, label: string, row: number, action: unknown) =>
+    buttonComponentSchema.parse({
+      id,
+      type: 'button',
+      label,
+      placement: { row, column: 5, rowSpan: 1, columnSpan: 8 },
+      action,
+    })
+
+  const menu = (id: string, title: string, components: unknown[]) =>
+    sceneSchema.parse({
+      'schema-version': '1.0.0',
+      id,
+      title,
+      type: 'stand-alone',
+      screen,
+      components,
+    })
+
+  const gameMenu = menu('game-menu', 'Game menu', [
+    button('resume', 'Resume', 2, { type: 'resume-game' }),
+    button('main-menu', 'Main menu', 4, { type: 'main-menu', scene: 'start' }),
+    button('save', 'Save game', 6, { type: 'enter-scene', scene: 'save' }),
+    button('load', 'Load game', 8, { type: 'enter-scene', scene: 'load' }),
+    button('settings', 'Settings', 10, { type: 'enter-scene', scene: 'settings' }),
+  ])
+
+  const saveScenes = Object.fromEntries(
+    ['save', 'load'].map((id) => [
+      `scenes/${id}.json`,
+      menu(id, `${id === 'save' ? 'Save' : 'Load'} game`, [
+        {
+          id: 'slots',
+          type: 'save-slots',
+          placement: { row: 2, column: 2, rowSpan: 3, columnSpan: 14 },
+        },
+        button(id, `${id === 'save' ? 'Save' : 'Load'} game`, 6, { type: `${id}-game` }),
+        {
+          id: 'status',
+          type: 'save-status',
+          placement: { row: 8, column: 2, rowSpan: 2, columnSpan: 14 },
+        },
+        button('resume', 'Resume', 11, { type: 'resume-game' }),
+        button('main-menu', 'Main menu', 12, { type: 'main-menu', scene: 'start' }),
+      ]),
+    ]),
+  )
+
+  const settings = menu('settings', 'Settings', [
+    {
+      id: 'help',
+      type: 'text',
+      text: 'Add your game settings here.',
+      placement: { row: 2, column: 2, rowSpan: 3, columnSpan: 14 },
+    },
+    button('resume', 'Resume', 10, { type: 'resume-game' }),
+  ])
+
+  const start = sceneSchema.parse(documents['scenes/start.json'])
+  start.components.push(button('load', 'Load game', 12, { type: 'enter-scene', scene: 'load' }))
+
+  return {
+    ...documents,
+    ...saveScenes,
+    'scenes/start.json': start,
+    'scenes/game-menu.json': gameMenu,
+    'scenes/settings.json': settings,
   }
 }

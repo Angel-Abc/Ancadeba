@@ -29,7 +29,7 @@ function references(documents: ProjectDocuments, game: GameDefinition): SceneRef
     }
 
     for (const [key, child] of Object.entries(object(value))) {
-      if (key === 'scene' && typeof child === 'string')
+      if ((key === 'scene' || key === 'menuScene') && typeof child === 'string')
         result.push({ file, path: [...path, key], scene: child })
       else inspect(child, file, [...path, key])
     }
@@ -37,6 +37,9 @@ function references(documents: ProjectDocuments, game: GameDefinition): SceneRef
 
   for (const id of game.scenes)
     inspect(sceneSchema.parse(documents[`scenes/${id}.json`]), `scenes/${id}.json`)
+
+  if (game['menu-scene'])
+    result.push({ file: 'game.json', path: ['menu-scene'], scene: game['menu-scene'] })
 
   for (const id of game.rules ?? [])
     inspect(gameRulesSchema.parse(documents[`rules/${id}.json`]), `rules/${id}.json`)
@@ -166,6 +169,9 @@ export function editSceneStructure(
       ...(command.type === 'scene.rename' && game['initial-scene'] === sceneId
         ? { 'initial-scene': command.newId }
         : {}),
+      ...(command.type === 'scene.rename' && game['menu-scene'] === sceneId
+        ? { 'menu-scene': command.newId }
+        : {}),
     }
     affected.delete(file)
 
@@ -222,6 +228,7 @@ export function editSceneStructure(
     ...manifest,
     scenes: remaining,
     ...(game['initial-scene'] === sceneId ? { 'initial-scene': replacement ?? remaining[0] } : {}),
+    ...(game['menu-scene'] === sceneId ? { 'menu-scene': replacement } : {}),
   }
   delete documents[file]
 

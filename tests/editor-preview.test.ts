@@ -239,6 +239,7 @@ describe('editor preview', () => {
       input: undefined,
       messages: expect.anything(),
       timers: expect.anything(),
+      prepareMenu: expect.any(Function),
       actions: undefined,
       lifecycle: expect.anything(),
     })
@@ -318,6 +319,7 @@ describe('editor preview', () => {
       input: undefined,
       messages: expect.anything(),
       timers: expect.anything(),
+      prepareMenu: expect.any(Function),
       actions: undefined,
       lifecycle: expect.anything(),
     })

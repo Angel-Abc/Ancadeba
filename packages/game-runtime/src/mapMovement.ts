@@ -53,14 +53,18 @@ export class GameMapMovement implements IGameMapMovement {
   private readonly unsubscribeState: (() => void) | undefined
   private disposed = false
 
-  save(): Record<string, MapPosition> {
-    const positions = this.savePositions()
+  save(allowPending = false): Record<string, MapPosition> {
+    const positions = this.savePositions(allowPending)
 
     return (this.scene && positions[this.scene.data.id]) || {}
   }
 
-  savePositions(): SavedMapPositions {
-    if ([...this.maps.values()].some((maps) => [...maps.values()].some((state) => state.pending)))
+  /** Paused menus may capture committed tiles without changing the unfinished live step. */
+  savePositions(allowPending = false): SavedMapPositions {
+    if (
+      !allowPending &&
+      [...this.maps.values()].some((maps) => [...maps.values()].some((state) => state.pending))
+    )
       throw new GameSaveError('busy')
 
     return Object.fromEntries(

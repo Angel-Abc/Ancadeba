@@ -8,6 +8,7 @@ import {
   type ProjectSnapshot,
 } from '@ancadeba/editor-core'
 import { describe, expect, it } from 'vite-plus/test'
+import { gameSchema } from '@ancadeba/schemas'
 
 function project(): ProjectSnapshot {
   const documents = createStarterProject({ path: 'game', title: 'Clipboard test', description: '' })
@@ -17,7 +18,10 @@ function project(): ProjectSnapshot {
     revision: 'one',
     documents: {
       ...documents,
-      'game.json': { ...object(documents['game.json']), scenes: ['start', 'adventure', 'target'] },
+      'game.json': {
+        ...object(documents['game.json']),
+        scenes: [...gameSchema.parse(documents['game.json']).scenes, 'target'],
+      },
       'scenes/target.json': { ...source, id: 'target', components: [], custom: { keep: true } },
     },
   }

@@ -42,7 +42,10 @@
     {
       "id": "load-game",
       "type": "button",
-      "action": { "type": "load-game" },
+      "action": {
+        "type": "enter-scene",
+        "scene": "load-game"
+      },
       "placement": {
         "row": 7,
         "column": 5,
