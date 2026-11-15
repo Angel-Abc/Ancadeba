@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import type { CommandRequest, ProjectView, ProjectRepairRequest } from '@ancadeba/editor-core'
 import {
   EditorClientError,
@@ -477,6 +477,35 @@ describe('project editor controller', () => {
     })
     expect(requests[0]?.url).toBe('/api/editor/commands')
     expect(requests[0]?.init?.cache).toBe('no-store')
+  })
+
+  it('downloads source ZIP bytes without rebinding the injected browser fetcher', async () => {
+    const bytes = new Uint8Array([80, 75, 3, 4, 0, 255, 128, 42])
+
+    const fetcher: typeof fetch = vi.fn(async function (this: unknown) {
+      if (this !== undefined) throw new TypeError('Illegal invocation: fetch receiver')
+
+      return new Response(bytes, {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': 'attachment; filename="test-project.zip"',
+        },
+      })
+    })
+
+    const client = new HttpEditorClient(fetcher)
+    const request = { path: 'basic', expectedRevision: 'one' }
+    const archive = await client.exportProject(request)
+
+    expect(fetcher).toHaveBeenCalledExactlyOnceWith('/api/editor/projects/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+      cache: 'no-store',
+    })
+    expect(archive.fileName).toBe('test-project.zip')
+    expect(archive.blob.type).toBe('application/zip')
+    expect(new Uint8Array(await archive.blob.arrayBuffer())).toEqual(bytes)
   })
 
   it.each([

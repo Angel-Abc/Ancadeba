@@ -152,7 +152,9 @@ function panel(
     ownerDocument: { createElement: () => new Control('option'), defaultView: new EventTarget() },
   }
 
-  const fetcher: typeof fetch = async (url, init) => {
+  const fetcher: typeof fetch = async function (this: unknown, url, init) {
+    if (this !== undefined) throw new TypeError('Illegal invocation: fetch receiver')
+
     if (typeof url === 'string' && url.startsWith('/api/editor/projects/import?')) {
       if (!(init?.body instanceof File)) throw new Error('Expected a raw ZIP file')
       expect(init.headers).toEqual({ 'Content-Type': 'application/zip' })

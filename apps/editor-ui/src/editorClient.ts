@@ -86,7 +86,9 @@ export class HttpEditorClient implements IEditorClient {
   }
 
   async exportProject(request: ProjectExportRequest): Promise<ProjectDownload> {
-    const response = await this.fetcher('/api/editor/projects/export', {
+    const fetcher = this.fetcher
+
+    const response = await fetcher('/api/editor/projects/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
