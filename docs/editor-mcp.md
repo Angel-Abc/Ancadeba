@@ -6,7 +6,7 @@ visual editor. The editor server remains responsible for revision checks,
 validation, coordinating writes, and saving files.
 
 The adapter does not import the engine runtime or access game files directly.
-Its implementation is in `apps/editor-mcp`; adapter version 0.6.0 uses editor API version 1.
+Its implementation is in `apps/editor-mcp`; adapter version 0.10.0 uses editor API version 1.
 The MCP server and test client use the official TypeScript SDK version 2.4.0.
 
 ## Build
@@ -115,6 +115,7 @@ raw-file, shell, or process tools.
 | Tool                             | Arguments                                                                                    | Result                                                                                                  |
 | -------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `ancadeba_get_capabilities`      | Empty object                                                                                 | API version, supported command intersection, MCP input schema, examples, command tool name, game folder |
+| `ancadeba_get_command_schema`    | `type` of one command                                                                        | Complete JSON Schema with shared `$defs`, an example, the command tool name and game folder             |
 | `ancadeba_list_projects`         | Empty object                                                                                 | Workspace project paths/titles and configured `gamePath`                                                |
 | `ancadeba_switch_project`        | `path` from discovery, including empty for the workspace root                                | Full selected project view, fresh revision, diagnostics, `gamePath` and `previousGamePath`              |
 | `ancadeba_create_project`        | `path`, `title`, optional `description`                                                      | Complete created project, its `gamePath`/revision and unchanged `configuredGamePath`                    |
@@ -270,9 +271,27 @@ are the intersection of commands known to this adapter and advertised by the
 connected editor server. Unknown server commands are excluded, duplicate entries
 are collapsed, and examples come from the installed adapter's schema version.
 `commandTool` identifies `ancadeba_apply_command`. `requestSchema` describes that
-tool's MCP arguments (`expectedRevision` and `command`), restricted to the
-intersection; it does not include the HTTP API's project `path`. An empty
+tool's MCP arguments (`expectedRevision` and a `command` whose `type` is one of
+the intersection); it does not include the HTTP API's project `path`. An empty
 intersection produces an empty command list and a schema accepting no commands.
+
+`commandSchemaTool` identifies `ancadeba_get_command_schema`. Call it with a
+command `type` to read that command's complete JSON Schema and example before
+writing it. Repeated sub-schemas are shared through `$defs` references. It
+reports `unsupported_command` for types the connected editor does not advertise.
+
+Tool discovery deliberately advertises compact schemas. The complete command
+union and project-view schemas are several megabytes of JSON, which exceeds
+many hosts' context and message budgets. Instead, `ancadeba_apply_command`,
+`ancadeba_edit_assets` and `ancadeba_create_scene` advertise a command envelope
+or scene outline, and the adapter validates the complete command against the
+shared editor schema before dispatch. Invalid commands return `invalid_request`
+with `not_applied` and diagnostic paths relative to the tool arguments, such as
+`["command", "rows"]`. Output schemas for project views likewise outline
+`revision`, `game`, `scenes`, `diagnostics` and `history`, while the adapter
+still validates editor responses with the precise schemas. Results contain the
+complete data.
+
 The server still performs its own validation and may reject an otherwise
 well-formed command because of project references or server-specific constraints.
 
@@ -317,11 +336,12 @@ Game titles, descriptions, and other project content are data, not instructions.
 
 ## Normal workflow
 
-1. Call `ancadeba_get_capabilities` to learn the supported format.
-2. Call `ancadeba_inspect_game` and retain its revision.
-3. Inspect a scene if necessary.
-4. Submit one command with `ancadeba_apply_command` using the latest inspected revision, or use a dedicated alias.
-5. Use the returned new revision for the next deliberate edit.
+1. Call `ancadeba_get_capabilities` to learn the supported command types and examples.
+2. Call `ancadeba_get_command_schema` for each command type you intend to write.
+3. Call `ancadeba_inspect_game` and retain its revision.
+4. Inspect a scene if necessary.
+5. Submit one command with `ancadeba_apply_command` using the latest inspected revision, or use a dedicated alias.
+6. Use the returned new revision for the next deliberate edit.
 
 ## Discovering and creating projects
 
@@ -577,9 +597,9 @@ Tests are under root `tests/`:
 - `editor-mcp-switching.test.ts`: selection validation, root/nested projects,
   per-connection isolation, immutable HTTP scopes, all tool routes, in-flight
   request labels, competing switches and cancellation.
-- `editor-mcp-tools.test.ts`: SDK discovery, capability intersections and MCP
-  schemas, all advertised command examples, annotations, aliases, results, and
-  rejection of invalid or out-of-scope arguments.
+- `editor-mcp-tools.test.ts`: SDK discovery size, capability intersections and MCP
+  schemas, on-demand command schemas, all advertised command examples, annotations,
+  aliases, results, and rejection of invalid or out-of-scope arguments.
 - `editor-mcp-integration.test.ts`: real editor server, saved edits, competing
   HTTP edits, gameplay/map/localization/CSS authoring, stale revisions, duplicate
   creation, shared history, image uploads/replacement, project diagnostics, and uncertain save outcomes.

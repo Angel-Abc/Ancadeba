@@ -1,7 +1,7 @@
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { describe, expect, it } from 'vite-plus/test'
 import { capabilities, commandSchema, object, type EditorCommand } from '@ancadeba/editor-core'
-import { mcpCapabilitiesSchema } from '../apps/editor-mcp/src/protocol.js'
+import { commandDetailSchema, mcpCapabilitiesSchema } from '../apps/editor-mcp/src/protocol.js'
 import { createMcpServer } from '../apps/editor-mcp/src/mcpServer.js'
 import { EditorApiError, type IEditorApi } from '../apps/editor-mcp/src/editorApiClient.js'
 
@@ -637,6 +637,7 @@ describe('MCP adapter tools', () => {
         'ancadeba_export_game',
         'ancadeba_export_project',
         'ancadeba_get_capabilities',
+        'ancadeba_get_command_schema',
         'ancadeba_import_project',
         'ancadeba_inspect_assets',
         'ancadeba_inspect_game',
@@ -653,7 +654,9 @@ describe('MCP adapter tools', () => {
         'ancadeba_update_scene_metadata',
         'ancadeba_upload_asset',
       ])
-      expect(tools.filter((tool) => tool.annotations?.readOnlyHint)).toHaveLength(8)
+      expect(tools.filter((tool) => tool.annotations?.readOnlyHint)).toHaveLength(9)
+      // Complete command and project-view schemas are fetched on demand, not on every discovery.
+      expect(JSON.stringify(tools).length).toBeLessThan(150_000)
       expect(
         tools.find((tool) => tool.name === 'ancadeba_export_game')?.inputSchema.required ?? [],
       ).not.toContain('timeoutMs')
@@ -761,6 +764,7 @@ describe('MCP adapter tools', () => {
       const result = await client.callTool({ name: 'ancadeba_get_capabilities', arguments: {} })
       const data = mcpCapabilitiesSchema.parse(object(result.structuredContent).data)
       expect(data.commandTool).toBe('ancadeba_apply_command')
+      expect(data.commandSchemaTool).toBe('ancadeba_get_command_schema')
       expect(data.commands).toEqual([
         { type: 'game.assignStylesheet', example: { type: 'game.assignStylesheet', file: null } },
       ])
@@ -814,6 +818,71 @@ describe('MCP adapter tools', () => {
           (await client.callTool({ name: 'ancadeba_apply_command', arguments: args })).isError,
         ).toBe(true)
       expect(calls).toBe(0)
+
+      const invalid = await client.callTool({
+        name: 'ancadeba_apply_command',
+        arguments: {
+          expectedRevision: 'one',
+          command: { type: 'scene.updateLayout', sceneId: 'shop', rows: 0, columns: 4 },
+        },
+      })
+
+      expect(invalid.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: 'invalid_request',
+          outcome: 'not_applied',
+          diagnostics: [{ path: ['command', 'rows'] }],
+        },
+      })
+
+      const misplaced = await client.callTool({
+        name: 'ancadeba_edit_assets',
+        arguments: { expectedRevision: 'one', command },
+      })
+
+      expect(misplaced.isError).toBe(true)
+      expect(calls).toBe(0)
+    } finally {
+      await close()
+    }
+  })
+
+  it('returns one complete command schema on demand for commands the editor supports', async () => {
+    const remote = api()
+    const { client, close } = await connection(remote)
+
+    try {
+      const result = await client.callTool({
+        name: 'ancadeba_get_command_schema',
+        arguments: { type: 'game.upsertCombat' },
+      })
+
+      const data = commandDetailSchema.parse(object(result.structuredContent).data)
+      expect(data).toMatchObject({
+        gamePath: 'basic',
+        type: 'game.upsertCombat',
+        commandTool: 'ancadeba_apply_command',
+        example: { type: 'game.upsertCombat' },
+        schema: { type: 'object', properties: { type: { const: 'game.upsertCombat' } } },
+      })
+      expect(data.schema).toHaveProperty('$defs')
+
+      for (const args of [{ type: 'future.command' }, { type: 'scene.create', path: 'other' }])
+        expect(
+          (await client.callTool({ name: 'ancadeba_get_command_schema', arguments: args })).isError,
+        ).toBe(true)
+      remote.capabilities = async () => ({ ...capabilities, commands: [] })
+
+      const unsupported = await client.callTool({
+        name: 'ancadeba_get_command_schema',
+        arguments: { type: 'scene.create' },
+      })
+
+      expect(unsupported.structuredContent).toMatchObject({
+        ok: false,
+        error: { code: 'unsupported_command', outcome: 'not_applied' },
+      })
     } finally {
       await close()
     }

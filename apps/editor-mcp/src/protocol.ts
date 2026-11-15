@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { sceneSchema } from '@ancadeba/schemas'
 import { diagnosticSchema, projectViewSchema, projectListSchema } from '@ancadeba/editor-core'
-import { commandTool } from './commandSupport.js'
+import { commandSchemaTool, commandTool } from './commandSupport.js'
 import { editorFeaturesSchema, operationsSchema } from './operationSupport.js'
 
 export { apiErrorSchema, projectViewSchema } from '@ancadeba/editor-core'
@@ -44,7 +44,52 @@ export const capabilitiesSchema = z.object({
 export const mcpCapabilitiesSchema = capabilitiesSchema.extend({
   gamePath: z.string(),
   commandTool: z.literal(commandTool),
+  commandSchemaTool: z.literal(commandSchemaTool),
   operations: operationsSchema,
+})
+
+export const commandDetailSchema = z.object({
+  gamePath: z.string(),
+  type: z.string(),
+  commandTool: z.literal(commandTool),
+  schema: z.record(z.string(), z.unknown()),
+  example: z.record(z.string(), z.unknown()),
+})
+
+/*
+ * Advertised tool output schemas outline project views instead of repeating every definition
+ * schema. Complete definition schemas would add megabytes to tool discovery; the editor client
+ * already validates server responses with the precise schemas above.
+ */
+const definition = z.looseObject({})
+
+const projectOutline = <T extends z.ZodRawShape>(shape: T) =>
+  z.looseObject({
+    revision: z.string(),
+    game: definition.nullable(),
+    scenes: z.array(definition),
+    diagnostics: z.array(diagnosticSchema),
+    history: projectViewSchema.shape.history,
+    ...shape,
+  })
+
+export const advertisedGameSummarySchema = projectOutline({ gamePath: z.string() })
+
+export const advertisedProjectSwitchResultSchema = projectOutline({
+  gamePath: z.string(),
+  previousGamePath: z.string(),
+})
+
+export const advertisedProjectCreationResultSchema = projectOutline({
+  gamePath: z.string(),
+  configuredGamePath: z.string(),
+})
+
+export const advertisedSceneViewSchema = z.object({
+  gamePath: z.string(),
+  revision: z.string(),
+  scene: definition,
+  diagnostics: z.array(diagnosticSchema),
 })
 
 export const appliedChangeSchema = projectViewSchema.extend({
