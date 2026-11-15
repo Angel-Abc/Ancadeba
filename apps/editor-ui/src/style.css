@@ -199,6 +199,33 @@ details > summary {
   margin: 0.6rem;
 }
 
+/* A top-level section: its summary carries the title, so the group inside drops its frame. */
+.section-fold {
+  margin-block: 0.5rem;
+  background: var(--ed-sunken);
+}
+
+.section-fold > summary {
+  padding-block: 0.6rem;
+  font-size: 0.9375rem;
+}
+
+.section-fold > fieldset {
+  margin: 0;
+  padding: 0.75rem;
+  border: 0;
+}
+
+.section-fold > fieldset > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 a:where(:not(.ancadeba-game *)) {
   color: var(--ed-accent);
 }
@@ -903,7 +930,28 @@ label[for='graphic-existing'] {
   )
   :is(form, fieldset)
   > button {
-  flex: none;
+  /* Buttons keep their natural width but wrap their label rather than overflow a narrow group. */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Deeply nested editors, such as AI conditions, lose less width to each level of framing. */
+:is(
+    #rules-panel,
+    #action-bar-panel,
+    #status-panel-editor,
+    #item-editor,
+    #shop-editor,
+    #combat-editor,
+    #component-editor,
+    #story-editor,
+    #leveling-editor
+  )
+  fieldset
+  fieldset {
+  padding-inline: 0.5rem;
 }
 
 /* Long editors keep their save action in reach while scrolling the form. */

@@ -17,7 +17,12 @@ import {
   resolveCombatSource,
   type CombatActorSource,
 } from '@ancadeba/schemas'
-import { humanizeCode, type RuleFormControls, translationChoices } from './ruleFormControls.js'
+import {
+  displayLabel,
+  humanizeCode,
+  type RuleFormControls,
+  translationChoices,
+} from './ruleFormControls.js'
 import { sceneChoices } from './choiceLabels.js'
 
 export function combatForm(
@@ -27,7 +32,7 @@ export function combatForm(
   render: () => void,
   creating = false,
 ): HTMLElement[] {
-  const { input, select, group, button, create, fold, translation, t } = controls
+  const { input, select, group, button, fold, section, translation, t } = controls
   const keys = translationChoices(view)
   const availableStatuses = { ...draft.statuses }
 
@@ -242,46 +247,70 @@ export function combatForm(
 
   identity.querySelector('input')!.readOnly = !creating
 
+  // An actor's fold names it, so the encounter's cast can be scanned while its forms stay folded.
+  const actorTitle = (title: string, actor: CombatActorSource) =>
+    `${title} · ${displayLabel(view, actor.id, actor)}`
+
+  // Each top-level section folds, so the encounter reads as a short list of sections.
   const result: HTMLElement[] = [
-    identity,
-    ...presentation(t('form.encounter'), draft),
-    number(t('combat.seed'), draft.seed, (value) => {
-      draft.seed = value
-    }),
-    number(t('combat.roundCost'), draft.roundTimeMs, (value) => {
-      draft.roundTimeMs = value
-    }),
-    number(t('combat.logCapacity'), draft.logCapacity, (value) => {
-      draft.logCapacity = value
-    }),
-    select(
-      t('combat.allowEscape'),
-      String(draft.allowEscape),
-      [
-        ['false', t('form.no')],
-        ['true', t('form.yes')],
-      ],
-      (value) => {
-        draft.allowEscape = value === 'true'
-      },
+    section(
+      'settings',
+      group(
+        t('combat.sections.settings'),
+        identity,
+        ...presentation(t('form.encounter'), draft),
+        number(t('combat.seed'), draft.seed, (value) => {
+          draft.seed = value
+        }),
+        number(t('combat.roundCost'), draft.roundTimeMs, (value) => {
+          draft.roundTimeMs = value
+        }),
+        number(t('combat.logCapacity'), draft.logCapacity, (value) => {
+          draft.logCapacity = value
+        }),
+        select(
+          t('combat.allowEscape'),
+          String(draft.allowEscape),
+          [
+            ['false', t('form.no')],
+            ['true', t('form.yes')],
+          ],
+          (value) => {
+            draft.allowEscape = value === 'true'
+          },
+        ),
+      ),
+      true,
     ),
-    combatItemUseForm(controls, view, draft, render),
-    actorForm(draft.player, t('form.player')),
+    section('item-use', combatItemUseForm(controls, view, draft, render)),
+    section(
+      'player',
+      actorForm(draft.player, t('form.player')),
+      false,
+      actorTitle(t('form.player'), draft.player),
+    ),
   ]
 
-  draft.enemies.forEach((actor, index) =>
+  draft.enemies.forEach((actor, index) => {
+    const title = t('combat.enemyNumber', { number: index + 1 })
+
     result.push(
-      actorForm(
-        actor,
-        t('combat.enemyNumber', { number: index + 1 }),
-        button(t('combat.removeEnemy', { number: index + 1 }), () => {
-          draft.enemies.splice(index, 1)
-          controls.markEdited()
-          render()
-        }),
+      section(
+        `enemy:${index}`,
+        actorForm(
+          actor,
+          title,
+          button(t('combat.removeEnemy', { number: index + 1 }), () => {
+            draft.enemies.splice(index, 1)
+            controls.markEdited()
+            render()
+          }),
+        ),
+        false,
+        actorTitle(title, actor),
       ),
-    ),
-  )
+    )
+  })
   result.push(
     button(t('combat.addEnemy'), () => {
       let id = 'enemy'
@@ -300,64 +329,79 @@ export function combatForm(
         moves: move ? [move] : [],
         rotation: move ? [move] : [],
       })
+      controls.unfold(`enemy:${draft.enemies.length - 1}`)
       controls.markEdited()
       render()
     }),
   )
 
   result.push(
-    ...combatMovesForm(
-      controls,
-      view,
-      { ...draft, mechanics: combatDraftMechanics(draft, view) },
-      render,
-      (id) => draft.player.moves.push(id),
-      availableStatuses,
-      [draft.player, ...draft.enemies],
+    fold(
+      'moves',
+      t('combat.sections.moves', { count: Object.keys(draft.moves).length }),
+      false,
+      ...combatMovesForm(
+        controls,
+        view,
+        { ...draft, mechanics: combatDraftMechanics(draft, view) },
+        render,
+        (id) => draft.player.moves.push(id),
+        availableStatuses,
+        [draft.player, ...draft.enemies],
+      ),
     ),
   )
   result.push(
-    group(
-      t('combat.outcomeDestinations'),
-      ...(['victory', 'defeat', 'escaped'] as const).map((outcome) =>
-        select(
-          t('combat.outcomeDestination', { outcome: humanizeCode(outcome) }),
-          draft.outcomes[outcome] ?? '',
-          [['', t('combat.notSet')], ...sceneChoices(view)],
-          (value) => {
-            draft.outcomes[outcome] = value || undefined
-          },
+    section(
+      'outcomes',
+      group(
+        t('combat.outcomeDestinations'),
+        ...(['victory', 'defeat', 'escaped'] as const).map((outcome) =>
+          select(
+            t('combat.outcomeDestination', { outcome: humanizeCode(outcome) }),
+            draft.outcomes[outcome] ?? '',
+            [['', t('combat.notSet')], ...sceneChoices(view)],
+            (value) => {
+              draft.outcomes[outcome] = value || undefined
+            },
+          ),
         ),
       ),
     ),
   )
-  result.push(combatRewardsForm(controls, view, draft, render))
-  result.push(combatStatusesForm(controls, view, draft, render))
-  result.push(combatRulesetForm(controls, view, draft, render, availableStatuses))
-  const messages = create('details')
-  const summary = create('summary')
-  summary.textContent = t('combat.texts')
-  messages.append(summary)
-
-  for (const code of combatTextSchema.keyof().options)
-    messages.append(
-      group(
-        humanizeCode(code),
-        input(t('combat.codeText', { code: humanizeCode(code) }), draft.messages[code], (value) => {
-          draft.messages[code] = value
-        }),
-        translation(
-          t('combat.codeTranslation', { code: humanizeCode(code) }),
-          draft.messageKeys[code] ?? '',
-          keys,
-          (value) => {
-            if (value) draft.messageKeys[code] = value
-            else delete draft.messageKeys[code]
-          },
+  result.push(section('rewards', combatRewardsForm(controls, view, draft, render)))
+  result.push(section('statuses', combatStatusesForm(controls, view, draft, render)))
+  result.push(
+    section('ruleset', combatRulesetForm(controls, view, draft, render, availableStatuses)),
+  )
+  result.push(
+    fold(
+      'texts',
+      t('combat.texts'),
+      false,
+      ...combatTextSchema.keyof().options.map((code) =>
+        group(
+          humanizeCode(code),
+          input(
+            t('combat.codeText', { code: humanizeCode(code) }),
+            draft.messages[code],
+            (value) => {
+              draft.messages[code] = value
+            },
+          ),
+          translation(
+            t('combat.codeTranslation', { code: humanizeCode(code) }),
+            draft.messageKeys[code] ?? '',
+            keys,
+            (value) => {
+              if (value) draft.messageKeys[code] = value
+              else delete draft.messageKeys[code]
+            },
+          ),
         ),
       ),
-    )
-  result.push(messages)
+    ),
+  )
 
   return result
 }

@@ -192,102 +192,109 @@ export function bindCombatEditor(
 
     encounters.className = 'context-picker'
 
+    // Creating an encounter is folded away while one is open, so its form starts near the top.
+    // Each case keeps its own fold state; a fold that starts open records itself as opened.
     fields.append(
       picker,
       encounters,
-      controls.group(
-        t('combat.newEncounterHealth'),
-        help,
-        controls.select(
-          t('combat.newPlayerHealth'),
-          playerHealth,
-          healthChoices,
-          (value) => {
-            playerHealth = value
-          },
-          false,
-        ),
-        controls.select(
-          t('combat.newEnemyHealth'),
-          enemyHealth,
-          healthChoices,
-          (value) => {
-            enemyHealth = value
-          },
-          false,
-        ),
-      ),
-      controls.button(t('combat.addEncounter'), () => {
-        if (dirty || simulation.hasDrafts()) {
-          error.textContent = t('combat.saveFirst')
-
-          return
-        }
-
-        const playerField = healthFields.find((field) => fieldId(field.path) === playerHealth)
-        const enemyField = healthFields.find((field) => fieldId(field.path) === enemyHealth)
-
-        if (
-          !scene ||
-          scene.type !== 'game' ||
-          !playerField ||
-          !enemyField ||
-          playerHealth === enemyHealth
-        ) {
-          error.textContent = t('combat.chooseSceneAndHealth')
-
-          return
-        }
-
-        error.textContent = ''
-        let id = 'training'
-        let number = 1
-
-        while (view?.game?.combat?.some((entry) => entry.toLowerCase() === id.toLowerCase()))
-          id = `training-${number++}`
-
-        draft = combatSourceSchema.parse({
-          'schema-version': '1.0.0',
-          id,
-          label: 'Training',
-          player: {
-            id: 'player',
-            label: 'Player',
-            health: { source: 'game.state', path: [...playerField.path] },
-            maximumHealth: Math.max(40, playerField.value),
-            moves: ['attack', 'guard'],
-          },
-          enemies: [
-            {
-              id: 'opponent',
-              label: 'Opponent',
-              health: { source: 'game.state', path: [...enemyField.path] },
-              maximumHealth: Math.max(20, enemyField.value),
-              moves: ['attack'],
-              rotation: ['attack'],
+      controls.fold(
+        draft ? 'new-encounter:editing' : 'new-encounter:empty',
+        t('combat.newEncounter'),
+        !draft,
+        controls.group(
+          t('combat.newEncounterHealth'),
+          help,
+          controls.select(
+            t('combat.newPlayerHealth'),
+            playerHealth,
+            healthChoices,
+            (value) => {
+              playerHealth = value
             },
-          ],
-          moves: {
-            attack: { type: 'attack', label: 'Attack', apCost: 1, damage: { min: 2, max: 4 } },
-            guard: { type: 'guard', label: 'Guard', apCost: 1, guard: 4 },
-          },
-        })
-        encounterId = id
-        creating = true
-        component = combatComponentSchema.parse({
-          id: 'combat',
-          type: 'combat',
-          encounter: id,
-          placement: {
-            row: 1,
-            column: 1,
-            rowSpan: Math.min(5, scene?.screen.grid.rows ?? 1),
-            columnSpan: scene?.screen.grid.columns ?? 1,
-          },
-        })
-        dirty = true
-        render()
-      }),
+            false,
+          ),
+          controls.select(
+            t('combat.newEnemyHealth'),
+            enemyHealth,
+            healthChoices,
+            (value) => {
+              enemyHealth = value
+            },
+            false,
+          ),
+        ),
+        controls.button(t('combat.addEncounter'), () => {
+          if (dirty || simulation.hasDrafts()) {
+            error.textContent = t('combat.saveFirst')
+
+            return
+          }
+
+          const playerField = healthFields.find((field) => fieldId(field.path) === playerHealth)
+          const enemyField = healthFields.find((field) => fieldId(field.path) === enemyHealth)
+
+          if (
+            !scene ||
+            scene.type !== 'game' ||
+            !playerField ||
+            !enemyField ||
+            playerHealth === enemyHealth
+          ) {
+            error.textContent = t('combat.chooseSceneAndHealth')
+
+            return
+          }
+
+          error.textContent = ''
+          let id = 'training'
+          let number = 1
+
+          while (view?.game?.combat?.some((entry) => entry.toLowerCase() === id.toLowerCase()))
+            id = `training-${number++}`
+
+          draft = combatSourceSchema.parse({
+            'schema-version': '1.0.0',
+            id,
+            label: 'Training',
+            player: {
+              id: 'player',
+              label: 'Player',
+              health: { source: 'game.state', path: [...playerField.path] },
+              maximumHealth: Math.max(40, playerField.value),
+              moves: ['attack', 'guard'],
+            },
+            enemies: [
+              {
+                id: 'opponent',
+                label: 'Opponent',
+                health: { source: 'game.state', path: [...enemyField.path] },
+                maximumHealth: Math.max(20, enemyField.value),
+                moves: ['attack'],
+                rotation: ['attack'],
+              },
+            ],
+            moves: {
+              attack: { type: 'attack', label: 'Attack', apCost: 1, damage: { min: 2, max: 4 } },
+              guard: { type: 'guard', label: 'Guard', apCost: 1, guard: 4 },
+            },
+          })
+          encounterId = id
+          creating = true
+          component = combatComponentSchema.parse({
+            id: 'combat',
+            type: 'combat',
+            encounter: id,
+            placement: {
+              row: 1,
+              column: 1,
+              rowSpan: Math.min(5, scene?.screen.grid.rows ?? 1),
+              columnSpan: scene?.screen.grid.columns ?? 1,
+            },
+          })
+          dirty = true
+          render()
+        }),
+      ),
     )
 
     if (!draft || !scene || !component) return
@@ -298,62 +305,68 @@ export function bindCombatEditor(
     button.textContent = t('combat.saveEncounter')
     form.append(
       saveBar(document, button, controls.button(t('combat.discard'), reset)),
-      sharedCombatForm(
-        controls,
-        view,
-        draft,
-        render,
-        (library) => libraryEditor.navigate(library),
-        (command) => {
-          if (dirty) {
-            error.textContent = t('combat.saveFirstCopy')
+      controls.section(
+        'encounter-shared',
+        sharedCombatForm(
+          controls,
+          view,
+          draft,
+          render,
+          (library) => libraryEditor.navigate(library),
+          (command) => {
+            if (dirty) {
+              error.textContent = t('combat.saveFirstCopy')
 
-            return
-          }
+              return
+            }
 
-          submit(command)
-        },
+            submit(command)
+          },
+        ),
       ),
       ...combatForm(scopedFolds(controls, `encounter:${draft.id}`), view, draft, render, creating),
-      controls.group(
-        t('form.combatView'),
-        controls.input(t('combat.componentId'), current.id, (value) => {
-          current.id = value.trim()
-        }),
-        controls.select(
-          t('combat.mainTextTarget'),
-          current.textTarget ?? '',
-          [
-            '',
-            ...scene.components
-              .filter((component) => component.type === 'text')
-              .map((component) => component.id),
-          ],
-          (value) => {
-            current.textTarget = value || undefined
-          },
-        ),
-        controls.select(
-          t('combat.lootInventory'),
-          current.lootInventory ?? '',
-          [
-            '',
-            ...scene.components
-              .filter((component) => component.type === 'inventory')
-              .map((component) => component.id),
-          ],
-          (value) => {
-            current.lootInventory = value || undefined
-          },
-        ),
-        ...placementFields(t).map(([key, label]) =>
-          controls.input(
-            label,
-            String(current.placement[key]),
+      controls.section(
+        'encounter-view',
+        controls.group(
+          t('form.combatView'),
+          controls.input(t('combat.componentId'), current.id, (value) => {
+            current.id = value.trim()
+          }),
+          controls.select(
+            t('combat.mainTextTarget'),
+            current.textTarget ?? '',
+            [
+              '',
+              ...scene.components
+                .filter((component) => component.type === 'text')
+                .map((component) => component.id),
+            ],
             (value) => {
-              current.placement[key] = Number(value)
+              current.textTarget = value || undefined
             },
-            'number',
+          ),
+          controls.select(
+            t('combat.lootInventory'),
+            current.lootInventory ?? '',
+            [
+              '',
+              ...scene.components
+                .filter((component) => component.type === 'inventory')
+                .map((component) => component.id),
+            ],
+            (value) => {
+              current.lootInventory = value || undefined
+            },
+          ),
+          ...placementFields(t).map(([key, label]) =>
+            controls.input(
+              label,
+              String(current.placement[key]),
+              (value) => {
+                current.placement[key] = Number(value)
+              },
+              'number',
+            ),
           ),
         ),
       ),

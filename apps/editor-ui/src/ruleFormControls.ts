@@ -61,10 +61,26 @@ function foldControls(document: Document, folds: FoldMemory) {
     return details
   }
 
+  /**
+   * Folds a titled group under its legend's text, or under `title` when given. The group and its
+   * legend stay inside the fold for assistive technology; styling hides the repeated legend.
+   */
+  const section = (key: string, box: HTMLElement, openByDefault = false, title?: string) => {
+    const legend = box.children[0]
+
+    const heading =
+      title ?? (legend?.tagName.toLowerCase() === 'legend' ? (legend.textContent ?? '') : '')
+
+    const details = fold(key, heading, openByDefault, box)
+    details.className = 'fold section-fold'
+
+    return details
+  }
+
   /** Opens a fold before it is rendered, such as the entry an author has just added. */
   const unfold = (key: string) => folds.set(key, true)
 
-  return { fold, unfold, folds }
+  return { fold, section, unfold, folds }
 }
 
 export function ruleFormControls(
