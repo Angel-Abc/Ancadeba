@@ -32,11 +32,13 @@ export function renderSaveActionButton(
   let epoch = 0
   let selectedSlot = saves?.selectedSlot
   let releaseRead: (() => void) | undefined
+  let cancelConfirmation: (() => void) | undefined
 
   const update = () => {
     if (selectedSlot !== saves?.selectedSlot) {
       selectedSlot = saves?.selectedSlot
       epoch++
+      cancelConfirmation?.()
     }
 
     const allowed =
@@ -68,16 +70,14 @@ export function renderSaveActionButton(
       else saves.loadAutosave()
     } else if (action === 'delete-save') {
       const selected = saves.slots.find(({ id }) => id === saves.selectedSlot)
-
-      if (
-        document.defaultView?.confirm(
-          t('save.confirmDelete', {
-            slot: saves.selectedSlot,
-            name: selected?.name || t('save.unnamed'),
-          }),
-        ) === true
+      const selection = epoch
+      const slot = saves.selectedSlot
+      cancelConfirmation = context.confirm?.(
+        () => t('save.confirmDelete', { slot, name: selected?.name || t('save.unnamed') }),
+        () => {
+          if (!disposed && selection === epoch && saves.canDelete) saves.delete()
+        },
       )
-        saves.delete()
     } else if (action === 'import-save') {
       file.value = ''
       file.click()
@@ -117,12 +117,13 @@ export function renderSaveActionButton(
       releaseRead?.()
       releaseRead = undefined
 
-      if (
-        saves.slots.find(({ id }) => id === saves.selectedSlot)?.occupied &&
-        document.defaultView?.confirm(t('save.confirmImport')) !== true
-      )
-        return
-      saves.importFile(text)
+      const perform = () => {
+        if (!disposed && selection === epoch && saves.canImport) saves.importFile(text)
+      }
+
+      if (saves.slots.find(({ id }) => id === saves.selectedSlot)?.occupied)
+        cancelConfirmation = context.confirm?.(() => t('save.confirmImport'), perform)
+      else perform()
     } catch {
       releaseRead?.()
 
@@ -146,6 +147,7 @@ export function renderSaveActionButton(
     element: root,
     dispose() {
       disposed = true
+      cancelConfirmation?.()
       releaseRead?.()
       unsubscribe?.()
       element.removeEventListener('click', onClick)

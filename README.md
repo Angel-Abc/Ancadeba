@@ -1327,6 +1327,12 @@ gameplay scene; the Basic Game's main-menu **Load Game** button and authored sav
 buttons use the selected slot too. Loading while a playthrough is open asks before
 replacing unsaved progress. Starting **New game** leaves all manual slots intact.
 
+Load, autosave load, save deletion, and importing over an occupied slot use modal
+confirmation dialogs inside the game. Cancel is focused first. Escape cancels the
+confirmation while leaving the game menu open; Confirm performs the requested
+action. Changing scenes or save slots, or stopping the game, cancels pending
+confirmations. No native browser confirmation is used for these game actions.
+
 To clear a manual slot, choose it and click **Delete save**. Confirm the slot
 number and saved name before deletion; this cannot be undone. The slot becomes
 empty and reusable. Deletion preserves the active playthrough, autosave, other

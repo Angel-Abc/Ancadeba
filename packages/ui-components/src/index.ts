@@ -6,6 +6,8 @@ export { SceneRenderer, type SceneRendererOptions } from './sceneRenderer.js'
 
 export { ComponentRenderer } from './componentRenderer.js'
 
+export { GameConfirmationDialog, type GameConfirmation } from './gameConfirmationDialog.js'
+
 export { TextComponentRenderer } from './textComponentRenderer.js'
 
 export { ButtonComponentRenderer } from './buttonComponentRenderer.js'

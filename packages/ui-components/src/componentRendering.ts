@@ -14,6 +14,7 @@ import type {
 import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancadeba/schemas'
 import type { IGraphicResources } from './graphicResources.js'
 import type { KeyboardInputSink } from './keyboardInput.js'
+import type { GameConfirmation } from './gameConfirmationDialog.js'
 
 type SceneNavigation = Extract<
   NonNullable<ButtonComponentData['action']>,
@@ -21,6 +22,7 @@ type SceneNavigation = Extract<
 >
 
 export interface ComponentRendererOptions {
+  readonly confirm?: GameConfirmation | undefined
   readonly game?: GameData | undefined
   readonly downloadSave?: ((file: GameSaveFile) => void) | undefined
   readonly onOpenMenu?: ((scene: string) => void) | undefined

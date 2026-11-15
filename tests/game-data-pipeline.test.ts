@@ -102,6 +102,8 @@ describe('game data pipeline', () => {
       language: 'en',
       version: '1.0.0',
       initialScene: 'start-screen',
+      menuScene: 'game-menu',
+      saving: { manual: 'anywhere', autosave: 'automatic' },
       stylesheet: expect.stringContaining('--ge-inventory-item-min-width: 9em'),
       input: {
         virtualKeys: [
@@ -135,6 +137,9 @@ describe('game data pipeline', () => {
       'shop',
       'training',
       'advanced-training',
+      'game-menu',
+      'save-game',
+      'load-game',
     ])
     expect([...game.scenes.values()].map(({ type }) => type)).toEqual([
       'game',
@@ -148,6 +153,9 @@ describe('game data pipeline', () => {
       'game',
       'game',
       'game',
+      'stand-alone',
+      'stand-alone',
+      'stand-alone',
     ])
     expect(game.scenes.get('standard')?.components[0]).toEqual({
       id: 'location-title',
@@ -164,7 +172,7 @@ describe('game data pipeline', () => {
       ]),
     )
     expect(game.inventory?.itemTypes['folded-letter']?.inspection?.inline).toBe(false)
-    expect(game.scenes.get('settings')?.components.length).toBe(4)
+    expect(game.scenes.get('settings')?.components.length).toBe(5)
   })
 
   it.each(['../theme.css', '/theme.css', 'https://example.com/theme.css', 'theme.json'])(

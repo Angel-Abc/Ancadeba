@@ -10,6 +10,7 @@ import { bindKeyboardInput, type KeyboardInputSink } from './keyboardInput.js'
 import { SceneRenderer, type SceneRendererOptions } from './sceneRenderer.js'
 import { mountGameStylesheet } from './gameStylesheet.js'
 import type { SceneEntrance } from '@ancadeba/schemas'
+import { GameConfirmationDialog } from './gameConfirmationDialog.js'
 
 export interface GameViewSession {
   readonly prepareMenu?: () => boolean
@@ -53,6 +54,41 @@ export function mountGameView(
   viewport.className = 'ancadeba-scene-viewport'
   const cleanups: (() => void)[] = []
   let disposed = false
+
+  const confirmations = new GameConfirmationDialog(
+    root,
+    viewport,
+    (key, values) => runtimeText(game, key, values),
+    () => session.input?.reset(),
+  )
+
+  cleanups.push(() => confirmations.dispose())
+
+  const load = (autosave = false) => {
+    const saves = session.saves
+
+    if (!saves || !(autosave ? saves.canLoadAutosave : saves.canLoad)) return
+
+    const sourceGame = session.lifecycle.currentGame
+    const sourceScene = session.lifecycle.activeScene
+    const slot = saves.selectedSlot
+
+    const perform = () => {
+      if (
+        disposed ||
+        sourceGame !== session.lifecycle.currentGame ||
+        sourceScene !== session.lifecycle.activeScene ||
+        slot !== saves.selectedSlot
+      )
+        return
+
+      if (autosave) saves.loadAutosave()
+      else saves.load()
+    }
+
+    if (sourceGame) confirmations.request(() => runtimeText(game, 'save.confirm'), perform)
+    else perform()
+  }
 
   const cleanup = () => {
     if (disposed) return
@@ -120,6 +156,19 @@ export function mountGameView(
 
   try {
     if (localization) cleanups.push(localization.subscribe(syncMetadata))
+
+    if (localization) cleanups.push(localization.subscribe(() => confirmations.refresh()))
+    cleanups.push(session.lifecycle.subscribeSceneChanges(() => confirmations.cancel()))
+    let selectedSlot = session.saves?.selectedSlot
+
+    if (session.saves)
+      cleanups.push(
+        session.saves.subscribe(() => {
+          if (selectedSlot === session.saves?.selectedSlot) return
+          selectedSlot = session.saves?.selectedSlot
+          confirmations.cancel()
+        }),
+      )
 
     root.addEventListener('keydown', onMenuKey, true)
     cleanups.push(() => root.removeEventListener('keydown', onMenuKey, true))
@@ -209,22 +258,9 @@ export function mountGameView(
         ),
       canResumeGame: () => Boolean(session.lifecycle.suspendedScene),
       saves: session.saves,
-      onLoadGame: () => {
-        if (
-          session.lifecycle.currentGame &&
-          document.defaultView?.confirm(runtimeText(game, 'save.confirm')) !== true
-        )
-          return
-        session.saves?.load()
-      },
-      onLoadAutosave: () => {
-        if (
-          session.lifecycle.currentGame &&
-          document.defaultView?.confirm(runtimeText(game, 'save.confirm')) !== true
-        )
-          return
-        session.saves?.loadAutosave()
-      },
+      confirm: confirmations.request,
+      onLoadGame: () => load(),
+      onLoadAutosave: () => load(true),
       input: session.input,
       onActionBarFocusLost: () => root.focus(),
       assets: game.assets,

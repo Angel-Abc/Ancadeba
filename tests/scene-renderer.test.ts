@@ -30,6 +30,7 @@ import {
 } from '@ancadeba/utilities'
 import {
   ComponentRenderer,
+  GameConfirmationDialog,
   TextComponentRenderer,
   LanguageSelectComponentRenderer,
   mountGameView,
@@ -81,6 +82,7 @@ class TestElement extends EventTarget {
   value = ''
   disabled = false
   hidden = false
+  open = false
   type = ''
   files: { size: number; text: () => Promise<string> }[] = []
   private content = ''
@@ -129,6 +131,13 @@ class TestElement extends EventTarget {
   }
   click(): void {
     this.dispatchEvent(new Event('click'))
+  }
+  showModal(): void {
+    this.open = true
+  }
+  close(): void {
+    this.open = false
+    this.dispatchEvent(new Event('close'))
   }
   append(...children: TestElement[]): void {
     for (const child of children) {
@@ -184,11 +193,19 @@ class TestElement extends EventTarget {
     // @ts-expect-error -- Deliberately partial DOM fixture supplies only the operations used by these renderers.
     return this
   }
+  querySelectorAll(selector: string): TestElement[] {
+    return this.children.flatMap((child) => [
+      ...(child.tagName.toLowerCase() === selector ? [child] : []),
+      ...child.querySelectorAll(selector),
+    ])
+  }
 }
 
 class TestDocument extends EventTarget {
   readonly defaultView = Object.assign(new EventTarget(), {
-    confirm: vi.fn(() => true),
+    confirm: vi.fn(() => {
+      throw new Error('Native browser confirmations must not be used')
+    }),
     setTimeout: (callback: () => void, delayMs: number) => setTimeout(callback, delayMs),
     clearTimeout: (id: ReturnType<typeof setTimeout>) => clearTimeout(id),
     URL: {
@@ -206,6 +223,119 @@ class TestDocument extends EventTarget {
 }
 
 const logger: ILogger = { debug: () => '', info: () => '', warn: () => '', error: () => '' }
+
+const confirmation = (target: TestElement) =>
+  target.find((node) => node.attributes.get('role') === 'alertdialog')
+
+function respondToConfirmation(target: TestElement, accept = true): void {
+  const dialog = confirmation(target)
+  expect(dialog).toBeDefined()
+  const labels = accept ? ['Confirm', 'Bevestigen'] : ['Cancel', 'Annuleren']
+  dialog!.find((node) => node.tagName === 'BUTTON' && labels.includes(node.textContent))!.click()
+}
+
+describe('in-game confirmations', () => {
+  function setupConfirmation() {
+    const document = new TestDocument()
+    const surface = document.createElement('section')
+    const viewport = document.createElement('div')
+    const trigger = document.createElement('button')
+    viewport.append(trigger)
+    surface.append(viewport)
+    document.body.append(surface)
+    trigger.focus()
+    const resetInput = vi.fn()
+    let language = 'en'
+
+    const dialogs = new GameConfirmationDialog(
+      surface.asElement(),
+      viewport.asElement(),
+      (key, values) => runtimeText({ language }, key, values),
+      resetInput,
+    )
+
+    onTestFinished(() => dialogs.dispose())
+
+    return {
+      document,
+      surface,
+      trigger,
+      dialogs,
+      resetInput,
+      setLanguage: (value: string) => {
+        language = value
+        dialogs.refresh()
+      },
+    }
+  }
+
+  function key(code: string) {
+    const event = new Event('keydown', { cancelable: true })
+    Object.defineProperty(event, 'code', { value: code })
+
+    return event
+  }
+
+  it('defaults to Cancel, traps keyboard input, restores focus, and confirms only once', () => {
+    const { document, surface, trigger, dialogs, resetInput } = setupConfirmation()
+    const accept = vi.fn()
+    const gameInput = vi.fn()
+    surface.addEventListener('keydown', gameInput)
+    dialogs.request(() => 'Load <saved> progress?', accept)
+    const dialog = confirmation(surface)!
+    expect(dialog.open).toBe(true)
+    expect(dialog.attributes.get('aria-modal')).toBe('true')
+    expect(dialog.textContent).toContain('Load <saved> progress?')
+    expect(document.activeElement?.textContent).toBe('Cancel')
+    surface.dispatchEvent(key('Tab'))
+    expect(document.activeElement?.textContent).toBe('Confirm')
+    surface.dispatchEvent(key('KeyE'))
+    expect(gameInput).not.toHaveBeenCalled()
+    expect(accept).not.toHaveBeenCalled()
+    const confirm = document.activeElement!
+    confirm.click()
+    confirm.click()
+    expect(accept).toHaveBeenCalledOnce()
+    expect(confirmation(surface)).toBeUndefined()
+    expect(document.activeElement).toBe(trigger)
+    expect(resetInput).toHaveBeenCalledTimes(2)
+    expect(document.defaultView.confirm).not.toHaveBeenCalled()
+    surface.dispatchEvent(key('KeyE'))
+    expect(gameInput).toHaveBeenCalledOnce()
+  })
+
+  it('cancels with Escape without forwarding it to the game menu', () => {
+    const { surface, dialogs } = setupConfirmation()
+    const accept = vi.fn()
+    const menuKey = vi.fn()
+    surface.addEventListener('keydown', menuKey)
+    dialogs.request(() => 'Load progress?', accept)
+    const escape = key('Escape')
+    surface.dispatchEvent(escape)
+    expect(escape.defaultPrevented).toBe(true)
+    expect(menuKey).not.toHaveBeenCalled()
+    expect(accept).not.toHaveBeenCalled()
+    expect(confirmation(surface)).toBeUndefined()
+  })
+
+  it('localizes the dialog and dismisses requests on close or disposal', () => {
+    const { document, surface, dialogs, setLanguage } = setupConfirmation()
+    const accept = vi.fn()
+    dialogs.request(() => 'Load progress?', accept)
+    setLanguage('nl')
+    expect(confirmation(surface)?.attributes.get('aria-label')).toBe('Actie bevestigen')
+    expect(document.activeElement?.textContent).toBe('Annuleren')
+    confirmation(surface)!.close()
+    expect(confirmation(surface)).toBeUndefined()
+    dialogs.request(() => 'Delete save?', accept)
+    const confirm = confirmation(surface)!.find((node) => node.textContent === 'Bevestigen')!
+    dialogs.dispose()
+    confirm.click()
+    expect(accept).not.toHaveBeenCalled()
+    expect(confirmation(surface)).toBeUndefined()
+  })
+})
+
 const timing = { clock: { now: () => 0 }, scheduler: { schedule: () => () => {} } }
 
 const source: IResourceSource = {
@@ -276,6 +406,138 @@ function withSaveComponents(resources: IResourceSource): IResourceSource {
 const saveLoader = new GameLoader(new JsonResourceLoader(withSaveComponents(source), logger))
 
 describe('authored game menus', () => {
+  it.each(['slot', 'scene', 'unmount'] as const)(
+    'cancels a pending load after %s changes',
+    async (change) => {
+      const document = new TestDocument()
+      const target = document.createElement('main')
+      const storage = new Map<string, string>()
+
+      const engine = new Engine(
+        loader,
+        new DomEngineHost(target.asElement()),
+        logger,
+        () => new MessageBus<EngineMessages>(),
+        {
+          ...timing,
+          saveStore: {
+            read: (id) => storage.get(id),
+            write: (id, text) => {
+              storage.set(id, text)
+            },
+          },
+        },
+      )
+
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      startSampleGame(target)
+      engine.saves!.save()
+      engine.lifecycle!.openMenu!('load-game')
+      target.find((node) => node.dataset.componentId === 'load-game')!.click()
+
+      const staleConfirm = confirmation(target)!.find(
+        (node) => node.tagName === 'BUTTON' && node.textContent === 'Confirm',
+      )!
+
+      const load = vi.spyOn(engine.saves!, 'load')
+
+      if (change === 'slot') engine.saves!.selectSlot('2')
+      else if (change === 'scene') engine.lifecycle!.openMenu!('settings')
+      else engine.stop()
+      expect(confirmation(target)).toBeUndefined()
+      staleConfirm.click()
+      expect(load).not.toHaveBeenCalled()
+    },
+  )
+
+  it('connects the existing Basic game menus, save slots, language settings, and Escape resume', async () => {
+    const document = new TestDocument()
+    const target = document.createElement('main')
+    const storage = new Map<string, string>()
+
+    const engine = new Engine(
+      loader,
+      new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      {
+        ...timing,
+        saveStore: {
+          read: (id, slot = '1') => storage.get(`${id}:${slot}`),
+          write: (id, text, slot = '1') => {
+            storage.set(`${id}:${slot}`, text)
+          },
+        },
+      },
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+
+    const component = (id: string) => target.find((node) => node.dataset.componentId === id)!
+    component('load-game').click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
+    expect(component('load-game').disabled).toBe(true)
+    component('main-menu').click()
+    startSampleGame(target)
+    const gameplay = engine.lifecycle!.activeScene!
+    const game = engine.lifecycle!.currentGame
+    const root = target.find((node) => node.className === 'ancadeba-game')!
+
+    const escape = () => {
+      const event = new Event('keydown', { cancelable: true })
+      Object.defineProperty(event, 'code', { value: 'Escape' })
+      root.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    }
+
+    escape()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('game-menu')
+    expect(
+      ['main-menu', 'save-game', 'load-game', 'settings'].map((id) => component(id).textContent),
+    ).toEqual(['Main menu', 'Save game', 'Load game', 'Settings'])
+    component('save-game').click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('save-game')
+    engine.saves!.selectSlot('3')
+    engine.saves!.setName!('Museum pause save')
+    component('save-game').click()
+    expect(JSON.parse(storage.get('basic-game:3')!)).toMatchObject({
+      scene: 'standard',
+      slotName: 'Museum pause save',
+    })
+    component('back').click()
+    component('settings').click()
+    const language = component('language').find((node) => node.tagName === 'SELECT')!
+    language.value = 'nl'
+    language.dispatchEvent(new Event('change'))
+    expect(engine.game!.language).toBe('nl')
+    component('resume').click()
+    expect(engine.lifecycle!.activeScene).toBe(gameplay)
+    expect(engine.lifecycle!.currentGame).toBe(game)
+    escape()
+    expect(component('main-menu').textContent).toBe('Hoofdmenu')
+    component('load-game').click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
+    component('load-game').click()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
+    expect(confirmation(target)?.textContent).toContain('Opgeslagen voortgang laden?')
+    expect(document.activeElement?.textContent).toBe('Annuleren')
+    escape()
+    expect(confirmation(target)).toBeUndefined()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
+    expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
+    component('load-game').click()
+    respondToConfirmation(target)
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('standard')
+    expect(engine.lifecycle!.currentGame).not.toBe(game)
+    expect(engine.lifecycle!.suspendedScene).toBeUndefined()
+    escape()
+    component('main-menu').click()
+    expect(engine.lifecycle!.currentGame).toBeUndefined()
+    expect(engine.lifecycle!.activeScene!.data.id).toBe('start-screen')
+  })
+
   it('opens with Escape, navigates submenus, saves gameplay, and resumes the same scene', async () => {
     const files = createStarterProject({ path: 'menus', title: 'Menus', description: '' })
     const document = new TestDocument()
@@ -1375,10 +1637,11 @@ describe('scene renderer', () => {
 
       for (let i = 0; i < 20; i++) engine.flushMessages()
       expect(engine.lifecycle!.activeScene!.data.id).toBe('gallery')
-      document.defaultView.confirm.mockReturnValueOnce(false)
       button('Load autosave').click()
+      respondToConfirmation(target, false)
       expect(engine.lifecycle!.activeScene!.data.id).toBe('gallery')
       button('Load autosave').click()
+      respondToConfirmation(target)
       expect(engine.lifecycle!.activeScene!.data.id).toBe('standard')
       expect(storage.get('basic-game:1')).toBe(manual)
       full = true
@@ -1454,15 +1717,16 @@ describe('scene renderer', () => {
       storage.set('basic-game:autosave', first)
       const second = storage.get('basic-game:2')
       expect(button('Delete save').disabled).toBe(false)
-      document.defaultView.confirm.mockReturnValueOnce(false)
       button('Delete save').click()
-      expect(document.defaultView.confirm).toHaveBeenCalledWith(
+      expect(confirmation(target)?.textContent).toContain(
         'Delete the save in slot 2 (Museum)? This cannot be undone.',
       )
+      respondToConfirmation(target, false)
       expect(storage.get('basic-game:2')).toBe(second)
       expect(status()).toBe('Progress saved on this device.')
       blocked = true
       button('Delete save').click()
+      respondToConfirmation(target)
       expect(status()).toContain('Browser storage is unavailable or full')
       expect(storage.get('basic-game:2')).toBe(second)
       expect(name.value).toBe('Museum')
@@ -1471,9 +1735,10 @@ describe('scene renderer', () => {
       button('Opslag verwijderen').click()
       select = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
       name = target.find((node) => node.attributes.get('aria-label') === 'Opslagnaam')!
-      expect(document.defaultView.confirm).toHaveBeenLastCalledWith(
+      expect(confirmation(target)?.textContent).toContain(
         'De opslag in vak 2 (Museum) verwijderen? Dit kan niet ongedaan worden gemaakt.',
       )
+      respondToConfirmation(target)
       expect(status()).toBe('Opslag verwijderd uit het gekozen vak.')
       expect(select.children[1]?.textContent).toBe('Vak 2: Leeg')
       expect(name.value).toBe('')
@@ -1487,6 +1752,8 @@ describe('scene renderer', () => {
       expect(storage.get('basic-game:autosave')).toBe(first)
       expect(storage.has('basic-game:2')).toBe(false)
       engine.lifecycle!.enterScene('start-screen')
+      expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(false)
+      target.find((node) => node.dataset.componentId === 'load-game')!.click()
       expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(true)
       select = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
       select.value = '1'
@@ -1565,16 +1832,31 @@ describe('scene renderer', () => {
     expect(engine.lifecycle!.currentGame).toBe(old)
     expect(document.defaultView.confirm).not.toHaveBeenCalled()
     const original = storage.get('basic-game:2')
-    document.defaultView.confirm.mockReturnValueOnce(false)
     input.dispatchEvent(new Event('change'))
     expect(button('Delete save').disabled).toBe(true)
-    await vi.waitFor(() => expect(slot.disabled).toBe(false))
-    expect(document.defaultView.confirm).toHaveBeenCalledWith(
+    await vi.waitFor(() => expect(confirmation(target)).toBeDefined())
+    expect(confirmation(target)?.textContent).toContain(
       'Replace the saved game in this slot with the imported file?',
     )
+    respondToConfirmation(target, false)
     expect(storage.get('basic-game:2')).toBe(original)
+    input.dispatchEvent(new Event('change'))
+    await vi.waitFor(() => expect(confirmation(target)).toBeDefined())
+
+    const staleConfirm = confirmation(target)!.find(
+      (node) => node.tagName === 'BUTTON' && node.textContent === 'Confirm',
+    )!
+
+    engine.saves!.selectSlot('3')
+    expect(confirmation(target)).toBeUndefined()
+    staleConfirm.click()
+    expect(storage.get('basic-game:3')).toBeUndefined()
+    expect(storage.get('basic-game:2')).toBe(original)
+    engine.saves!.selectSlot('2')
     input.files = [{ size: 1, text: async () => '{' }]
     input.dispatchEvent(new Event('change'))
+    await vi.waitFor(() => expect(confirmation(target)).toBeDefined())
+    respondToConfirmation(target)
     await vi.waitFor(() => expect(status()).toContain('damaged or invalid'))
     expect(storage.get('basic-game:2')).toBe(original)
     input.files = [{ size: maxGameSaveBytes + 1, text: vi.fn() }]
@@ -1592,6 +1874,7 @@ describe('scene renderer', () => {
     input.dispatchEvent(new Event('change'))
     await vi.waitFor(() => expect(status()).toContain('could not be read'))
     button('Load progress').click()
+    respondToConfirmation(target)
     expect(engine.lifecycle!.currentGame).not.toBe(old)
     engine.game!.localization!.select('nl')
     expect(button('Opslag exporteren')).toBeDefined()
@@ -1692,7 +1975,11 @@ describe('scene renderer', () => {
 
     expect(button('Save progress').disabled).toBe(true)
     const menuLoad = target.find((node) => node.dataset.componentId === 'load-game')!
-    expect(menuLoad.disabled).toBe(true)
+    expect(menuLoad.disabled).toBe(false)
+    menuLoad.click()
+    expect(first.lifecycle!.activeScene!.data.id).toBe('load-game')
+    expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(true)
+    target.find((node) => node.dataset.componentId === 'main-menu')!.click()
     target
       .find((node) => node.dataset.componentId === 'new-game')!
       .dispatchEvent(new Event('click'))
@@ -1705,10 +1992,11 @@ describe('scene renderer', () => {
 
     for (let count = 0; count < 20; count++) first.flushMessages()
     expect(first.lifecycle!.activeScene!.data.id).toBe('gallery')
-    document.defaultView.confirm.mockReturnValueOnce(false)
     button('Load progress').dispatchEvent(new Event('click'))
+    respondToConfirmation(target, false)
     expect(first.lifecycle!.activeScene!.data.id).toBe('gallery')
     button('Load progress').dispatchEvent(new Event('click'))
+    respondToConfirmation(target)
     expect(first.lifecycle!.activeScene!.data.id).toBe('standard')
     const oldSave = button('Save progress')
     first.stop()
@@ -1718,6 +2006,7 @@ describe('scene renderer', () => {
     const second = create()
     onTestFinished(() => second.stop())
     await second.start()
+    target.find((node) => node.dataset.componentId === 'load-game')!.click()
     const load = target.find((node) => node.dataset.componentId === 'load-game')!
     expect(load.disabled).toBe(false)
     load.dispatchEvent(new Event('click'))
@@ -3320,10 +3609,10 @@ describe('scene renderer', () => {
 
     const renderer = new SceneRenderer(target.asElement(), lifecycle, {}, components)
     expect(() => lifecycle.enterScene('settings')).toThrow()
-    expect(dispose).toHaveBeenCalledTimes(8)
+    expect(dispose).toHaveBeenCalledTimes(9)
     expect(target.children).toHaveLength(0)
     renderer.dispose()
-    expect(dispose).toHaveBeenCalledTimes(8)
+    expect(dispose).toHaveBeenCalledTimes(9)
   })
 
   it('renders the three sample scenes with exact grid placement and semantic text', async () => {
@@ -3668,7 +3957,7 @@ describe.each([
       'Load Game',
       'Settings',
     ])
-    expect(buttons.map((button) => button.disabled)).toEqual([false, true, false])
+    expect(buttons.map((button) => button.disabled)).toEqual([false, false, false])
     expect(lifecycle.currentGame).toBeUndefined()
     buttons[2]!.dispatchEvent(new Event('click'))
     expect(lifecycle.activeScene?.data.id).toBe('settings')

@@ -1,6 +1,9 @@
 import type { GameTranslation } from './localization.js'
 
 const en = {
+  'confirmation.title': 'Confirm action',
+  'confirmation.confirm': 'Confirm',
+  'confirmation.cancel': 'Cancel',
   'inventory.unavailable': 'Inventory unavailable',
   'inventory.destination': 'Destination',
   'inventory.move': 'Move selected item',
@@ -92,6 +95,9 @@ export type RuntimeTextValues = Readonly<Record<string, string | number>>
 export type RuntimeTranslator = (key: RuntimeTextKey, values?: RuntimeTextValues) => string
 
 const nl: Record<RuntimeTextKey, string> = {
+  'confirmation.title': 'Actie bevestigen',
+  'confirmation.confirm': 'Bevestigen',
+  'confirmation.cancel': 'Annuleren',
   'inventory.unavailable': 'Inventaris niet beschikbaar',
   'inventory.destination': 'Bestemming',
   'inventory.move': 'Geselecteerd voorwerp verplaatsen',

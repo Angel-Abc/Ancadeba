@@ -8,3 +8,10 @@
   padding-inline-start: 0.5em;
   font-size: 0.9em;
 }
+
+.ancadeba-scene:is([data-scene-id='save-game'], [data-scene-id='load-game'])
+  :is(.ancadeba-save-slots, .ancadeba-save-status) {
+  justify-content: center;
+  align-content: center;
+  font-size: inherit;
+}

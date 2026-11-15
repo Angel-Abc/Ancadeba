@@ -53,3 +53,57 @@
   width: 100%;
   height: 100%;
 }
+
+.ancadeba-confirmation {
+  box-sizing: border-box;
+  margin: auto;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  font: inherit;
+  line-height: 1.5;
+  color: var(--ge-game-color);
+  background: var(--ge-game-background);
+  box-shadow: 0 1rem 3rem #0008;
+}
+
+.ancadeba-confirmation::backdrop {
+  background: #000a;
+}
+
+.ancadeba-confirmation h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25em;
+}
+
+.ancadeba-confirmation p {
+  margin: 0 0 1.5rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ancadeba-confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.75rem;
+}
+
+.ancadeba-confirmation button {
+  padding: 0.5em 1em;
+  border: 1px solid currentColor;
+  border-radius: 0.35em;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ancadeba-confirmation button:hover,
+.ancadeba-confirmation button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
