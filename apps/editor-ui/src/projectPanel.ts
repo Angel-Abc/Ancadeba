@@ -1,3 +1,5 @@
+import { renderSceneNavigation } from './sceneNavigation.js'
+import { refreshSaveStatuses, saveStatus } from './formSaveStatus.js'
 import { bindLevelingEditor } from './levelingEditor.js'
 import { z } from 'zod'
 import { savingPolicySchema } from '@ancadeba/schemas'
@@ -77,6 +79,7 @@ export function bindProjectPanel(
     onProjectChange,
     onProjectClose,
     onSceneSelect,
+    onNavigate,
     confirmDiscardDrafts = () =>
       root.ownerDocument.defaultView?.confirm(t('project.discardDrafts')) ?? false,
     confirmDelete = (message: string) => root.ownerDocument.defaultView?.confirm(message) ?? false,
@@ -87,6 +90,7 @@ export function bindProjectPanel(
     onProjectClose?: () => void
     /** Reports the scene of the explorer selection, or undefined outside the scenes section. */
     onSceneSelect?: (scene: { id: string; title: string } | undefined) => void
+    onNavigate?: () => void
     confirmDiscardDrafts?: () => boolean
     confirmDelete?: (message: string) => boolean
     draftStorage?: () => EditorDraftStorage | undefined
@@ -135,9 +139,16 @@ export function bindProjectPanel(
   const recoverFields = root.querySelector<HTMLFieldSetElement>('#project-recover-fields')
   const recoverFolder = root.querySelector<HTMLInputElement>('#project-recover-folder')
   const recoverCancel = root.querySelector<HTMLButtonElement>('#project-recover-cancel')
+  const explorerToggle = root.querySelector<HTMLButtonElement>('#explorer-toggle')
+  const compact = root.ownerDocument.defaultView?.matchMedia?.('(max-width: 960px)')
+
+  const setExplorerExpanded = (expanded: boolean) =>
+    explorerToggle?.setAttribute('aria-expanded', String(expanded))
+
   const value = (id: string) => find<HTMLInputElement>(id).value
 
   const showOpenControls = (show: boolean) => {
+    if (show) setExplorerExpanded(true)
     openControls.hidden = !show
     openToggle.setAttribute('aria-expanded', String(show))
 
@@ -330,6 +341,8 @@ export function bindProjectPanel(
   const clipboardElement = treeElement && root.querySelector<HTMLElement>('#component-clipboard')
   let componentClipboard: ReturnType<typeof bindComponentClipboard> | undefined
   const railElement = treeElement && root.querySelector<HTMLElement>('#section-rail')
+  const sceneList = treeElement && root.querySelector<HTMLElement>('#scene-list')
+  const sceneActions = treeElement && root.querySelector<HTMLElement>('#scene-header-actions')
   let rail: ReturnType<typeof bindSectionRail> | undefined
 
   const sections = [
@@ -447,7 +460,19 @@ export function bindProjectPanel(
     sceneMetadata.hidden =
       node.kind !== 'scene' || !view?.scenes.some((scene) => scene.id === sceneId)
     layout.hidden = sceneMetadata.hidden
-    create.hidden = node.section !== 'scenes' || !['section', 'new-scene'].includes(node.kind)
+    create.hidden = node.kind !== 'new-scene'
+
+    if (sceneList && sceneActions)
+      renderSceneNavigation(
+        sceneList,
+        sceneActions,
+        node,
+        (key) => tree?.select(key),
+        t,
+        busy,
+        fields.disabled,
+      )
+
     fields.hidden = metadata.hidden && sceneMetadata.hidden && create.hidden
     find('assets-panel').hidden = node.section !== 'assets' && !graphic
 
@@ -563,6 +588,15 @@ export function bindProjectPanel(
         ? t('project.heading')
         : [sectionLabel, parentLabel].filter(Boolean).join(' › ')
     find('workspace-heading').textContent = node.kind === 'section' ? sectionLabel : node.label
+
+    if (explorerToggle) {
+      explorerToggle.hidden = !view
+      find('explorer-selection').textContent =
+        node.section === 'maps' && node.kind === 'section'
+          ? mapEditor?.currentMap() || t('maps.new')
+          : [parentLabel, find('workspace-heading').textContent].filter(Boolean).join(' › ')
+    }
+
     rail?.render(view ? node.section : undefined)
     renderHistoryControls()
 
@@ -1062,6 +1096,8 @@ export function bindProjectPanel(
   const controller = new ProjectEditorController(client, (state, replaceFields) => {
     draftRecovery?.beforeRender()
     render(state, replaceFields)
+
+    if (treeElement) refreshSaveStatuses(workspace)
     draftRecovery?.afterRender(state)
   })
 
@@ -1086,8 +1122,14 @@ export function bindProjectPanel(
       },
     )
 
+  const copyButton =
+    clipboardElement && sceneControlsElement
+      ? root.ownerDocument.createElement('button')
+      : undefined
+
   if (clipboardElement)
     componentClipboard = bindComponentClipboard(clipboardElement, t, {
+      copyButton,
       copy: (sceneId, componentId) => controller.copyComponent(sceneId, componentId),
       save: (command) => {
         void controller.save(command)
@@ -1108,6 +1150,7 @@ export function bindProjectPanel(
 
   if (sceneControlsElement)
     sceneControls = bindSceneControls(sceneControlsElement, t, {
+      copyButton,
       save: (command) => {
         void controller.save(command)
       },
@@ -1317,7 +1360,26 @@ export function bindProjectPanel(
     tree = bindProjectTree(
       treeElement,
       find<HTMLInputElement>('project-search'),
-      navigate,
+      (node, interactive) => {
+        const fromPane = interactive && workspace.contains(root.ownerDocument.activeElement)
+        const selected = navigate(node)
+
+        if (interactive && !selected && compact?.matches) setExplorerExpanded(true)
+
+        if (interactive && selected) {
+          onNavigate?.()
+
+          if (compact?.matches) {
+            setExplorerExpanded(false)
+            find('workspace-heading').focus({ preventScroll: true })
+            const workbench = workspace.parentElement
+
+            if (workbench) workbench.scrollTop = 0
+          } else if (fromPane) find('workspace-heading').focus()
+        }
+
+        return selected
+      },
       t,
       sections,
     )
@@ -1332,6 +1394,8 @@ export function bindProjectPanel(
 
   const unsubscribeLanguage = subscribeLanguageChanges?.(() => {
     refreshLanguage()
+
+    if (treeElement) refreshSaveStatuses(workspace)
     renderProjectChoices(folder.value)
     renderOpenControls()
     draftRecovery?.languageChanged()
@@ -1343,6 +1407,20 @@ export function bindProjectPanel(
     element.addEventListener(event, listener)
     listeners.push(() => element.removeEventListener(event, listener))
   }
+
+  if (treeElement) {
+    const refresh = () => queueMicrotask(() => refreshSaveStatuses(workspace))
+
+    for (const event of ['input', 'change', 'click', 'keyup']) on(workspace, event, refresh)
+  }
+
+  if (explorerToggle)
+    on(explorerToggle, 'click', () => {
+      const expanded = explorerToggle.getAttribute('aria-expanded') !== 'true'
+      setExplorerExpanded(expanded)
+
+      if (expanded && openControls.hidden) tree?.focusSelection()
+    })
 
   on(openToggle, 'click', () => {
     const show = Boolean(openControls.hidden)
@@ -1601,6 +1679,8 @@ export function bindProjectPanel(
       if (scene) sceneTranslations.render(view, scene, false)
       renderHistoryControls()
 
+      if (treeElement) refreshSaveStatuses(workspace)
+
       return failed
     },
   )
@@ -1657,6 +1737,9 @@ export function bindProjectPanel(
   })
 
   for (const form of [metadata, sceneMetadata, layout, create]) {
+    form
+      .querySelector?.('[data-save-actions]')
+      ?.append(saveStatus(root.ownerDocument, t, () => dirtyForms.has(form.id)))
     on(form, 'input', () => {
       dirtyForms.add(form.id)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)

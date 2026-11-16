@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { combatPassivesForm } from './combatPassiveForms.js'
 import { combatRulesetReferences } from '@ancadeba/schemas'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -206,7 +207,11 @@ export function bindCombatLibraryEditor(
     identity.querySelector('input')!.readOnly = !creating
     const entries = scopedFolds(controls, `library:${current.id}`)
     form.append(
-      saveBar(document, saveButton),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => dirty),
+      ),
       usage,
       entryUsage,
       identity,

@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { gameRulesSchema } from '@ancadeba/schemas'
@@ -137,6 +138,7 @@ export function bindRulesPanel(
       saveBar(
         document,
         saveButton,
+        saveStatus(document, t, () => rulesDirty),
         rulesControls.button(t('rules.discard'), () => {
           newRuleId = ''
           resetRules()

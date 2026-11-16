@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { combatSourceSchema } from '@ancadeba/schemas'
@@ -304,7 +305,12 @@ export function bindCombatEditor(
     button.type = 'submit'
     button.textContent = t('combat.saveEncounter')
     form.append(
-      saveBar(document, button, controls.button(t('combat.discard'), reset)),
+      saveBar(
+        document,
+        button,
+        saveStatus(document, t, () => dirty),
+        controls.button(t('combat.discard'), reset),
+      ),
       controls.section(
         'encounter-shared',
         sharedCombatForm(

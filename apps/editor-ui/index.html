@@ -59,8 +59,16 @@
               Preview
             </button>
           </div>
-          <form id="preview-form" class="preview-actions">
+          <div class="export-controls">
             <button id="game-export" type="button" data-i18n="export.button">Export</button>
+            <div id="export-feedback" class="export-feedback" hidden>
+              <p id="export-status" class="help" role="status"></p>
+              <p id="export-error" class="error" role="alert" hidden></p>
+              <a id="export-download" hidden data-i18n="export.download">Download ZIP again</a>
+              <button id="export-dismiss" type="button" data-i18n="export.dismiss">Dismiss</button>
+            </div>
+          </div>
+          <form id="preview-form" class="preview-actions">
             <button id="preview-stop" type="button" disabled data-i18n="preview.stop">Stop</button>
             <button id="preview-start" type="submit" class="primary" data-i18n="preview.start">
               Play
@@ -83,7 +91,18 @@
           data-i18n-aria-label="rail.label"
           hidden
         ></nav>
-        <aside class="project-sidebar" aria-labelledby="tree-heading">
+        <button
+          id="explorer-toggle"
+          class="explorer-toggle"
+          type="button"
+          aria-controls="project-sidebar"
+          aria-expanded="true"
+          hidden
+        >
+          <span data-i18n="tree.heading">Project explorer</span>
+          <span id="explorer-selection"></span>
+        </button>
+        <aside id="project-sidebar" class="project-sidebar" aria-labelledby="tree-heading">
           <h2 id="tree-heading" data-i18n="tree.heading">Project explorer</h2>
           <form id="project-open-controls">
             <label for="editor-folder" data-i18n="project.available">Available games</label>
@@ -389,11 +408,15 @@
         <div id="editor-workspace" class="editor-workspace" hidden>
           <section id="project-editor" class="editor-pane" aria-labelledby="editor-heading">
             <header class="pane-header">
-              <h2 id="editor-heading" data-i18n="project.heading">Game project</h2>
-              <h3 id="workspace-heading"></h3>
+              <div class="pane-titles">
+                <h2 id="editor-heading" data-i18n="project.heading">Game project</h2>
+                <h3 id="workspace-heading" tabindex="-1"></h3>
+              </div>
+              <div id="scene-header-actions" class="preview-actions" hidden></div>
             </header>
             <div class="editor-pane-body">
               <p id="editor-error" class="error" role="alert" hidden></p>
+              <ul id="scene-list" class="scene-list" hidden></ul>
               <section id="project-repair" class="project-repair" hidden></section>
               <fieldset id="editor-fields" disabled>
                 <legend class="sr-only" data-i18n="project.properties">Project properties</legend>
@@ -457,7 +480,9 @@
                     throughout a scene or near a map position. Opening the Escape menu pauses
                     gameplay; Escape or Resume returns to it.
                   </p>
-                  <button type="submit" data-i18n="game.save">Save game properties</button>
+                  <div class="preview-actions" data-save-actions>
+                    <button type="submit" data-i18n="game.save">Save game properties</button>
+                  </div>
                 </form>
                 <label for="editor-scenes" data-i18n="scene.label">Scene</label
                 ><select id="editor-scenes"></select>
@@ -497,14 +522,18 @@
                     Choose keys saved in Localization. Leave a key empty to use literal text.
                     Missing language translations use the default-language text.
                   </p>
-                  <button type="submit" data-i18n="scene.save">Save scene properties</button>
+                  <div class="preview-actions" data-save-actions>
+                    <button type="submit" data-i18n="scene.save">Save scene properties</button>
+                  </div>
                 </form>
                 <form id="scene-layout" hidden>
                   <label for="scene-rows" data-i18n="grid.rows">Rows</label
                   ><input id="scene-rows" type="number" min="1" step="1" required />
                   <label for="scene-columns" data-i18n="grid.columns">Columns</label
                   ><input id="scene-columns" type="number" min="1" step="1" required />
-                  <button type="submit" data-i18n="grid.save">Save grid</button>
+                  <div class="preview-actions" data-save-actions>
+                    <button type="submit" data-i18n="grid.save">Save grid</button>
+                  </div>
                 </form>
                 <form id="scene-create">
                   <h3 data-i18n="scene.add">Add scene</h3>
@@ -528,7 +557,9 @@
                     value="16"
                     required
                   />
-                  <button type="submit" data-i18n="scene.create">Create scene</button>
+                  <div class="preview-actions" data-save-actions>
+                    <button type="submit" data-i18n="scene.create">Create scene</button>
+                  </div>
                 </form>
               </fieldset>
               <section id="assets-panel" aria-label="Assets"></section>
@@ -593,11 +624,6 @@
               </p>
             </header>
             <div class="preview-messages">
-              <p id="export-status" class="help" role="status"></p>
-              <p id="export-error" class="error" role="alert" hidden></p>
-              <a id="export-download" class="export-download" hidden data-i18n="export.download"
-                >Download ZIP again</a
-              >
               <p id="preview-error" class="error" role="alert" hidden></p>
             </div>
             <div

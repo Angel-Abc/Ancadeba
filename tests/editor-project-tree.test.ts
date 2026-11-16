@@ -15,6 +15,7 @@ import {
   type ProjectTreeNode,
 } from '../apps/editor-ui/src/projectTree.js'
 import { bindProjectTree } from '../apps/editor-ui/src/projectTreeView.js'
+import { renderSceneNavigation } from '../apps/editor-ui/src/sceneNavigation.js'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
 
 const view = projectViewSchema.parse({
@@ -113,13 +114,16 @@ function setup(accept: (node: ProjectTreeNode) => boolean = () => true) {
   const root = document.createElement()
   const search = document.createElement()
   const selections: string[] = []
+  const interactiveSelections: string[] = []
 
   const tree = bindProjectTree(
     root.asElement(),
     search.asInput(),
-    (node) => {
+    (node, interactive) => {
       if (!accept(node)) return false
       selections.push(node.key)
+
+      if (interactive) interactiveSelections.push(node.key)
 
       return true
     },
@@ -142,10 +146,47 @@ function setup(accept: (node: ProjectTreeNode) => boolean = () => true) {
     root.dispatchEvent(event)
   }
 
-  return { tree, root, search, selections, row, key, document }
+  return { tree, root, search, selections, interactiveSelections, row, key, document }
 }
 
 describe('extensible project explorer', () => {
+  it('opens existing scenes from the overview and sends header actions through tree navigation', () => {
+    const document = new TreeDocument()
+    const list = document.createElement()
+    const actions = document.createElement()
+    const selected: string[] = []
+    const scenes = buildProjectTree(view, t).find((node) => node.key === 'scenes')!
+
+    const show = (node: ProjectTreeNode) =>
+      renderSceneNavigation(
+        list.asElement(),
+        actions.asElement(),
+        node,
+        (key) => selected.push(key),
+        t,
+        false,
+        false,
+      )
+
+    show(scenes)
+    expect(actions.children.map((button) => button.textContent)).toEqual(['New scene'])
+    actions.children[0]!.dispatchEvent(new Event('click'))
+    list.children[0]!.children[0]!.dispatchEvent(new Event('click'))
+    show(scenes.children![0]!)
+    expect(list.children).toHaveLength(0)
+    expect(actions.children.map((button) => button.textContent)).toEqual([
+      'Add component',
+      'Add graphic',
+    ])
+
+    for (const button of actions.children) button.dispatchEvent(new Event('click'))
+    expect(selected).toEqual([
+      'scene-new',
+      'scene:standard',
+      'component-new:standard',
+      'graphic-new:standard',
+    ])
+  })
   it('separates scene components from shared assets and marks startup and scene context', () => {
     const nodes = buildProjectTree(view, t)
     expect(nodes.map((node) => node.key)).toEqual(['game', 'scenes', 'assets'])
@@ -310,7 +351,10 @@ describe('extensible project explorer', () => {
   })
 
   it('keeps selection when navigation is refused or busy and falls back after removal', () => {
-    const { tree, row, selections } = setup((node) => node.key !== 'scene:standard')
+    const { tree, row, selections, interactiveSelections } = setup(
+      (node) => node.key !== 'scene:standard',
+    )
+
     tree.select('scene:standard')
     expect(row('game').getAttribute('aria-selected')).toBe('true')
     tree.render(view, true)
@@ -321,6 +365,7 @@ describe('extensible project explorer', () => {
     expect(row('asset:portrait').getAttribute('aria-selected')).toBe('true')
     tree.render({ ...view, assets: undefined }, false)
     expect(row('game').getAttribute('aria-selected')).toBe('true')
+    expect(interactiveSelections).toEqual(['asset:portrait'])
     tree.dispose()
   })
 

@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { inventorySchema } from '@ancadeba/schemas'
@@ -274,7 +275,13 @@ export function bindItemEditor(
     const button = document.createElement('button')
     button.type = 'submit'
     button.textContent = t('items.save')
-    form.append(saveBar(document, button))
+    form.append(
+      saveBar(
+        document,
+        button,
+        saveStatus(document, t, () => dirty),
+      ),
+    )
 
     if (item)
       form.append(

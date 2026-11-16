@@ -174,6 +174,9 @@ export function bindWorkspaceLayout(
   apply()
 
   return {
+    revealEditor(previewActive: boolean) {
+      if (layout === 'preview') setLayout(previewActive ? 'split' : 'edit')
+    },
     /** Starting the game from the editor-only layout brings the preview back into view. */
     revealPreview() {
       if (layout === 'edit') setLayout('split')

@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerFormDraft } from './editorDraftState.js'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
 import type { GameBindingDefinition, ButtonComponentDefinition } from '@ancadeba/schemas'
@@ -23,11 +24,11 @@ export const ruleTriggerSections = ['buttons', 'inspection', 'actions', 'nearby'
 
 export type RuleTriggerSection = (typeof ruleTriggerSections)[number]
 
-function submit(form: HTMLFormElement, title: string, action: () => void) {
+function submit(form: HTMLFormElement, title: string, status: HTMLElement, action: () => void) {
   const button = form.ownerDocument.createElement('button')
   button.textContent = title
   button.type = 'submit'
-  form.append(button)
+  form.append(button, status)
   form.addEventListener('submit', (event) => {
     event.preventDefault()
     action()
@@ -158,27 +159,31 @@ function buttonTriggers(
           },
         ),
       )
-      submit(form, t('rules.saveButton'), () =>
-        save({
-          type: 'scene.upsertRuleButton',
-          sceneId: scene.id,
-          component: {
-            id,
-            type: 'button',
-            label,
-            placement,
-            ...(labelKey ? { labelKey } : {}),
-            ...(action
-              ? {
-                  action: {
-                    type: 'request-action',
-                    action,
-                    ...(enabled ? { enabledWhen: binding(enabled) } : {}),
-                  },
-                }
-              : {}),
-          },
-        }),
+      submit(
+        form,
+        t('rules.saveButton'),
+        saveStatus(form.ownerDocument, t, () => dirty),
+        () =>
+          save({
+            type: 'scene.upsertRuleButton',
+            sceneId: scene.id,
+            component: {
+              id,
+              type: 'button',
+              label,
+              placement,
+              ...(labelKey ? { labelKey } : {}),
+              ...(action
+                ? {
+                    action: {
+                      type: 'request-action',
+                      action,
+                      ...(enabled ? { enabledWhen: binding(enabled) } : {}),
+                    },
+                  }
+                : {}),
+            },
+          }),
       )
       formArea.replaceChildren(form)
     }
@@ -276,12 +281,16 @@ function inspectionTriggers(
         ),
       )
       form.append(t('rules.inspectionHelp'))
-      submit(form, t('rules.saveInspection'), () =>
-        save({
-          type: 'inventory.setRuleInspection',
-          itemType,
-          inspection: action ? { action, details: binding(path), inline } : null,
-        }),
+      submit(
+        form,
+        t('rules.saveInspection'),
+        saveStatus(form.ownerDocument, t, () => dirty),
+        () =>
+          save({
+            type: 'inventory.setRuleInspection',
+            itemType,
+            inspection: action ? { action, details: binding(path), inline } : null,
+          }),
       )
       formArea.replaceChildren(form)
     }

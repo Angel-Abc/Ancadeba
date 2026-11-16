@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { componentClipboardSchema } from '@ancadeba/editor-core'
@@ -21,10 +22,12 @@ export function bindComponentClipboard(
     save,
     canChange,
     onSaved,
+    copyButton,
   }: {
     copy: (sceneId: string, componentId: string) => Promise<ComponentClipboard | undefined>
     save: (command: EditorCommand) => void
     canChange: () => boolean
+    copyButton?: HTMLButtonElement | undefined
     onSaved: (command: Extract<EditorCommand, { type: 'scene.pasteComponent' }>) => void
   },
 ) {
@@ -149,6 +152,11 @@ export function bindComponentClipboard(
     save(result.data)
   }
 
+  const buttonCopy = copyButton ?? document.createElement('button')
+  buttonCopy.type = 'button'
+  buttonCopy.setAttribute('aria-keyshortcuts', 'Control+c Meta+c')
+  buttonCopy.addEventListener('click', () => void copySelected())
+
   function render() {
     fields.replaceChildren()
     const current = scene()
@@ -156,15 +164,12 @@ export function bindComponentClipboard(
     if (!current) return
     fields.disabled = busy || copying || !view?.game || Boolean(view.diagnostics.length)
 
-    if (componentId && current.components.some(({ id }) => id === componentId)) {
-      const button = controls.button(t('clipboard.copy'), () => {
-        void copySelected()
-      })
+    buttonCopy.textContent = t('clipboard.copy')
+    buttonCopy.title = t('shortcuts.copy')
+    buttonCopy.disabled = fields.disabled
 
-      button.setAttribute('aria-keyshortcuts', 'Control+c Meta+c')
-      button.title = t('shortcuts.copy')
-      fields.append(button)
-    }
+    if (!copyButton && componentId && current.components.some(({ id }) => id === componentId))
+      fields.append(buttonCopy)
 
     if (!clipboard) return
     const status = document.createElement('p')
@@ -195,7 +200,11 @@ export function bindComponentClipboard(
           'number',
         ),
       ),
-      saveBar(document, button),
+      saveBar(
+        document,
+        button,
+        saveStatus(document, t, () => dirty),
+      ),
     )
     form.addEventListener('submit', (event) => {
       event.preventDefault()

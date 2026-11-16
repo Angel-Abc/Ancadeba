@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
@@ -188,6 +189,7 @@ export function bindStylesheetEditor(
       saveBar(
         document,
         saveButton,
+        saveStatus(document, t, () => dirty),
         button(t('stylesheets.discard'), () => reset(true)),
       ),
       active,

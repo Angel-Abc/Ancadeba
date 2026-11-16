@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { actionBarComponentSchema } from '@ancadeba/schemas'
@@ -168,7 +169,11 @@ export function bindActionBarPanel(
     saveButton.type = 'submit'
     saveButton.textContent = t('controls.saveBar')
     form.append(
-      saveBar(document, saveButton),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => barDirty),
+      ),
       ...actionBarForm(
         barControls,
         view,
@@ -257,7 +262,11 @@ export function bindActionBarPanel(
     form.append(
       location,
       help,
-      saveBar(document, saveButton),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => inputDirty),
+      ),
       ...inputDefinitionForm(
         inputControls,
         inputDraft,

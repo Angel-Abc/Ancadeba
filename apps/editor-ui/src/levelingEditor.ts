@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -253,7 +254,12 @@ export function bindLevelingEditor(
     saveButton.type = 'submit'
     saveButton.textContent = t('leveling.save')
     form.append(
-      saveBar(document, saveButton, button(t('leveling.discard'), reset)),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => dirty),
+        button(t('leveling.discard'), reset),
+      ),
       input(t('leveling.profileId'), current.id, (value) => {
         current.id = value.trim()
       }),

@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -243,7 +244,11 @@ export function bindStoryEditor(
       button.type = 'submit'
       button.textContent = t('story.saveJournal')
       form.append(
-        saveBar(document, button),
+        saveBar(
+          document,
+          button,
+          saveStatus(document, t, () => journalDirty),
+        ),
         journalControls.input(t('story.journalId'), current.id, (value) => {
           current.id = value
         }),
@@ -333,7 +338,12 @@ export function bindStoryEditor(
     button.textContent =
       current.kind === 'dialogue' ? t('story.saveDialogue') : t('story.saveQuest')
     form.append(
-      saveBar(document, button, controls.button(t('story.discard'), reset)),
+      saveBar(
+        document,
+        button,
+        saveStatus(document, t, () => dirty),
+        controls.button(t('story.discard'), reset),
+      ),
       controls.input(t('story.definitionId'), current.data.id, (value) => {
         current.data.id = value.trim()
       }),

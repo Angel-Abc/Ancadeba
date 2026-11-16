@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft, registerFormDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import {
@@ -78,20 +79,20 @@ export function bindAssetsPanel(
     <p class="help" data-i18n="assets.temporary"></p>
     <form id="asset-palettes"><h4 data-i18n="assets.colors"></h4><div id="asset-color-fields"></div>
       <label for="asset-preset-name" data-i18n="assets.presetName"></label><input id="asset-preset-name" pattern="[a-zA-Z0-9_-]+" />
-      <div class="preview-actions"><button type="button" id="asset-save-defaults" data-i18n="assets.saveDefaults"></button><button type="submit" data-i18n="assets.savePreset"></button><button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button></div>
+      <div class="preview-actions" data-save-actions><button type="button" id="asset-save-defaults" data-i18n="assets.saveDefaults"></button><button type="submit" data-i18n="assets.savePreset"></button><button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button></div>
     </form>
     </div><form id="asset-image"><h4 id="asset-image-heading" data-i18n="assets.import"></h4>
       <label for="asset-image-id" data-i18n="metadata.id"></label><input id="asset-image-id" required pattern="[a-zA-Z0-9_-]+" />
       <label for="asset-format" data-i18n="assets.format"></label><select id="asset-format"><option>svg</option><option>png</option><option>jpeg</option><option>webp</option></select>
       <label for="asset-file" data-i18n="assets.file"></label><input id="asset-file" type="file" accept=".svg,.png,.jpg,.jpeg,.webp" />
       <label for="asset-source" data-i18n="assets.source"></label><input id="asset-source" placeholder="assets/images/tunic.svg" />
-      <button type="submit" data-i18n="assets.saveImage"></button>
+      <div class="preview-actions" data-save-actions><button type="submit" data-i18n="assets.saveImage"></button></div>
     </form>
     <details><summary data-i18n="assets.definitions"></summary><form id="asset-definition">
       <label for="asset-kind" data-i18n="assets.kind"></label><select id="asset-kind"><option value="images" data-i18n="assets.image"></option><option value="parts" data-i18n="assets.part"></option><option value="compositions" data-i18n="assets.composition"></option></select>
       <label for="asset-definition-id" data-i18n="metadata.id"></label><input id="asset-definition-id" required pattern="[a-zA-Z0-9_-]+" />
       <label for="asset-json" data-i18n="assets.definitionJson"></label><textarea id="asset-json" rows="12" spellcheck="false"></textarea>
-      <div class="preview-actions"><button type="submit" data-i18n="assets.saveDefinition"></button><button id="asset-remove" type="button" data-i18n="assets.remove"></button></div>
+      <div class="preview-actions" data-save-actions><button type="submit" data-i18n="assets.saveDefinition"></button><button id="asset-remove" type="button" data-i18n="assets.remove"></button></div>
     </form></details>
     <section id="graphic-definitions-editor" hidden></section>
     <section id="scene-graphic-editor" hidden></section>
@@ -536,7 +537,10 @@ export function bindAssetsPanel(
   on('asset-save-defaults', 'click', () => savePalette('defaults'))
   on('asset-remove-preset', 'click', () => savePalette('remove'))
 
-  for (const id of ['asset-image', 'asset-palettes', 'asset-definition'])
+  for (const id of ['asset-image', 'asset-palettes', 'asset-definition']) {
+    find(id)
+      .querySelector?.('[data-save-actions]')
+      ?.append(saveStatus(document, t, () => dirty.has(id)))
     on(id, 'input', (event) => {
       if (id === 'asset-palettes' && event.target instanceof HTMLSelectElement) return
       dirty.add(id)
@@ -544,6 +548,7 @@ export function bindAssetsPanel(
       if (id === 'asset-definition' || id === 'asset-palettes')
         find<HTMLSelectElement>('asset-select').disabled = true
     })
+  }
 
   for (const node of panel.querySelectorAll<HTMLElement>('[data-i18n]'))
     node.textContent = t(node.dataset.i18n!)

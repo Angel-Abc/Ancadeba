@@ -932,6 +932,7 @@ export function bindMapEditor(
     navigate,
     draftHistory,
     restoreDraft,
+    currentMap: () => (creating ? undefined : selected),
     hasDrafts: () => dirty,
     dispose: () => {
       board?.dispose()

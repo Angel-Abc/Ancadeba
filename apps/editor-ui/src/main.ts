@@ -64,6 +64,8 @@ const error = element<HTMLElement>('#preview-error')
 const content = element<HTMLElement>('#preview-content')
 const empty = element<HTMLElement>('#preview-empty')
 const exportButton = element<HTMLButtonElement>('#game-export')
+const exportFeedback = element<HTMLElement>('#export-feedback')
+const exportDismiss = element<HTMLButtonElement>('#export-dismiss')
 const exportStatus = element<HTMLElement>('#export-status')
 const exportError = element<HTMLElement>('#export-error')
 const exportDownload = element<HTMLAnchorElement>('#export-download')
@@ -163,6 +165,8 @@ const container = new ContainerBuilder({
     exportState = state
     exportMessage = message
     renderExportState()
+    exportFeedback.hidden = state === 'idle'
+    exportDismiss.hidden = exporting
     exportError.hidden = state !== 'error'
 
     if (state !== 'ready') clearDownload()
@@ -208,6 +212,13 @@ stop.addEventListener('click', onStop)
 
 exportButton.addEventListener('click', onExport)
 
+const dismissExport = () => {
+  exportFeedback.hidden = true
+  exportButton.focus()
+}
+
+exportDismiss.addEventListener('click', dismissExport)
+
 controller.stop()
 
 const projectPanel = bindProjectPanel(
@@ -216,6 +227,7 @@ const projectPanel = bindProjectPanel(
   t,
   subscribeLanguageChanges,
   {
+    onNavigate: () => layout.revealEditor(previewState !== 'stopped'),
     onProjectChange(path, storageKey) {
       const restartPreview = previewState !== 'stopped'
       projectPath = path
@@ -258,6 +270,7 @@ import.meta.hot?.dispose(() => {
   form.removeEventListener('submit', onStart)
   stop.removeEventListener('click', onStop)
   exportButton.removeEventListener('click', onExport)
+  exportDismiss.removeEventListener('click', dismissExport)
   exportController.dispose()
   clearDownload()
   controller.dispose()

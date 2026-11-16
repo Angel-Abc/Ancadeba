@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -188,7 +189,15 @@ export function bindLocalizationEditor(
     const help = document.createElement('p')
     help.className = 'help'
     help.textContent = t('localization.help')
-    form.append(saveBar(document, submit, button(t('localization.discard'), reset)), help)
+    form.append(
+      saveBar(
+        document,
+        submit,
+        saveStatus(document, t, () => dirty),
+        button(t('localization.discard'), reset),
+      ),
+      help,
+    )
     form.append(
       group(
         t('localization.languages'),

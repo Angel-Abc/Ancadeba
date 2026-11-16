@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import {
   combatScenarioAssertionsForm,
   newCombatScenarioAssertion,
@@ -627,6 +628,7 @@ export function combatScenarioForm(
         }),
         !view.combatSources?.[source.id],
       ),
+      saveStatus(results.ownerDocument, t, () => state.dirty),
       button(
         text('duplicate'),
         act(() => {

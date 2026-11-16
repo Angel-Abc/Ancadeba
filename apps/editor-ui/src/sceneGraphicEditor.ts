@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -211,7 +212,12 @@ export function bindSceneGraphicEditor(
     ]
 
     form.append(
-      saveBar(document, submit, button(t('graphic.discard'), reset)),
+      saveBar(
+        document,
+        submit,
+        saveStatus(document, t, () => dirty),
+        button(t('graphic.discard'), reset),
+      ),
       help,
       identity,
       select(t('graphic.visual'), current.visual, visuals, (value) =>

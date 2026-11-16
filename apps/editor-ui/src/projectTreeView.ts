@@ -12,7 +12,7 @@ import {
 export function bindProjectTree(
   container: HTMLElement,
   search: HTMLInputElement,
-  onSelect: (node: ProjectTreeNode) => boolean,
+  onSelect: (node: ProjectTreeNode, interactive: boolean) => boolean,
   t: Translate,
   sections: readonly ProjectTreeSection[] = projectTreeSections,
 ) {
@@ -134,7 +134,7 @@ export function bindProjectTree(
   }
 
   const select = (node: ProjectTreeNode) => {
-    if (busy || !onSelect(node)) return
+    if (busy || !onSelect(node, true)) return
     selected = node.key
 
     for (const row of rows)
@@ -221,6 +221,15 @@ export function bindProjectTree(
   }
 
   return {
+    focusSelection() {
+      revealSelected()
+      render()
+
+      if (rows.some((row) => row.node.key === selected)) {
+        scrollSelectedToTop()
+        focus(selected)
+      } else search.focus()
+    },
     /** `expand` opens the selected branch and brings it to the top, as the section rail does. */
     select(key: string, { expand = false } = {}) {
       const node = flattenProjectTree(nodes).find((node) => node.key === key)
@@ -248,7 +257,7 @@ export function bindProjectTree(
       if (!all.some((node) => node.key === selected)) {
         const fallback = all.find((node) => node.key === 'game')
 
-        if (fallback && !busy && onSelect(fallback)) selected = fallback.key
+        if (fallback && !busy && onSelect(fallback, false)) selected = fallback.key
       }
 
       const active = document.activeElement

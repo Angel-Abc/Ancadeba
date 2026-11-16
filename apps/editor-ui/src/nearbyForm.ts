@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { nearbyComponentSchema } from '@ancadeba/schemas'
@@ -258,6 +259,7 @@ export function nearbyForm(
     submit.textContent = t('nearby.save')
     form.append(
       submit,
+      saveStatus(form.ownerDocument, t, () => dirty),
       button(t('nearby.discard'), () => {
         reset()
         onDiscard?.()

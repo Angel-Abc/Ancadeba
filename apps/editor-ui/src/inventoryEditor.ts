@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -238,7 +239,12 @@ export function bindInventoryEditor(
     )
 
     form.append(
-      saveBar(document, saveButton, controls.button(t('items.discardInventory'), reset)),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => dirty),
+        controls.button(t('items.discardInventory'), reset),
+      ),
       picker,
       name,
       help,

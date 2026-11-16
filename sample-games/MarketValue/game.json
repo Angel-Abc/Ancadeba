@@ -11,5 +11,6 @@
   "menu-scene": "game-menu",
   "initial-scene": "start",
   "stylesheet": "theme.css",
-  "scenes": ["start", "adventure", "game-menu", "save", "load", "settings"]
+  "scenes": ["start", "adventure", "game-menu", "save", "load", "settings"],
+  "maps": []
 }

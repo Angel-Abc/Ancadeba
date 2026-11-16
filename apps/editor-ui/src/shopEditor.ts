@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -158,7 +159,11 @@ export function bindShopEditor(
     saveButton.type = 'submit'
     saveButton.textContent = t('shops.save')
     form.append(
-      saveBar(document, saveButton),
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => dirty),
+      ),
       ...shopForm(controls, view, sceneId, draft, panels, render),
     )
     form.addEventListener('submit', (event) => {

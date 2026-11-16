@@ -1,4 +1,5 @@
 import type { ProjectRepairRequest, ProjectRepairCheck } from '@ancadeba/editor-core'
+import { saveStatus } from './formSaveStatus.js'
 import type { Translate } from '@ancadeba/utilities'
 import { z } from 'zod'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -48,7 +49,14 @@ export function bindProjectRepair(
   check.type = save.type = discard.type = 'button'
   const buttons = document.createElement('div')
   buttons.className = 'preview-actions'
-  buttons.append(check, save, discard, generate)
+  let dirty = false
+  buttons.append(
+    check,
+    save,
+    saveStatus(document, t, () => dirty),
+    discard,
+    generate,
+  )
   const feedback = document.createElement('p')
   feedback.setAttribute('role', 'status')
   feedback.setAttribute('aria-live', 'polite')
@@ -60,7 +68,6 @@ export function bindProjectRepair(
   let file = ''
   let text = ''
   let revision = ''
-  let dirty = false
   let submitting = false
   let disposed = false
   let checked: { text: string; result: ProjectRepairCheck } | undefined

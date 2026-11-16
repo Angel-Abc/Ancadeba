@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { sceneEntranceFields } from './sceneEntranceFields.js'
 import { mapInteractFields } from './mapInteractFields.js'
@@ -211,6 +212,7 @@ export function bindComponentEditor(
       saveBar(
         document,
         saveButton,
+        saveStatus(document, t, () => dirty),
         controls.button(t('component.discard'), reset),
         ...(creating
           ? [

@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { statusPanelComponentSchema } from '@ancadeba/schemas'
@@ -167,7 +168,11 @@ export function bindStatusPanelEditor(
     submitButton.type = 'submit'
     submitButton.textContent = t('status.save')
     form.append(
-      saveBar(document, submitButton),
+      saveBar(
+        document,
+        submitButton,
+        saveStatus(document, t, () => dirty),
+      ),
       ...statusPanelForm(controls, view, draft, render, !creating),
     )
     form.addEventListener('submit', (event) => {

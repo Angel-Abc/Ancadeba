@@ -1,3 +1,4 @@
+import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
@@ -84,6 +85,7 @@ export function inventoryActionsForm(
     submit.textContent = t('items.saveItemActions')
     form.append(
       submit,
+      saveStatus(form.ownerDocument, t, () => dirty),
       button(t('items.discardItemActions'), () => {
         reset()
         onDiscard()

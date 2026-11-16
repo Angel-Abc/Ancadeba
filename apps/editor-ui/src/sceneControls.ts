@@ -15,10 +15,12 @@ export function bindSceneControls(
     canChange,
     confirmDelete,
     onSaved,
+    copyButton,
   }: {
     save: (command: EditorCommand) => void
     canChange: () => boolean
     confirmDelete: (message: string) => boolean
+    copyButton?: HTMLButtonElement | undefined
     onSaved: (command: EditorCommand, view: ProjectView) => void
   },
 ) {
@@ -119,7 +121,10 @@ export function bindSceneControls(
       button.title = t('shortcuts.duplicate')
     }
 
-    element.append(...children, saveBar(document, button))
+    const actions = saveBar(document, button)
+
+    if (buttonLabel === 'component.duplicate' && copyButton) actions.append(copyButton)
+    element.append(...children, actions)
     element.addEventListener('submit', (event) => {
       event.preventDefault()
       submit(command())
@@ -156,6 +161,8 @@ export function bindSceneControls(
           const help = document.createElement('p')
           help.textContent = t('component.singletonCopy')
           fields.append(help)
+
+          if (copyButton) fields.append(copyButton)
         } else {
           fields.append(
             form(
@@ -173,7 +180,9 @@ export function bindSceneControls(
           )
         }
 
-        fields.append(
+        const reorder = document.createElement('div')
+        reorder.className = 'preview-actions'
+        reorder.append(
           controls.button(
             t('component.moveUp'),
             () =>
@@ -196,9 +205,11 @@ export function bindSceneControls(
               }),
             index === current.components.length - 1,
           ),
-          deleteButton,
-          controls.button(t('component.discardControls'), reset),
         )
+        const destructive = document.createElement('div')
+        destructive.className = 'component-delete-actions'
+        destructive.append(deleteButton)
+        fields.append(reorder, controls.button(t('component.discardControls'), reset), destructive)
       }
 
       return
