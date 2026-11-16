@@ -1562,13 +1562,78 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 
 .map-editor-form,
-.map-editor-form > fieldset {
+.map-editor-page,
+.map-editor-page fieldset,
+.map-paint-canvas,
+.map-placement-canvas,
+.map-placement-properties {
   display: grid;
   gap: 0.75rem;
+  min-width: 0;
+  align-content: start;
 }
 
-.map-editor-form > fieldset {
+.map-editor-page fieldset {
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.map-editor-page[hidden],
+.map-editor-page [hidden] {
+  display: none;
+}
+
+.map-editor-header {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.map-draft-status {
+  margin-inline-end: auto;
+  color: var(--ed-muted);
+  font-size: 0.85rem;
+}
+
+.map-editor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  gap: 0.25rem;
+}
+
+.map-editor-tabs button[aria-selected='true'],
+.map-placement-tools button[aria-pressed='true'] {
+  border-color: var(--ed-accent);
+  background: var(--ed-selected);
+}
+
+.map-editor-page {
+  container-type: inline-size;
+}
+
+.map-paint-workspace,
+.map-placement-workspace {
+  display: grid;
+  align-items: start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.map-placement-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.map-placement-tools .help {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+@container (min-width: 50rem) {
+  .map-paint-workspace,
+  .map-placement-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+  }
 }
 
 .map-editor-form label {

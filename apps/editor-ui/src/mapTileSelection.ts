@@ -8,6 +8,8 @@ import {
 
 export type MapTileTool = 'paint' | 'select' | 'paste' | 'trigger' | 'object'
 
+type MapPaintTool = Exclude<MapTileTool, 'trigger' | 'object'>
+
 interface SelectedTiles {
   layer: string
   rectangle: TileRectangle
@@ -26,7 +28,7 @@ const contains = (rectangle: TileRectangle, point: TilePoint) =>
 
 /** An editor-local clipboard: map data changes only when a validated paste commits. */
 export class MapTileSelection {
-  tool: MapTileTool = 'paint'
+  tool: MapPaintTool = 'paint'
   selected: SelectedTiles | undefined
   anchor: TilePoint | undefined
   hover: TilePoint | undefined
@@ -109,7 +111,7 @@ export class MapTileSelection {
     this.hover = { x: rectangle.x, y: rectangle.y }
   }
 
-  setTool(tool: MapTileTool) {
+  setTool(tool: MapPaintTool) {
     if (tool !== 'paste' && this.clipboard) delete this.clipboard.source
     this.tool = tool
     this.hover = undefined

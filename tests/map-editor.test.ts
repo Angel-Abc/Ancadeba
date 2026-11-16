@@ -29,6 +29,8 @@ class Element extends EventTarget {
   step = ''
   title = ''
   open = false
+  hidden = false
+  id = ''
   width = 0
   height = 0
   src = ''
@@ -258,6 +260,222 @@ function setup(current = view) {
     },
   }
 }
+
+describe('map editor pages', () => {
+  const page = (ui: ReturnType<typeof setup>, id: string) =>
+    ui.root.all().find((element) => element.id === `map-page-${id}`)!
+
+  const select = (ui: ReturnType<typeof setup>, title: string) =>
+    ui.button(title).dispatchEvent(new Event('click'))
+
+  const current = (map = new MapDraft().data): ProjectView => ({
+    ...view,
+    game: { ...view.game!, maps: ['garden'] },
+    maps: { garden: map },
+    rules: { state: [], actions: { inspect: [{ when: [], effects: [] }] } },
+  })
+
+  it('shows four accessible task pages with keyboard navigation and common draft actions', () => {
+    const ui = setup(current())
+
+    try {
+      const tabs = ui.root.all().filter((element) => element.attributes.get('role') === 'tab')
+      expect(tabs.map((tab) => tab.textContent)).toEqual([
+        'Paint',
+        'Terrain & tilesets',
+        'Objects & triggers',
+        'Map settings',
+      ])
+      expect(page(ui, 'paint').hidden).toBe(false)
+      expect(page(ui, 'paint').contains(ui.control('Paint terrain'))).toBe(true)
+      expect(page(ui, 'terrain').contains(ui.control('Terrain to edit'))).toBe(true)
+      expect(page(ui, 'objects').contains(ui.button('Edit tile-entry triggers'))).toBe(true)
+      expect(page(ui, 'settings').contains(ui.control('Width in tiles'))).toBe(true)
+      expect(page(ui, 'settings').contains(ui.button('Delete map'))).toBe(true)
+
+      const press = (key: string) =>
+        ui.document.activeElement!.dispatchEvent(
+          Object.assign(new Event('keydown', { cancelable: true }), { key }),
+        )
+
+      ui.button('Paint').focus()
+      press('ArrowRight')
+      expect(ui.document.activeElement).toBe(ui.button('Terrain & tilesets'))
+      expect(page(ui, 'terrain').hidden).toBe(false)
+      expect(page(ui, 'paint').hidden).toBe(true)
+      expect(ui.button('Terrain & tilesets').attributes.get('aria-selected')).toBe('true')
+      expect(ui.button('Terrain & tilesets').tabIndex).toBe(0)
+      press('End')
+      expect(ui.document.activeElement).toBe(ui.button('Map settings'))
+      press('ArrowRight')
+      expect(ui.document.activeElement).toBe(ui.button('Paint'))
+      press('ArrowLeft')
+      expect(ui.document.activeElement).toBe(ui.button('Map settings'))
+      press('Home')
+      expect(ui.document.activeElement).toBe(ui.button('Paint'))
+      expect(ui.editor.hasDrafts()).toBe(false)
+      expect(ui.button('Undo map edit').disabled).toBe(true)
+      expect(ui.button('Save map').parent).toBe(ui.button('Undo map edit').parent)
+      expect(ui.saved).toEqual([])
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('edits terrain independently of the paint brush and opens the current brush through its shortcut', async () => {
+    const ui = setup(current())
+
+    try {
+      ui.edit('Paint terrain', 'wall', 'change')
+      select(ui, 'Terrain & tilesets')
+      expect(ui.control('Terrain to edit').value).toBe('ground')
+      ui.edit('Terrain color', '#112233')
+      ui.edit('Terrain to edit', 'wall', 'change')
+      ui.edit('Movement time (ms)', '250')
+      select(ui, 'Paint')
+      expect(ui.control('Paint terrain').value).toBe('wall')
+      ui.tile(0, 0).dispatchEvent(new Event('click'))
+      ui.edit('Paint terrain', 'ground', 'change')
+      select(ui, 'Edit terrain')
+      expect(page(ui, 'terrain').hidden).toBe(false)
+      expect(ui.control('Terrain to edit').value).toBe('ground')
+      expect(ui.control('Terrain color').value).toBe('#112233')
+      await ui.submit()
+      expect(ui.saved[0]).toMatchObject({
+        map: { terrain: { ground: { color: '#112233' }, wall: { movementCostMs: 250 } } },
+      })
+      expect(ui.saved[0]!.type === 'game.upsertMap' && ui.saved[0]!.map.tiles[0]![0]).toBe('wall')
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('retains pending fields, terrain selection and shared undo/redo across all pages and draft recovery', () => {
+    const initial = current()
+    const ui = setup(initial)
+    const recovered = setup(initial)
+
+    try {
+      ui.edit('Paint terrain', 'wall', 'change')
+      ui.tile(0, 0).dispatchEvent(new Event('click'))
+      select(ui, 'Terrain & tilesets')
+      ui.edit('Terrain to edit', 'wall', 'change')
+      ui.edit('Movement time (ms)', '200')
+      ui.edit('New terrain ID', 'water')
+      ui.edit('New tileset ID', 'nature')
+      select(ui, 'Map settings')
+      ui.edit('Width in tiles', '32')
+      select(ui, 'Objects & triggers')
+      select(ui, 'Paint')
+      ui.edit('New layer ID', 'trees')
+      select(ui, 'Terrain & tilesets')
+      expect(ui.control('Terrain to edit').value).toBe('wall')
+      expect(ui.control('New terrain ID').value).toBe('water')
+      expect(ui.control('New tileset ID').value).toBe('nature')
+      expect(ui.control('New layer ID').value).toBe('trees')
+      expect(ui.control('Width in tiles').value).toBe('32')
+      select(ui, 'Undo map edit')
+      expect(ui.control('Movement time (ms)').value).toBe('0')
+      expect(page(ui, 'terrain').hidden).toBe(false)
+      select(ui, 'Map settings')
+      select(ui, 'Undo map edit')
+      expect(ui.tile(0, 0).attributes.get('aria-label')).toContain('ground')
+      expect(ui.editor.hasDrafts()).toBe(true)
+      select(ui, 'Redo map edit')
+      expect(ui.tile(0, 0).attributes.get('aria-label')).toContain('wall')
+      select(ui, 'Terrain & tilesets')
+      select(ui, 'Redo map edit')
+      expect(ui.control('Movement time (ms)').value).toBe('200')
+      const drafts = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
+      expect(restoreEditorDrafts(recovered.root.asElement(), drafts)).toEqual([])
+      expect(page(recovered, 'terrain').hidden).toBe(false)
+      expect(recovered.control('Terrain to edit').value).toBe('wall')
+      expect(recovered.control('Paint terrain').value).toBe('wall')
+      expect(recovered.control('New terrain ID').value).toBe('water')
+      expect(recovered.control('New tileset ID').value).toBe('nature')
+      expect(recovered.control('New layer ID').value).toBe('trees')
+      expect(recovered.control('Width in tiles').value).toBe('32')
+      expect(recovered.editor.hasDrafts()).toBe(true)
+    } finally {
+      ui.editor.dispose()
+      recovered.editor.dispose()
+    }
+  })
+
+  it('keeps the camera, focused tile and cut clipboard when visiting other pages', async () => {
+    const map = new MapDraft()
+    map.resize(64, 40, 'ground')
+    map.paint(30, 20, 'wall')
+    const ui = setup(current(map.data))
+
+    try {
+      ui.edit('Map zoom', '200', 'change')
+      select(ui, 'Next columns')
+      select(ui, 'Next columns')
+      select(ui, 'Next rows')
+      select(ui, 'Next rows')
+      ui.edit('Paint tool', 'select', 'change')
+      ui.tile(30, 20).dispatchEvent(new Event('click'))
+      select(ui, 'Cut selection')
+      ui.tile(31, 20).focus()
+      select(ui, 'Terrain & tilesets')
+      select(ui, 'Map settings')
+      select(ui, 'Objects & triggers')
+      expect(ui.control('Map zoom').value).toBe('200')
+      expect(ui.tile(31, 20).tabIndex).toBe(0)
+      select(ui, 'Paint')
+      expect(ui.control('Paint tool').value).toBe('paste')
+      expect(ui.control('Map zoom').value).toBe('200')
+      expect(ui.tile(31, 20).tabIndex).toBe(0)
+      ui.tile(31, 20).dispatchEvent(new Event('click'))
+      await ui.submit()
+      const command = ui.saved[0]!
+      expect(command.type).toBe('game.upsertMap')
+
+      if (command.type !== 'game.upsertMap') throw new Error('Expected map command')
+      expect(command.map.tiles[20]!.slice(30, 32)).toEqual(['ground', 'wall'])
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('places objects and triggers beside their properties without changing the retained paint tool', () => {
+    const ui = setup(current())
+
+    try {
+      ui.edit('Paint tool', 'select', 'change')
+      select(ui, 'Objects & triggers')
+
+      const undoWithoutDraft = Object.assign(new Event('keydown', { cancelable: true }), {
+        key: 'z',
+        ctrlKey: true,
+      })
+
+      ui.tile(0, 0).dispatchEvent(undoWithoutDraft)
+      expect(undoWithoutDraft.defaultPrevented).toBe(false)
+      ui.tile(1, 1).dispatchEvent(new Event('click'))
+      ui.edit('Object label', 'Chest')
+      const objectProperties = ui.control('Object label').parent!.parent!.parent!
+      expect(objectProperties.hidden).toBe(false)
+      select(ui, 'Edit tile-entry triggers')
+      expect(ui.control('Object label').parent!.parent!.parent!.hidden).toBe(true)
+      ui.tile(2, 1).dispatchEvent(new Event('click'))
+      ui.edit('Trigger ID', 'exit')
+      select(ui, 'Map settings')
+      select(ui, 'Undo map edit')
+      select(ui, 'Objects & triggers')
+      expect(ui.control('Trigger ID').value).toBe('entry')
+      select(ui, 'Place or edit map objects')
+      expect(ui.control('Object label').value).toBe('Chest')
+      select(ui, 'Paint')
+      expect(ui.control('Paint tool').value).toBe('select')
+      expect(ui.tile(1, 1).attributes.get('aria-label')).toContain('ground')
+      expect(ui.saved).toEqual([])
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+})
 
 describe('map drafts', () => {
   it('paints a detached map, resizes without sharing rows, and replaces terrain before removing it', () => {
@@ -509,7 +727,7 @@ describe('visual map editor', () => {
       ui.button('Place or edit map objects').dispatchEvent(new Event('click'))
       ui.tile(1, 1).dispatchEvent(new Event('click'))
       expect(ui.document.activeElement?.value).toBe('object')
-      expect(ui.control('Paint tool').value).toBe('object')
+      expect(ui.button('Place or edit map objects').attributes.get('aria-pressed')).toBe('true')
       ui.edit('Object label', 'Chest')
       ui.edit('Object action', 'inspect', 'change')
       expect(ui.tile(1, 1).title).toContain('Chest')
@@ -543,7 +761,9 @@ describe('visual map editor', () => {
           JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement()))),
         ),
       ).toEqual([])
-      expect(recovered.control('Paint tool').value).toBe('object')
+      expect(recovered.button('Place or edit map objects').attributes.get('aria-pressed')).toBe(
+        'true',
+      )
       expect(recovered.control('Object label').value).toBe('')
       recovered.edit('Object label', 'Recovered chest')
       recovered.button('Remove map object').dispatchEvent(new Event('click'))
@@ -605,7 +825,7 @@ describe('visual map editor', () => {
       expect(ui.tile(0, 0).title).toContain('Trigger depart: travel, zero-based tile (0, 0)')
       expect(ui.tile(2, 2).attributes.get('aria-label')).toContain('Trigger return: inspect')
       ui.button('Edit tile-entry triggers').dispatchEvent(new Event('click'))
-      expect(ui.control('Paint tool').value).toBe('trigger')
+      expect(ui.button('Edit tile-entry triggers').attributes.get('aria-pressed')).toBe('true')
       ui.tile(2, 2).dispatchEvent(new Event('click'))
       expect(ui.document.activeElement?.value).toBe('return')
       expect(ui.tile(2, 2).attributes.get('aria-selected')).toBe('true')
@@ -673,7 +893,9 @@ describe('visual map editor', () => {
       ui.edit('Trigger ID', '')
       const drafts = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
       expect(restoreEditorDrafts(recovered.root.asElement(), drafts)).toEqual([])
-      expect(recovered.control('Paint tool').value).toBe('trigger')
+      expect(recovered.button('Edit tile-entry triggers').attributes.get('aria-pressed')).toBe(
+        'true',
+      )
       expect(recovered.tile(1, 2).title).toContain('inspect')
       recovered.tile(1, 2).dispatchEvent(new Event('click'))
       expect(recovered.document.activeElement?.value).toBe('')
@@ -696,7 +918,7 @@ describe('visual map editor', () => {
     }
 
     try {
-      ui.edit('Paint tool', 'trigger', 'change')
+      ui.button('Edit tile-entry triggers').dispatchEvent(new Event('click'))
       ui.tile(0, 1).focus()
       press(0, 1, 'ArrowRight', { shiftKey: true })
       expect(ui.document.activeElement).toBe(ui.tile(1, 1))
@@ -916,7 +1138,13 @@ describe('visual map editor', () => {
       ui.document.dispatchEvent(new Event('pointerup'))
       ui.tile(2, 2).dispatchEvent(Object.assign(new Event('click'), { detail: 1 }))
       expect(
-        ui.root.all().filter((element) => element.attributes.get('aria-selected') === 'true'),
+        ui.root
+          .all()
+          .filter(
+            (element) =>
+              element.attributes.get('role') === 'gridcell' &&
+              element.attributes.get('aria-selected') === 'true',
+          ),
       ).toHaveLength(4)
       expect(ui.editor.hasDrafts()).toBe(false)
       ui.button('Copy selection').dispatchEvent(new Event('click'))
@@ -1149,6 +1377,7 @@ describe('visual map editor', () => {
       ui.edit('Terrain color', '#2266aa')
       ui.edit('Walkable', 'no', 'change')
       ui.edit('Movement time (ms)', '300')
+      ui.edit('Paint terrain', 'water', 'change')
       ui.tile(1, 0).dispatchEvent(new Event('click'))
       await ui.submit()
       expect(ui.saved[0]).toMatchObject({

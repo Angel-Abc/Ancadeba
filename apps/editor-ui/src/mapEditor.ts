@@ -10,6 +10,9 @@ import { ruleFormControls, saveBar } from './ruleFormControls.js'
 import { mapTileImages, type IGraphicResources } from '@ancadeba/ui-components'
 import { mapTilesetEditor, type TilesetEditorState } from './mapTilesetEditor.js'
 import { mapLayerEditor, type MapLayerEditorState } from './mapLayerEditor.js'
+import { mapEditorTabs, mapEditorTabIds, type MapEditorTab } from './mapEditorTabs.js'
+import { mapTerrainEditor, type MapTerrainEditorState } from './mapTerrainEditor.js'
+import { mapPlacementTools, type MapPlacementTool } from './mapPlacementTools.js'
 import { MapTileSelection } from './mapTileSelection.js'
 import { mapSelectionTools } from './mapSelectionTools.js'
 import { MapDraftHistory } from './mapDraftHistory.js'
@@ -90,7 +93,11 @@ export function bindMapEditor(
   let brush = 'ground'
   let width = '16'
   let height = '12'
-  let newTerrain = ''
+  let terrainState: MapTerrainEditorState = { selected: 'ground', newId: '' }
+  let activeTab: MapEditorTab = 'paint'
+  let placementTool: MapPlacementTool = 'object'
+  let tabs: ReturnType<typeof mapEditorTabs> | undefined
+  let refreshActions = () => {}
   let dirty = false
   let busy = false
   let confirming = false
@@ -125,6 +132,7 @@ export function bindMapEditor(
 
   const notifyHistory = () => {
     tileTools?.refresh()
+    refreshActions()
     options.onHistoryChange?.()
   }
 
@@ -134,7 +142,7 @@ export function bindMapEditor(
       history.dirty ||
       width !== String(draft.data.width) ||
       height !== String(draft.data.height) ||
-      Boolean(newTerrain || layerState.newId || tilesetState.newId) ||
+      Boolean(terrainState.newId || layerState.newId || tilesetState.newId) ||
       (!creating && !view?.maps?.[selected])
   }
 
@@ -219,14 +227,19 @@ export function bindMapEditor(
       : (Object.keys(draft.data.terrain)[0] ?? '')
     width = String(draft.data.width)
     height = String(draft.data.height)
-    newTerrain = ''
+    terrainState = {
+      selected: Object.hasOwn(draft.data.terrain, terrainState.selected)
+        ? terrainState.selected
+        : brush,
+      newId: '',
+    }
     const retainedLayer = draft.data.layers?.find((layer) => layer.id === layerState.selected)
     layerState = {
       selected: retainedLayer?.id ?? '',
       newId: '',
       erasing: Boolean(retainedLayer && layerState.erasing),
     }
-    const tile = draft.data.terrain[brush]?.tile
+    const tile = draft.data.terrain[terrainState.selected]?.tile
     tilesetState = {
       selected: tile?.tileset ?? '',
       newId: '',
@@ -315,6 +328,7 @@ export function bindMapEditor(
     selected = next
     creating = nextCreating
     brush = ''
+    terrainState = { selected: '', newId: '' }
     gridViewport = mapGridViewport()
     selection = new MapTileSelection()
     layerState = { selected: '', newId: '', erasing: false }
@@ -349,7 +363,18 @@ export function bindMapEditor(
     error.textContent = ''
     render()
     notifyHistory()
-    board?.focus()
+
+    if (activeTab === 'paint' || activeTab === 'objects') board?.focus()
+    else tabs?.focus()
+  }
+
+  const switchTab = (tab: MapEditorTab) => {
+    if (busy || confirming) return
+    finishStroke()
+    history.breakGroup()
+    activeTab = tab
+    render()
+    tabs?.focus()
   }
 
   const render = () => {
@@ -363,6 +388,9 @@ export function bindMapEditor(
     if (!draft.data.entryTriggers?.[entryState.selected]) entryState.selected = -1
 
     if (!draft.data.objects?.[objectState.selected]) objectState.selected = -1
+
+    if (!Object.hasOwn(draft.data.terrain, terrainState.selected))
+      terrainState.selected = Object.keys(draft.data.terrain)[0] ?? ''
     images = mapTileImages(
       draft.data,
       view.assets,
@@ -449,11 +477,22 @@ export function bindMapEditor(
           scenes: [...new Set(references.map((reference) => reference.scene))].join(', '),
         })
       : t('maps.placeHelp')
-    const terrain = document.createElement('fieldset')
-    const legend = document.createElement('legend')
-    legend.textContent = t('maps.terrainSettings', { terrain: brush })
-    terrain.append(legend)
-    // The brush pickers sit directly above the grid they paint.
+
+    const terrain = mapTerrainEditor(
+      document,
+      draft,
+      controls,
+      t,
+      terrainState,
+      tilesetState,
+      render,
+      change,
+      () => board?.refresh(),
+      (removed, replacement) => {
+        if (brush === removed) brush = replacement
+      },
+    )
+
     const brushes = document.createElement('div')
     brushes.className = 'map-brushes'
 
@@ -463,136 +502,11 @@ export function bindMapEditor(
       Object.keys(draft.data.terrain),
       (value) => {
         brush = value
-        const tile = draft.data.terrain[brush]?.tile
-
-        if (tile) {
-          tilesetState.selected = tile.tileset
-          tilesetState.column = tile.column
-          tilesetState.row = tile.row
-        }
-
         render()
       },
       false,
     )
 
-    const definition = draft.data.terrain[brush]
-
-    if (!definition) legend.textContent = t('maps.terrain')
-    let tileChoice: HTMLSelectElement | undefined
-
-    if (definition) {
-      terrain.append(
-        controls.select(
-          t('maps.baseColor'),
-          definition.color ? 'yes' : 'no',
-          [
-            ['yes', t('maps.yes')],
-            ['no', t('maps.no')],
-          ],
-          (value) =>
-            change(() => {
-              if (value === 'yes') definition.color ??= '#608c4f'
-              else delete definition.color
-            }),
-        ),
-      )
-      terrain.append(
-        controls.input(
-          t('maps.color'),
-          definition.color ?? '#608c4f',
-          (value) => {
-            definition.color = value
-            board?.refresh()
-          },
-          'color',
-        ),
-        controls.select(
-          t('maps.walkable'),
-          definition.walkable === false ? 'no' : 'yes',
-          [
-            ['yes', t('maps.yes')],
-            ['no', t('maps.no')],
-          ],
-          (value) => {
-            definition.walkable = value === 'yes'
-            board?.refresh()
-          },
-        ),
-        controls.input(
-          t('maps.cost'),
-          String(definition.movementCostMs ?? 0),
-          (value) => {
-            definition.movementCostMs = Number(value)
-          },
-          'number',
-        ),
-      )
-
-      const colorInput = terrain.querySelector('input')!
-      colorInput.disabled = definition.color === undefined
-
-      const tileField = controls.select(
-        t('maps.tileImage'),
-        definition.tile?.tileset ?? '',
-        [
-          ['', t('maps.noImage')],
-          ...Object.keys(draft.data.tilesets ?? {}).map((id) => [id, id] as const),
-        ],
-        (value) =>
-          change(() => {
-            if (!value) {
-              delete definition.tile
-              definition.color ??= '#608c4f'
-            } else {
-              definition.tile = { tileset: value, column: 0, row: 0 }
-              tilesetState.selected = value
-            }
-          }),
-      )
-
-      tileChoice = tileField.querySelector('select')!
-      terrain.append(tileField)
-
-      const alternatives = Object.keys(draft.data.terrain).filter(
-        (terrainId) => terrainId !== brush,
-      )
-
-      let replacement = alternatives[0] ?? ''
-      terrain.append(
-        controls.select(
-          t('maps.replacement'),
-          replacement,
-          alternatives,
-          (value) => {
-            replacement = value
-          },
-          false,
-        ),
-        controls.button(
-          t('maps.removeTerrain'),
-          () =>
-            change(() => {
-              draft.removeTerrain(brush, replacement)
-              brush = replacement || Object.keys(draft.data.terrain)[0]!
-            }),
-          alternatives.length === 0,
-        ),
-      )
-    }
-
-    terrain.append(
-      controls.input(t('maps.newTerrain'), newTerrain, (value) => {
-        newTerrain = value.trim()
-      }),
-      controls.button(t('maps.addTerrain'), () =>
-        change(() => {
-          draft.addTerrain(newTerrain)
-          brush = newTerrain
-          newTerrain = ''
-        }),
-      ),
-    )
     const instructions = document.createElement('p')
     instructions.className = 'help'
     instructions.textContent = `${t('maps.paintHelp')} ${t('maps.entryGridLegend')}`
@@ -617,8 +531,7 @@ export function bindMapEditor(
     const gridDisabled = () =>
       busy ||
       confirming ||
-      (selection.tool !== 'trigger' &&
-        selection.tool !== 'object' &&
+      (activeTab !== 'objects' &&
         draft.data.layers?.find((layer) => layer.id === layerState.selected)?.visible === false)
 
     const openTrigger = (point: TilePoint) => {
@@ -704,22 +617,32 @@ export function bindMapEditor(
       assets: view.assets,
       imageUrl: (image) => images?.url(image),
       history: { state: draftHistory, restore: restoreDraft },
-      triggers: {
-        activate: openTrigger,
-        selected: ({ x, y }) => {
-          const trigger = draft.data.entryTriggers?.[entryState.selected]
+    })
 
-          return trigger?.x === x && trigger.y === y
-        },
+    const placement = mapPlacementTools(document, controls, t, placementTool, {
+      disabled: gridDisabled,
+      select: (tool) => {
+        if (busy || confirming) return
+        finishStroke()
+        placementTool = tool
+        switchTab('objects')
+        board?.focus()
       },
-      objects: {
-        activate: openObject,
-        selected: ({ x, y }) => {
-          const object = draft.data.objects?.[objectState.selected]
+      activate: placementTool === 'object' ? openObject : openTrigger,
+      selected: ({ x, y }) => {
+        const selected =
+          placementTool === 'object'
+            ? draft.data.objects?.[objectState.selected]
+            : draft.data.entryTriggers?.[entryState.selected]
 
-          return object?.x === x && object.y === y
-        },
+        return selected?.x === x && selected.y === y
       },
+      paint: () => {
+        switchTab('paint')
+        board?.focus()
+      },
+      historyActive: () => draftHistory().active,
+      restore: restoreDraft,
     })
 
     board = mapTileGrid(
@@ -741,7 +664,7 @@ export function bindMapEditor(
       () => layerState.selected,
       () => layerState.erasing,
       gridViewport,
-      tileTools.interaction,
+      activeTab === 'objects' ? placement.interaction : tileTools.interaction,
       {
         begin: () => {
           finishStroke()
@@ -755,7 +678,7 @@ export function bindMapEditor(
       document,
       draft.data,
       view.assets,
-      brush,
+      terrainState.selected,
       controls,
       t,
       (image) => images?.url(image),
@@ -764,7 +687,7 @@ export function bindMapEditor(
       () => {
         board?.refresh()
 
-        if (tileChoice) tileChoice.value = draft.data.terrain[brush]?.tile?.tileset ?? ''
+        terrain.refresh()
       },
       report,
     )
@@ -772,11 +695,38 @@ export function bindMapEditor(
     saveButton.type = 'submit'
     saveButton.textContent = t(creating ? 'maps.create' : 'maps.save')
     saveButton.disabled = !creating && !view.maps?.[selected]
-    const actions = saveBar(document, saveButton, controls.button(t('maps.discard'), reset))
+    const title = document.createElement('strong')
+    const status = document.createElement('span')
+    status.className = 'map-draft-status'
+    status.setAttribute('role', 'status')
+    const undo = controls.button(t('maps.undoDraft'), () => restoreDraft('undo'))
+    const redo = controls.button(t('maps.redoDraft'), () => restoreDraft('redo'))
 
-    if (!creating)
-      actions.append(
-        controls.button(
+    const actions = saveBar(
+      document,
+      title,
+      status,
+      saveButton,
+      undo,
+      redo,
+      controls.button(t('maps.discard'), reset),
+    )
+
+    actions.classList.add('map-editor-header')
+    refreshActions = () => {
+      title.textContent = id || t('maps.new')
+      status.textContent = t(dirty ? 'maps.unsaved' : 'maps.noChanges')
+      undo.disabled = busy || confirming || !draftHistory().canUndo
+      redo.disabled = busy || confirming || !draftHistory().canRedo
+    }
+
+    refreshActions()
+    tabs = mapEditorTabs(document, t, activeTab, switchTab)
+    actions.append(tabs.element)
+    const pages = tabs.pages
+
+    const deleteMap = !creating
+      ? controls.button(
           t('maps.delete'),
           async () => {
             if (busy || confirming) return
@@ -791,26 +741,24 @@ export function bindMapEditor(
               submit({ type: 'game.removeMap', mapId: selected })
           },
           dirty,
-        ),
-      )
+        )
+      : undefined
+
     brushes.append(
       layerPicker,
       brushPicker,
-      controls.button(t('maps.editEntryTriggers'), () => {
-        if (busy || confirming) return
-        finishStroke()
-        selection.setTool('trigger')
-        layerState.erasing = false
-        render()
-        board?.focus()
-      }),
-      controls.button(t('maps.editObjects'), () => {
-        if (busy || confirming) return
-        finishStroke()
-        selection.setTool('object')
-        layerState.erasing = false
-        render()
-        board?.focus()
+      tileTools.picker,
+      controls.button(t('maps.editTerrain'), () => {
+        terrainState.selected = brush
+        const tile = draft.data.terrain[brush]?.tile
+
+        if (tile)
+          Object.assign(tilesetState, {
+            selected: tile.tileset,
+            column: tile.column,
+            row: tile.row,
+          })
+        switchTab('terrain')
       }),
     )
     entryEditor = mapEntryTriggerEditor(
@@ -854,24 +802,35 @@ export function bindMapEditor(
       },
     )
 
-    // Paint first: the grid follows its brushes; settings come after it.
-    form.append(
-      actions,
-      picker,
-      name,
-      brushes,
-      board.element,
-      instructions,
-      fill,
-      tileTools.element,
-      entryEditor.element,
-      objectEditor.element,
-      terrain,
-      layers,
-      tilesetEditor.element,
-      dimensions,
-      help,
-    )
+    const paintWorkspace = document.createElement('div')
+    paintWorkspace.className = 'map-paint-workspace'
+    const paintCanvas = document.createElement('div')
+    paintCanvas.className = 'map-paint-canvas'
+    paintCanvas.append(brushes)
+
+    if (activeTab !== 'objects') paintCanvas.append(board.element)
+    paintCanvas.append(instructions, fill, tileTools.element)
+    paintWorkspace.append(paintCanvas, layers)
+    pages.paint.append(paintWorkspace)
+    pages.terrain.append(terrain.element, tilesetEditor.element)
+    const placementWorkspace = document.createElement('div')
+    placementWorkspace.className = 'map-placement-workspace'
+    const placementCanvas = document.createElement('div')
+    placementCanvas.className = 'map-placement-canvas'
+    placementCanvas.append(placement.element)
+
+    if (activeTab === 'objects') placementCanvas.append(board.element)
+    const properties = document.createElement('div')
+    properties.className = 'map-placement-properties'
+    entryEditor.element.hidden = placementTool !== 'trigger'
+    objectEditor.element.hidden = placementTool !== 'object'
+    properties.append(objectEditor.element, entryEditor.element)
+    placementWorkspace.append(placementCanvas, properties)
+    pages.objects.append(placementWorkspace)
+    pages.settings.append(name, dimensions, help)
+
+    if (deleteMap) pages.settings.append(deleteMap)
+    form.append(actions, picker, ...mapEditorTabIds.map((tab) => pages[tab]))
     form.addEventListener('submit', async (event) => {
       event.preventDefault()
 
@@ -909,10 +868,12 @@ export function bindMapEditor(
       brush: z.string(),
       width: z.string(),
       height: z.string(),
-      newTerrain: z.string(),
+      terrainState: z.object({ selected: z.string(), newId: z.string() }),
+      activeTab: z.enum(mapEditorTabIds),
+      placementTool: z.enum(['object', 'trigger']),
       entrySelection: z.number().int().min(-1).optional(),
       objectSelection: z.number().int().min(-1).optional(),
-      mapTool: z.enum(['paint', 'select', 'paste', 'trigger', 'object']).optional(),
+      mapTool: z.enum(['paint', 'select', 'paste']).optional(),
       layerState: z.object({ selected: z.string(), newId: z.string(), erasing: z.boolean() }),
       tilesetState: z.object({
         selected: z.string(),
@@ -931,7 +892,9 @@ export function bindMapEditor(
             brush,
             width,
             height,
-            newTerrain,
+            terrainState,
+            activeTab,
+            placementTool,
             entrySelection: entryState.selected,
             objectSelection: objectState.selected,
             mapTool: selection.tool,
@@ -947,13 +910,12 @@ export function bindMapEditor(
       brush = saved.brush
       width = saved.width
       height = saved.height
-      newTerrain = saved.newTerrain
+      terrainState = saved.terrainState
+      activeTab = saved.activeTab
+      placementTool = saved.placementTool
       entryState.selected = saved.entrySelection ?? -1
 
-      if (entryState.selected >= 0) selection.setTool('trigger')
       objectState.selected = saved.objectSelection ?? -1
-
-      if (objectState.selected >= 0) selection.setTool('object')
 
       if (saved.mapTool) selection.setTool(saved.mapTool === 'paste' ? 'select' : saved.mapTool)
       layerState = saved.layerState
@@ -1021,6 +983,9 @@ export function bindMapEditor(
         if (projectChanged) {
           layerState = { selected: '', newId: '', erasing: false }
           brush = ''
+          terrainState = { selected: '', newId: '' }
+          activeTab = 'paint'
+          placementTool = 'object'
           gridViewport = mapGridViewport()
           selection = new MapTileSelection()
         }

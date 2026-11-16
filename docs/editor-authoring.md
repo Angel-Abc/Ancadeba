@@ -648,17 +648,30 @@ Unrelated panels can be visited without discarding drafts.
 ### Maps and terrain
 
 Use the **Edit** or **Split** layout and choose **Maps** in the section rail or
-explorer. Choose **New map**, enter a unique map ID, and set its width and height
-in tiles. **Apply size** preserves overlapping tiles and fills new cells with the
-selected terrain. Reducing either dimension asks before cropping the draft.
+explorer. Each map has four tabs: **Paint** for the canvas, brushes, selection and
+layers; **Terrain & tilesets** for terrain definitions and image sheets;
+**Objects & triggers** for placement and nearby properties; and **Map settings**
+for the ID, dimensions, scene references and deletion. The map name, unsaved
+status, Save, Discard and Undo/Redo stay available in the shared header. Use the
+left/right arrow keys, Home or End while a tab is focused to switch pages.
+Switching tabs retains unfinished fields, terrain selections, the paint tool and
+clipboard, draft history, and the canvas pan, zoom and focused tile.
+
+Choose **New map**, then open **Map settings**, enter a unique map ID, and set its
+width and height in tiles. **Apply size** preserves overlapping tiles and fills
+new cells with the selected terrain. Reducing either dimension asks before cropping the draft.
 Maps can contain up to 65,536 tiles.
 Crop, fill, and delete confirmations open inside the editor. Choose **Cancel**
 or press Escape to leave the map unchanged; **Confirm** applies the action.
 
-In **Terrain palette**, select the paint terrain or add one using **New terrain
+In **Terrain & tilesets**, choose **Terrain to edit** or add one using **New terrain
 ID** and **Add terrain**. Set its color, walkability, and movement time in
 milliseconds. Removing a terrain replaces its painted cells with the selected
 replacement terrain; the last terrain cannot be removed.
+This selector is independent of **Paint terrain** in **Paint**. **Edit terrain**
+beside the paint brush opens its definition directly. Adding or editing terrain
+does not change the retained paint brush; select the new terrain in **Paint** to
+use it.
 
 During play, each completed tile step advances the progression turn counter once,
 including steps with zero movement time. The destination terrain's movement time
@@ -673,13 +686,14 @@ Text and status panels can display `game.progression` fields `turn` and
 `worldTimeMs`; saved progress preserves both counters with the player's position.
 
 For image tiles, import a PNG, WebP, JPEG, or SVG image in **Assets**, then return
-to **Maps**. In **Tilesets**, enter a **New tileset ID** and choose **Add tileset**.
+to **Maps → Terrain & tilesets**. In **Tilesets**, enter a **New tileset ID** and
+choose **Add tileset**.
 Select its **Tileset image** and set **Tile width (pixels)** and **Tile height
 (pixels)**. Margin is the border around the sheet; spacing is the gap between
 tiles. For a single image per tile, use the image's full width and height with
 zero margin and spacing. Use a transparent PNG, WebP, or SVG for overlays.
 
-Choose a paint terrain, then click an image in the tileset picker to assign it.
+Choose **Terrain to edit**, then click an image in the tileset picker to assign it.
 The selected tile is outlined; the picker pages through large sheets. Keep **Use
 base color** enabled for an image over a color, or switch it off for image-only
 terrain. **Terrain tileset → Color only** removes the image and restores a base
@@ -696,11 +710,11 @@ image cropping and rendering are shared by the editor, preview, and exported gam
 Click or drag to paint tiles. Arrow keys move tile focus, and Enter or Space
 paints. Large maps show a movable window of up to 24 columns by 16 rows; use the
 row/column controls or arrow keys at the window edges to reach other tiles.
-Displayed coordinates start at 1. Stripes indicate blocked terrain and a dot
+Displayed coordinates start at 0. Stripes indicate blocked terrain and a dot
 marks a scene's player spawn. **Fill map with selected terrain** asks before
 replacing every tile in the draft.
 
-Use **Layers → Paint layer** to switch between **Ground** and independent object
+In **Paint**, use **Paint layer** to switch between **Ground** and independent object
 layers. Enter a **New layer ID** and choose **Add overlay layer**, then name it
 Trees, Buildings, or another useful group. Paint terrain or image tiles on that
 layer; empty cells reveal the ground and objects below. Turn off **Use base
@@ -802,14 +816,15 @@ up to 32 overlays in draw order, each with a unique `id`, optional `name`,
 `visible` and `collision` flags, and a matching grid of terrain IDs or `null`
 for empty cells. Existing single-layer maps need no conversion.
 
-In **Tile-entry triggers**, choose **Add tile-entry trigger**, set a unique
+In **Objects & triggers**, choose **Edit tile-entry triggers**. In **Tile-entry
+triggers**, choose **Add tile-entry trigger**, set a unique
 **Trigger ID**, zero-based **Trigger tile X/Y**, and an **Entry action** saved in
 **Rules**. The editor starts each trigger on an unused walkable tile. Each tile
 can have one trigger. To create an exit, give its Rules action an **Enter scene**
 effect. Normal action conditions support scene-specific exits and one-time events.
 The grid shows a **T** badge on every trigger tile; its tooltip includes the
 trigger ID, action, and zero-based coordinates. Choose **Edit tile-entry triggers**
-above the grid, or **Paint tool → Tile-entry triggers**, then click a tile to
+above the placement grid, then click a tile to
 add a trigger or focus its existing fields. The selected tile and trigger form
 are highlighted together. Arrow keys navigate and **Enter/Space** opens a tile;
 **Escape** returns to painting. Dragging in trigger mode does not paint or create
@@ -838,7 +853,7 @@ Navigation buttons and action-bar slots disable while their destination tile is
 blocked by the current object state, and explain the unavailable destination in
 their tooltip. They update when flags change and recheck collision on activation.
 
-Use **Place or edit map objects** above the grid, or **Paint tool → Map objects**,
+In **Objects & triggers**, use **Place or edit map objects** above the placement grid
 to place an object by clicking a tile. Click an **O** badge to edit an existing
 object. Keyboard users can navigate with arrows and open a tile with Enter/Space;
 Escape returns to painting. New blocking objects cannot be placed directly on a
