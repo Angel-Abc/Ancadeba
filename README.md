@@ -2121,6 +2121,12 @@ them. The panel returns to its empty text when hover and focus leave all actions
 and refreshes when an inspected action's availability changes. Inspection is
 scene-local UI state and does not publish gameplay messages.
 
+The basic sample includes this panel in its museum, harbour route, inventory,
+shop, and training scenes, with English and Dutch action descriptions. Start a
+new game and pick up the letter, then hover over or Tab back to its action to see
+why it is now unavailable. In training, focus Power strike to see its level
+requirement, or queue attacks to try AP and cooldown explanations.
+
 Slots can also use `{ "type": "inventory-action", "inventory": "items", "action": "inspect" }`.
 Here `items` identifies an inventory component in the same scene. Selecting an item
 in that panel populates the slot when the item supports its action. The `inspect`

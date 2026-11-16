@@ -59,7 +59,8 @@
       "damage": {
         "min": 8,
         "max": 12
-      }
+      },
+      "descriptionKey": "combat.heavy-strike.description"
     },
     "power-strike": {
       "type": "attack",
@@ -68,7 +69,8 @@
       "damage": {
         "min": 14,
         "max": 18
-      }
+      },
+      "descriptionKey": "leveling.powerStrike.description"
     }
   },
   "outcomes": {

@@ -46,7 +46,7 @@
         "row": 3,
         "column": 5,
         "rowSpan": 2,
-        "columnSpan": 8
+        "columnSpan": 4
       },
       "textKey": "scenes.inventory.components.details.text",
       "bindings": {
@@ -106,7 +106,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-4"
-          }
+          },
+          "descriptionKey": "actions.inspect.description"
         },
         "5": {
           "labelKey": "actions.read",
@@ -118,7 +119,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-5"
-          }
+          },
+          "descriptionKey": "actions.read.description"
         },
         "1": {
           "labelKey": "equipment.equip",
@@ -130,7 +132,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-1"
-          }
+          },
+          "descriptionKey": "equipment.equip.description"
         },
         "2": {
           "labelKey": "equipment.unequip",
@@ -142,7 +145,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-2"
-          }
+          },
+          "descriptionKey": "equipment.unequip.description"
         },
         "6": {
           "action": {
@@ -153,7 +157,8 @@
             "context": "gameplay",
             "input": "slot-6"
           },
-          "labelKey": "usable.use"
+          "labelKey": "usable.use",
+          "descriptionKey": "usable.use.description"
         }
       }
     },
@@ -169,6 +174,18 @@
         "column": 5,
         "rowSpan": 4,
         "columnSpan": 8
+      }
+    },
+    {
+      "id": "action-information",
+      "type": "action-info",
+      "labelKey": "actionInfo.title",
+      "emptyTextKey": "actionInfo.empty",
+      "placement": {
+        "row": 3,
+        "column": 9,
+        "rowSpan": 2,
+        "columnSpan": 4
       }
     }
   ],

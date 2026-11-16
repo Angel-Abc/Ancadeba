@@ -90,7 +90,7 @@
       "placement": {
         "row": 3,
         "column": 3,
-        "rowSpan": 6,
+        "rowSpan": 4,
         "columnSpan": 8
       },
       "textKey": "scenes.gallery.components.narrative.text",
@@ -250,7 +250,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-1"
-          }
+          },
+          "descriptionKey": "museum.walk-west.description"
         },
         "2": {
           "labelKey": "museum.press-crown",
@@ -265,7 +266,9 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-2"
-          }
+          },
+          "descriptionKey": "museum.press-crown.description",
+          "unavailableTextKey": "museum.crest.unavailable"
         },
         "3": {
           "labelKey": "museum.press-heron",
@@ -280,7 +283,9 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-3"
-          }
+          },
+          "descriptionKey": "museum.press-heron.description",
+          "unavailableTextKey": "museum.crest.unavailable"
         },
         "4": {
           "labelKey": "actions.inspect",
@@ -292,7 +297,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-4"
-          }
+          },
+          "descriptionKey": "actions.inspect.description"
         },
         "5": {
           "labelKey": "actions.read",
@@ -304,7 +310,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-5"
-          }
+          },
+          "descriptionKey": "actions.read.description"
         },
         "6": {
           "labelKey": "museum.take-chart",
@@ -319,8 +326,22 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-6"
-          }
+          },
+          "descriptionKey": "museum.take-chart.description",
+          "unavailableTextKey": "museum.take-chart.unavailable"
         }
+      }
+    },
+    {
+      "id": "action-information",
+      "type": "action-info",
+      "labelKey": "actionInfo.title",
+      "emptyTextKey": "actionInfo.empty",
+      "placement": {
+        "row": 7,
+        "column": 3,
+        "rowSpan": 2,
+        "columnSpan": 8
       }
     }
   ]

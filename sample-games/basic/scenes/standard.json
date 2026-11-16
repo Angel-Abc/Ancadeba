@@ -88,7 +88,7 @@
       "placement": {
         "row": 3,
         "column": 3,
-        "rowSpan": 6,
+        "rowSpan": 4,
         "columnSpan": 8
       },
       "textKey": "scenes.standard.components.narrative.text",
@@ -274,7 +274,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-1"
-          }
+          },
+          "descriptionKey": "harbour.walk-to-harbour.description"
         },
         "2": {
           "labelKey": "museum.take-letter",
@@ -289,7 +290,9 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-2"
-          }
+          },
+          "descriptionKey": "museum.take-letter.description",
+          "unavailableTextKey": "museum.take-letter.unavailable"
         },
         "3": {
           "labelKey": "museum.walk-east",
@@ -300,7 +303,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-3"
-          }
+          },
+          "descriptionKey": "museum.walk-east.description"
         },
         "4": {
           "labelKey": "actions.inspect",
@@ -312,7 +316,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-4"
-          }
+          },
+          "descriptionKey": "actions.inspect.description"
         },
         "5": {
           "labelKey": "actions.read",
@@ -324,7 +329,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-5"
-          }
+          },
+          "descriptionKey": "actions.read.description"
         },
         "6": {
           "labelKey": "actions.talk",
@@ -336,7 +342,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-6"
-          }
+          },
+          "descriptionKey": "actions.talk.description"
         },
         "7": {
           "labelKey": "actions.examine",
@@ -348,7 +355,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-7"
-          }
+          },
+          "descriptionKey": "actions.examine.description"
         },
         "8": {
           "labelKey": "actions.take",
@@ -360,7 +368,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-8"
-          }
+          },
+          "descriptionKey": "actions.take.description"
         },
         "9": {
           "labelKey": "shop.visit",
@@ -372,7 +381,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-9"
-          }
+          },
+          "descriptionKey": "shop.visit.description"
         },
         "10": {
           "labelKey": "combat.visit",
@@ -383,7 +393,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-10"
-          }
+          },
+          "descriptionKey": "combat.visit.description"
         },
         "11": {
           "labelKey": "dialogue.talk",
@@ -397,7 +408,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-11"
-          }
+          },
+          "descriptionKey": "dialogue.talk.description"
         },
         "12": {
           "labelKey": "dialogue.reply1",
@@ -412,7 +424,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-12"
-          }
+          },
+          "descriptionKey": "dialogue.reply1.description"
         },
         "13": {
           "labelKey": "dialogue.reply2",
@@ -427,7 +440,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-13"
-          }
+          },
+          "descriptionKey": "dialogue.reply2.description"
         },
         "14": {
           "labelKey": "dialogue.end",
@@ -441,7 +455,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-14"
-          }
+          },
+          "descriptionKey": "dialogue.end.description"
         },
         "15": {
           "labelKey": "quest.turnIn",
@@ -453,7 +468,8 @@
           "inputBinding": {
             "context": "gameplay",
             "input": "slot-15"
-          }
+          },
+          "descriptionKey": "quest.turnIn.description"
         }
       }
     },
@@ -468,6 +484,18 @@
         "columnSpan": 2
       },
       "textTarget": "narrative"
+    },
+    {
+      "id": "action-information",
+      "type": "action-info",
+      "labelKey": "actionInfo.title",
+      "emptyTextKey": "actionInfo.empty",
+      "placement": {
+        "row": 7,
+        "column": 3,
+        "rowSpan": 2,
+        "columnSpan": 8
+      }
     }
   ],
   "titleKey": "scenes.standard.title",

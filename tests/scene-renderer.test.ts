@@ -84,6 +84,9 @@ class TestElement extends EventTarget {
   title = ''
   value = ''
   disabled = false
+  get unavailable(): boolean {
+    return this.disabled || this.attributes.get('aria-disabled') === 'true'
+  }
   hidden = false
   open = false
   type = ''
@@ -229,6 +232,9 @@ const logger: ILogger = { debug: () => '', info: () => '', warn: () => '', error
 
 const confirmation = (target: TestElement) =>
   target.find((node) => node.attributes.get('role') === 'alertdialog')
+
+const manualSaveStatus = (target: TestElement) =>
+  target.find((node) => node.className.split(' ').includes('ancadeba-save-status'))!.children[0]!
 
 function respondToConfirmation(target: TestElement, accept = true): void {
   const dialog = confirmation(target)
@@ -481,7 +487,7 @@ describe('authored game menus', () => {
     const component = (id: string) => target.find((node) => node.dataset.componentId === id)!
     component('load-game').click()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
-    expect(component('load-game').disabled).toBe(true)
+    expect(component('load-game').unavailable).toBe(true)
     component('main-menu').click()
     startSampleGame(target)
     const gameplay = engine.lifecycle!.activeScene!
@@ -758,27 +764,9 @@ describe('scene renderer', () => {
         async readText(path) {
           const raw = await source.readText(path)
 
-          if (path.startsWith('languages/')) {
-            const catalog = languageCatalogSchema.parse(JSON.parse(raw))
-            catalog['test.actionDescription'] = path.includes('/nl/')
-              ? 'Neem de brief mee.'
-              : 'Take the letter with you.'
-
-            return JSON.stringify(catalog)
-          }
-
           if (path !== 'scenes/standard.json') return raw
           const scene = sceneSchema.parse(JSON.parse(raw))
-          const bar = scene.components.find((component) => component.type === 'action-bar')!
-          bar.slots['1']!.description = 'Walk to the harbour.'
-          bar.slots['2']!.descriptionKey = 'test.actionDescription'
-          bar.slots['2']!.unavailableText = 'You have already taken the letter.'
           scene.components.push(
-            actionInfoComponentSchema.parse({
-              id: 'action-information',
-              type: 'action-info',
-              placement: { row: 1, column: 1 },
-            }),
             buttonComponentSchema.parse({
               id: 'take-again',
               type: 'button',
@@ -815,21 +803,21 @@ describe('scene renderer', () => {
       const slot = (id: string) => target.find((node) => node.dataset.actionBarSlot === id)!
       const take = slot('2')
       const request = vi.spyOn(engine.lifecycle!.currentGame!.actions!, 'request')
-      expect(info().textContent).toContain('Hover over or focus an action')
+      expect(info().textContent).toContain('Hover over an action')
       take.focus()
       take.dispatchEvent(new Event('focus'))
-      expect(info().textContent).toContain('Take the letter with you.')
+      expect(info().textContent).toContain('Pick up the folded letter from the museum table')
       slot('1').dispatchEvent(new Event('mouseenter'))
-      expect(info().textContent).toContain('Walk to the harbour.')
+      expect(info().textContent).toContain('Leave the museum and walk to the old harbour.')
       slot('1').dispatchEvent(new Event('mouseleave'))
-      expect(info().textContent).toContain('Take the letter with you.')
+      expect(info().textContent).toContain('Pick up the folded letter from the museum table')
       expect(request).not.toHaveBeenCalled()
       take.click()
       flush(engine)
       expect(take.disabled).toBe(false)
       expect(take.getAttribute('aria-disabled')).toBe('true')
       expect(document.activeElement).toBe(take)
-      expect(info().textContent).toContain('Unavailable: You have already taken the letter.')
+      expect(info().textContent).toContain('Unavailable: You have already taken the folded letter.')
       request.mockClear()
       take.click()
       flush(engine)
@@ -842,17 +830,15 @@ describe('scene renderer', () => {
       expect(request).not.toHaveBeenCalled()
       ordinary.dispatchEvent(new Event('mouseleave'))
       take.dispatchEvent(new Event('blur'))
-      expect(info().textContent).toContain('Hover over or focus an action')
+      expect(info().textContent).toContain('Hover over an action')
       engine.lifecycle!.currentGame!.data.localization?.select('nl')
       slot('2').dispatchEvent(new Event('focus'))
-      expect(info().textContent).toContain('Neem de brief mee.')
+      expect(info().textContent).toContain('Pak de gevouwen brief van de museumtafel')
       expect(info().textContent).toContain('Niet beschikbaar:')
       engine.lifecycle!.enterScene('old-harbour')
       take.dispatchEvent(new Event('mouseenter'))
-      expect(
-        target.find((node) => node.dataset.componentId === 'action-information'),
-      ).toBeUndefined()
-      expect(target.textContent).not.toContain('Take the letter with you.')
+      expect(info().textContent).toContain('Beweeg de muis over een actie')
+      expect(info().textContent).not.toContain('Pak de gevouwen brief van de museumtafel')
     },
   )
 
@@ -1317,16 +1303,16 @@ describe('scene renderer', () => {
         flush(engine)
       }
 
-      expect(slot('7').disabled).toBe(true)
+      expect(slot('7').unavailable).toBe(true)
       expect(slot('7').title).toContain('Rhythm dive unavailable')
       expect(slot('7').title).toContain('current 0')
       expect(slot('7').attributes.get('aria-description')).toContain(slot('7').title)
       expect(slot('7').attributes.get('aria-description')).toContain('Requires at least 20%')
 
       for (let i = 0; i < 3; i++) click('6')
-      expect(slot('7').disabled).toBe(true)
+      expect(slot('7').unavailable).toBe(true)
       click('15')
-      expect(slot('7').disabled).toBe(false)
+      expect(slot('7').unavailable).toBe(false)
       click('7')
       click('7')
       expect(engine.saves!.save()).toBe(true)
@@ -1334,7 +1320,7 @@ describe('scene renderer', () => {
       const first = snapshot()
       expect(first.log.some((entry) => entry.type === 'requirementsUnavailable')).toBe(true)
       expect(first.resources.stamina).toBe(82)
-      expect(slot('7').disabled).toBe(true)
+      expect(slot('7').unavailable).toBe(true)
       expect(target.textContent).toContain('Rhythm dive unavailable: requires')
       expect(engine.saves!.load()).toBe(true)
       expect(snapshot().plan).toHaveLength(2)
@@ -1344,7 +1330,7 @@ describe('scene renderer', () => {
       click('8')
       click('15')
       engine.lifecycle!.enterScene('underwater-boss-requirements')
-      expect(slot('11').disabled).toBe(true)
+      expect(slot('11').unavailable).toBe(true)
       expect(slot('11').title).toContain('Seal release unavailable')
       expect(slot('11').title).toContain('Phase')
       expect(slot('11').title).toContain('OR')
@@ -1401,7 +1387,7 @@ describe('scene renderer', () => {
       expect(
         target.find((node) => node.dataset.combatDamageDefenses === 'player')!.textContent,
       ).toContain('water: resistance 25%')
-      expect(slot('6').disabled).toBe(false)
+      expect(slot('6').unavailable).toBe(false)
       slot('6').dispatchEvent(new Event('click'))
       slot('15').dispatchEvent(new Event('click'))
       flush(engine)
@@ -1418,7 +1404,7 @@ describe('scene renderer', () => {
       expect(
         target.find((node) => node.dataset.combatDamageDefenses === 'player')!.textContent,
       ).toContain('water: resistance 75%')
-      expect(slot('6').disabled).toBe(false)
+      expect(slot('6').unavailable).toBe(false)
     },
   )
 
@@ -1469,11 +1455,11 @@ describe('scene renderer', () => {
       slot('11').dispatchEvent(new Event('click'))
       slot('15').dispatchEvent(new Event('click'))
       flush(engine)
-      expect(slot('12').disabled).toBe(true)
+      expect(slot('12').unavailable).toBe(true)
       expect(slot('12').title).toContain('blocked (spell)')
-      expect(slot('13').disabled).toBe(true)
+      expect(slot('13').unavailable).toBe(true)
       expect(slot('13').title).toContain('blocked (weapon)')
-      expect(slot('3').disabled).toBe(false)
+      expect(slot('3').unavailable).toBe(false)
       expect(
         target.find((node) => node.dataset.combatRestrictions === 'player')!.textContent,
       ).toContain('spell, weapon')
@@ -1483,8 +1469,8 @@ describe('scene renderer', () => {
       slot('3').dispatchEvent(new Event('click'))
       slot('15').dispatchEvent(new Event('click'))
       flush(engine)
-      expect(slot('12').disabled).toBe(false)
-      expect(slot('13').disabled).toBe(false)
+      expect(slot('12').unavailable).toBe(false)
+      expect(slot('13').unavailable).toBe(false)
       target
         .find(
           (node) => node.tagName === 'BUTTON' && node.textContent === 'Return to standard controls',
@@ -1635,7 +1621,7 @@ describe('scene renderer', () => {
         'AP 1/3',
       )
       expect(target.textContent).toContain('Float and recover · 2 AP')
-      expect(slot('2').disabled).toBe(true)
+      expect(slot('2').unavailable).toBe(true)
       expect(slot('2').title).toContain('AP')
     },
   )
@@ -1798,7 +1784,7 @@ describe('scene renderer', () => {
       const feedback = () =>
         target.find((node) => node.className === 'ancadeba-autosave-status')!.textContent
 
-      expect(button('Load autosave').disabled).toBe(true)
+      expect(button('Load autosave').unavailable).toBe(true)
       expect(feedback()).toBe('Autosave enabled.')
       engine.lifecycle!.startGame()
       engine.lifecycle!.enterScene('standard')
@@ -1808,12 +1794,10 @@ describe('scene renderer', () => {
       name.value = 'Name draft'
       name.dispatchEvent(new Event('input'))
       vi.advanceTimersByTime(500)
-      expect(button('Load autosave').disabled).toBe(false)
+      expect(button('Load autosave').unavailable).toBe(false)
       expect(feedback()).toBe('Progress autosaved on this device.')
       expect(name.value).toBe('Name draft')
-      expect(target.find((node) => node.attributes.get('role') === 'status')!.textContent).toBe(
-        'Progress saved on this device.',
-      )
+      expect(manualSaveStatus(target).textContent).toBe('Progress saved on this device.')
       engine.actions!.request('walk-east')
 
       for (let i = 0; i < 20; i++) engine.flushMessages()
@@ -1828,12 +1812,10 @@ describe('scene renderer', () => {
       full = true
       vi.advanceTimersByTime(500)
       expect(feedback()).toContain('Autosave failed:')
-      expect(target.find((node) => node.attributes.get('role') === 'status')!.textContent).toBe(
-        'Saved progress loaded.',
-      )
+      expect(manualSaveStatus(target).textContent).toBe('Saved progress loaded.')
       engine.game!.localization!.select('nl')
       const load = button('Automatische opslag laden')
-      expect(load.disabled).toBe(false)
+      expect(load.unavailable).toBe(false)
       expect(feedback()).toContain('Automatisch opslaan mislukt:')
       const resume = vi.spyOn(engine.saves!, 'loadAutosave')
       engine.stop()
@@ -1879,10 +1861,9 @@ describe('scene renderer', () => {
       const button = (text: string) =>
         target.find((node) => node.tagName === 'BUTTON' && node.textContent === text)!
 
-      const status = () =>
-        target.find((node) => node.attributes.get('role') === 'status')!.textContent
+      const status = () => manualSaveStatus(target).textContent
 
-      expect(button('Delete save').disabled).toBe(true)
+      expect(button('Delete save').unavailable).toBe(true)
       engine.lifecycle!.startGame()
       engine.lifecycle!.enterScene('standard')
       const current = engine.lifecycle!.currentGame
@@ -1897,7 +1878,7 @@ describe('scene renderer', () => {
       const first = storage.get('basic-game:1')!
       storage.set('basic-game:autosave', first)
       const second = storage.get('basic-game:2')
-      expect(button('Delete save').disabled).toBe(false)
+      expect(button('Delete save').unavailable).toBe(false)
       button('Delete save').click()
       expect(confirmation(target)?.textContent).toContain(
         'Delete the save in slot 2 (Museum)? This cannot be undone.',
@@ -1923,23 +1904,29 @@ describe('scene renderer', () => {
       expect(status()).toBe('Opslag verwijderd uit het gekozen vak.')
       expect(select.children[1]?.textContent).toBe('Vak 2: Leeg')
       expect(name.value).toBe('')
-      expect(button('Opslag verwijderen').disabled).toBe(true)
-      expect(button('Voortgang laden').disabled).toBe(true)
-      expect(button('Opslag exporteren').disabled).toBe(true)
-      expect(button('Automatische opslag laden').disabled).toBe(false)
+      expect(button('Opslag verwijderen').unavailable).toBe(true)
+      expect(button('Voortgang laden').unavailable).toBe(true)
+      expect(button('Opslag exporteren').unavailable).toBe(true)
+      expect(button('Automatische opslag laden').unavailable).toBe(false)
       expect(engine.lifecycle!.currentGame).toBe(current)
       expect(engine.lifecycle!.activeScene).toBe(scene)
       expect(storage.get('basic-game:1')).toBe(first)
       expect(storage.get('basic-game:autosave')).toBe(first)
       expect(storage.has('basic-game:2')).toBe(false)
       engine.lifecycle!.enterScene('start-screen')
-      expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(false)
+      expect(target.find((node) => node.dataset.componentId === 'load-game')!.unavailable).toBe(
+        false,
+      )
       target.find((node) => node.dataset.componentId === 'load-game')!.click()
-      expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(true)
+      expect(target.find((node) => node.dataset.componentId === 'load-game')!.unavailable).toBe(
+        true,
+      )
       select = target.find((node) => node.attributes.get('aria-label') === 'Opslagvak')!
       select.value = '1'
       select.dispatchEvent(new Event('change'))
-      expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(false)
+      expect(target.find((node) => node.dataset.componentId === 'load-game')!.unavailable).toBe(
+        false,
+      )
       const remove = vi.spyOn(engine.saves!, 'delete')
       const oldDelete = button('Opslag verwijderen')
       engine.stop()
@@ -1982,11 +1969,10 @@ describe('scene renderer', () => {
     const button = (text: string) =>
       target.find((node) => node.tagName === 'BUTTON' && node.textContent === text)!
 
-    const status = () =>
-      target.find((node) => node.attributes.get('role') === 'status')!.textContent
+    const status = () => manualSaveStatus(target).textContent
 
-    expect(button('Export save').disabled).toBe(true)
-    expect(button('Import save').disabled).toBe(false)
+    expect(button('Export save').unavailable).toBe(true)
+    expect(button('Import save').unavailable).toBe(false)
     engine.lifecycle!.startGame()
     engine.lifecycle!.enterScene('standard')
     const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
@@ -2002,11 +1988,11 @@ describe('scene renderer', () => {
     slot.value = '2'
     slot.dispatchEvent(new Event('change'))
     expect(name.value).toBe('')
-    expect(button('Load progress').disabled).toBe(true)
+    expect(button('Load progress').unavailable).toBe(true)
     const input = target.find((node) => node.type === 'file')!
     input.files = [{ size: file.text.length, text: async () => file.text }]
     input.dispatchEvent(new Event('change'))
-    expect(slot.disabled).toBe(true)
+    expect(slot.unavailable).toBe(true)
     await vi.waitFor(() => expect(status()).toContain('Save imported'))
     expect(slot.children[1]?.textContent).toBe('Slot 2: Museum')
     expect(name.value).toBe('Museum')
@@ -2014,7 +2000,7 @@ describe('scene renderer', () => {
     expect(document.defaultView.confirm).not.toHaveBeenCalled()
     const original = storage.get('basic-game:2')
     input.dispatchEvent(new Event('change'))
-    expect(button('Delete save').disabled).toBe(true)
+    expect(button('Delete save').unavailable).toBe(true)
     await vi.waitFor(() => expect(confirmation(target)).toBeDefined())
     expect(confirmation(target)?.textContent).toContain(
       'Replace the saved game in this slot with the imported file?',
@@ -2154,21 +2140,19 @@ describe('scene renderer', () => {
       return found
     }
 
-    expect(button('Save progress').disabled).toBe(true)
+    expect(button('Save progress').unavailable).toBe(true)
     const menuLoad = target.find((node) => node.dataset.componentId === 'load-game')!
-    expect(menuLoad.disabled).toBe(false)
+    expect(menuLoad.unavailable).toBe(false)
     menuLoad.click()
     expect(first.lifecycle!.activeScene!.data.id).toBe('load-game')
-    expect(target.find((node) => node.dataset.componentId === 'load-game')!.disabled).toBe(true)
+    expect(target.find((node) => node.dataset.componentId === 'load-game')!.unavailable).toBe(true)
     target.find((node) => node.dataset.componentId === 'main-menu')!.click()
     target
       .find((node) => node.dataset.componentId === 'new-game')!
       .dispatchEvent(new Event('click'))
-    expect(button('Save progress').disabled).toBe(false)
+    expect(button('Save progress').unavailable).toBe(false)
     button('Save progress').dispatchEvent(new Event('click'))
-    expect(target.find((node) => node.attributes.get('role') === 'status')!.textContent).toBe(
-      'Progress saved on this device.',
-    )
+    expect(manualSaveStatus(target).textContent).toBe('Progress saved on this device.')
     first.actions!.request('walk-east')
 
     for (let count = 0; count < 20; count++) first.flushMessages()
@@ -2189,12 +2173,10 @@ describe('scene renderer', () => {
     await second.start()
     target.find((node) => node.dataset.componentId === 'load-game')!.click()
     const load = target.find((node) => node.dataset.componentId === 'load-game')!
-    expect(load.disabled).toBe(false)
+    expect(load.unavailable).toBe(false)
     load.dispatchEvent(new Event('click'))
     expect(second.lifecycle!.activeScene!.data.id).toBe('standard')
-    expect(target.find((node) => node.attributes.get('role') === 'status')!.textContent).toBe(
-      'Saved progress loaded.',
-    )
+    expect(manualSaveStatus(target).textContent).toBe('Saved progress loaded.')
   })
 
   it.each(['preview', 'standalone'])(
@@ -2640,13 +2622,13 @@ describe('scene renderer', () => {
 
       expect(actionBar().children).toHaveLength(15)
       expect(button('1').children[1]!.textContent).toBe(badge)
-      expect(button('2').disabled).toBe(false)
+      expect(button('2').unavailable).toBe(false)
       expect(button('4').hidden).toBe(true)
       button('2').focus()
       button('2').dispatchEvent(new Event('click'))
       flush(engine)
-      expect(button('2').disabled).toBe(true)
-      expect(document.activeElement).toBe(surface)
+      expect(button('2').unavailable).toBe(true)
+      expect(document.activeElement).toBe(button('2'))
       const item = target.find((node) => node.dataset.itemId === 'folded-letter')!
       item.focus()
       item.dispatchEvent(new Event('click'))
@@ -2784,7 +2766,7 @@ describe('scene renderer', () => {
       click('take-letter')
       click('take-letter')
       flush(engine)
-      expect(component('take-letter').disabled).toBe(true)
+      expect(component('take-letter').unavailable).toBe(true)
       expect(
         component('nearby').find((node) => node.dataset.nearbyEntry === 'folded-letter')!.parent!
           .hidden,
@@ -2808,9 +2790,9 @@ describe('scene renderer', () => {
       expect(component('event-log').textContent).toContain(`09:01  ${message('gallery')}`)
       expect(engine.actions?.progression.worldTimeMs).toBe(60_000)
       expect(component('nearby').textContent).toContain(message('caseLabel'))
-      expect(component('press-crown').disabled).toBe(true)
-      expect(component('press-heron').disabled).toBe(true)
-      expect(component('take-chart').disabled).toBe(true)
+      expect(component('press-crown').unavailable).toBe(true)
+      expect(component('press-heron').unavailable).toBe(true)
+      expect(component('take-chart').unavailable).toBe(true)
       expect(inspectChart()).toBeUndefined()
       expect(component('items').textContent).not.toContain(message('clue'))
 
@@ -2828,7 +2810,7 @@ describe('scene renderer', () => {
       expect(component('items').find((node) => Boolean(node.dataset.inspectItem))).toBeUndefined()
       expect(component('narrative').textContent).toContain(message('clue'))
       expect(component('event-log').textContent).toContain(message('read'))
-      expect(component('press-heron').disabled).toBe(false)
+      expect(component('press-heron').unavailable).toBe(false)
 
       click('press-crown')
       flush(engine)
@@ -2840,15 +2822,15 @@ describe('scene renderer', () => {
       expect(component('nearby').textContent).toContain(message('caseOpenLabel'))
       expect(component('narrative').textContent).toContain(message('caseOpen'))
       expect(component('event-log').textContent).toContain(message('opened'))
-      expect(component('press-heron').disabled).toBe(true)
-      expect(component('take-chart').disabled).toBe(false)
+      expect(component('press-heron').unavailable).toBe(true)
+      expect(component('take-chart').unavailable).toBe(false)
       expect(component('nearby').textContent).toContain(message('caseOpenWithChart'))
       expect(inspectChart()).toBeUndefined()
 
       click('take-chart')
       click('take-chart')
       flush(engine)
-      expect(component('take-chart').disabled).toBe(true)
+      expect(component('take-chart').unavailable).toBe(true)
       expect(component('nearby').textContent).not.toContain(message('caseOpenWithChart'))
       expect(component('narrative').textContent).toContain(message('caseEmpty'))
       expect(component('items').textContent).toContain(
@@ -2864,7 +2846,7 @@ describe('scene renderer', () => {
       expect(engine.lifecycle?.activeScene?.data.id).toBe('standard')
       expect(mapColumn()).toBe('2')
       expect(component('clock').textContent).toContain('09:02')
-      expect(component('take-letter').disabled).toBe(true)
+      expect(component('take-letter').unavailable).toBe(true)
       expect(component('items').textContent).not.toContain(message('clue'))
       expect(component('narrative').textContent).not.toContain(message('clue'))
       // Reinspection restores the result without repeating discovery effects.
@@ -2876,7 +2858,7 @@ describe('scene renderer', () => {
       click('walk-to-harbour')
       flush(engine)
       expect(engine.lifecycle?.activeScene?.data.id).toBe('old-harbour')
-      expect(component('follow-chart-to-buoy').disabled).toBe(true)
+      expect(component('follow-chart-to-buoy').unavailable).toBe(true)
       expect(mapColumn('harbour-map')).toBe('2')
 
       engine.actions?.request('follow-chart-to-buoy')
@@ -2890,7 +2872,7 @@ describe('scene renderer', () => {
       expect(component('items').textContent).not.toContain(message('chartDetails'))
       expect(component('narrative').textContent).toContain(message('chartDetails'))
       expect(occurrences(component('event-log').textContent, 'chartRead')).toBe(1)
-      expect(component('follow-chart-to-buoy').disabled).toBe(false)
+      expect(component('follow-chart-to-buoy').unavailable).toBe(false)
 
       click('follow-chart-to-buoy')
       flush(engine)
@@ -2919,13 +2901,13 @@ describe('scene renderer', () => {
       click('walk-east')
       flush(engine)
       expect(component('nearby').textContent).toContain(message('caseOpenLabel'))
-      expect(component('take-chart').disabled).toBe(true)
+      expect(component('take-chart').unavailable).toBe(true)
 
       expect(component('event-log').textContent).not.toContain('09:00  ' + message('lobby'))
 
       engine.lifecycle?.enterScene('start-screen')
       startSampleGame(target)
-      expect(component('take-letter').disabled).toBe(false)
+      expect(component('take-letter').unavailable).toBe(false)
       expect(component('items').textContent).toContain(catalog['usable.healing-potion.name'])
       expect(component('event-log').textContent).not.toContain(message('pickup'))
       expect(component('clock').textContent).toContain('09:00')
@@ -2933,8 +2915,8 @@ describe('scene renderer', () => {
       click('walk-east')
       flush(engine)
       expect(component('nearby').textContent).toContain(message('caseLabel'))
-      expect(component('press-heron').disabled).toBe(true)
-      expect(component('take-chart').disabled).toBe(true)
+      expect(component('press-heron').unavailable).toBe(true)
+      expect(component('take-chart').unavailable).toBe(true)
       expect(inspectChart()).toBeUndefined()
     },
   )
@@ -3053,16 +3035,16 @@ describe('scene renderer', () => {
       const player = () => target.find((node) => node.className === 'ancadeba-map-player')!
       const column = () => player().style.getPropertyValue('--ge-map-player-column')
       const east = target.find((node) => node.dataset.componentId === 'east-button')!
-      expect(button('2').disabled).toBe(true)
-      expect(button('8').disabled).toBe(false)
+      expect(button('2').unavailable).toBe(true)
+      expect(button('8').unavailable).toBe(false)
       expect(button('8').children[1]!.textContent).toBe('D / ArrowRight')
       east.dispatchEvent(new Event('click'))
-      expect(button('8').disabled).toBe(true)
-      expect(east.disabled).toBe(true)
+      expect(button('8').unavailable).toBe(true)
+      expect(east.unavailable).toBe(true)
       expect(column()).toBe('10')
       tasks[0]!.callback()
       expect(column()).toBe('11')
-      expect(east.disabled).toBe(false)
+      expect(east.unavailable).toBe(false)
       engine.input!.pressKey('KeyA')
       engine.input!.releaseKey('KeyA')
       flush(engine)
@@ -3173,7 +3155,7 @@ describe('scene renderer', () => {
       onTestFinished(() => engine.stop())
       await engine.start()
       const button = () => target.find((node) => node.dataset.componentId === 'entrance')!
-      expect(button().disabled).toBe(true)
+      expect(button().unavailable).toBe(true)
       expect(engine.lifecycle!.currentGame).toBeUndefined()
       engine.lifecycle!.startGame()
       const coast = engine.lifecycle!.enterScene('coast')
@@ -3188,27 +3170,27 @@ describe('scene renderer', () => {
       }
 
       const slot = () => target.find((node) => node.dataset.actionBarSlot === '15')!
-      expect(button().disabled).toBe(true)
-      expect(slot().disabled).toBe(true)
+      expect(button().unavailable).toBe(true)
+      expect(slot().unavailable).toBe(true)
       expect(slot().title).toContain('blocked')
       instance.actionBar!.activate(coast, 'movement-bar', '15')
       expect(engine.lifecycle!.activeScene).toBe(coast)
       setOpen(true)
-      expect(button().disabled).toBe(false)
-      expect(slot().disabled).toBe(false)
+      expect(button().unavailable).toBe(false)
+      expect(slot().unavailable).toBe(false)
       // Simulate a collision change occurring before notification reaches either control.
       state.set('chestOpened', false)
       button().dispatchEvent(new Event('click'))
       instance.actionBar!.activate(coast, 'movement-bar', '15')
-      expect(button().disabled).toBe(true)
+      expect(button().unavailable).toBe(true)
       expect(engine.lifecycle!.activeScene).toBe(coast)
       setOpen(true)
       engine.lifecycle!.enterScene('menu')
-      expect(button().disabled).toBe(false)
+      expect(button().unavailable).toBe(false)
       setOpen(false)
-      expect(button().disabled).toBe(true)
+      expect(button().unavailable).toBe(true)
       setOpen(true)
-      expect(button().disabled).toBe(false)
+      expect(button().unavailable).toBe(false)
       button().dispatchEvent(new Event('click'))
       const village = engine.lifecycle!.activeScene!
       expect(village.data.id).toBe('village')
@@ -3370,8 +3352,8 @@ describe('scene renderer', () => {
       expect(object.attributes.get('aria-label')).toBe('Signpost')
       expect(object.style.getPropertyValue('grid-column')).toBe('11 / span 1')
       expect(object.style.getPropertyValue('grid-row')).toBe('5 / span 1')
-      expect(object.disabled).toBe(false)
-      expect(button.disabled).toBe(false)
+      expect(object.unavailable).toBe(false)
+      expect(button.unavailable).toBe(false)
       object.dispatchEvent(new Event('click'))
       flush(engine)
       button.dispatchEvent(new Event('click'))
@@ -3382,13 +3364,13 @@ describe('scene renderer', () => {
       ).toEqual({ status: 'resolved', value: true })
       const movement = engine.lifecycle!.currentGame!.mapMovement!
       movement.move(engine.lifecycle!.activeScene!, 'coast-map', 'west')
-      expect(object.disabled).toBe(true)
-      expect(button.disabled).toBe(true)
+      expect(object.unavailable).toBe(true)
+      expect(button.unavailable).toBe(true)
       object.dispatchEvent(new Event('click'))
       flush(engine)
       tasks.shift()!()
       flush(engine)
-      expect(object.disabled).toBe(true)
+      expect(object.unavailable).toBe(true)
       expect(applied).toHaveLength(2)
       engine.lifecycle!.enterScene('village')
       object.dispatchEvent(new Event('click'))
@@ -3453,7 +3435,7 @@ describe('scene renderer', () => {
         flush(engine)
       }
 
-      expect(interact().disabled).toBe(false)
+      expect(interact().unavailable).toBe(false)
       expect(interact().children[1]!.textContent).toBe('E')
       expect(
         target.find((element) => element.dataset.mapObject === 'coast-signpost')!.disabled,
@@ -3463,12 +3445,12 @@ describe('scene renderer', () => {
       expect(feedback()).toContain('Coins: 0')
 
       for (const code of ['KeyA', 'KeyW', 'KeyW']) walk(code)
-      expect(interact().disabled).toBe(true)
+      expect(interact().unavailable).toBe(true)
       expect(
         target.find((element) => element.dataset.mapObject === 'village-chest')!.disabled,
       ).toBe(true)
       walk('KeyD')
-      expect(interact().disabled).toBe(false)
+      expect(interact().unavailable).toBe(false)
       expect(
         target
           .find((element) => element.dataset.mapObject === 'village-chest')!
@@ -3529,16 +3511,18 @@ describe('scene renderer', () => {
         },
       })
       expect(basket.hidden).toBe(false)
-      expect(basket.disabled).toBe(false)
+      expect(basket.unavailable).toBe(false)
       basket.focus()
       engine.input!.pressKey('KeyE')
       engine.input!.releaseKey('KeyE')
       flush(engine)
       expect(basket.hidden).toBe(true)
-      expect(basket.disabled).toBe(true)
+      expect(basket.unavailable).toBe(true)
       expect(backpack().textContent.match(/Wild berry/g)).toHaveLength(3)
       expect(document.activeElement).toBe(mapView)
-      expect(target.find((element) => element.dataset.actionBarSlot === '12')!.disabled).toBe(true)
+      expect(target.find((element) => element.dataset.actionBarSlot === '12')!.unavailable).toBe(
+        true,
+      )
       basket.dispatchEvent(new Event('click'))
       flush(engine)
       expect(applied).toEqual(['collect-berries'])
@@ -3824,7 +3808,7 @@ describe('scene renderer', () => {
     const narrative = standard.find((element) => element.dataset.componentId === 'narrative')!
     expect(narrative.tagName).toBe('DIV')
     expect(narrative.style.getPropertyValue('--ge-component-row')).toBe('3')
-    expect(narrative.style.getPropertyValue('--ge-component-row-span')).toBe('6')
+    expect(narrative.style.getPropertyValue('--ge-component-row-span')).toBe('4')
     expect(narrative.textContent).toContain('\n\n')
     const firstNode = standard
     lifecycle.enterScene('inventory')
@@ -4448,14 +4432,14 @@ describe('editor scene picker', () => {
 
       game.inventorySelection!.select(scene, 'items', 'healing-potion-one')
       const slot = () => target.find((node) => node.dataset.actionBarSlot === '6')!
-      expect(slot().disabled).toBe(false)
+      expect(slot().unavailable).toBe(false)
       slot().focus()
       engine.input!.pressKey('KeyA')
       engine.input!.releaseKey('KeyA')
       flush(engine)
       expect(game.combatStats!.snapshot('player')!.health).toBe(37)
       expect(game.inventorySelection!.get(scene, 'items')).toBeUndefined()
-      expect(document.activeElement).toBe(target.find((node) => node.className === 'ancadeba-game'))
+      expect(document.activeElement).toBe(slot())
       const details = () => target.find((node) => node.dataset.componentId === 'details')!
       expect(details().textContent).toContain('Used Healing potion: restored 12 health.')
       game.data.localization!.select('nl')
@@ -4532,7 +4516,7 @@ describe('editor scene picker', () => {
       const slot = (id: string) => target.find((node) => node.dataset.actionBarSlot === id)!
       slot('2').dispatchEvent(new Event('click'))
       flush(engine)
-      expect(slot('2').disabled).toBe(true)
+      expect(slot('2').unavailable).toBe(true)
       expect(slot('2').title).toContain('Already queued')
       slot('15').dispatchEvent(new Event('click'))
       flush(engine)
@@ -4550,7 +4534,7 @@ describe('editor scene picker', () => {
       flush(engine)
       expect(target.find((node) => node.dataset.statusEffect === 'poison')).toBeUndefined()
       expect(document.activeElement).toBe(target.find((node) => node.className === 'ancadeba-game'))
-      expect(slot('2').disabled).toBe(false)
+      expect(slot('2').unavailable).toBe(false)
       engine.game!.localization!.select('nl')
       expect(slot('2').textContent).toContain('Gifslag')
       slot('2').dispatchEvent(new Event('click'))
@@ -4612,7 +4596,7 @@ describe('editor scene picker', () => {
       const slot = (id: string) =>
         component('commands').find((node) => node.dataset.actionBarSlot === id)!
 
-      expect(slot('12').disabled).toBe(true)
+      expect(slot('12').unavailable).toBe(true)
       expect(slot('12').textContent).toContain('Requires level 2')
 
       for (const id of ['sentinel', 'keeper']) {
@@ -4637,7 +4621,7 @@ describe('editor scene picker', () => {
       expect(game.bindings!.read({ source: 'game.state', path: ['player', 'gold'] })).toMatchObject(
         { value: 20 },
       )
-      expect(slot('9').disabled).toBe(true)
+      expect(slot('9').unavailable).toBe(true)
       const prize = game.combatRewards!.snapshot(scene, 'combat')!.items[0]!
       const lootItem = () => component('loot').find((node) => node.dataset.itemId === prize)!
       expect(lootItem().textContent).toContain('<b>Training token</b>')
@@ -4649,7 +4633,7 @@ describe('editor scene picker', () => {
       expect(component('loot-details').textContent).toContain('Trainingsmunt')
       expect(component('progression').textContent).toContain('Niveau 2')
       expect(component('progression').textContent).toContain('Vrijgespeeld: Krachtslag')
-      expect(slot('9').disabled).toBe(false)
+      expect(slot('9').unavailable).toBe(false)
       lootItem().focus()
       engine.input!.pressKey('KeyF')
       engine.input!.releaseKey('KeyF')
@@ -4657,7 +4641,7 @@ describe('editor scene picker', () => {
       expect(game.inventorySelection!.get(scene, 'loot')).toBeUndefined()
       expect(document.activeElement).toBe(target.find((node) => node.className === 'ancadeba-game'))
 
-      if (!slot('10').disabled) {
+      if (!slot('10').unavailable) {
         slot('10').dispatchEvent(new Event('click'))
         flush(engine)
       }
@@ -4669,7 +4653,7 @@ describe('editor scene picker', () => {
       expect(slot('12').textContent).not.toContain('Vereist')
       const advanced = engine.lifecycle!.activeScene!
       game.combat!.selectTarget(advanced, 'combat', 'advanced-sentinel')
-      expect(slot('12').disabled).toBe(false)
+      expect(slot('12').unavailable).toBe(false)
       engine.input!.pressKey('KeyX')
       engine.input!.releaseKey('KeyX')
       flush(engine)
@@ -4693,7 +4677,7 @@ describe('editor scene picker', () => {
         level: 1,
         xp: 0,
       })
-      expect(slot('10').disabled).toBe(true)
+      expect(slot('10').unavailable).toBe(true)
     },
   )
   it.each([false, true])(
@@ -4723,11 +4707,11 @@ describe('editor scene picker', () => {
       const enemy = () =>
         component('combat').find((node) => node.dataset.combatTarget === 'sentinel')!
 
-      expect(slot('1').disabled).toBe(true)
+      expect(slot('1').unavailable).toBe(true)
       expect(component('combat').textContent).toContain('3–6')
       expect(component('combat').textContent).toContain('Practice keeper')
       enemy().dispatchEvent(new Event('click'))
-      expect(slot('1').disabled).toBe(false)
+      expect(slot('1').unavailable).toBe(false)
       slot('1').focus()
 
       for (const code of ['KeyQ', 'KeyW', 'KeyB']) {
@@ -4803,21 +4787,21 @@ describe('editor scene picker', () => {
 
       expect(component('shop').textContent).toContain('12 Gold')
       expect(component('merchant-items').textContent).toContain('5 Gold')
-      expect(slot('1').disabled).toBe(true)
+      expect(slot('1').unavailable).toBe(true)
       const stock = item('merchant-items', 'postcard-one')
       stock.focus()
       stock.dispatchEvent(new Event('click'))
       expect(component('narrative').textContent).toContain('A small postcard')
-      expect(slot('1').disabled).toBe(false)
+      expect(slot('1').unavailable).toBe(false)
       engine.input!.pressKey('KeyQ')
       engine.input!.releaseKey('KeyQ')
       flush(engine)
       expect(component('shop').textContent).toContain('7 Gold')
       expect(component('narrative').textContent).toContain('Bought Museum postcard for 5 Gold.')
       expect(document.activeElement).toBe(target.find((node) => node.className === 'ancadeba-game'))
-      expect(slot('1').disabled).toBe(true)
+      expect(slot('1').unavailable).toBe(true)
       item('player-items', 'postcard-one').dispatchEvent(new Event('click'))
-      expect(slot('2').disabled).toBe(false)
+      expect(slot('2').unavailable).toBe(false)
       engine.game!.localization!.select('nl')
       expect(component('shop').textContent).toContain('7 Goud')
       expect(component('narrative').textContent).toContain('Museumkaart gekocht voor 5 Goud.')
@@ -4896,7 +4880,7 @@ describe('editor scene picker', () => {
       expect(details().dataset.bindingStatus).toBe('unresolved')
       expect(details().textContent).toContain('Inside Backpack (Wayfarer)')
       expect(details().textContent).toContain('40 → 48 (+8)')
-      expect(slot('1').disabled).toBe(false)
+      expect(slot('1').unavailable).toBe(false)
       expect(
         equipment()
           .find((node) => node.dataset.equipmentSlot === 'outerwear')!
@@ -4910,7 +4894,7 @@ describe('editor scene picker', () => {
       expect(engine.lifecycle!.currentGame!.combatStats!.snapshot('wayfarer')!.total).toMatchObject(
         { attack: 2, defense: 1, guard: 2, maximumHealth: 48 },
       )
-      expect(slot('2').disabled).toBe(false)
+      expect(slot('2').unavailable).toBe(false)
       item('amber-cloak').dispatchEvent(new Event('click'))
       expect(details().textContent).toContain('48 → 52 (+4)')
       slot('1').dispatchEvent(new Event('click'))

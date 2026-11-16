@@ -9,13 +9,15 @@
       "damage": {
         "min": 3,
         "max": 6
-      }
+      },
+      "descriptionKey": "combat.attack.description"
     },
     "guard": {
       "type": "guard",
       "labelKey": "combat.guard",
       "apCost": 1,
-      "guard": 5
+      "guard": 5,
+      "descriptionKey": "combat.guard.description"
     },
     "poison-strike": {
       "type": "ability",
@@ -37,7 +39,8 @@
           "status": "poison"
         }
       ],
-      "labelKey": "abilities.move.poison-strike"
+      "labelKey": "abilities.move.poison-strike",
+      "descriptionKey": "abilities.move.poison-strike.description"
     },
     "recover": {
       "type": "ability",
@@ -51,7 +54,8 @@
           "amount": 10
         }
       ],
-      "labelKey": "abilities.move.recover"
+      "labelKey": "abilities.move.recover",
+      "descriptionKey": "abilities.move.recover.description"
     },
     "battle-focus": {
       "type": "ability",
@@ -65,7 +69,8 @@
           "status": "focus"
         }
       ],
-      "labelKey": "abilities.move.battle-focus"
+      "labelKey": "abilities.move.battle-focus",
+      "descriptionKey": "abilities.move.battle-focus.description"
     },
     "weaken": {
       "type": "ability",
@@ -79,7 +84,8 @@
           "status": "weakness"
         }
       ],
-      "labelKey": "abilities.move.weaken"
+      "labelKey": "abilities.move.weaken",
+      "descriptionKey": "abilities.move.weaken.description"
     },
     "regenerate": {
       "type": "ability",
@@ -93,7 +99,8 @@
           "status": "regeneration"
         }
       ],
-      "labelKey": "abilities.move.regenerate"
+      "labelKey": "abilities.move.regenerate",
+      "descriptionKey": "abilities.move.regenerate.description"
     },
     "stunning-blow": {
       "type": "ability",
@@ -115,7 +122,8 @@
           "status": "stun"
         }
       ],
-      "labelKey": "abilities.move.stunning-blow"
+      "labelKey": "abilities.move.stunning-blow",
+      "descriptionKey": "abilities.move.stunning-blow.description"
     },
     "restore-vitality": {
       "type": "ability",
@@ -129,7 +137,8 @@
           "amount": 12
         }
       ],
-      "labelKey": "usable.restore-vitality"
+      "labelKey": "usable.restore-vitality",
+      "descriptionKey": "usable.restore-vitality.description"
     },
     "cleanse-poison": {
       "type": "ability",
@@ -143,7 +152,8 @@
           "status": "poison"
         }
       ],
-      "labelKey": "usable.cleanse-poison"
+      "labelKey": "usable.cleanse-poison",
+      "descriptionKey": "usable.cleanse-poison.description"
     },
     "flame-burst": {
       "type": "ability",
@@ -160,7 +170,8 @@
           }
         }
       ],
-      "labelKey": "usable.flame-burst"
+      "labelKey": "usable.flame-burst",
+      "descriptionKey": "usable.flame-burst.description"
     }
   },
   "statuses": {
