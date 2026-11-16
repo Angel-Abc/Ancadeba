@@ -1,0 +1,82 @@
+{
+  "schema-version": "1.0.0",
+  "id": "save",
+  "title": "Save game",
+  "description": "",
+  "type": "stand-alone",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "slots",
+      "type": "save-slots",
+      "placement": {
+        "row": 2,
+        "column": 2,
+        "rowSpan": 3,
+        "columnSpan": 14
+      },
+      "label": "Save slots",
+      "showName": true
+    },
+    {
+      "id": "save",
+      "type": "button",
+      "placement": {
+        "row": 6,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Save game",
+      "action": {
+        "type": "save-game"
+      }
+    },
+    {
+      "id": "status",
+      "type": "save-status",
+      "placement": {
+        "row": 8,
+        "column": 2,
+        "rowSpan": 2,
+        "columnSpan": 14
+      },
+      "label": "Save status"
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "placement": {
+        "row": 11,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Resume",
+      "action": {
+        "type": "resume-game"
+      }
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "placement": {
+        "row": 12,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Main menu",
+      "action": {
+        "type": "main-menu",
+        "scene": "start"
+      }
+    }
+  ]
+}
