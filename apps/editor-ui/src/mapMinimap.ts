@@ -21,6 +21,7 @@ export function mapMinimap(
     navigate(point: TilePoint): void
     pan(x: number, y: number): void
     focusGrid(): void
+    view?(): { x: number; y: number; columns: number; rows: number }
     assets?: AssetCatalog | undefined
     imageUrl(image: ImageAsset): string | undefined
     spawns: ReadonlySet<string>
@@ -142,29 +143,24 @@ export function mapMinimap(
   }
 
   const refreshView = () => {
+    const view = options.view?.() ?? camera
     outline.style.setProperty(
       'left',
-      `${(100 * (left + (camera.x * width) / map.width)) / frameWidth}%`,
+      `${(100 * (left + (view.x * width) / map.width)) / frameWidth}%`,
     )
     outline.style.setProperty(
       'top',
-      `${(100 * (top + (camera.y * height) / map.height)) / frameHeight}%`,
+      `${(100 * (top + (view.y * height) / map.height)) / frameHeight}%`,
     )
-    outline.style.setProperty(
-      'width',
-      `${(100 * camera.columns * width) / map.width / frameWidth}%`,
-    )
-    outline.style.setProperty(
-      'height',
-      `${(100 * camera.rows * height) / map.height / frameHeight}%`,
-    )
+    outline.style.setProperty('width', `${(100 * view.columns * width) / map.width / frameWidth}%`)
+    outline.style.setProperty('height', `${(100 * view.rows * height) / map.height / frameHeight}%`)
     button.setAttribute(
       'aria-description',
       t('maps.range', {
-        x: camera.x,
-        endX: camera.x + camera.columns - 1,
-        y: camera.y,
-        endY: camera.y + camera.rows - 1,
+        x: Math.floor(view.x),
+        endX: Math.min(map.width - 1, Math.ceil(view.x + view.columns) - 1),
+        y: Math.floor(view.y),
+        endY: Math.min(map.height - 1, Math.ceil(view.y + view.rows) - 1),
       }),
     )
   }

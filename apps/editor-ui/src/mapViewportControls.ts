@@ -11,6 +11,7 @@ export function mapViewportControls(
     panning(): boolean
     setPanning(value: boolean): void
     focusGrid(): void
+    view?(): { x: number; y: number; columns: number; rows: number }
   },
 ) {
   const element = document.createElement('div')
@@ -129,15 +130,16 @@ export function mapViewportControls(
   element.append(zoomControls, pages)
 
   const refresh = () => {
+    const view = options.view?.() ?? camera
     zoom.value = String(camera.zoom)
     pan.setAttribute('aria-pressed', String(options.panning()))
 
     for (const { button, disabled } of buttons) button.disabled = disabled()
     range.textContent = t('maps.range', {
-      x: camera.x,
-      endX: camera.x + camera.columns - 1,
-      y: camera.y,
-      endY: camera.y + camera.rows - 1,
+      x: Math.floor(view.x),
+      endX: Math.min(camera.width - 1, Math.ceil(view.x + view.columns) - 1),
+      y: Math.floor(view.y),
+      endY: Math.min(camera.height - 1, Math.ceil(view.y + view.rows) - 1),
     })
   }
 

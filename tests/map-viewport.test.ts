@@ -2,6 +2,28 @@ import { describe, expect, it } from 'vite-plus/test'
 import { MapViewport, mapGridViewport, mapZoomLevels } from '../apps/editor-ui/src/mapViewport.js'
 
 describe('map viewport', () => {
+  it('adapts to the visible canvas size and retains edge positions when restored', () => {
+    const camera = new MapViewport(64, 40)
+    expect(camera.resize(10.5, 8.5)).toBe(true)
+    expect(camera).toMatchObject({ columns: 11, rows: 9 })
+    camera.pan(1000, 1000)
+
+    const saved = {
+      ...mapGridViewport(),
+      x: camera.x,
+      y: camera.y,
+      viewColumns: camera.viewSize.columns,
+      viewRows: camera.viewSize.rows,
+    }
+
+    expect(new MapViewport(64, 40, saved)).toMatchObject({ x: 53, y: 31, columns: 11, rows: 9 })
+    camera.zoomTo(200)
+    expect(camera).toMatchObject({ columns: 6, rows: 5 })
+    expect(camera.resize(0, 0)).toBe(false)
+    expect(camera.resize(Number.NaN, 10)).toBe(false)
+    expect(camera.resize(1000, 1000)).toBe(true)
+    expect(camera.columns * camera.rows).toBeLessThanOrEqual(1536)
+  })
   it('centers minimap destinations at the current zoom and clamps to every map edge', () => {
     const camera = new MapViewport(64, 40)
     camera.centerOn(32, 20)

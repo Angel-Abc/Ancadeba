@@ -1896,9 +1896,18 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 
 .map-canvas {
-  max-width: 100%;
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 42rem);
   overflow: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+  border: 1px solid var(--ed-border);
   touch-action: none;
+}
+
+.map-scroll-extent {
+  position: relative;
 }
 
 .map-pan-mode .map-tile {
@@ -1910,9 +1919,8 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 
 .map-tile-grid {
+  position: absolute;
   width: max-content;
-  border: 1px solid var(--ed-border);
-  margin-top: 0.5rem;
   touch-action: none;
 }
 

@@ -33,6 +33,12 @@ class Element extends EventTarget {
   id = ''
   width = 0
   height = 0
+  clientWidth = 0
+  clientHeight = 0
+  clientLeft = 0
+  clientTop = 0
+  scrollLeft = 0
+  scrollTop = 0
   src = ''
   context = {
     fillStyle: '',
@@ -47,6 +53,10 @@ class Element extends EventTarget {
   dataset: Record<string, string> = {}
   attributes = new Map<string, string>()
   style = {
+    width: '',
+    height: '',
+    left: '',
+    top: '',
     properties: new Map<string, string>(),
     backgroundColor: '',
     backgroundImage: '',
@@ -143,6 +153,29 @@ class DocumentFixture extends EventTarget {
   body = new Element(this, 'BODY')
   activeElement: Element | undefined
   defaultView = new EventTarget()
+  observers = new Map<Element, () => void>()
+  constructor() {
+    super()
+    const observers = this.observers
+    this.defaultView = Object.assign(new EventTarget(), {
+      ResizeObserver: class {
+        target: Element | undefined
+        constructor(readonly callback: () => void) {}
+        observe(target: Element) {
+          this.target = target
+          observers.set(target, this.callback)
+        }
+        disconnect() {
+          if (this.target) observers.delete(this.target)
+        }
+      },
+    })
+  }
+  resize(element: Element, width: number, height: number) {
+    element.clientWidth = width
+    element.clientHeight = height
+    this.observers.get(element)?.()
+  }
   createElement(tag: string) {
     const element = new Element(this, tag.toUpperCase())
     this.created.push(element)
@@ -1853,6 +1886,174 @@ describe('map zoom and pan', () => {
     target.dispatchEvent(
       Object.assign(new Event('keydown', { cancelable: true }), { key, ...extra }),
     )
+
+  const scroll = (ui: ReturnType<typeof setup>, left: number, top: number) => {
+    surface(ui).scrollLeft = left
+    surface(ui).scrollTop = top
+    surface(ui).dispatchEvent(new Event('scroll'))
+  }
+
+  it('scrolls both axes across the entire map and keeps the minimap and pan controls synchronized', () => {
+    const ui = setup(largeView())
+
+    try {
+      ui.document.resize(surface(ui), 280, 224)
+      const extent = surface(ui).children[0]
+      expect(extent).toMatchObject({ style: { width: '1792px', height: '1120px' } })
+      scroll(ui, 140, 112)
+      expect(ui.tile(5, 4)).toBeDefined()
+      expect(ui.tile(14, 11)).toBeDefined()
+      expect(grid(ui).style).toMatchObject({ left: '140px', top: '112px' })
+      expect(ui.button('Navigate using minimap').attributes.get('aria-description')).toBe(
+        'Columns 5–14, rows 4–11',
+      )
+      expect(
+        ui.button('Navigate using minimap').querySelector('span')!.style.properties.get('width'),
+      ).toBe('15.625%')
+      expect(
+        grid(ui)
+          .all()
+          .filter((cell) => cell.attributes.get('role') === 'gridcell'),
+      ).toHaveLength(80)
+      scroll(ui, 1512, 896)
+      expect(ui.tile(54, 32)).toBeDefined()
+      expect(ui.tile(63, 39)).toBeDefined()
+      expect(ui.button('Pan right').disabled).toBe(true)
+      expect(ui.button('Pan down').disabled).toBe(true)
+      ui.button('Reset view').dispatchEvent(new Event('click'))
+      expect(surface(ui)).toMatchObject({ scrollLeft: 0, scrollTop: 0 })
+      expect(ui.tile(0, 0)).toBeDefined()
+      expect(ui.editor.hasDrafts()).toBe(false)
+      expect(ui.editor.draftHistory().active).toBe(false)
+      expect(ui.saved).toEqual([])
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('renders partially visible edge tiles and preserves the exact scroll position across tabs and resizing', () => {
+    const ui = setup(largeView())
+
+    try {
+      ui.document.resize(surface(ui), 294, 238)
+      scroll(ui, 147, 91)
+      expect(() => ui.tile(16, 3)).toThrow()
+      scroll(ui, 161, 91)
+      expect(ui.tile(5, 3)).toBeDefined()
+      expect(ui.tile(16, 11)).toBeDefined()
+      scroll(ui, 161, 105)
+      expect(ui.tile(16, 12)).toBeDefined()
+      scroll(ui, 161, 91)
+      expect(ui.button('Navigate using minimap').attributes.get('aria-description')).toBe(
+        'Columns 5–16, rows 3–11',
+      )
+      const outline = ui.button('Navigate using minimap').querySelector('span')!
+      expect(outline.style.properties.get('left')).toBe('8.984375%')
+      expect(outline.style.properties.get('top')).toBe('8.125%')
+      ui.button('Terrain & tilesets').dispatchEvent(new Event('click'))
+      ui.button('Objects & triggers').dispatchEvent(new Event('click'))
+      ui.button('Paint').dispatchEvent(new Event('click'))
+      ui.document.resize(surface(ui), 294, 238)
+      expect(surface(ui)).toMatchObject({ scrollLeft: 161, scrollTop: 91 })
+      expect(ui.tile(16, 11)).toBeDefined()
+      scroll(ui, 1498, 882)
+      ui.button('Map settings').dispatchEvent(new Event('click'))
+      ui.button('Paint').dispatchEvent(new Event('click'))
+      ui.document.resize(surface(ui), 294, 238)
+      expect(surface(ui)).toMatchObject({ scrollLeft: 1498, scrollTop: 882 })
+      expect(ui.tile(63, 39)).toBeDefined()
+      ui.document.resize(surface(ui), 448, 280)
+      expect(ui.tile(63, 39)).toBeDefined()
+      expect(ui.button('Pan right').disabled).toBe(true)
+      expect(ui.button('Pan down').disabled).toBe(true)
+      expect(ui.editor.hasDrafts()).toBe(false)
+    } finally {
+      ui.editor.dispose()
+      expect(ui.document.observers.size).toBe(0)
+    }
+  })
+
+  it('updates native scroll positions after minimap jumps, zoom and toolbar navigation', () => {
+    const ui = setup(largeView())
+
+    try {
+      ui.document.resize(surface(ui), 294, 238)
+      ui.button('Navigate using minimap').dispatchEvent(
+        Object.assign(new Event('keydown', { cancelable: true }), { key: 'End' }),
+      )
+      expect(surface(ui)).toMatchObject({ scrollLeft: 1498, scrollTop: 882 })
+      expect(ui.tile(63, 39)).toBeDefined()
+      ui.button('Pan left').dispatchEvent(new Event('click'))
+      expect(surface(ui).scrollLeft).toBe(1456)
+      ui.edit('Map zoom', '200', 'change')
+      expect(surface(ui).scrollLeft).toBeGreaterThan(1498)
+      const extent = surface(ui).children[0]
+      expect(extent).toMatchObject({ style: { width: '3584px', height: '2240px' } })
+      expect(
+        ui.button('Navigate using minimap').querySelector('span')!.style.properties.get('width'),
+      ).toBe('8.203125%')
+      ui.button('Reset view').dispatchEvent(new Event('click'))
+      ui.button('Next columns').dispatchEvent(new Event('click'))
+      ui.button('Next rows').dispatchEvent(new Event('click'))
+      expect(surface(ui)).toMatchObject({ scrollLeft: 308, scrollTop: 252 })
+      expect(ui.editor.draftHistory().active).toBe(false)
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('finishes a stroke when scrolling without painting additional tiles or adding a navigation undo step', () => {
+    const ui = setup(largeView())
+
+    try {
+      ui.document.resize(surface(ui), 280, 224)
+      ui.edit('Paint terrain', 'wall', 'change')
+      ui.document.resize(surface(ui), 280, 224)
+      pointer(ui.tile(0, 0), 'pointerdown', 10, 10)
+      scroll(ui, 140, 112)
+      pointer(ui.tile(5, 4), 'pointerenter', 10, 10)
+      expect(ui.tile(5, 4).attributes.get('aria-label')).toContain('ground')
+      ui.editor.restoreDraft('undo')
+      ui.document.resize(surface(ui), 280, 224)
+      expect(ui.editor.hasDrafts()).toBe(false)
+      expect(surface(ui)).toMatchObject({ scrollLeft: 140, scrollTop: 112 })
+      ui.button('Reset view').dispatchEvent(new Event('click'))
+      expect(ui.tile(0, 0).attributes.get('aria-label')).toContain('ground')
+      ui.editor.restoreDraft('redo')
+      expect(ui.tile(0, 0).attributes.get('aria-label')).toContain('wall')
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
+  it('reveals keyboard destinations and leaves the native scrollbar gutters usable in pan mode', () => {
+    const ui = setup(largeView())
+
+    try {
+      ui.document.resize(surface(ui), 280, 224)
+      key(ui.tile(9, 7), 'ArrowRight')
+      expect(surface(ui)).toMatchObject({ scrollLeft: 28, scrollTop: 0 })
+      expect(ui.document.activeElement).toBe(ui.tile(10, 7))
+      key(ui.tile(10, 7), 'ArrowDown')
+      expect(surface(ui)).toMatchObject({ scrollLeft: 28, scrollTop: 28 })
+      expect(ui.document.activeElement).toBe(ui.tile(10, 8))
+      ui.button('Pan map').dispatchEvent(new Event('click'))
+
+      const gutter = Object.assign(new Event('pointerdown', { cancelable: true }), {
+        button: 0,
+        clientX: 285,
+        clientY: 100,
+      })
+
+      surface(ui).dispatchEvent(gutter)
+      expect(gutter.defaultPrevented).toBe(false)
+      scroll(ui, 140, 112)
+      expect(ui.tile(5, 4)).toBeDefined()
+      expect(ui.editor.hasDrafts()).toBe(false)
+    } finally {
+      ui.editor.dispose()
+    }
+  })
 
   it('zooms to show more tiles or larger detail, clamps pan controls, and resets without creating a draft', () => {
     const ui = setup(largeView())

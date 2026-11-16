@@ -708,8 +708,10 @@ have a `color`, a `tile`, or both. Transparent image pixels reveal the base colo
 image cropping and rendering are shared by the editor, preview, and exported game.
 
 Click or drag to paint tiles. Arrow keys move tile focus, and Enter or Space
-paints. Large maps show a movable window of up to 24 columns by 16 rows; use the
-row/column controls or arrow keys at the window edges to reach other tiles.
+paints. Horizontal and vertical scrollbars navigate the entire map. The canvas
+adapts to the available editor width, rendering only the visible tiles and
+partially visible edge tiles. Use the scrollbars, wheel or trackpad to reach any
+part of a large map; arrow keys at the window edges also reveal the next tile.
 Displayed coordinates start at 0. Stripes indicate blocked terrain and a dot
 marks a scene's player spawn. **Fill map with selected terrain** asks before
 replacing every tile in the draft.
@@ -733,17 +735,20 @@ the selected editing tool. Dragging with the middle mouse button temporarily
 pans in any tool. Panning stops at the map edges and never paints or changes a
 selection. In Pan mode, arrow keys pan the view. With focus on a grid cell,
 **+ / −** changes zoom and **0** returns to 100%. **Ctrl/Cmd+wheel** zooms around
-the pointer; ordinary wheel scrolling remains available for the page.
+the pointer; ordinary wheel or trackpad scrolling over the canvas moves the map.
+Scrolling outside the canvas moves the editor page as usual.
 
 **Reset view** restores 100%, the top-left corner, and the editing tool. Zoom and
-position survive brush/layer changes, edit undo/redo, and saving in the current
+position, including partial-tile scroll offsets, survive tab and brush/layer changes, edit undo/redo, and saving in the current
 map, and reset on switching maps or reloading the browser. View controls do not
 create unsaved changes or edit-history steps and are not stored in map JSON.
-The visible grid stays bounded (up to 48 × 32 tiles at 50%) on large maps.
+The visible grid stays bounded on large maps, with up to 48 × 32 whole tiles at
+50% plus partially visible edge tiles.
 
 The **Minimap** shows the entire current map with terrain colors, image tiles,
 visible overlay layers, and spawn markers. Its amber outline marks the main
-grid's visible area and follows zoom and pan. Click a location to center the
+grid's visible area and follows scrolling, zoom and pan. Minimap jumps and pan
+controls update both scrollbars. Click a location to center the
 view there at the current zoom; clicks near an edge stop at the map boundary.
 The overview includes unsaved painting, erasing and tile-group edits, and updates
 after undo/redo, resizing and layer visibility changes. Clicking it navigates

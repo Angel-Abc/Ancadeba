@@ -11,6 +11,7 @@ import type { MapTileTool } from './mapTileSelection.js'
 import { MapViewport, mapGridViewport } from './mapViewport.js'
 import { mapViewportControls } from './mapViewportControls.js'
 import { mapMinimap } from './mapMinimap.js'
+import { mapCanvasScroll } from './mapCanvasScroll.js'
 
 export { mapGridViewport } from './mapViewport.js'
 
@@ -46,6 +47,9 @@ export function mapTileGrid(
   element.className = 'map-painter'
   const surface = document.createElement('div')
   surface.className = 'map-canvas'
+  surface.setAttribute('role', 'region')
+  surface.setAttribute('aria-label', t('maps.scrollMap'))
+  surface.tabIndex = -1
   const grid = document.createElement('div')
   grid.className = 'map-tile-grid'
   grid.setAttribute('role', 'grid')
@@ -56,6 +60,7 @@ export function mapTileGrid(
   const abort = new AbortController()
   const camera = new MapViewport(draft.data.width, draft.data.height, viewport)
   let panning = viewport?.panning ?? false
+  let scrolling: ReturnType<typeof mapCanvasScroll> | undefined
 
   let focused = {
     x: Math.max(camera.x, Math.min(camera.x + camera.columns - 1, viewport?.focusX ?? camera.x)),
@@ -173,7 +178,7 @@ export function mapTileGrid(
     if (disabled() || panning || drag) return
 
     if (selection?.tool() === 'select') {
-      button.focus()
+      button.focus({ preventScroll: true })
       selection.drag(point(button))
     } else if (!selection || selection.tool() === 'paint') paint(button)
   }
@@ -188,6 +193,7 @@ export function mapTileGrid(
   const changeView = (operation: () => void) => {
     stop()
     operation()
+    scrolling?.align()
     clampFocus()
     selection?.hover(undefined)
     render()
@@ -199,7 +205,8 @@ export function mapTileGrid(
     setPanning: (value) => {
       panning = value
     },
-    focusGrid: () => cells.get(key(focused.x, focused.y))?.focus(),
+    view: () => scrolling?.view() ?? camera,
+    focusGrid: () => cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true }),
   })
 
   const minimap = mapMinimap(document, draft.data, camera, t, {
@@ -209,7 +216,8 @@ export function mapTileGrid(
         focused = { ...point }
       }),
     pan: (x, y) => changeView(() => camera.pan(x, y)),
-    focusGrid: () => cells.get(key(focused.x, focused.y))?.focus(),
+    focusGrid: () => cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true }),
+    view: () => scrolling?.view() ?? camera,
     assets,
     imageUrl,
     spawns,
@@ -221,8 +229,9 @@ export function mapTileGrid(
 
   const render = () => {
     indexTriggers()
-    const columns = camera.columns
-    const rows = camera.rows
+    scrolling?.refresh()
+    const columns = scrolling?.columns ?? camera.columns
+    const rows = scrolling?.rows ?? camera.rows
     cells.clear()
     controls.refresh()
     minimap.refreshView()
@@ -263,7 +272,7 @@ export function mapTileGrid(
         button.addEventListener('pointerdown', (event) => {
           if (event.button !== 0 || disabled() || panning || drag) return
           event.preventDefault()
-          button.focus()
+          button.focus({ preventScroll: true })
           painting = !selection || selection.tool() === 'paint' || selection.tool() === 'select'
 
           if (!selection || selection.tool() === 'paint') {
@@ -288,7 +297,7 @@ export function mapTileGrid(
             changeView(() => {
               panning = false
             })
-            cells.get(key(focused.x, focused.y))?.focus()
+            cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
 
             return
           }
@@ -304,7 +313,7 @@ export function mapTileGrid(
             changeView(() =>
               event.key === '0' ? camera.zoomTo(100) : camera.zoomBy(event.key === '-' ? -1 : 1),
             )
-            cells.get(key(focused.x, focused.y))?.focus()
+            cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
 
             return
           }
@@ -346,7 +355,7 @@ export function mapTileGrid(
 
           if (panning) {
             changeView(() => camera.pan(delta[0]!, delta[1]!))
-            cells.get(key(focused.x, focused.y))?.focus()
+            cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
 
             return
           }
@@ -356,7 +365,8 @@ export function mapTileGrid(
           focused = { x: nextX, y: nextY }
           selection?.move({ x, y }, focused, event.shiftKey)
 
-          if (
+          if (scrolling?.reveal(focused)) render()
+          else if (
             nextX < camera.x ||
             nextX >= camera.x + columns ||
             nextY < camera.y ||
@@ -366,10 +376,11 @@ export function mapTileGrid(
               Math.min(Math.max(camera.x, nextX - columns + 1), nextX),
               Math.min(Math.max(camera.y, nextY - rows + 1), nextY),
             )
+            scrolling?.align()
             render()
           }
 
-          cells.get(key(nextX, nextY))?.focus()
+          cells.get(key(nextX, nextY))?.focus({ preventScroll: true })
         })
         row.append(button)
       }
@@ -424,6 +435,18 @@ export function mapTileGrid(
     'pointerdown',
     (event) => {
       if (event.button !== 1 && !(panning && event.button === 0)) return
+      const surfaceBounds = surface.getBoundingClientRect()
+      const localX = event.clientX - surfaceBounds.left - surface.clientLeft
+      const localY = event.clientY - surfaceBounds.top - surface.clientTop
+
+      if (
+        surface.clientWidth > 0 &&
+        (localX < 0 ||
+          localY < 0 ||
+          localX >= surface.clientWidth ||
+          localY >= surface.clientHeight)
+      )
+        return
       event.preventDefault()
       stop()
       const bounds = grid.getBoundingClientRect()
@@ -434,8 +457,8 @@ export function mapTileGrid(
         startY: event.clientY,
         x: camera.x,
         y: camera.y,
-        cellWidth: bounds.width / camera.columns,
-        cellHeight: bounds.height / camera.rows,
+        cellWidth: scrolling?.tileSize ?? bounds.width / camera.columns,
+        cellHeight: scrolling?.tileSize ?? bounds.height / camera.rows,
       }
       surface.classList.toggle('map-panning', true)
       surface.setPointerCapture?.(event.pointerId)
@@ -461,9 +484,10 @@ export function mapTileGrid(
       const y = drag.y - Math.round((event.clientY - drag.startY) / drag.cellHeight)
 
       if (camera.moveTo(x, y)) {
+        scrolling?.align()
         clampFocus()
         render()
-        cells.get(key(focused.x, focused.y))?.focus()
+        cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
       }
     },
     { signal: abort.signal },
@@ -481,7 +505,7 @@ export function mapTileGrid(
     (event) => {
       if ((!event.ctrlKey && !event.metaKey) || event.deltaY === 0) return
       event.preventDefault()
-      const bounds = grid.getBoundingClientRect()
+      const bounds = surface.getBoundingClientRect()
 
       const anchor = {
         x: Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width)),
@@ -496,14 +520,25 @@ export function mapTileGrid(
   document.addEventListener('pointerup', stop, { signal: abort.signal })
   document.addEventListener('pointercancel', stop, { signal: abort.signal })
   document.defaultView?.addEventListener('blur', stop, { signal: abort.signal })
-  surface.append(grid)
+  scrolling = mapCanvasScroll(document, surface, grid, camera, viewport, {
+    stop,
+    changed: () => {
+      const restoreFocus = grid.contains(document.activeElement)
+      clampFocus()
+      selection?.hover(undefined)
+      render()
+
+      if (restoreFocus) cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
+    },
+    refreshView: minimap.refreshView,
+  })
   // The grid comes first; the overview and view tips follow it.
   element.append(navigation, surface, minimap.element, controls.help)
   render()
 
   return {
     element,
-    focus: () => cells.get(key(focused.x, focused.y))?.focus(),
+    focus: () => cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true }),
     refresh: (overview = true) => {
       indexTriggers()
 
@@ -515,6 +550,7 @@ export function mapTileGrid(
     dispose: () => {
       stop()
       minimap.dispose()
+      scrolling?.dispose()
 
       if (viewport)
         Object.assign(viewport, {
@@ -524,6 +560,8 @@ export function mapTileGrid(
           focusY: focused.y,
           zoom: camera.zoom,
           panning,
+          viewColumns: camera.viewSize.columns,
+          viewRows: camera.viewSize.rows,
         })
       abort.abort()
       element.remove()

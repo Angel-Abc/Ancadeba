@@ -7,6 +7,10 @@ export const mapGridViewport = () => ({
   y: 0,
   focusX: 0,
   focusY: 0,
+  offsetX: 0,
+  offsetY: 0,
+  viewColumns: 24,
+  viewRows: 16,
   zoom: 100,
   panning: false,
 })
@@ -16,6 +20,8 @@ export class MapViewport {
   x = 0
   y = 0
   zoom = 100
+  private viewColumns = 24
+  private viewRows = 16
   private zoomAnchor: { point: TilePoint; fraction: TilePoint } | undefined
 
   constructor(
@@ -23,15 +29,35 @@ export class MapViewport {
     readonly height: number,
     saved = mapGridViewport(),
   ) {
+    this.resize(saved.viewColumns, saved.viewRows)
     this.zoom = mapZoomLevels.find((level) => level === saved.zoom) ?? 100
     this.moveTo(saved.x, saved.y)
   }
 
   get columns() {
-    return Math.min(this.width, Math.max(1, Math.floor((24 * 100) / this.zoom)))
+    return Math.min(this.width, Math.max(1, Math.ceil((this.viewColumns * 100) / this.zoom)))
   }
   get rows() {
-    return Math.min(this.height, Math.max(1, Math.floor((16 * 100) / this.zoom)))
+    return Math.min(this.height, Math.max(1, Math.ceil((this.viewRows * 100) / this.zoom)))
+  }
+
+  get viewSize() {
+    return { columns: this.viewColumns, rows: this.viewRows }
+  }
+
+  /** Available space in tile units at 100% zoom, capped to keep rendering bounded. */
+  resize(columns: number, rows: number) {
+    if (columns <= 0 || rows <= 0 || !Number.isFinite(columns) || !Number.isFinite(rows))
+      return false
+    const nextColumns = Math.min(24, columns)
+    const nextRows = Math.min(16, rows)
+
+    if (this.viewColumns === nextColumns && this.viewRows === nextRows) return false
+    this.viewColumns = nextColumns
+    this.viewRows = nextRows
+    this.moveTo(this.x, this.y)
+
+    return true
   }
   get canZoomIn() {
     return this.zoom < mapZoomLevels[mapZoomLevels.length - 1]!
