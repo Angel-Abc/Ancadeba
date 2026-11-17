@@ -1,0 +1,48 @@
+{
+  "schema-version": "1.0.0",
+  "id": "clothing",
+  "label": "Find something to wear",
+  "description": "You are standing on the beach with nothing on. Find material to cover yourself before the cold sets in.",
+  "when": [],
+  "turnInWhen": [],
+  "stages": [
+    {
+      "id": "cloth",
+      "label": "Cover yourself",
+      "description": "",
+      "objectives": [
+        {
+          "id": "find-cloth",
+          "label": "Find some cloth",
+          "description": "Search the beach and dunes for scraps of fabric or anything you can wrap yourself in.",
+          "when": [
+            {
+              "type": "item-carried-by",
+              "item": "cloth-scarf",
+              "owner": "player"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "handIns": [],
+  "rewards": {
+    "numeric": [],
+    "items": []
+  },
+  "messages": {
+    "active": "Active",
+    "ready": "Ready to turn in",
+    "completed": "Completed",
+    "not-started": "Not started",
+    "unavailable": "Quest operation is unavailable.",
+    "requirements": "Quest requirements are not satisfied.",
+    "inventory": "Required items are missing, equipped, nonempty, or reserved.",
+    "rewards": "Rewards cannot be delivered: check state access, amounts, and inventory.",
+    "accept": "This quest cannot be accepted right now.",
+    "handIn": "Hand in",
+    "reward": "Rewards"
+  },
+  "messageKeys": {}
+}

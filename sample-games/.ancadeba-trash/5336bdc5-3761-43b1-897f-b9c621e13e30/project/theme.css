@@ -1,0 +1,7 @@
+.ancadeba-scene {
+  --ge-scene-text-padding: calc(3 * var(--ge-unit-size));
+}
+
+.ancadeba-button {
+  --ge-scene-text-padding: calc(3 * var(--ge-unit-size));
+}

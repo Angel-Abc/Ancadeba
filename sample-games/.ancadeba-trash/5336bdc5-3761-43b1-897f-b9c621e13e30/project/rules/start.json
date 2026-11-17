@@ -1,0 +1,17 @@
+{
+  "state": [
+    {
+      "path": ["player", "state"],
+      "value": "washed-ashore"
+    },
+    {
+      "path": ["player", "clothed"],
+      "value": false
+    },
+    {
+      "path": ["player", "gold"],
+      "value": 0
+    }
+  ],
+  "actions": {}
+}

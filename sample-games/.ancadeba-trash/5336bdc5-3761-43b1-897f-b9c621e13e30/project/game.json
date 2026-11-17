@@ -12,5 +12,8 @@
   "initial-scene": "start",
   "stylesheet": "theme.css",
   "scenes": ["start", "adventure", "game-menu", "save", "load", "settings"],
-  "maps": []
+  "maps": ["coastline"],
+  "rules": ["start"],
+  "inventory": ["survival"],
+  "quests": ["clothing"]
 }

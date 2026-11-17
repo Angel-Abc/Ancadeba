@@ -1,0 +1,46 @@
+{
+  "schema-version": "1.0.0",
+  "id": "adventure",
+  "title": "Adventure",
+  "description": "",
+  "type": "game",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "narrative",
+      "type": "text",
+      "placement": {
+        "row": 2,
+        "column": 2,
+        "rowSpan": 6,
+        "columnSpan": 14
+      },
+      "text": "You wake on a sandy beach, the taste of salt still in your mouth. The sea has washed you ashore. Naked, shivering, and without a single possession, the only things you have are the wind, the tide, and your own two hands.",
+      "presentation": {
+        "variant": "body",
+        "align": "start"
+      }
+    },
+    {
+      "id": "menu",
+      "type": "button",
+      "placement": {
+        "row": 9,
+        "column": 5,
+        "rowSpan": 2,
+        "columnSpan": 8
+      },
+      "label": "Game menu (Escape)",
+      "action": {
+        "type": "open-menu",
+        "scene": "game-menu"
+      }
+    }
+  ]
+}

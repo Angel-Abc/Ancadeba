@@ -1,0 +1,60 @@
+{
+  "schema-version": "1.0.0",
+  "itemTypes": {
+    "cloth": {
+      "label": "Cloth",
+      "description": "Torn scraps of fabric. Enough to cover yourself if you stitch them together.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    },
+    "shell": {
+      "label": "Shell",
+      "description": "A smooth, heavy seashell from the tide line.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    },
+    "stick": {
+      "label": "Stick",
+      "description": "A straight, dry branch.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    },
+    "wood": {
+      "label": "Wood",
+      "description": "Split, weathered wood.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    },
+    "flint": {
+      "label": "Flint",
+      "description": "A sharp shard of black stone — useful for fire and cutting.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    }
+  },
+  "owners": {
+    "player": {
+      "label": "Player",
+      "equipmentSlots": {}
+    },
+    "world": {
+      "label": "World",
+      "equipmentSlots": {}
+    }
+  },
+  "items": {
+    "cloth-scarf": {
+      "itemType": "cloth",
+      "placement": {
+        "type": "carried",
+        "owner": "world"
+      },
+      "colors": {}
+    }
+  }
+}
