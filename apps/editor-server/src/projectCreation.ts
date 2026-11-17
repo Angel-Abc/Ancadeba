@@ -1,6 +1,7 @@
 import { EditorError, type ProjectDocuments } from '@ancadeba/editor-core'
 import type { ProjectWorkspace } from './editorProjectRepository.js'
 import { workspaceError } from './workspace.js'
+import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 const projectExists = () =>
   new EditorError(409, 'project_exists', 'Choose a new folder; this destination already exists')
@@ -35,10 +36,12 @@ export async function createWorkspaceProject(
     workspace,
     folder,
     Object.fromEntries(
-      Object.entries(documents).map(([file, value]) => [
-        file,
-        Buffer.from(typeof value === 'string' ? value : `${JSON.stringify(value, null, 2)}\n`),
-      ]),
+      await Promise.all(
+        Object.entries(documents).map(async ([file, value]) => [
+          file,
+          await encodeProjectDocument(file, value),
+        ]),
+      ),
     ),
     beforePublish,
   )

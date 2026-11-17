@@ -29,8 +29,8 @@ const view = {
   diagnostics: [],
 }
 
-async function connection(api: IEditorApi) {
-  const server = createMcpServer(api, 'basic')
+async function connection(api: IEditorApi, gamePath: string | null = 'basic') {
+  const server = createMcpServer(api, gamePath)
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
   await server.connect(serverTransport)
   const client = new Client({ name: 'adapter-tests', version: '1' })
@@ -79,6 +79,52 @@ function api(): IEditorApi {
 }
 
 describe('MCP adapter tools', () => {
+  it('imports projects and restores from trash before selecting a game', async () => {
+    const deleted = {
+      trashId: 'f108487a-40de-45f2-98ac-33f906c4e234',
+      revision: 'one',
+      path: 'deleted',
+      title: 'Deleted',
+      deletedAt: '2026-11-14T00:00:00.000Z',
+    }
+
+    const { client, close } = await connection(
+      {
+        ...api(),
+        importProject: async () => view,
+        listDeletedProjects: async () => ({ projects: [deleted] }),
+        restoreProject: async () => ({ ...view, path: 'recovered', previousPath: deleted.path }),
+      },
+      null,
+    )
+
+    const call = (name: string, args: Record<string, unknown> = {}) =>
+      client.callTool({ name, arguments: args })
+
+    try {
+      expect(
+        (await call('ancadeba_import_project', { destination: 'imported', dataBase64: 'UEsDBA==' }))
+          .structuredContent,
+      ).toMatchObject({ data: { gamePath: 'imported', configuredGamePath: null } })
+      expect((await call('ancadeba_list_deleted_projects')).structuredContent).toMatchObject({
+        data: { projects: [deleted] },
+      })
+      expect(
+        (
+          await call('ancadeba_restore_project', {
+            trashId: deleted.trashId,
+            expectedRevision: deleted.revision,
+            destination: 'recovered',
+          })
+        ).structuredContent,
+      ).toMatchObject({ data: { gamePath: 'recovered', previousGamePath: 'deleted' } })
+      expect((await call('ancadeba_list_projects')).structuredContent).toMatchObject({
+        data: { gamePath: null },
+      })
+    } finally {
+      await close()
+    }
+  })
   it('exports editable ZIP bytes and imports a new project without changing the active binding', async () => {
     const remote = api()
     const imports: unknown[] = []

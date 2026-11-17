@@ -18,6 +18,7 @@ import type { ProjectStorage } from './projectStorage.js'
 import { restoreHistoryFiles, sameBytes, type HistoryFile } from './historyFiles.js'
 import { workspaceError } from './workspace.js'
 import { hasRecoveryResources } from './manifestRecovery.js'
+import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 const trashRecordSchema = deletedProjectSchema.extend({
   version: z.literal(1),
@@ -139,7 +140,7 @@ export class ProjectDirectoryManagement {
       manifest = {
         file: 'game.json',
         before: Buffer.from(text),
-        after: Buffer.from(`${JSON.stringify(metadata, null, 2)}\n`),
+        after: await encodeProjectDocument('game.json', metadata),
       }
     }
 

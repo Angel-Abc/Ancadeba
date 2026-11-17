@@ -1,6 +1,10 @@
 import type { Diagnostic, EditorWriteOutcome } from '@ancadeba/editor-core'
 
 export class EditorApiError extends Error {
+  static projectNotSelected() {
+    return new EditorApiError('project_not_selected', 'No project is selected for this connection.')
+  }
+
   constructor(
     readonly code: string,
     message: string,

@@ -2,6 +2,7 @@ import { EditorError, type CommandResult } from '@ancadeba/editor-core'
 import type { ProjectWorkspace } from './editorProjectRepository.js'
 import { workspaceError } from './workspace.js'
 import { sameBytes as same } from './historyFiles.js'
+import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 /** Publishes references and the manifest before removing old files, with guarded rollback. */
 export async function saveProjectStructureChanges(
@@ -41,11 +42,7 @@ export async function saveProjectStructureChanges(
       before,
       after: change.removedFiles?.includes(file)
         ? undefined
-        : Buffer.from(
-            typeof change.project.documents[file] === 'string'
-              ? change.project.documents[file]
-              : `${JSON.stringify(change.project.documents[file], null, 2)}\n`,
-          ),
+        : await encodeProjectDocument(file, change.project.documents[file]),
     })
   }
 

@@ -121,6 +121,12 @@ export class EditorApiClient implements IEditorApi {
     private readonly shutdownSignal?: AbortSignal,
   ) {}
 
+  private get projectPath(): string {
+    if (this.config.game === null) throw EditorApiError.projectNotSelected()
+
+    return this.config.game
+  }
+
   async importProject(input: z.infer<typeof importProjectInputSchema>, signal?: AbortSignal) {
     const parsed = importProjectInputSchema.safeParse(input)
 
@@ -143,6 +149,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   async exportProject(input: z.input<typeof exportProjectInputSchema>, signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = exportProjectInputSchema.safeParse(input)
 
     if (!parsed.success)
@@ -157,7 +164,7 @@ export class EditorApiClient implements IEditorApi {
     return this.request(
       '/api/editor/projects/export',
       undefined,
-      jsonBody({ path: this.config.game, expectedRevision: parsed.data.expectedRevision }),
+      jsonBody({ path, expectedRevision: parsed.data.expectedRevision }),
       signal,
       {
         readResponse: (response) => readExportArchive(response, 'project'),
@@ -179,6 +186,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   async renameProject(input: z.infer<typeof renameProjectInputSchema>, signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = renameProjectInputSchema.safeParse(input)
 
     if (!parsed.success)
@@ -191,12 +199,13 @@ export class EditorApiClient implements IEditorApi {
     return this.request(
       '/api/editor/projects/rename',
       projectLocationSchema,
-      jsonBody({ ...parsed.data, path: this.config.game }),
+      jsonBody({ ...parsed.data, path }),
       signal,
     )
   }
 
   async deleteProject(input: z.infer<typeof deleteProjectInputSchema>, signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = deleteProjectInputSchema.safeParse(input)
 
     if (!parsed.success)
@@ -206,7 +215,7 @@ export class EditorApiClient implements IEditorApi {
     return this.request(
       '/api/editor/projects/delete',
       deletedProjectSchema,
-      jsonBody({ ...parsed.data, path: this.config.game }),
+      jsonBody({ ...parsed.data, path }),
       signal,
     )
   }
@@ -275,6 +284,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   async exportGame(input: z.input<typeof exportGameInputSchema>, signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = exportGameInputSchema.safeParse(input)
 
     if (!parsed.success)
@@ -287,7 +297,7 @@ export class EditorApiClient implements IEditorApi {
         'The connected editor does not advertise game export support',
       )
 
-    return this.request('/api/exports', undefined, jsonBody({ path: this.config.game }), signal, {
+    return this.request('/api/exports', undefined, jsonBody({ path }), signal, {
       readResponse: readExportArchive,
       timeoutMs: parsed.data.timeoutMs,
       readOnly: true,
@@ -321,7 +331,7 @@ export class EditorApiClient implements IEditorApi {
 
   inspectGame(signal?: AbortSignal) {
     return this.request(
-      `/api/editor/project?${new URLSearchParams({ path: this.config.game }).toString()}`,
+      `/api/editor/project?${new URLSearchParams({ path: this.projectPath }).toString()}`,
       projectViewSchema,
       undefined,
       signal,
@@ -329,6 +339,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   async duplicateProject(input: z.infer<typeof duplicateProjectInputSchema>, signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = duplicateProjectInputSchema.safeParse(input)
 
     if (!parsed.success)
@@ -347,14 +358,14 @@ export class EditorApiClient implements IEditorApi {
     return this.request(
       '/api/editor/projects/duplicate',
       projectViewSchema,
-      jsonBody({ ...parsed.data, path: this.config.game }),
+      jsonBody({ ...parsed.data, path }),
       signal,
     )
   }
 
   inspectScene(id: string, signal?: AbortSignal) {
     return this.request(
-      `/api/editor/scene?${new URLSearchParams({ path: this.config.game, id }).toString()}`,
+      `/api/editor/scene?${new URLSearchParams({ path: this.projectPath, id }).toString()}`,
       sceneViewSchema,
       undefined,
       signal,
@@ -363,7 +374,7 @@ export class EditorApiClient implements IEditorApi {
 
   async apply(expectedRevision: string, input: EditorCommand, signal?: AbortSignal) {
     const request = commandRequestSchema.safeParse({
-      path: this.config.game,
+      path: this.projectPath,
       expectedRevision,
       command: input,
     })
@@ -396,6 +407,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   async restore(expectedRevision: string, direction: 'undo' | 'redo', signal?: AbortSignal) {
+    const path = this.projectPath
     const parsed = historyInputSchema.safeParse({ expectedRevision })
 
     if (!parsed.success || !['undo', 'redo'].includes(direction))
@@ -411,7 +423,7 @@ export class EditorApiClient implements IEditorApi {
     return this.request(
       '/api/editor/history',
       projectViewSchema,
-      jsonBody({ path: this.config.game, ...parsed.data, direction }),
+      jsonBody({ path, ...parsed.data, direction }),
       signal,
     )
   }
@@ -433,7 +445,7 @@ export class EditorApiClient implements IEditorApi {
     const { dataBase64, ...metadata } = parsed.data
     const bytes = Buffer.from(dataBase64, 'base64')
     const form = new FormData()
-    form.set('metadata', JSON.stringify({ path: this.config.game, ...metadata }))
+    form.set('metadata', JSON.stringify({ path: this.projectPath, ...metadata }))
 
     const mime = { svg: 'image/svg+xml', png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' }[
       metadata.format

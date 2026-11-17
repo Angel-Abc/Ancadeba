@@ -8,16 +8,17 @@ export { apiErrorSchema, projectViewSchema } from '@ancadeba/editor-core'
 
 export { projectListSchema } from '@ancadeba/editor-core'
 
-export const projectDiscoveryResultSchema = projectListSchema.extend({ gamePath: z.string() })
+const selectionPath = z.string().nullable()
+export const projectDiscoveryResultSchema = projectListSchema.extend({ gamePath: selectionPath })
 
 export const projectCreationResultSchema = projectViewSchema.extend({
   gamePath: z.string(),
-  configuredGamePath: z.string(),
+  configuredGamePath: selectionPath,
 })
 
 export const projectSwitchResultSchema = projectViewSchema.extend({
   gamePath: z.string(),
-  previousGamePath: z.string(),
+  previousGamePath: selectionPath,
 })
 
 export const gameExportResultSchema = z.object({
@@ -42,14 +43,14 @@ export const capabilitiesSchema = z.object({
 })
 
 export const mcpCapabilitiesSchema = capabilitiesSchema.extend({
-  gamePath: z.string(),
+  gamePath: selectionPath,
   commandTool: z.literal(commandTool),
   commandSchemaTool: z.literal(commandSchemaTool),
   operations: operationsSchema,
 })
 
 export const commandDetailSchema = z.object({
-  gamePath: z.string(),
+  gamePath: selectionPath,
   type: z.string(),
   commandTool: z.literal(commandTool),
   schema: z.record(z.string(), z.unknown()),
@@ -77,12 +78,12 @@ export const advertisedGameSummarySchema = projectOutline({ gamePath: z.string()
 
 export const advertisedProjectSwitchResultSchema = projectOutline({
   gamePath: z.string(),
-  previousGamePath: z.string(),
+  previousGamePath: selectionPath,
 })
 
 export const advertisedProjectCreationResultSchema = projectOutline({
   gamePath: z.string(),
-  configuredGamePath: z.string(),
+  configuredGamePath: selectionPath,
 })
 
 export const advertisedSceneViewSchema = z.object({

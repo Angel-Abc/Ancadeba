@@ -89,21 +89,20 @@ describe('MCP stdio process', () => {
     await rm(root, { recursive: true, force: true })
   })
 
-  function args(game = 'basic') {
+  function args(game: string | null = 'basic') {
     return [
       '--import',
       loader,
       entry,
       '--editor-server-url',
       base,
-      '--game',
-      game,
+      ...(game === null ? [] : ['--game', game]),
       '--timeout-ms',
       '1000',
     ]
   }
 
-  async function connect(game = 'basic') {
+  async function connect(game: string | null = 'basic') {
     transport = new StdioClientTransport({
       command: process.execPath,
       args: args(game),
@@ -364,6 +363,83 @@ describe('MCP stdio process', () => {
     })
     expect(errors).toEqual([])
     expect(stderr.join('')).toBe('')
+  })
+
+  it('lists, creates, selects and edits over stdio without implicitly selecting the workspace root', async () => {
+    const manifest = await readFile(join(root, 'basic/game.json'), 'utf8')
+    await writeFile(join(root, 'game.json'), manifest)
+    const { activeClient } = await connect(null)
+
+    const call = (name: string, args: Record<string, unknown> = {}) =>
+      activeClient.callTool({ name, arguments: args })
+
+    const listed = await call('ancadeba_list_projects')
+    expect(listed.structuredContent).toMatchObject({
+      data: {
+        gamePath: null,
+        projects: expect.arrayContaining([{ path: '', title: 'Process game' }]),
+      },
+    })
+    expect((await call('ancadeba_get_capabilities')).structuredContent).toMatchObject({
+      data: { gamePath: null },
+    })
+    expect(
+      (await call('ancadeba_get_command_schema', { type: 'game.updateMetadata' }))
+        .structuredContent,
+    ).toMatchObject({ data: { gamePath: null } })
+    expect(
+      (await call('ancadeba_switch_project', { path: 'missing' })).structuredContent,
+    ).toMatchObject({ error: { code: 'project_not_found' } })
+
+    let editorRequests = 0
+    server.on('request', () => {
+      editorRequests++
+    })
+    const metadata = { title: 'Saved after selecting', description: '', version: '2' }
+    const expectedRevision = 'unused'
+
+    for (const [name, args] of [
+      ['ancadeba_inspect_game', {}],
+      ['ancadeba_update_game_metadata', { ...metadata, expectedRevision }],
+      ['ancadeba_export_project', { expectedRevision }],
+      ['ancadeba_duplicate_project', { expectedRevision, destination: 'copy', title: 'Copy' }],
+      ['ancadeba_rename_project', { expectedRevision, title: 'Renamed' }],
+      ['ancadeba_delete_project', { expectedRevision, confirm: true }],
+    ] as const) {
+      expect((await call(name, args)).structuredContent, name).toMatchObject({
+        ok: false,
+        error: {
+          code: 'project_not_selected',
+          outcome: 'not_applied',
+          recovery: expect.stringMatching(/ancadeba_list_projects.*ancadeba_switch_project/),
+        },
+      })
+    }
+
+    expect(editorRequests).toBe(0)
+
+    const created = await call('ancadeba_create_project', { path: 'new-game', title: 'New game' })
+    expect(created.structuredContent).toMatchObject({
+      data: { gamePath: 'new-game', configuredGamePath: null },
+    })
+    expect((await call('ancadeba_inspect_game')).structuredContent).toMatchObject({
+      error: { code: 'project_not_selected' },
+    })
+    const switched = await call('ancadeba_switch_project', { path: 'new-game' })
+    const selected = projectSwitchResultSchema.parse(object(switched.structuredContent).data)
+    expect(selected).toMatchObject({ gamePath: 'new-game', previousGamePath: null })
+    expect(
+      (
+        await call('ancadeba_update_game_metadata', {
+          ...metadata,
+          expectedRevision: selected.revision,
+        })
+      ).isError,
+    ).toBe(false)
+    expect(JSON.parse(await readFile(join(root, 'new-game/game.json'), 'utf8')).title).toBe(
+      metadata.title,
+    )
+    expect(await readFile(join(root, 'game.json'), 'utf8')).toBe(manifest)
   })
 
   it('discovers and creates a configured future project through stdio before its manifest exists', async () => {

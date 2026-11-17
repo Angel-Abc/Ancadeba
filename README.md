@@ -43,8 +43,8 @@ and tests. TypeScript 7's native `tsc` handles type checks and compilation of th
 server and shared packages; tsx restarts the server during development.
 
 Use `pnpm dev:mcp` to start the same development stack together with the HTTP MCP
-watcher. It connects to the editor server at `http://127.0.0.1:3000`, initially
-selects `marketvalue`, and exposes `http://127.0.0.1:3101/mcp` for llama.cpp at
+watcher. Each MCP session starts without a selected game. The watcher connects to
+the editor server at `http://127.0.0.1:3000` and exposes `http://127.0.0.1:3101/mcp` for llama.cpp at
 `http://localhost:8081` or `http://127.0.0.1:8081`. Stop the combined stack with Ctrl+C.
 
 Browser source includes DOM types; server and tooling include Node types.
@@ -143,7 +143,8 @@ Use `ancadeba_list_projects` to discover workspace games and
 `ancadeba_create_project` to create a playable starter in a new folder. Creation
 returns its revision and leaves the active project unchanged. Select a discovered
 or newly created game with `ancadeba_switch_project` to edit it without restarting
-or reconfiguring the connection. `--game` sets only the initial selection.
+or reconfiguring the connection. To start with a project selected, pass
+`--game basic` for the `basic` folder or `--game ""` for a workspace-root game.
 
 Use `ancadeba_export_game` to export the active project's saved files as a playable
 ZIP without opening the editor. It returns ZIP metadata and an embedded binary

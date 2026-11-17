@@ -9,7 +9,7 @@
     "start": "node dist/main.js",
     "start:http": "node dist/httpMain.js",
     "dev:mcp": "tsx src/main.ts",
-    "dev:mcp:local": "tsx watch src/httpMain.ts --editor-server-url http://127.0.0.1:3000 --game marketvalue --allowed-origin http://localhost:8081 --allowed-origin http://127.0.0.1:8081",
+    "dev:mcp:local": "tsx watch src/httpMain.ts --editor-server-url http://127.0.0.1:3000 --allowed-origin http://localhost:8081 --allowed-origin http://127.0.0.1:8081",
     "dev:mcp:http": "tsx src/httpMain.ts"
   },
   "dependencies": {

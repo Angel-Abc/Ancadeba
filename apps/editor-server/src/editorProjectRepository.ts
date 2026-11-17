@@ -42,6 +42,7 @@ import { ProjectStorage } from './projectStorage.js'
 import { ProjectDirectoryManagement } from './projectDirectoryManagement.js'
 import { readProjectArchive, writeProjectArchive } from './projectArchive.js'
 import { ProjectArchiveWorkspace } from './projectArchiveWorkspace.js'
+import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 export interface ProjectWorkspace extends WorkspaceService {
   canonicalDirectoryPath?(path: string): Promise<string>
@@ -155,8 +156,13 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
       )
     }
 
-    const text = `${JSON.stringify(duplicateProjectManifest(source, request), null, 2)}\n`
-    files['game.json'] = Buffer.from(text)
+    const manifest = await encodeProjectDocument(
+      'game.json',
+      duplicateProjectManifest(source, request),
+    )
+
+    const text = manifest.toString('utf8')
+    files['game.json'] = manifest
     await createWorkspaceProjectFiles(this.workspace, request.destination, files, async () => {
       const source = await this.load(
         request.path,
@@ -450,16 +456,15 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
       return
     }
 
-    const encode = (file: string) =>
-      Buffer.from(`${JSON.stringify(change.project.documents[file], null, 2)}\n`)
+    const encode = (file: string) => encodeProjectDocument(file, change.project.documents[file])
 
     const newScene = change.changedFiles.find((file) => file !== 'game.json')
 
     if (change.changedFiles.length === 2 && newScene?.startsWith('scenes/')) {
       const path = projectPath(folder, newScene)
-      const bytes = encode(newScene)
+      const bytes = await encode(newScene)
       const manifestPath = projectPath(folder, 'game.json')
-      const manifestBytes = encode('game.json')
+      const manifestBytes = await encode('game.json')
       const sceneId = sceneSchema.parse(change.project.documents[newScene]).id
 
       try {
@@ -503,9 +508,9 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
       }
     } else if (change.changedFiles.length === 2 && newScene) {
       const path = projectPath(folder, newScene)
-      const bytes = encode(newScene)
+      const bytes = await encode(newScene)
       const manifestPath = projectPath(folder, 'game.json')
-      const manifestBytes = encode('game.json')
+      const manifestBytes = await encode('game.json')
 
       const createsRules = newScene.startsWith('rules/')
 
@@ -555,7 +560,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
     } else {
       const file = change.changedFiles[0]
 
-      if (file) await this.workspace.write(projectPath(folder, file), encode(file))
+      if (file) await this.workspace.write(projectPath(folder, file), await encode(file))
     }
   }
 
@@ -574,7 +579,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
       records.push({
         file,
         before,
-        after: Buffer.from(`${JSON.stringify(change.project.documents[file], null, 2)}\n`),
+        after: await encodeProjectDocument(file, change.project.documents[file]),
       })
     }
 

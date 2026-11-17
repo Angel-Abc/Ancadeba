@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test'
 import { parseAdapterConfig } from '../apps/editor-mcp/src/config.js'
 
 describe('MCP adapter configuration', () => {
-  it('requires explicit server and game binding, including an explicit empty root', () => {
+  it('requires the editor server and distinguishes omitted, root, and named game selections', () => {
     expect(
       parseAdapterConfig(['--editor-server-url', 'http://127.0.0.1:3100/', '--game', 'basic']),
     ).toEqual({ editorServerUrl: 'http://127.0.0.1:3100', game: 'basic', timeoutMs: 10000 })
@@ -17,9 +17,10 @@ describe('MCP adapter configuration', () => {
       ]),
     ).toMatchObject({ game: '', timeoutMs: 200 })
     expect(() => parseAdapterConfig([])).toThrow('required')
-    expect(() => parseAdapterConfig(['--editor-server-url', 'http://localhost:3100'])).toThrow(
-      'required',
-    )
+    expect(parseAdapterConfig(['--editor-server-url', 'http://localhost:3100']).game).toBeNull()
+    expect(() =>
+      parseAdapterConfig(['--editor-server-url', 'http://localhost:3100', '--game']),
+    ).toThrow()
   })
   it.each([
     'https://localhost:3100',

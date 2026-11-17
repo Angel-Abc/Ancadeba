@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { format } from 'vite-plus/fmt'
 import { FileWorkspace, WorkspaceError } from '../apps/editor-server/src/workspace.js'
 import { EditorCoordinator } from '../apps/editor-server/src/editorCoordinator.js'
 import { EditorProjectService } from '../apps/editor-server/src/editorProjectService.js'
@@ -1001,6 +1002,15 @@ describe('MCP and shared editor integration', () => {
     })
 
     expect(metadata.isError).toBe(false)
+    const saved = await repository.load('basic')
+
+    for (const file of Object.keys(saved.documents).filter((file) => file.endsWith('.json'))) {
+      const text = await readFile(join(root, 'basic', file), 'utf8')
+      const formatted = await format(file, text)
+      expect(formatted.errors).toEqual([])
+      expect(text, file).toBe(formatted.code)
+    }
+
     const result = await client.callTool({ name: 'ancadeba_inspect_game', arguments: {} })
     const data = gameSummarySchema.parse(object(result.structuredContent).data)
     expect(data).toMatchObject({

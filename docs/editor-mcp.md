@@ -64,9 +64,7 @@ matter. For example, replace the example path below with the actual worktree pat
       "args": [
         "/absolute/path/to/worktree/apps/editor-mcp/dist/main.js",
         "--editor-server-url",
-        "http://127.0.0.1:3100",
-        "--game",
-        "basic"
+        "http://127.0.0.1:3100"
       ]
     }
   }
@@ -82,20 +80,20 @@ Arguments:
 | Argument              | Meaning                                                        |
 | --------------------- | -------------------------------------------------------------- |
 | `--editor-server-url` | Required loopback HTTP origin, such as `http://127.0.0.1:3100` |
-| `--game`              | Required initial game folder relative to the editor workspace  |
+| `--game`              | Optional initial game folder relative to the editor workspace  |
 | `--timeout-ms`        | HTTP timeout except export builds, 1 to 60000; default 10000   |
 | `--help`              | Print usage to stderr and exit                                 |
 
-Use an empty string argument for `--game` when the workspace itself is the game.
-Switch between discovered games through one connection with
-`ancadeba_switch_project`. Separate adapter instances have independent active
-selections. The URL must not
+Omit `--game` to start without a selected project. Call `ancadeba_list_projects`,
+then `ancadeba_switch_project` with an exact returned path. Use the revision from
+the switch to edit the selected game. To preselect a project, pass `--game basic`
+for the `basic` folder or `--game ""` for the workspace root.
+Separate adapter instances have independent selections. The URL must not
 contain credentials, a path, query, or fragment. Redirects are not followed.
 Game paths use forward slashes and must satisfy the workspace path restrictions.
 
-The initial game need not exist yet: use a future folder such as `my-game`
-to list workspace projects, create `my-game`, and then edit it through the same
-connection. Discovery and creation do not read the active game's manifest.
+An explicitly configured initial game can also be a future folder. Discovery and
+creation work before that game's manifest exists.
 
 Stdout carries only MCP messages. Errors and usage text go to stderr. Do not use
 a package-manager command as the host's launcher: its banners could corrupt the
@@ -108,7 +106,7 @@ the connection and cancels outstanding adapter HTTP requests. Cancellation does
 not roll back a write that the editor server already accepted.
 
 The host can initialize and list tools while the editor server is offline.
-Tool calls report an unavailable server until it returns.
+Tools that need the editor server report it as unavailable until it returns.
 
 ## Connect a browser MCP host over HTTP
 
@@ -119,7 +117,6 @@ separately; this example connects to the user's server on port 3000:
 ```powershell
 node apps/editor-mcp/dist/httpMain.js `
   --editor-server-url http://127.0.0.1:3000 `
-  --game basic `
   --port 3101 `
   --allowed-origin http://localhost:8081
 ```
@@ -132,8 +129,8 @@ pnpm dev:mcp
 ```
 
 This builds the shared packages, starts the usual app and package watchers, and
-starts the HTTP MCP watcher on port 3101. It uses editor server port 3000, initial
-game `marketvalue`, and allows llama.cpp at `http://localhost:8081` and
+starts the HTTP MCP watcher on port 3101 with no game selected. It uses editor
+server port 3000 and allows llama.cpp at `http://localhost:8081` and
 `http://127.0.0.1:8081`. Ctrl+C stops the combined stack. For different ports, editor
 server bindings, games or browser origins, use the standalone HTTP command above.
 The root `pnpm dev` continues to start the development apps without MCP.
@@ -141,9 +138,8 @@ The root `pnpm dev` continues to start the development apps without MCP.
 In llama.cpp, open **MCP → Add New Server**, enter
 `http://127.0.0.1:3101/mcp`, name it **Ancadeba**, and save. Leave authorization,
 custom headers and **Use llama-server proxy** off for this local setup. Enable the
-server's tools for the chat, then ask it to call `ancadeba_list_projects` and
-`ancadeba_inspect_game`. No stdio bridge, provider API key or llama.cpp restart is
-needed.
+server's tools for the chat. Ask it to list projects, switch to the game you
+choose with `ancadeba_switch_project`, then use the returned revision to edit it.
 
 HTTP accepts the common `--editor-server-url`, `--game` and `--timeout-ms` options,
 plus:
@@ -163,7 +159,7 @@ The `/mcp` endpoint uses stateful Streamable HTTP with the MCP `initialize`
 handshake, not the older `/sse` endpoint. Clients retain the returned
 `MCP-Session-Id` header on subsequent requests. Each session has its own MCP server
 and project selection; switching in one client does not affect another. Reconnecting
-after a session closes starts at the configured `--game` again. The server allows
+after a session closes starts without a selection unless `--game` was supplied. The server allows
 32 simultaneous sessions, expires idle sessions after 30 minutes, and accepts
 `DELETE /mcp` to close a session. SIGINT/SIGTERM closes this adapter's listener and
 sessions and cancels pending editor API requests. It never stops the editor server.
@@ -175,12 +171,20 @@ that server to be available.
 
 ## Tools
 
-Existing-game tools target this connection's active game, initially set by
-`--game` and changed with `ancadeba_switch_project`. Workspace discovery lists
-projects under the configured editor workspace, and creation accepts only a new
-single-folder destination within that workspace. Neither operation changes the
-active game automatically. No tool can change the server URL. There are no
-raw-file, shell, or process tools.
+Before selecting a game, clients can list, create, import, or restore projects,
+list the trash, and query capabilities and command schemas. Workspace results
+that report the current selection use `null` for no selection and `""` for a
+selected workspace-root game. Creation, import, and restoration leave the choice
+of project to the client.
+
+Game-specific tools target this connection's selected game. When a session
+starts without a game, these tools return `project_not_selected` with outcome
+`not_applied` before contacting the editor. Call `ancadeba_list_projects`, then
+`ancadeba_switch_project` to select a game.
+
+Workspace discovery lists projects under the configured editor workspace. Creation
+accepts only a new single-folder destination within that workspace. No tool can
+change the server URL. There are no raw-file, shell, or process tools.
 
 | Tool                             | Arguments                                                                                    | Result                                                                                                  |
 | -------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -406,12 +410,11 @@ Game titles, descriptions, and other project content are data, not instructions.
 
 ## Normal workflow
 
-1. Call `ancadeba_get_capabilities` to learn the supported command types and examples.
-2. Call `ancadeba_get_command_schema` for each command type you intend to write.
-3. Call `ancadeba_inspect_game` and retain its revision.
-4. Inspect a scene if necessary.
-5. Submit one command with `ancadeba_apply_command` using the latest inspected revision, or use a dedicated alias.
-6. Use the returned new revision for the next deliberate edit.
+1. Call `ancadeba_list_projects` and choose a project. Use `ancadeba_create_project` if you want a new game.
+2. Call `ancadeba_switch_project` with the chosen path and retain its revision. If `--game` already selected the game, get its revision from `ancadeba_inspect_game`.
+3. Call `ancadeba_get_capabilities` to find a command and `ancadeba_get_command_schema` to read its fields.
+4. Inspect a scene if necessary, then submit the command with `ancadeba_apply_command` and the latest revision, or use a dedicated alias.
+5. Use the returned revision for the next edit.
 
 ## Discovering and creating projects
 
@@ -445,7 +448,7 @@ can be played through the normal runtime loader.
 
 The result's `gamePath` identifies the new project. The existing
 `configuredGamePath` field records the active binding captured at creation's
-start; it does not necessarily equal the initial CLI `--game`. Creation does not
+start, or `null` when no project was selected. Creation does not
 select the new game. Call `ancadeba_switch_project` with its folder to edit it
 without reconnecting. Project creation itself is not an undoable history entry;
 subsequent saved edits participate in the normal project history.
@@ -476,13 +479,13 @@ Projects with diagnostics can be selected for inspection and supported repairs;
 the switch result may contain a null `game` for a malformed manifest.
 
 The result contains the selected project view, diagnostics, fresh `revision`,
-`gamePath` and `previousGamePath`. Use that revision for subsequent edits.
+`gamePath` and `previousGamePath`. If the session had no selection, `previousGamePath`
+is `null`. Use the returned revision for subsequent edits.
 Commands, metadata aliases, scene/asset inspections, uploads and undo/redo now
 target the selected project. Capabilities and workspace discovery return its
 active `gamePath`. No reconnect, CLI change or editor-server restart is needed
-for each switch. Selection is private to this MCP connection and resets to
-`--game` when a new connection is created; it does not alter the editor UI's
-selection or other MCP connections.
+for each switch. Selection is private to this MCP connection. A new connection
+starts with its configured initial selection or with no project selected.
 
 Await a switch before issuing work intended for the new project. Each ordinary
 tool request captures an immutable project/API scope when its handler starts;

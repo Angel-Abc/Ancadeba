@@ -3,12 +3,17 @@ import { workspaceProjectPathSchema } from './projectPath.js'
 
 export interface AdapterConfig {
   editorServerUrl: string
-  game: string
+  game: string | null
   timeoutMs: number
 }
 
+export const gameUsage =
+  'Omit --game to start without a selection. Call ancadeba_list_projects, then ancadeba_switch_project before editing. Use --game "" to select the workspace root.'
+
 export const usage =
-  'Usage: node apps/editor-mcp/dist/main.js --editor-server-url http://127.0.0.1:3100 --game basic [--timeout-ms 10000]\nUse --game "" for the workspace root. Start the editor server separately.'
+  'Usage: node apps/editor-mcp/dist/main.js --editor-server-url http://127.0.0.1:3100 [--game basic] [--timeout-ms 10000]\n' +
+  gameUsage +
+  ' Start the editor server separately.'
 
 export const adapterOptions = {
   'editor-server-url': { type: 'string' as const },
@@ -32,8 +37,8 @@ export function adapterConfigFromValues(values: {
   game?: string | undefined
   'timeout-ms'?: string | undefined
 }): AdapterConfig {
-  if (values['editor-server-url'] === undefined || values.game === undefined) {
-    throw new Error('Both --editor-server-url and --game are required')
+  if (values['editor-server-url'] === undefined) {
+    throw new Error('--editor-server-url is required')
   }
 
   const url = new URL(values['editor-server-url'])
@@ -52,9 +57,9 @@ export function adapterConfigFromValues(values: {
     )
   }
 
-  const game = values.game
+  const game = values.game ?? null
 
-  if (!workspaceProjectPathSchema.safeParse(game).success) {
+  if (game !== null && !workspaceProjectPathSchema.safeParse(game).success) {
     throw new Error(
       'Game must be a workspace-relative folder using / separators, or empty for the root',
     )

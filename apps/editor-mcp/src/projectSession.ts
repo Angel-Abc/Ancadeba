@@ -8,12 +8,15 @@ export interface ProjectBinding {
 
 /** Per-connection selection; existing requests keep their captured immutable API scope. */
 export class ProjectSession {
-  private active: ProjectBinding
+  private active: ProjectBinding | null
   private switches: Promise<void> = Promise.resolve()
   private closed = false
 
-  constructor(api: IEditorApi, gamePath: string) {
-    this.active = { api, gamePath }
+  constructor(
+    private readonly workspaceApi: IEditorApi,
+    gamePath: string | null,
+  ) {
+    this.active = gamePath === null ? null : { api: workspaceApi, gamePath }
   }
 
   capture(): ProjectBinding {
@@ -23,11 +26,13 @@ export class ProjectSession {
         'The active project was deleted. List projects and switch to an existing project before editing.',
       )
 
+    if (this.active === null) throw EditorApiError.projectNotSelected()
+
     return this.active
   }
 
-  captureWorkspace(): ProjectBinding {
-    return this.active
+  captureWorkspace() {
+    return this.active ?? { api: this.workspaceApi, gamePath: null }
   }
 
   private transition<T>(
@@ -92,6 +97,7 @@ export class ProjectSession {
         return binding.api.deleteProject(input, signal)
       },
       () => {
+        this.active = null
         this.closed = true
       },
     )
@@ -110,7 +116,7 @@ export class ProjectSession {
       }
 
       checkCancellation()
-      const previous = this.active
+      const previous = this.captureWorkspace()
       const listed = await previous.api.listProjects(signal)
 
       if (!listed.projects.some(({ path: listedPath }) => listedPath === parsed.data))

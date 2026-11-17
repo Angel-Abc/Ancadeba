@@ -64,6 +64,7 @@ describe('MCP HTTP configuration', () => {
       allowedOrigins: [origin, 'http://127.0.0.1:8081'],
     })
     expect(parseHttpAdapterConfig([...args.slice(0, -1), '']).game).toBe('')
+    expect(parseHttpAdapterConfig(['--editor-server-url', 'http://127.0.0.1:3100']).game).toBeNull()
   })
 
   it.each(['0', '-1', '65536', '1.5', 'NaN'])('rejects invalid listening port %s', (port) => {
@@ -336,7 +337,7 @@ describe('MCP Streamable HTTP', () => {
     expect(adapter.server.listening).toBe(false)
   })
 
-  it('launches the standalone HTTP wrapper from an unrelated directory and reports startup errors', async () => {
+  it('starts the standalone HTTP wrapper with independent unselected sessions and reports startup errors', async () => {
     // The test listener reserves a free port until just before the child binds it.
     const port = new URL(url).port
     await adapter.close()
@@ -349,8 +350,6 @@ describe('MCP Streamable HTTP', () => {
         entry,
         '--editor-server-url',
         editorUrl,
-        '--game',
-        'basic',
         '--port',
         port,
         '--allowed-origin',
@@ -366,7 +365,28 @@ describe('MCP Streamable HTTP', () => {
     try {
       const [ready] = await once(child.stderr, 'data')
       expect(String(ready)).toContain('Ancadeba MCP listening')
-      expect((await (await connect()).client.listTools()).tools).toHaveLength(25)
+      const first = (await connect()).client
+      const second = (await connect()).client
+      expect((await first.listTools()).tools).toHaveLength(25)
+
+      const switched = await first.callTool({
+        name: 'ancadeba_switch_project',
+        arguments: { path: 'basic' },
+      })
+
+      expect(switched.structuredContent).toMatchObject({
+        data: { gamePath: 'basic', previousGamePath: null },
+      })
+      expect(
+        (await first.callTool({ name: 'ancadeba_inspect_game', arguments: {} })).structuredContent,
+      ).toMatchObject({ data: { gamePath: 'basic' } })
+      expect(
+        (await second.callTool({ name: 'ancadeba_list_projects', arguments: {} }))
+          .structuredContent,
+      ).toMatchObject({ data: { gamePath: null } })
+      expect(
+        (await second.callTool({ name: 'ancadeba_inspect_game', arguments: {} })).structuredContent,
+      ).toMatchObject({ error: { code: 'project_not_selected' } })
       expect(stdout).toEqual([])
     } finally {
       child.kill()
