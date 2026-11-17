@@ -1,13 +1,20 @@
 # Editor MCP adapter
 
-The adapter exposes the shared editor command layer to a local MCP host. It
-runs as a separate stdio process and calls the same editor HTTP server as the
-visual editor. The editor server remains responsible for revision checks,
-validation, coordinating writes, and saving files.
+The adapter exposes the shared editor command layer to a local MCP host over
+stdio or Streamable HTTP. Both entry points use the same MCP tools and editor
+API client, and call the same editor HTTP server as the visual editor. The editor
+server remains responsible for revision checks, validation, coordinating writes,
+and saving files.
 
 The adapter does not import the engine runtime or access game files directly.
 Its implementation is in `apps/editor-mcp`; adapter version 0.10.0 uses editor API version 1.
 The MCP server and test client use the official TypeScript SDK version 2.4.0.
+The HTTP entry point uses its official Node transport adapter, version 2.1.2.
+
+The shared `mcpServer.ts` factory registers the tools and creates an independent
+`ProjectSession`. `adapter.ts` supplies its editor API dependency. `main.ts` wraps
+that factory in stdio; `httpMain.ts` and `httpServer.ts` wrap it in HTTP. Neither
+transport implements or duplicates editor commands.
 
 ## Build
 
@@ -43,7 +50,7 @@ The visual editor can connect to that same server using its existing
 `EDITOR_SERVER_URL` override. Ports 5173, 5174, and 3000 remain reserved for
 the user's instances.
 
-## Connect an MCP host
+## Connect a stdio MCP host
 
 Launch Node directly with the compiled adapter entry point. Use an absolute
 entry-point path in host configuration so the host's working directory does not
@@ -102,6 +109,69 @@ not roll back a write that the editor server already accepted.
 
 The host can initialize and list tools while the editor server is offline.
 Tool calls report an unavailable server until it returns.
+
+## Connect a browser MCP host over HTTP
+
+For llama.cpp's browser UI and other URL-based clients, start the HTTP entry point
+from the repository root after building. Keep the existing editor server running
+separately; this example connects to the user's server on port 3000:
+
+```powershell
+node apps/editor-mcp/dist/httpMain.js `
+  --editor-server-url http://127.0.0.1:3000 `
+  --game basic `
+  --port 3101 `
+  --allowed-origin http://localhost:8081
+```
+
+For development, use `pnpm --filter @ancadeba/editor-mcp dev:mcp:http` with the same
+arguments. To start the complete development stack and MCP together, run:
+
+```powershell
+pnpm dev:mcp
+```
+
+This builds the shared packages, starts the usual app and package watchers, and
+starts the HTTP MCP watcher on port 3101. It uses editor server port 3000, initial
+game `marketvalue`, and allows llama.cpp at `http://localhost:8081` and
+`http://127.0.0.1:8081`. Ctrl+C stops the combined stack. For different ports, editor
+server bindings, games or browser origins, use the standalone HTTP command above.
+The root `pnpm dev` continues to start the development apps without MCP.
+
+In llama.cpp, open **MCP → Add New Server**, enter
+`http://127.0.0.1:3101/mcp`, name it **Ancadeba**, and save. Leave authorization,
+custom headers and **Use llama-server proxy** off for this local setup. Enable the
+server's tools for the chat, then ask it to call `ancadeba_list_projects` and
+`ancadeba_inspect_game`. No stdio bridge, provider API key or llama.cpp restart is
+needed.
+
+HTTP accepts the common `--editor-server-url`, `--game` and `--timeout-ms` options,
+plus:
+
+| Argument           | Meaning                                                                        |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `--port`           | MCP listening port, 1–65535; default 3101                                      |
+| `--allowed-origin` | Exact HTTP(S) browser origin allowed to connect; repeat for additional origins |
+
+The HTTP listener binds only to `127.0.0.1` and validates the Host header. Browser
+requests require an explicitly allowed origin; non-browser clients may omit
+`Origin`. CORS preflights and the exposed MCP session header let the browser
+connect directly. If the UI uses `http://127.0.0.1:8081` instead of
+`http://localhost:8081`, allow that exact origin as well.
+
+The `/mcp` endpoint uses stateful Streamable HTTP with the MCP `initialize`
+handshake, not the older `/sse` endpoint. Clients retain the returned
+`MCP-Session-Id` header on subsequent requests. Each session has its own MCP server
+and project selection; switching in one client does not affect another. Reconnecting
+after a session closes starts at the configured `--game` again. The server allows
+32 simultaneous sessions, expires idle sessions after 30 minutes, and accepts
+`DELETE /mcp` to close a session. SIGINT/SIGTERM closes this adapter's listener and
+sessions and cancels pending editor API requests. It never stops the editor server.
+
+HTTP request bodies use the same bounded message limit as stdio, including room
+for base64 image uploads. Both transports keep diagnostics on stderr. Tool
+discovery works while the editor server is offline; actual editor calls require
+that server to be available.
 
 ## Tools
 
@@ -605,6 +675,9 @@ Tests are under root `tests/`:
   creation, shared history, image uploads/replacement, project diagnostics, and uncertain save outcomes.
 - `editor-mcp-stdio.test.ts`: actual child process, protocol cleanliness,
   offline recovery, unrelated working directories, root binding, and shutdown.
+- `editor-mcp-http.test.ts`: real Streamable HTTP clients, isolated project
+  selections, saved edits and conflicts, CORS and Host validation, session deletion,
+  bounded uploads, shutdown, and the standalone HTTP entry point.
 
 Run `pnpm lint`, `pnpm test`, `pnpm typecheck`, and `pnpm build`.
 Integration tests use temporary projects and automatically allocated ports.

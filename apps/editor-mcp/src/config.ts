@@ -10,18 +10,28 @@ export interface AdapterConfig {
 export const usage =
   'Usage: node apps/editor-mcp/dist/main.js --editor-server-url http://127.0.0.1:3100 --game basic [--timeout-ms 10000]\nUse --game "" for the workspace root. Start the editor server separately.'
 
+export const adapterOptions = {
+  'editor-server-url': { type: 'string' as const },
+  game: { type: 'string' as const },
+  'timeout-ms': { type: 'string' as const, default: '10000' },
+}
+
 export function parseAdapterConfig(args: string[]): AdapterConfig {
   const { values } = parseArgs({
     args,
     strict: true,
     allowPositionals: false,
-    options: {
-      'editor-server-url': { type: 'string' },
-      game: { type: 'string' },
-      'timeout-ms': { type: 'string', default: '10000' },
-    },
+    options: adapterOptions,
   })
 
+  return adapterConfigFromValues(values)
+}
+
+export function adapterConfigFromValues(values: {
+  'editor-server-url'?: string | undefined
+  game?: string | undefined
+  'timeout-ms'?: string | undefined
+}): AdapterConfig {
   if (values['editor-server-url'] === undefined || values.game === undefined) {
     throw new Error('Both --editor-server-url and --game are required')
   }

@@ -42,6 +42,11 @@ handles web development, production bundles, task execution, linting, formatting
 and tests. TypeScript 7's native `tsc` handles type checks and compilation of the
 server and shared packages; tsx restarts the server during development.
 
+Use `pnpm dev:mcp` to start the same development stack together with the HTTP MCP
+watcher. It connects to the editor server at `http://127.0.0.1:3000`, initially
+selects `marketvalue`, and exposes `http://127.0.0.1:3101/mcp` for llama.cpp at
+`http://localhost:8081` or `http://127.0.0.1:8081`. Stop the combined stack with Ctrl+C.
+
 Browser source includes DOM types; server and tooling include Node types.
 Schemas, game-runtime, and utilities include neither DOM nor Node globals, keeping
 them usable across browser and server applications.
@@ -50,6 +55,7 @@ them usable across browser and server applications.
 
 ```sh
 pnpm dev           # Start all apps and shared package watchers
+pnpm dev:mcp       # Start the development stack plus the HTTP MCP watcher
 pnpm build         # Build all packages and apps in dependency order
 pnpm export:game sample-games/basic  # Package a standalone game
 pnpm check         # Format, lint, and type-check all source and TS configs
@@ -123,6 +129,10 @@ map, inventory, localization, scene/component and stylesheet commands through
 `ancadeba_apply_command`. Capability discovery reports the commands supported by
 both the installed adapter and connected server, with MCP argument schemas and
 examples. Existing focused MCP tools remain available.
+
+The adapter has stdio and Streamable HTTP entry points backed by the same tools.
+Browser clients such as llama.cpp can connect directly to its local `/mcp` endpoint;
+see the [HTTP setup](docs/editor-mcp.md#connect-a-browser-mcp-host-over-http).
 
 MCP also supports shared saved-project undo/redo with `ancadeba_undo` and
 `ancadeba_redo`, and image uploads with `ancadeba_upload_asset`. Uploads accept

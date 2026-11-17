@@ -1,6 +1,15 @@
 import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
+  run: {
+    tasks: {
+      'dev:with-mcp': {
+        command: 'vp run --filter "./apps/*" --filter "./packages/*" --parallel dev',
+        cache: false,
+        dependsOn: ['@ancadeba/editor-mcp#dev:mcp:local'],
+      },
+    },
+  },
   fmt: {
     singleQuote: true,
     semi: false,

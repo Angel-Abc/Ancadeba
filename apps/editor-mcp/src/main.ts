@@ -1,7 +1,6 @@
 import { serveStdio, StdioServerTransport } from '@modelcontextprotocol/server/stdio'
 import { parseAdapterConfig, usage } from './config.js'
-import { EditorApiClient } from './editorApiClient.js'
-import { createMcpServer } from './mcpServer.js'
+import { createAdapterServer } from './adapter.js'
 import { maxMcpMessageBytes } from './operationSupport.js'
 
 try {
@@ -10,9 +9,8 @@ try {
   } else {
     const config = parseAdapterConfig(process.argv.slice(2))
     const shutdown = new AbortController()
-    const api = new EditorApiClient(config, fetch, shutdown.signal)
 
-    const handle = serveStdio(() => createMcpServer(api, config.game), {
+    const handle = serveStdio(() => createAdapterServer(config, fetch, shutdown.signal), {
       // Base64 expands uploads beyond the SDK's default 10 MiB input buffer.
       transport: new StdioServerTransport(process.stdin, process.stdout, {
         maxBufferSize: maxMcpMessageBytes,

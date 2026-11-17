@@ -7,11 +7,15 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/main.js",
-    "dev:mcp": "tsx src/main.ts"
+    "start:http": "node dist/httpMain.js",
+    "dev:mcp": "tsx src/main.ts",
+    "dev:mcp:local": "tsx watch src/httpMain.ts --editor-server-url http://127.0.0.1:3000 --game marketvalue --allowed-origin http://localhost:8081 --allowed-origin http://127.0.0.1:8081",
+    "dev:mcp:http": "tsx src/httpMain.ts"
   },
   "dependencies": {
     "@ancadeba/editor-core": "workspace:*",
     "@ancadeba/schemas": "workspace:*",
+    "@modelcontextprotocol/node": "2.1.2",
     "@modelcontextprotocol/server": "2.4.0",
     "zod": "4.6.7"
   },

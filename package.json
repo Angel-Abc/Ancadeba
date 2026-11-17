@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm build:packages && vp run --filter \"./apps/*\" --filter \"./packages/*\" --parallel dev",
+    "dev:mcp": "pnpm build:packages && vp run --parallel dev:with-mcp",
     "build:packages": "vp run --filter \"./packages/*\" build",
     "build": "vp run --filter \"./apps/*\" --filter \"./packages/*\" build",
     "export:game": "pnpm build:packages && pnpm --filter @ancadeba/engine typecheck && tsx tooling/export-game.ts",
