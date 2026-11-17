@@ -12,7 +12,6 @@ import { EditorDraftStore, type EditorDraftStorage } from './editorDraftStore.js
 import { bindEditorDraftRecovery } from './editorDraftRecovery.js'
 import { bindLocalizationEditor } from './localizationEditor.js'
 import { bindMapEditor } from './mapEditor.js'
-import { mapConfirmation } from './mapConfirmation.js'
 import {
   BrowserGraphicResources,
   createGraphicPlatform,
@@ -44,6 +43,7 @@ import { bindStylesheetEditor } from './stylesheetEditor.js'
 import { bindProjectRepair } from './projectRepair.js'
 import { bindProjectManagementPanel } from './projectManagementPanel.js'
 import { bindProjectArchivePanel } from './projectArchivePanel.js'
+import { createEditorConfirmation, type ConfirmAction } from './editorConfirmation.js'
 import {
   buildProjectTree,
   dataFileContent,
@@ -66,6 +66,7 @@ export interface ProjectWorkspaceSection extends ProjectTreeSection {
 
 export interface ProjectPanelBinding {
   hasDrafts(): boolean
+  confirm: ReturnType<typeof createEditorConfirmation>['ask']
   dispose(): void
 }
 
@@ -80,9 +81,8 @@ export function bindProjectPanel(
     onProjectClose,
     onSceneSelect,
     onNavigate,
-    confirmDiscardDrafts = () =>
-      root.ownerDocument.defaultView?.confirm(t('project.discardDrafts')) ?? false,
-    confirmDelete = (message: string) => root.ownerDocument.defaultView?.confirm(message) ?? false,
+    confirmDiscardDrafts,
+    confirmDelete: confirmDeletion,
     draftStorage = () => root.ownerDocument.defaultView?.localStorage,
   }: {
     additionalSections?: readonly ProjectWorkspaceSection[]
@@ -91,11 +91,14 @@ export function bindProjectPanel(
     /** Reports the scene of the explorer selection, or undefined outside the scenes section. */
     onSceneSelect?: (scene: { id: string; title: string } | undefined) => void
     onNavigate?: () => void
-    confirmDiscardDrafts?: () => boolean
-    confirmDelete?: (message: string) => boolean
+    confirmDiscardDrafts?: () => boolean | Promise<boolean>
+    confirmDelete?: ConfirmAction
     draftStorage?: () => EditorDraftStorage | undefined
   } = {},
 ): ProjectPanelBinding {
+  const confirmation = createEditorConfirmation(root.ownerDocument, t)
+  const confirmDelete = confirmDeletion ?? confirmation.ask
+
   const find = <T extends HTMLElement>(id: string): T => {
     const element = root.querySelector<T>(`#${id}`)
 
@@ -284,7 +287,6 @@ export function bindProjectPanel(
   const storyElement = treeElement && root.querySelector<HTMLElement>('#story-editor')
   let storyEditor: ReturnType<typeof bindStoryEditor> | undefined
   const mapElement = treeElement && root.querySelector<HTMLElement>('#map-editor')
-  const mapConfirm = mapElement ? mapConfirmation(root.ownerDocument, t) : undefined
   let mapEditor: ReturnType<typeof bindMapEditor> | undefined
 
   const mapHistory = () =>
@@ -1094,6 +1096,14 @@ export function bindProjectPanel(
   let archivePanel: ReturnType<typeof bindProjectArchivePanel> | undefined
 
   const controller = new ProjectEditorController(client, (state, replaceFields) => {
+    if (
+      state.busy ||
+      state.path !== loadedPath ||
+      state.view?.revision !== view?.revision ||
+      state.view?.storageKey !== view?.storageKey
+    )
+      confirmation.cancel()
+
     draftRecovery?.beforeRender()
     render(state, replaceFields)
 
@@ -1207,7 +1217,7 @@ export function bindProjectPanel(
       },
       t,
       {
-        confirm: (message) => mapConfirm!.ask(message),
+        confirm: confirmation.ask,
         onHistoryChange: renderHistoryControls,
         createGraphics: (path) =>
           new BrowserGraphicResources(
@@ -1463,12 +1473,13 @@ export function bindProjectPanel(
       return
     }
 
-    if (hasDrafts() && !confirmDiscardDrafts()) return
-    openingProject = true
-    creatingProject = true
-    openError = ''
-    newError.hidden = true
-    void controller.create(request.data)
+    void afterDiscard(() => {
+      openingProject = true
+      creatingProject = true
+      openError = ''
+      newError.hidden = true
+      void controller.create(request.data)
+    })
   })
 
   on(duplicateToggle, 'click', () => {
@@ -1518,12 +1529,15 @@ export function bindProjectPanel(
       return
     }
 
-    if (hasDrafts() && !confirmDiscardDrafts()) return
-    openingProject = true
-    duplicatingProject = true
-    openError = ''
-    duplicateError.hidden = true
-    void controller.duplicate(request.data)
+    void afterDiscard(() => {
+      if (request.data.path !== loadedPath || request.data.expectedRevision !== view?.revision)
+        return
+      openingProject = true
+      duplicatingProject = true
+      openError = ''
+      duplicateError.hidden = true
+      void controller.duplicate(request.data)
+    })
   })
 
   if (recoverToggle && recoverForm && recoverFolder && recoverCancel) {
@@ -1557,10 +1571,11 @@ export function bindProjectPanel(
         return
       }
 
-      if (hasDrafts() && !confirmDiscardDrafts()) return
-      openingProject = true
-      openError = ''
-      void controller.load(path)
+      void afterDiscard(() => {
+        openingProject = true
+        openError = ''
+        void controller.load(path)
+      })
     })
   }
 
@@ -1573,13 +1588,17 @@ export function bindProjectPanel(
   on(openControls, 'submit', (event) => {
     event.preventDefault()
 
-    if (load.disabled || !projectChoices.some(({ path }) => path === folder.value)) return
+    const path = folder.value
 
-    if (hasDrafts() && !confirmDiscardDrafts()) return
+    if (load.disabled || !projectChoices.some((choice) => choice.path === path)) return
 
-    openingProject = true
-    openError = ''
-    void controller.load(folder.value)
+    void afterDiscard(() => {
+      if (load.disabled) return
+
+      openingProject = true
+      openError = ''
+      void controller.load(path)
+    })
   })
 
   const hasDrafts = (includeSceneControls = true, includeClipboard = true) =>
@@ -1602,6 +1621,17 @@ export function bindProjectPanel(
       storyEditor?.hasDrafts() ||
       mapEditor?.hasDrafts(),
     )
+
+  const allowDiscard = () =>
+    !hasDrafts() || (confirmDiscardDrafts?.() ?? confirmation.ask(t('project.discardDrafts')))
+
+  async function afterDiscard(proceed: () => void): Promise<void> {
+    const allowed = allowDiscard()
+
+    if (allowed !== true && !(await allowed)) return
+
+    if (!busy) proceed()
+  }
 
   const formFields = [
     'editor-title',
@@ -1665,6 +1695,7 @@ export function bindProjectPanel(
           }
         : undefined,
     hasDrafts,
+    confirmation.ask,
     (draft) => {
       controller.recoverDrafts(draft.base)
       selection = flattenProjectTree(buildProjectTree(draft.base, t, sections)).find(
@@ -1837,25 +1868,15 @@ export function bindProjectPanel(
     void controller.refresh(hasDrafts)
   })
 
-  management = bindProjectManagementPanel(
-    root,
-    client,
-    controller,
-    t,
-    () => !hasDrafts() || confirmDiscardDrafts(),
-    confirmDelete,
-  )
-  archivePanel = bindProjectArchivePanel(
-    root,
-    controller,
-    t,
-    () => !hasDrafts() || confirmDiscardDrafts(),
-  )
+  management = bindProjectManagementPanel(root, client, controller, t, allowDiscard, confirmDelete)
+  archivePanel = bindProjectArchivePanel(root, controller, t, allowDiscard)
   void refreshProjects()
 
   return {
     hasDrafts,
+    confirm: confirmation.ask,
     dispose() {
+      confirmation.cancel()
       management?.dispose()
       archivePanel?.dispose()
       draftRecovery?.dispose()
@@ -1864,7 +1885,6 @@ export function bindProjectPanel(
       controller.dispose()
       assetsPanel?.dispose()
       mapEditor?.dispose()
-      mapConfirm?.dispose()
       tree?.dispose()
       rail?.dispose()
       unsubscribeLanguage?.()

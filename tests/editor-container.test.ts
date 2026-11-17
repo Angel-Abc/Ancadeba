@@ -94,6 +94,35 @@ describe('editor container', () => {
     container.resolve('exportController').dispose()
   })
 
+  it('ignores pending preview and export confirmations after a project change', async () => {
+    const { dependencies } = createDependencies()
+    let accept!: (value: boolean) => void
+
+    const confirmation = new Promise<boolean>((resolve) => {
+      accept = resolve
+    })
+
+    const container = new ContainerBuilder({
+      ...dependencies,
+      confirmPreview: () => confirmation,
+      confirmExport: () => confirmation,
+    }).build()
+
+    const preview = container.resolve('previewController')
+    const exporter = container.resolve('exportController')
+    const start = preview.start('basic')
+    const exporting = exporter.export('basic')
+    expect(dependencies.fetcher).not.toHaveBeenCalled()
+
+    preview.stop()
+    exporter.reset()
+    accept(true)
+    await Promise.all([start, exporting])
+    expect(dependencies.fetcher).not.toHaveBeenCalled()
+    preview.dispose()
+    exporter.dispose()
+  })
+
   it('reads the current game language preference each time the preview restarts', async () => {
     const { dependencies } = createDependencies()
     let language = 'en'

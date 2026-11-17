@@ -11,7 +11,7 @@ import { assetCatalogSchema, mapDefinitionSchema, sceneComponentSchema } from '@
 import { MapDraft } from '../apps/editor-ui/src/mapDraft.js'
 import { captureEditorDrafts, restoreEditorDrafts } from '../apps/editor-ui/src/editorDraftState.js'
 import { bindMapEditor } from '../apps/editor-ui/src/mapEditor.js'
-import { mapConfirmation } from '../apps/editor-ui/src/mapConfirmation.js'
+import { createEditorConfirmation } from '../apps/editor-ui/src/editorConfirmation.js'
 import { mapFileNodes } from '../apps/editor-ui/src/projectTree.js'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
 import type { ProjectEditorState } from '../apps/editor-ui/src/projectController.js'
@@ -2459,11 +2459,11 @@ describe('map minimap', () => {
   })
 })
 
-describe('map confirmation dialog', () => {
+describe('editor confirmation dialog', () => {
   it('focuses cancel, resolves accepted and canceled actions, and cleans up pending dialogs', async () => {
     const document = new DocumentFixture()
     // @ts-expect-error -- Partial DOM fixture supplies modal lifecycle and focus.
-    const confirmation = mapConfirmation(document, editorLocalization().t)
+    const confirmation = createEditorConfirmation(document, editorLocalization().t)
     const ask = () => confirmation.ask('Replace map tiles?')
 
     const button = (name: string) =>
@@ -2473,15 +2473,16 @@ describe('map confirmation dialog', () => {
 
     const accepted = ask()
     expect(document.activeElement).toBe(button('Cancel'))
+    await expect(confirmation.ask('Delete this project?', 'project.delete')).resolves.toBe(false)
     button('Confirm').dispatchEvent(new Event('click'))
     await expect(accepted).resolves.toBe(true)
     expect(document.body.querySelector('dialog')).toBeNull()
     const canceled = ask()
     document.body.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }))
     await expect(canceled).resolves.toBe(false)
-    const disposed = ask()
-    confirmation.dispose()
-    await expect(disposed).resolves.toBe(false)
+    const pending = ask()
+    confirmation.cancel()
+    await expect(pending).resolves.toBe(false)
     expect(document.body.querySelector('dialog')).toBeNull()
   })
 })

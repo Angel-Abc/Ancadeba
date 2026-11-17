@@ -73,7 +73,8 @@ function harness(storage = new Storage(), session = 'tab') {
     ]),
   )
 
-  const window = Object.assign(new EventTarget(), { confirm: vi.fn(() => true) })
+  const window = new EventTarget()
+  const confirm = vi.fn(() => true)
   const document = Object.assign(new EventTarget(), { defaultView: window, hidden: false })
 
   const root = Object.assign(new EventTarget(), {
@@ -98,6 +99,7 @@ function harness(storage = new Storage(), session = 'tab') {
     (key) => key,
     () => ({ ...draft, savedAt: Date.now() }),
     () => dirty,
+    confirm,
     restore,
   )
 
@@ -118,6 +120,7 @@ function harness(storage = new Storage(), session = 'tab') {
     storage,
     store,
     window,
+    confirm,
     document,
     root,
     controls,
@@ -290,7 +293,7 @@ describe('browser draft recovery lifecycle', () => {
     new EditorDraftStore(() => storage, 'old').write(snapshot())
     const ui = harness(storage)
     ui.dirty(true)
-    ui.window.confirm.mockReturnValue(false)
+    ui.confirm.mockReturnValue(false)
     ui.controls.get('draft-restore')!.dispatchEvent(new Event('click'))
     expect(ui.restore).not.toHaveBeenCalled()
     ui.controls.get('draft-discard')!.dispatchEvent(new Event('click'))

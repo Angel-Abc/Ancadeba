@@ -7,6 +7,7 @@ import type { Translate } from '@ancadeba/utilities'
 import type { HttpEditorClient } from './editorClient.js'
 import type { ProjectEditorController, ProjectEditorState } from './projectController.js'
 import { gameTitle } from './projectTree.js'
+import type { ConfirmAction } from './editorConfirmation.js'
 
 /** Project folder actions and recoverable deletion, separate from authoring forms. */
 export function bindProjectManagementPanel(
@@ -14,8 +15,8 @@ export function bindProjectManagementPanel(
   client: HttpEditorClient,
   controller: ProjectEditorController,
   t: Translate,
-  allowDiscard: () => boolean,
-  confirmDelete: (message: string) => boolean,
+  allowDiscard: () => boolean | Promise<boolean>,
+  confirmDelete: ConfirmAction,
 ) {
   const find = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!
   const renameToggle = find<HTMLButtonElement>('project-rename-toggle')
@@ -113,7 +114,7 @@ export function bindProjectManagementPanel(
     renameToggle.setAttribute('aria-expanded', 'false')
     renameToggle.focus()
   })
-  on(renameForm, 'submit', (event) => {
+  on(renameForm, 'submit', async (event) => {
     event.preventDefault()
 
     if (!state?.view || state.busy) return
@@ -134,19 +135,30 @@ export function bindProjectManagementPanel(
       return
     }
 
-    if (allowDiscard()) void controller.rename(request.data)
-  })
-  on(remove, 'click', () => {
-    if (remove.disabled || !allowDiscard()) return
+    const target = state
 
-    if (
-      confirmDelete(
-        t('project.confirmDelete', {
-          title: state?.view ? gameTitle(state.view) || state.path : '',
-          path: state?.path ?? '',
-        }),
-      )
+    if ((await allowDiscard()) && !disposed && state === target)
+      void controller.rename(request.data)
+  })
+  on(remove, 'click', async () => {
+    const target = state
+
+    if (remove.disabled || !target?.view) return
+    const discard = allowDiscard()
+
+    if (discard !== true && !(await discard)) return
+
+    if (disposed || remove.disabled || state !== target) return
+
+    const accepted = confirmDelete(
+      t('project.confirmDelete', {
+        title: gameTitle(target.view) || target.path,
+        path: target.path,
+      }),
+      'project.delete',
     )
+
+    if ((await accepted) && !disposed && !remove.disabled && state === target)
       void controller.delete()
   })
   on(trashToggle, 'click', () => {
@@ -157,7 +169,7 @@ export function bindProjectManagementPanel(
     if (!trash.hidden) void list()
   })
   on(trashSelect, 'change', selectDeleted)
-  on(restore, 'click', () => {
+  on(restore, 'click', async () => {
     if (restore.disabled) return
     const selected = deleted.find(({ trashId }) => trashId === trashSelect.value)
 
@@ -176,7 +188,10 @@ export function bindProjectManagementPanel(
       return
     }
 
-    if (allowDiscard()) void controller.restoreProject(request.data)
+    const target = state
+
+    if ((await allowDiscard()) && !disposed && !restore.disabled && state === target)
+      void controller.restoreProject(request.data)
   })
   controls()
 

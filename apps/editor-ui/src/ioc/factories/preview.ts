@@ -26,7 +26,7 @@ export interface PreviewDependencies {
   runtime: EngineRuntimeServices
   logger: ILogger
   onPreviewStateChange: PreviewStateListener
-  confirmPreview?: () => boolean
+  confirmPreview?: () => boolean | Promise<boolean>
   getPreferredGameLanguages?: () => readonly string[]
   gameLanguagePreferences?: GameLanguagePreferences
   createGameSaveStore?: (folder: string) => GameSaveStore

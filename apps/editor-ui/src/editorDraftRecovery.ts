@@ -1,6 +1,7 @@
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
 import { EditorDraftStore, type EditorDraft } from './editorDraftStore.js'
+import type { ConfirmAction } from './editorConfirmation.js'
 
 export function bindEditorDraftRecovery(
   root: HTMLElement,
@@ -8,6 +9,7 @@ export function bindEditorDraftRecovery(
   t: Translate,
   capture: () => EditorDraft | undefined,
   hasDrafts: () => boolean,
+  confirm: ConfirmAction,
   restore: (draft: EditorDraft) => string[],
 ) {
   const window = root.ownerDocument.defaultView
@@ -80,11 +82,14 @@ export function bindEditorDraftRecovery(
     listeners.push(() => target?.removeEventListener?.(event, listener, capture))
   }
 
-  on(recover, 'click', () => {
+  on(recover, 'click', async () => {
     if (!pending || busy) return
 
-    if (hasDrafts() && window?.confirm(t('drafts.replaceCurrent')) !== true) return
     const source = pending
+
+    if (hasDrafts() && !(await confirm(t('drafts.replaceCurrent'), 'drafts.restore'))) return
+
+    if (disposed || busy || pending !== source) return
     paused = true
     let failed: string[]
 

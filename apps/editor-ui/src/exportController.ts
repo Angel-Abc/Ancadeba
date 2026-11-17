@@ -12,18 +12,21 @@ export class EditorExportController {
     private readonly fetcher: typeof fetch,
     private readonly download: (archive: Blob, fileName: string) => void,
     private readonly onStateChange: ExportStateListener,
-    private readonly confirmExport: () => boolean = () => true,
+    private readonly confirmExport: () => boolean | Promise<boolean> = () => true,
   ) {}
 
   async export(folder: string): Promise<void> {
     if (this.disposed || this.request) return
 
-    if (!this.confirmExport()) return
-
     const request = new AbortController()
     this.request = request
 
     try {
+      const accepted = this.confirmExport()
+
+      if (accepted !== true && !(await accepted)) return
+
+      if (this.request !== request) return
       const path = normalizeGameFolder(folder)
       this.onStateChange('exporting')
       const fetcher = this.fetcher

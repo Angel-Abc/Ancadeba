@@ -19,6 +19,7 @@ import {
 import { bindProjectPanel } from '../apps/editor-ui/src/projectPanel.js'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
 import type { EditorDraftStorage } from '../apps/editor-ui/src/editorDraftStore.js'
+import type { ConfirmAction } from '../apps/editor-ui/src/editorConfirmation.js'
 
 // A small DOM surface for testing form reconciliation without a browser runtime.
 class Control extends EventTarget {
@@ -139,7 +140,7 @@ function panel(
   let applyResponse: (() => Promise<Response>) | undefined
   const onProjectChange = vi.fn<(path: string) => void>()
   const confirmDiscardDrafts = vi.fn(() => false)
-  const confirmDelete = vi.fn(() => false)
+  const confirmDelete = vi.fn<ConfirmAction>(() => false)
   const onProjectClose = vi.fn()
   let localization = editorLocalization()
   let languageChanged = () => {}
@@ -472,7 +473,20 @@ describe('project panel form reconciliation', () => {
       ui.control('project-delete').fire('click')
       expect(ui.managementRequests).toEqual([])
       ui.confirmDiscardDrafts.mockReturnValue(true)
+      let accept!: (value: boolean) => void
+
+      const confirmation = new Promise<boolean>((resolve) => {
+        accept = resolve
+      })
+
+      ui.confirmDelete.mockReturnValue(confirmation)
       ui.control('project-delete').fire('click')
+      expect(ui.confirmDelete).toHaveBeenLastCalledWith(
+        expect.stringContaining('Move “Game” (basic) to project trash?'),
+        'project.delete',
+      )
+      expect(ui.managementRequests).toEqual([])
+      accept(true)
       await vi.waitFor(() => expect(ui.onProjectClose).toHaveBeenCalledOnce())
       expect(ui.hasDrafts()).toBe(false)
       expect(ui.control('editor-workspace').hidden).toBe(true)

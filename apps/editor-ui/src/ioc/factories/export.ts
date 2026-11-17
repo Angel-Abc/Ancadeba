@@ -5,7 +5,7 @@ export interface ExportDependencies {
   fetcher: typeof fetch
   download: (archive: Blob, fileName: string) => void
   onExportStateChange: ExportStateListener
-  confirmExport?: () => boolean
+  confirmExport?: () => boolean | Promise<boolean>
 }
 
 export interface ExportServices {

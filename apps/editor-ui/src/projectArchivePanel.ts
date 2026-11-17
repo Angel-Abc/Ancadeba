@@ -6,7 +6,7 @@ export function bindProjectArchivePanel(
   root: HTMLElement,
   controller: ProjectEditorController,
   t: Translate,
-  allowDiscard: () => boolean,
+  allowDiscard: () => boolean | Promise<boolean>,
 ) {
   const find = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!
   const toggle = find<HTMLButtonElement>('project-import-toggle')
@@ -76,7 +76,7 @@ export function bindProjectArchivePanel(
           .slice(0, 55) || 'game'
       }-imported`
   })
-  on(form, 'submit', (event) => {
+  on(form, 'submit', async (event) => {
     event.preventDefault()
 
     if (state?.busy) return
@@ -90,14 +90,14 @@ export function bindProjectArchivePanel(
       return
     }
 
-    if (allowDiscard()) {
-      importing = true
-      void controller.importProject(request.data, selected).then(() => {
-        importing = false
+    const target = state
 
-        if (!disposed) render()
-      })
-    }
+    if (!(await allowDiscard()) || disposed || state !== target) return
+    importing = true
+    await controller.importProject(request.data, selected)
+    importing = false
+
+    if (!disposed) render()
   })
   on(exportButton, 'click', () => {
     if (exportButton.disabled) return

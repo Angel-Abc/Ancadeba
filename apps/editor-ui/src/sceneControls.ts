@@ -5,6 +5,7 @@ import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
 import { ruleFormControls, saveBar } from './ruleFormControls.js'
 import { sceneTitle } from './projectTree.js'
+import type { ConfirmAction } from './editorConfirmation.js'
 
 /** Scene and component structure controls share the same revision-checked save flow. */
 export function bindSceneControls(
@@ -19,7 +20,7 @@ export function bindSceneControls(
   }: {
     save: (command: EditorCommand) => void
     canChange: () => boolean
-    confirmDelete: (message: string) => boolean
+    confirmDelete: ConfirmAction
     copyButton?: HTMLButtonElement | undefined
     onSaved: (command: EditorCommand, view: ProjectView) => void
   },
@@ -74,7 +75,7 @@ export function bindSceneControls(
     render()
   }
 
-  const submit = (command: EditorCommand) => {
+  const submit = async (command: EditorCommand) => {
     if (busy || !view?.game || view.diagnostics.length) return
 
     if (!canChange()) {
@@ -93,18 +94,28 @@ export function bindSceneControls(
       return
     }
 
-    if (
-      (command.type === 'scene.remove' || command.type === 'scene.removeComponent') &&
-      !confirmDelete(
-        command.type === 'scene.remove'
+    if (command.type === 'scene.remove' || command.type === 'scene.removeComponent') {
+      const target = view
+      const selectedScene = sceneId
+      const selectedComponent = componentId
+      const removingScene = command.type === 'scene.remove'
+
+      const accepted = confirmDelete(
+        removingScene
           ? t('scene.confirmDelete', {
               scene: sceneId ?? '',
               replacement: replacement || t('scene.noReplacement'),
             })
           : t('component.confirmDelete', { component: componentId ?? '' }),
+        removingScene ? 'scene.delete' : 'component.delete',
       )
-    )
-      return
+
+      if (accepted !== true && !(await accepted)) return
+
+      if (busy || view !== target || sceneId !== selectedScene || componentId !== selectedComponent)
+        return
+    }
+
     pending = parsed.data
     error.textContent = ''
     save(parsed.data)
@@ -127,7 +138,7 @@ export function bindSceneControls(
     element.append(...children, actions)
     element.addEventListener('submit', (event) => {
       event.preventDefault()
-      submit(command())
+      void submit(command())
     })
 
     return element
@@ -345,14 +356,18 @@ export function bindSceneControls(
           return true
         }
 
-        submit({
+        void submit({
           type: 'scene.duplicateComponent',
           sceneId: current.id,
           componentId: component.id,
           newId: duplicateComponentId,
         })
       } else
-        submit({ type: 'scene.removeComponent', sceneId: current.id, componentId: component.id })
+        void submit({
+          type: 'scene.removeComponent',
+          sceneId: current.id,
+          componentId: component.id,
+        })
 
       return true
     },

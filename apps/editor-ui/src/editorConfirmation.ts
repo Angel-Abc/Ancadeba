@@ -1,34 +1,45 @@
 import type { Translate } from '@ancadeba/utilities'
 
-/** Keeps destructive map actions inside the editor with native dialog focus management. */
-export function mapConfirmation(document: Document, t: Translate) {
+export type ConfirmAction = (message: string, actionKey?: string) => boolean | Promise<boolean>
+
+/** Shares a single in-app confirmation across the editor. */
+export function createEditorConfirmation(document: Document, t: Translate) {
   let cancelPending: (() => void) | undefined
 
   return {
-    ask(message: string): Promise<boolean> {
-      cancelPending?.()
+    ask(this: void, message: string, actionKey = 'confirmation.confirm'): Promise<boolean> {
+      if (cancelPending) return Promise.resolve(false)
 
       return new Promise((resolve) => {
         const dialog = document.createElement('dialog')
-        dialog.className = 'map-confirmation'
-        dialog.setAttribute('aria-label', t('maps.confirmTitle'))
+        dialog.className = 'editor-confirmation'
+        dialog.setAttribute('role', 'alertdialog')
+        dialog.setAttribute('aria-labelledby', 'editor-confirmation-title')
+        dialog.setAttribute('aria-describedby', 'editor-confirmation-message')
+        const title = document.createElement('h2')
+        title.id = 'editor-confirmation-title'
+        title.textContent = t('confirmation.title')
         const text = document.createElement('p')
+        text.id = 'editor-confirmation-message'
         text.textContent = message
         const actions = document.createElement('div')
-        actions.className = 'map-confirmation-actions'
+        actions.className = 'editor-confirmation-actions'
         const cancel = document.createElement('button')
         cancel.type = 'button'
-        cancel.textContent = t('maps.cancel')
+        cancel.autofocus = true
+        cancel.textContent = t('confirmation.cancel')
         const accept = document.createElement('button')
         accept.type = 'button'
-        accept.textContent = t('maps.confirm')
+        accept.className = 'primary'
+        accept.textContent = t(actionKey)
         let settled = false
 
         const finish = (value: boolean) => {
           if (settled) return
           settled = true
           cancelPending = undefined
-          dialog.close()
+
+          if (dialog.open) dialog.close()
           dialog.remove()
           resolve(value)
         }
@@ -42,12 +53,12 @@ export function mapConfirmation(document: Document, t: Translate) {
         })
         dialog.addEventListener('close', () => finish(false))
         actions.append(cancel, accept)
-        dialog.append(text, actions)
+        dialog.append(title, text, actions)
         document.body.append(dialog)
         dialog.showModal()
         cancel.focus()
       })
     },
-    dispose: () => cancelPending?.(),
+    cancel: () => cancelPending?.(),
   }
 }

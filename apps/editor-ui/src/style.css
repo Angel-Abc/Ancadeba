@@ -2094,21 +2094,29 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   z-index: 1;
 }
 
-.map-confirmation {
-  max-width: min(30rem, calc(100vw - 3rem));
+.editor-confirmation {
+  box-sizing: border-box;
+  width: min(30rem, calc(100vw - 2rem));
   padding: 1.25rem;
   color: var(--ed-text);
   background: var(--ed-panel);
   border: 1px solid var(--ed-border);
   border-radius: 0.5rem;
+  overflow-wrap: anywhere;
 }
 
-.map-confirmation::backdrop {
+.editor-confirmation::backdrop {
   background: rgb(0 0 0 / 60%);
 }
 
-.map-confirmation-actions {
+.editor-confirmation h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.editor-confirmation-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1rem;

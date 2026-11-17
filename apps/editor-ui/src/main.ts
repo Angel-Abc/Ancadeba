@@ -172,8 +172,10 @@ const container = new ContainerBuilder({
     if (state !== 'ready') clearDownload()
     updateControls()
   },
-  confirmExport: () => !projectPanel.hasDrafts() || window.confirm(t('export.unsaved')),
-  confirmPreview: () => !projectPanel.hasDrafts() || window.confirm(t('preview.unsaved')),
+  confirmExport: () =>
+    !projectPanel.hasDrafts() || projectPanel.confirm(t('export.unsaved'), 'export.button'),
+  confirmPreview: () =>
+    !projectPanel.hasDrafts() || projectPanel.confirm(t('preview.unsaved'), 'preview.start'),
   onPreviewStateChange: (state, message) => {
     previewState = state
     previewMessage = message
