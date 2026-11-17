@@ -44,25 +44,7 @@ export class EditorProjectService {
   ) {}
 
   get features() {
-    return {
-      history:
-        typeof this.repository.restoreHistoryFiles === 'function' &&
-        typeof this.repository.readHistoryFiles === 'function',
-      assetImport: typeof this.repository.createAsset === 'function',
-      projectCreation: typeof this.repository.create === 'function',
-      projectDuplication: typeof this.repository.duplicate === 'function',
-      projectImport: typeof this.repository.importProject === 'function',
-      projectExport: typeof this.repository.exportProject === 'function',
-      projectRenaming: typeof this.repository.rename === 'function',
-      projectDeletion: typeof this.repository.delete === 'function',
-      projectRestoration:
-        typeof this.repository.restoreProject === 'function' &&
-        typeof this.repository.listDeleted === 'function',
-      projectRepair:
-        typeof this.repository.previewRepair === 'function' &&
-        typeof this.repository.readHistoryFiles === 'function' &&
-        typeof this.repository.restoreHistoryFiles === 'function',
-    }
+    return this.repository.capabilities
   }
 
   create(input: unknown): Promise<ProjectView> {
@@ -76,7 +58,7 @@ export class EditorProjectService {
       )
 
     return this.coordinator.run(async () => {
-      if (!this.repository.create)
+      if (!this.features.projectCreation || !this.repository.create)
         throw new EditorError(503, 'unsupported_creation', 'Project creation is unavailable')
       const documents = createStarterProject(parsed.data)
       const diagnostics = validateProject(documents)
@@ -116,7 +98,7 @@ export class EditorProjectService {
       )
 
     return this.coordinator.run(async () => {
-      if (!this.repository.importProject)
+      if (!this.features.projectImport || !this.repository.importProject)
         throw new EditorError(503, 'unsupported_project_import', 'Project import is unavailable')
       await this.repository.importProject(parsed.data, archive)
       this.history.clear(parsed.data.destination)
@@ -147,7 +129,7 @@ export class EditorProjectService {
       )
 
     return this.coordinator.run(async () => {
-      if (!this.repository.exportProject)
+      if (!this.features.projectExport || !this.repository.exportProject)
         throw new EditorError(503, 'unsupported_project_export', 'Project export is unavailable')
       const snapshot = await this.repository.load(parsed.data.path)
 
@@ -183,7 +165,7 @@ export class EditorProjectService {
     const request = parsed.data
 
     return this.coordinator.run(async () => {
-      if (!this.repository.duplicate)
+      if (!this.features.projectDuplication || !this.repository.duplicate)
         throw new EditorError(503, 'unsupported_duplication', 'Project duplication is unavailable')
       const source = await this.repository.load(request.path)
 
@@ -237,8 +219,15 @@ export class EditorProjectService {
         'Provide a project revision and a new title or folder name',
       )
 
+    if (parsed.data.folderName !== undefined && !this.features.projectFolderRenaming)
+      throw new EditorError(
+        503,
+        'unsupported_project_management',
+        'Project folder management is unavailable',
+      )
+
     return this.coordinator.run(async () => {
-      if (!this.repository.rename)
+      if (!this.features.projectRenaming || !this.repository.rename)
         throw new EditorError(
           503,
           'unsupported_project_management',
@@ -276,7 +265,7 @@ export class EditorProjectService {
       )
 
     return this.coordinator.run(async () => {
-      if (!this.repository.delete)
+      if (!this.features.projectDeletion || !this.repository.delete)
         throw new EditorError(
           503,
           'unsupported_project_management',
@@ -292,7 +281,7 @@ export class EditorProjectService {
 
   listDeleted(): Promise<DeletedProject[]> {
     return this.coordinator.run(async () => {
-      if (!this.repository.listDeleted)
+      if (!this.features.projectRestoration || !this.repository.listDeleted)
         throw new EditorError(503, 'unsupported_project_management', 'Project trash is unavailable')
 
       return this.repository.listDeleted()
@@ -310,7 +299,7 @@ export class EditorProjectService {
       )
 
     return this.coordinator.run(async () => {
-      if (!this.repository.restoreProject)
+      if (!this.features.projectRestoration || !this.repository.restoreProject)
         throw new EditorError(
           503,
           'unsupported_project_management',
@@ -430,7 +419,7 @@ export class EditorProjectService {
     if (!parsed.success) throw new EditorError(400, 'invalid_request', 'Invalid undo/redo request')
 
     return this.coordinator.run(async () => {
-      if (!this.repository.restoreHistoryFiles)
+      if (!this.features.history || !this.repository.restoreHistoryFiles)
         throw new EditorError(503, 'unsupported_history', 'Undo and redo are unavailable')
       const { path, expectedRevision, direction } = await this.resolveRequest(parsed.data)
       const current = await this.repository.load(path)
@@ -594,7 +583,7 @@ export class EditorProjectService {
       if (current.revision !== request.expectedRevision)
         throw new EditorError(409, 'revision_conflict', 'Project changed. Reload before retrying.')
 
-      if (!this.repository.createAsset)
+      if (!this.features.assetImport || !this.repository.createAsset)
         throw new EditorError(503, 'unsupported_import', 'Asset import is unavailable')
       let info: ReturnType<typeof inspectImageSource>
 

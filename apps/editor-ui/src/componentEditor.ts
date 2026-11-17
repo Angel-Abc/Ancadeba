@@ -314,6 +314,9 @@ export function bindComponentEditor(
   return {
     hasDrafts: () => dirty,
     /** Shows a component; refuses to leave another component with unsaved changes. */
+    canNavigate: (nextScene: string | undefined, nextComponent: string | undefined, add = false) =>
+      (nextScene === sceneId && (nextComponent ?? '') === componentId && add === creating) ||
+      !dirty,
     navigate(nextScene: string | undefined, nextComponent: string | undefined, add = false) {
       if (nextScene === sceneId && (nextComponent ?? '') === componentId && add === creating)
         return true

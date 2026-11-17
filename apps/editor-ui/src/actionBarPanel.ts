@@ -336,6 +336,7 @@ export function bindActionBarPanel(
   )
 
   return {
+    canNavigate: (nextScene?: string) => !nextScene || nextScene === sceneId || !barDirty,
     navigate,
     hasDrafts: () => barDirty || inputDirty,
     render(state: ProjectEditorState, replaceFields: boolean) {

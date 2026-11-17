@@ -3,6 +3,8 @@ import { WorkspaceError } from './workspace.js'
 
 /** A read-only filesystem view lets the normal repository validate imports before writing. */
 export class ProjectArchiveWorkspace implements ProjectWorkspace {
+  readonly readOnly = true
+
   constructor(private readonly files: Readonly<Record<string, Uint8Array>>) {}
 
   async read(path: string): Promise<Uint8Array> {

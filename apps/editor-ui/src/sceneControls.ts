@@ -288,13 +288,7 @@ export function bindSceneControls(
   const canNavigate = (nextScene?: string, nextComponent?: string) => {
     if (nextScene === sceneId && nextComponent === componentId) return true
 
-    if (dirty) {
-      error.textContent = t(
-        componentId ? 'component.discardControlsFirst' : 'scene.discardControlsFirst',
-      )
-
-      return false
-    }
+    if (dirty) return false
 
     return true
   }
@@ -374,7 +368,11 @@ export function bindSceneControls(
     hasDrafts: () => dirty,
     canNavigate,
     navigate(nextScene?: string, nextComponent?: string) {
-      if (!canNavigate(nextScene, nextComponent)) return false
+      if (!canNavigate(nextScene, nextComponent)) {
+        error.textContent = t('scene.discardControlsFirst')
+
+        return false
+      }
 
       if (nextScene === sceneId && nextComponent === componentId) return true
       sceneId = nextScene

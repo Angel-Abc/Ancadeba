@@ -265,6 +265,8 @@ export function bindStylesheetEditor(
 
   return {
     hasDrafts: () => dirty,
+    canNavigate: (next?: string, create = false) =>
+      create ? creating || !dirty : !next || next === file || !dirty,
     navigate(next?: string, create = false) {
       if (create) {
         if (creating && dirty) return true

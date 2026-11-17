@@ -1,3 +1,4 @@
+import { editorFeaturesSchema } from '@ancadeba/editor-core'
 import {
   assetImportMetadataSchema,
   historyRequestSchema,
@@ -65,19 +66,7 @@ export const exportProjectInputSchema = projectExportRequestSchema.omit({ path: 
   timeoutMs: exportGameInputSchema.shape.timeoutMs,
 })
 
-export const editorFeaturesSchema = z.object({
-  history: z.boolean().default(false),
-  assetImport: z.boolean().default(false),
-  projectDiscovery: z.boolean().optional(),
-  projectCreation: z.boolean().optional(),
-  projectDuplication: z.boolean().optional(),
-  projectImport: z.boolean().optional(),
-  projectExport: z.boolean().optional(),
-  projectRenaming: z.boolean().optional(),
-  projectDeletion: z.boolean().optional(),
-  projectRestoration: z.boolean().optional(),
-  gameExport: z.boolean().optional(),
-})
+export { editorFeaturesSchema } from '@ancadeba/editor-core'
 
 const toolOperation = <T extends string>(tool: T) =>
   z.object({

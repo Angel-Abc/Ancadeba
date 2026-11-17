@@ -929,6 +929,13 @@ export function bindMapEditor(
   )
 
   return {
+    canNavigate: (mapId?: string, newMap = false) => {
+      const next = newMap
+        ? ''
+        : (mapId ?? (view?.maps?.[selected] ? selected : (view?.game?.maps?.[0] ?? '')))
+
+      return (next === selected && (newMap || !next) === creating) || !dirty
+    },
     navigate,
     draftHistory,
     restoreDraft,

@@ -556,6 +556,11 @@ export function bindLevelingEditor(
   )
 
   return {
+    canNavigate: (id?: string, nextProfile?: string, nextComponent?: string) =>
+      ((id === undefined || id === sceneId) &&
+        (nextProfile === undefined || nextProfile === profileId) &&
+        (nextComponent === undefined || nextComponent === componentId)) ||
+      !dirty,
     navigate,
     hasDrafts: () => dirty,
     render(state: ProjectEditorState, replaceFields: boolean) {

@@ -614,7 +614,14 @@ export function bindItemEditor(
   )
 
   return {
+    canNavigate: (nextScene?: string, nextComponent?: string) =>
+      !(nextComponent && definitions && (dirty || inventoryEditor.hasDrafts())) &&
+      (((!nextScene || nextScene === sceneId) &&
+        (!nextComponent || `view:${nextComponent}` === target)) ||
+        !dirty),
     navigate,
+    canNavigateInventory: (id: string) =>
+      (!dirty || definitions) && inventoryEditor.canNavigate(id),
     navigateInventory(id: string) {
       if (!showDefinitions(true)) return false
 

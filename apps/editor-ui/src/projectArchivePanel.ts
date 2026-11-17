@@ -1,3 +1,4 @@
+import type { EditorFeatures } from '@ancadeba/editor-core'
 import { projectImportRequestSchema, maxProjectArchiveBytes } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorController, ProjectEditorState } from './projectController.js'
@@ -21,6 +22,7 @@ export function bindProjectArchivePanel(
   const download = find<HTMLAnchorElement>('project-export-download')
   const listeners: (() => void)[] = []
   let state: ProjectEditorState | undefined
+  let features: EditorFeatures | undefined
   let exporting = false
   let importing = false
   let notice = ''
@@ -36,10 +38,13 @@ export function bindProjectArchivePanel(
   }
 
   const render = () => {
-    toggle.disabled = Boolean(state?.busy)
-    fields.disabled = Boolean(state?.busy)
+    toggle.disabled = !features?.projectImport || Boolean(state?.busy)
+    fields.disabled = !features?.projectImport || Boolean(state?.busy)
     exportButton.disabled =
-      Boolean(state?.busy) || !state?.view?.game || Boolean(state.view.diagnostics.length)
+      !features?.projectExport ||
+      Boolean(state?.busy) ||
+      !state?.view?.game ||
+      Boolean(state.view.diagnostics.length)
     exportButton.textContent = t(exporting ? 'project.exporting' : 'project.export')
     submit.textContent = t(importing ? 'project.importing' : 'project.import')
     feedback.textContent = t(notice)
@@ -126,6 +131,10 @@ export function bindProjectArchivePanel(
   render()
 
   return {
+    setFeatures(next: EditorFeatures) {
+      features = next
+      render()
+    },
     render(next: ProjectEditorState, replaceFields: boolean) {
       state = next
 

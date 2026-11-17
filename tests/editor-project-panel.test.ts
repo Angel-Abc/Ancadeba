@@ -1,3 +1,4 @@
+import { createProjectPanelDependencies } from '../apps/editor-ui/src/projectPanelDependencies.js'
 import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   commandRequestSchema,
@@ -13,6 +14,7 @@ import {
   type CreateProjectRequest,
   type DuplicateProjectRequest,
   type ProjectChoice,
+  type EditorFeatures,
   type ProjectView,
   type HistoryRequest,
 } from '@ancadeba/editor-core'
@@ -101,6 +103,19 @@ function panel(
     { path: 'basic', title: 'Basic game' },
   ],
   recoveryStorage?: EditorDraftStorage,
+  features: EditorFeatures = {
+    history: true,
+    assetImport: true,
+    projectDiscovery: true,
+    projectCreation: true,
+    projectDuplication: true,
+    projectImport: true,
+    projectExport: true,
+    projectRenaming: true,
+    projectFolderRenaming: true,
+    projectDeletion: true,
+    projectRestoration: true,
+  },
 ) {
   const controls = new Map<string, Control>()
 
@@ -155,6 +170,8 @@ function panel(
 
   const fetcher: typeof fetch = async function (this: unknown, url, init) {
     if (this !== undefined) throw new TypeError('Illegal invocation: fetch receiver')
+
+    if (url === '/api/editor/capabilities') return Response.json({ features })
 
     if (typeof url === 'string' && url.startsWith('/api/editor/projects/import?')) {
       if (!(init?.body instanceof File)) throw new Error('Expected a raw ZIP file')
@@ -289,10 +306,13 @@ function panel(
     return new Response(JSON.stringify(latest))
   }
 
+  // @ts-expect-error -- The partial document fixture supplies the only DOM operations used by these bindings.
+  const dependencies = createProjectPanelDependencies(fetcher, root.ownerDocument)
+
   const binding = bindProjectPanel(
     // @ts-expect-error -- Deliberately partial DOM fixture supplies only the query and control operations used by the panel.
     root,
-    fetcher,
+    dependencies,
     (key, values) => localization.t(key, values),
     (listener) => {
       languageChanged = listener
@@ -1373,4 +1393,31 @@ describe('project panel form reconciliation', () => {
       dispose()
     }
   })
+})
+
+it('keeps title renaming enabled and gates unsupported management controls', async () => {
+  const ui = panel(undefined, undefined, {
+    history: false,
+    assetImport: false,
+    projectRenaming: true,
+    projectFolderRenaming: false,
+    projectDeletion: false,
+    projectRestoration: false,
+  })
+
+  try {
+    expect(ui.control('project-rename-toggle').disabled).toBe(true)
+    expect(ui.control('project-delete').disabled).toBe(true)
+    await ui.submitProject('basic')
+    await vi.waitFor(() => expect(ui.control('project-rename-toggle').disabled).toBe(false))
+    ui.control('project-rename-toggle').click()
+    expect(ui.control('project-rename-title').disabled).toBe(false)
+    expect(ui.control('project-rename-folder').disabled).toBe(true)
+    expect(ui.control('project-delete').disabled).toBe(true)
+    expect(ui.control('project-trash-toggle').disabled).toBe(true)
+    expect(ui.control('project-new-toggle').disabled).toBe(true)
+    expect(ui.control('project-import-toggle').disabled).toBe(true)
+  } finally {
+    ui.dispose()
+  }
 })

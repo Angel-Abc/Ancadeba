@@ -2275,3 +2275,20 @@ Water adds `assert-passive-shield`, `assert-items-healing` and
 a cooling-down round, then 12 healing from a reusable breath stone. Total healing
 is 18, tonic consumption is 1 and stone consumption is 0. The boss conduit check
 verifies 13 guardian damage, 12 redirected damage and 13 seal charge.
+
+## Workspace section composition
+
+The editor shell uses an instance-owned `ProjectSectionRegistry`. Application composition
+supplies the HTTP client, graphic-resource factory, draft store, and clock. Built-in editors
+and extensions use `ProjectSectionDefinition` registrations with tree metadata and participant
+factories. A selection resolves to one primary editor plus matching adjuncts; unmatched data
+uses the read-only fallback. Navigation predicates must be side-effect-free: the registry
+checks every guard before activation or visibility changes. Hidden participants still receive
+state updates and contribute drafts. History and shortcut ports are optional, and disposal
+belongs to the registry. Metadata form bindings own their validation, translations, and drafts.
+
+Repository capabilities are explicit backend guarantees. Folder creation and import require
+directory creation and removal. Folder rename, deletion, and restoration additionally require
+movement. `projectRenaming` permits title-only changes; `projectFolderRenaming` controls the
+folder field independently. Controls remain disabled until capability discovery succeeds;
+reopening the project picker retries discovery after a failure.

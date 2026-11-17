@@ -316,6 +316,7 @@ export function bindRulesPanel(
     },
     hasDrafts: () => rulesDirty || dirtyTriggers.size > 0,
     /** Opens a rule file's definitions; refuses while the current file has a draft. */
+    canNavigate: (id: string) => id === ruleId || !rulesDirty,
     navigate(id: string) {
       if (id === ruleId) {
         showTriggers(false)

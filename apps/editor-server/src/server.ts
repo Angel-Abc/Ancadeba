@@ -150,6 +150,7 @@ export function createEditorServer(
               projectImport: false,
               projectExport: false,
               projectRenaming: false,
+              projectFolderRenaming: false,
               projectDeletion: false,
               projectRestoration: false,
             }),

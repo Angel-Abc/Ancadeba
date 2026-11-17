@@ -443,6 +443,10 @@ export function bindCombatEditor(
   )
 
   return {
+    canNavigate: (id?: string, nextEncounter?: string) =>
+      ((id === undefined || id === sceneId) &&
+        (nextEncounter === undefined || nextEncounter === encounterId)) ||
+      (!dirty && !simulation.hasDrafts()),
     navigate,
     hasDrafts: () => dirty || libraryEditor.hasDrafts() || simulation.hasDrafts(),
     render(state: ProjectEditorState, replaceFields: boolean) {

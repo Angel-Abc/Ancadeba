@@ -4,7 +4,8 @@ import {
   type DeletedProject,
 } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
-import type { HttpEditorClient } from './editorClient.js'
+import type { IEditorClient } from './editorClient.js'
+import type { EditorFeatures } from '@ancadeba/editor-core'
 import type { ProjectEditorController, ProjectEditorState } from './projectController.js'
 import { gameTitle } from './projectTree.js'
 import type { ConfirmAction } from './editorConfirmation.js'
@@ -12,7 +13,7 @@ import type { ConfirmAction } from './editorConfirmation.js'
 /** Project folder actions and recoverable deletion, separate from authoring forms. */
 export function bindProjectManagementPanel(
   root: HTMLElement,
-  client: HttpEditorClient,
+  client: Pick<IEditorClient, 'listDeleted'>,
   controller: ProjectEditorController,
   t: Translate,
   allowDiscard: () => boolean | Promise<boolean>,
@@ -38,6 +39,7 @@ export function bindProjectManagementPanel(
   let listing = false
   let sequence = 0
   let notice = ''
+  let features: EditorFeatures | undefined
 
   const on = (target: EventTarget, event: string, listener: EventListener) => {
     target.addEventListener(event, listener)
@@ -45,13 +47,14 @@ export function bindProjectManagementPanel(
   }
 
   const controls = () => {
-    renameToggle.disabled = !state?.view || state.busy
-    renameFields.disabled = !state?.view || state.busy
-    folder.disabled = !state?.path || Boolean(state.busy)
+    renameToggle.disabled = !features?.projectRenaming || !state?.view || state.busy
+    renameFields.disabled = !features?.projectRenaming || !state?.view || state.busy
+    folder.disabled = !features?.projectFolderRenaming || !state?.path || Boolean(state.busy)
     title.disabled = !state?.view?.game || Boolean(state.busy)
-    remove.disabled = !state?.path || !state.view || state.busy
-    trashToggle.disabled = Boolean(state?.busy) || listing
-    trashSelect.disabled = Boolean(state?.busy) || listing || !deleted.length
+    remove.disabled = !features?.projectDeletion || !state?.path || !state.view || state.busy
+    trashToggle.disabled = !features?.projectRestoration || Boolean(state?.busy) || listing
+    trashSelect.disabled =
+      !features?.projectRestoration || Boolean(state?.busy) || listing || !deleted.length
     destination.disabled = trashSelect.disabled
     restore.disabled = trashSelect.disabled
     feedback.textContent = t(notice)
@@ -70,7 +73,7 @@ export function bindProjectManagementPanel(
     controls()
 
     try {
-      const result = await client.listDeleted()
+      const result = (await client.listDeleted?.()) ?? []
 
       if (disposed || request !== sequence) return
       deleted = result
@@ -117,13 +120,13 @@ export function bindProjectManagementPanel(
   on(renameForm, 'submit', async (event) => {
     event.preventDefault()
 
-    if (!state?.view || state.busy) return
+    if (!features?.projectRenaming || !state?.view || state.busy) return
 
     const request = renameProjectRequestSchema.safeParse({
       path: state.path,
       expectedRevision: state.view.revision,
       ...(state.view.game && title.value !== state.view.game.title ? { title: title.value } : {}),
-      ...(state.path && folder.value !== state.path.split('/').at(-1)
+      ...(!folder.disabled && state.path && folder.value !== state.path.split('/').at(-1)
         ? { folderName: folder.value }
         : {}),
     })
@@ -196,6 +199,10 @@ export function bindProjectManagementPanel(
   controls()
 
   return {
+    setFeatures(next: EditorFeatures) {
+      features = next
+      controls()
+    },
     render(next: ProjectEditorState, replaceFields: boolean) {
       if (next.view && (!state?.view || state.path !== next.path)) {
         renameForm.hidden = true

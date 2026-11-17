@@ -1218,6 +1218,7 @@ describe('shared editor project API', () => {
       projectImport: true,
       projectExport: true,
       projectRenaming: true,
+      projectFolderRenaming: true,
       projectDeletion: true,
       projectRestoration: true,
       projectRepair: true,

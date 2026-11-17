@@ -1,3 +1,4 @@
+import type { CombatRewardService } from './combatCollaborators.js'
 import { rewardItemId, type CombatDefinition, type RewardOperation } from '@ancadeba/schemas'
 import type { GameInstance, IGameLifecycle, SceneInstance } from './gameLifecycle.js'
 import type { IGameBindings } from './gameBindings.js'
@@ -37,7 +38,7 @@ export interface IGameCombatRewards {
 }
 
 /** Owns exactly-once reward delivery and ordinary inventory loot for one playthrough. */
-export class GameCombatRewards implements IGameCombatRewards {
+export class GameCombatRewards implements CombatRewardService, IGameCombatRewards {
   private readonly bundles = new Map<string, RewardBundle>()
   private readonly listeners = new Set<() => void>()
   private readonly cleanups: (() => void)[] = []

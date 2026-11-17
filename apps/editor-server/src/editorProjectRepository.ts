@@ -26,6 +26,7 @@ import {
   type RestoreProjectRequest,
   type DeletedProject,
   type ProjectImportRequest,
+  type RepositoryCapabilities,
 } from '@ancadeba/editor-core'
 import { WorkspaceError, workspaceError, type WorkspaceService } from './workspace.js'
 import {
@@ -45,6 +46,7 @@ import { ProjectArchiveWorkspace } from './projectArchiveWorkspace.js'
 import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 export interface ProjectWorkspace extends WorkspaceService {
+  readonly readOnly?: boolean
   canonicalDirectoryPath?(path: string): Promise<string>
   createDirectory?(path: string): Promise<void>
   removeDirectory?(path: string): Promise<void>
@@ -54,6 +56,7 @@ export interface ProjectWorkspace extends WorkspaceService {
 }
 
 export interface EditorProjectRepository {
+  readonly capabilities: RepositoryCapabilities
   /** Canonical workspace-relative path for existing project directories. */
   resolvePath?(folder: string): Promise<string>
   previewRepair?(folder: string, file: string, text: string): Promise<ProjectSnapshot>
@@ -85,10 +88,33 @@ export function projectPath(folder: string, file: string): string {
 }
 
 export class WorkspaceProjectRepository implements EditorProjectRepository {
+  readonly capabilities: RepositoryCapabilities
   private readonly storage: ProjectStorage | undefined
   private readonly directories: ProjectDirectoryManagement
 
   constructor(private readonly workspace: ProjectWorkspace) {
+    const writable = workspace.readOnly !== true
+
+    const creates =
+      writable &&
+      typeof workspace.createDirectory === 'function' &&
+      typeof workspace.removeDirectory === 'function'
+
+    const moves = creates && typeof workspace.moveDirectory === 'function'
+
+    this.capabilities = Object.freeze({
+      history: writable,
+      assetImport: writable,
+      projectCreation: creates,
+      projectDuplication: creates,
+      projectImport: creates,
+      projectExport: true,
+      projectRenaming: writable,
+      projectFolderRenaming: moves,
+      projectDeletion: moves,
+      projectRestoration: moves,
+      projectRepair: writable,
+    })
     this.storage = workspace.moveDirectory ? new ProjectStorage(workspace) : undefined
     this.directories = new ProjectDirectoryManagement(
       workspace,

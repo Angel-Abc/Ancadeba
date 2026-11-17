@@ -1,3 +1,4 @@
+import type { CombatLevelingService } from './combatCollaborators.js'
 import { levelForXp, type CombatDefinition } from '@ancadeba/schemas'
 import type { GameInstance } from './gameLifecycle.js'
 import type { IGameBindings } from './gameBindings.js'
@@ -34,7 +35,7 @@ export interface IGameLeveling {
 }
 
 /** Expands XP writes into one validated state batch. Prepared commits never notify observers. */
-export class GameLeveling implements IGameLeveling, IStateTransactions {
+export class GameLeveling implements CombatLevelingService, IGameLeveling, IStateTransactions {
   private healthBonus: (path: readonly string[]) => number = () => 0
   setHealthBonus(read: (path: readonly string[]) => number): void {
     this.healthBonus = read

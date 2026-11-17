@@ -392,6 +392,7 @@ export function bindInventoryEditor(
 
   return {
     hasDrafts: () => dirty,
+    canNavigate: (id: string) => id === selectedFile || !dirty,
     navigate,
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()

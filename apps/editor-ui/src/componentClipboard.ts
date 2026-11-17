@@ -227,11 +227,7 @@ export function bindComponentClipboard(
 
     if (nextScene === sceneId && nextComponent === componentId) return true
 
-    if (dirty) {
-      error.textContent = t('clipboard.discardFirst')
-
-      return false
-    }
+    if (dirty) return false
 
     return true
   }
@@ -282,7 +278,11 @@ export function bindComponentClipboard(
     hasDrafts: () => dirty || copying,
     canNavigate,
     navigate(nextScene?: string, nextComponent?: string) {
-      if (!canNavigate(nextScene, nextComponent)) return false
+      if (!canNavigate(nextScene, nextComponent)) {
+        error.textContent = t('clipboard.discardFirst')
+
+        return false
+      }
 
       if (nextScene === sceneId && nextComponent === componentId) return true
       sceneId = nextScene

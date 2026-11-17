@@ -225,6 +225,9 @@ export function bindStatusPanelEditor(
   )
 
   return {
+    canNavigate: (nextScene?: string, nextPanel?: string) =>
+      ((!nextScene || nextScene === sceneId) && (!nextPanel || nextPanel === componentId)) ||
+      !dirty,
     navigate,
     hasDrafts: () => dirty,
     render(state: ProjectEditorState, replaceFields: boolean) {

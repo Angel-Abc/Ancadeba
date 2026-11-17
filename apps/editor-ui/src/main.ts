@@ -1,3 +1,4 @@
+import { createProjectPanelDependencies } from './projectPanelDependencies.js'
 import './style.css'
 import '@ancadeba/ui-components/game.css'
 import { bindProjectPanel } from './projectPanel.js'
@@ -225,7 +226,7 @@ controller.stop()
 
 const projectPanel = bindProjectPanel(
   element<HTMLElement>('#app'),
-  fetch,
+  createProjectPanelDependencies(fetch, document),
   t,
   subscribeLanguageChanges,
   {

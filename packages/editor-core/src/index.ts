@@ -1,5 +1,7 @@
 export * from './commands.js'
 
+export * from './capabilities.js'
+
 export * from './project.js'
 
 export * from './protocol.js'

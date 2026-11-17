@@ -1,3 +1,4 @@
+import { editorFeaturesSchema, type EditorFeatures } from '@ancadeba/editor-core'
 import type {
   CommandRequest,
   CreateProjectRequest,
@@ -211,6 +212,21 @@ export class HttpEditorClient implements IEditorClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
+  }
+
+  async capabilities(signal?: AbortSignal): Promise<EditorFeatures> {
+    const response = await this.request('/api/editor/capabilities', signal ? { signal } : {})
+
+    const parsed = editorFeaturesSchema.safeParse(
+      response && typeof response === 'object' && 'features' in response
+        ? response.features
+        : undefined,
+    )
+
+    if (!parsed.success)
+      throw new EditorClientError('invalid_response', 'Editor capabilities were malformed')
+
+    return parsed.data
   }
 
   async listProjects(signal: AbortSignal): Promise<ProjectChoice[]> {

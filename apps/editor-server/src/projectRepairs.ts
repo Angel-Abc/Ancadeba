@@ -13,7 +13,12 @@ export async function prepareProjectRepair(repository: EditorProjectRepository, 
   if (Buffer.byteLength(request.text, 'utf8') > 4 * 1024 * 1024)
     throw new EditorError(413, 'repair_too_large', 'Repair text exceeds the 4 MiB limit')
 
-  if (!repository.previewRepair || !repository.readHistoryFiles || !repository.restoreHistoryFiles)
+  if (
+    !repository.capabilities.projectRepair ||
+    !repository.previewRepair ||
+    !repository.readHistoryFiles ||
+    !repository.restoreHistoryFiles
+  )
     throw new EditorError(503, 'unsupported_repair', 'Project repair is unavailable')
   const path = (await repository.resolvePath?.(request.path)) ?? request.path
   const current = await repository.load(path)

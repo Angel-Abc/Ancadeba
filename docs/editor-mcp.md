@@ -692,3 +692,13 @@ preview controls, raw file access, command batches, shell/process tools
 or remote MCP hosting. Component duplication and paste are available as shared
 commands; inspect a scene to obtain a source component. Declarative rules are
 authorable; arbitrary executable scripts are not added by the adapter.
+
+### Repository capability guarantees
+
+The editor reports repository support explicitly rather than inferring it from method names.
+`projectRenaming` enables title changes. `projectFolderRenaming` additionally permits a
+`folderName` in rename requests. A title-only request remains supported when directory moves
+are unavailable; a request containing `folderName` is rejected before posting or writing when
+that flag is false. Creation, duplication, import, deletion, and restoration flags reflect the
+workspace directory primitives available to the repository. MCP clients check these flags
+before invoking the associated operation.

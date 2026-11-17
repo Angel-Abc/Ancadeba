@@ -213,3 +213,5 @@ export * from './combatScenarioAssertions.js'
 export * from './runtimeText.js'
 
 export * from './savePoints.js'
+
+export * from './combatCollaborators.js'

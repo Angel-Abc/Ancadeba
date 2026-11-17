@@ -175,7 +175,7 @@ export class EditorApiClient implements IEditorApi {
   }
 
   private async managementSupport(
-    feature: 'projectRenaming' | 'projectDeletion' | 'projectRestoration',
+    feature: 'projectRenaming' | 'projectFolderRenaming' | 'projectDeletion' | 'projectRestoration',
     signal?: AbortSignal,
   ) {
     if (!(await this.capabilities(signal)).features?.[feature])
@@ -195,6 +195,9 @@ export class EditorApiClient implements IEditorApi {
         'Provide the source revision and a new title or folder name',
       )
     await this.managementSupport('projectRenaming', signal)
+
+    if (parsed.data.folderName !== undefined)
+      await this.managementSupport('projectFolderRenaming', signal)
 
     return this.request(
       '/api/editor/projects/rename',

@@ -203,6 +203,7 @@ export function bindShopEditor(
   )
 
   return {
+    canNavigate: (id?: string) => !id || id === sceneId || !dirty,
     navigate,
     hasDrafts: () => dirty,
     render(state: ProjectEditorState, replaceFields: boolean) {

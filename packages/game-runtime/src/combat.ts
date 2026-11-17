@@ -1,3 +1,8 @@
+import type {
+  CombatRewardService,
+  CombatLevelingService,
+  CombatStatsService,
+} from './combatCollaborators.js'
 import { combatMoveRequirementIssue, combatRequirementsText } from './combatRequirements.js'
 import { combatDamageProfile } from './combatDamage.js'
 import { combatEquipmentFor, combatActorMoves } from './combatEquipment.js'
@@ -22,10 +27,6 @@ import {
 
 import type { IGameInventory, InventoryReservation, InventoryItemSnapshot } from './inventory.js'
 
-import type { GameLeveling } from './leveling.js'
-
-import type { GameCombatStats } from './combatStats.js'
-
 import {
   combatMoveTarget,
   combatStunned,
@@ -39,8 +40,6 @@ import {
 } from './combatEffects.js'
 
 import { isRewardOperation } from '@ancadeba/schemas'
-
-import type { GameCombatRewards } from './combatRewards.js'
 
 import type {
   CombatDefinition,
@@ -428,11 +427,11 @@ export class GameCombat implements IGameCombat {
 
     private readonly invalidate: () => void,
 
-    private readonly rewards?: GameCombatRewards,
+    private readonly rewards?: CombatRewardService,
 
-    private readonly leveling?: GameLeveling,
+    private readonly leveling?: CombatLevelingService,
 
-    private readonly stats?: GameCombatStats,
+    private readonly stats?: CombatStatsService,
 
     private readonly inventory: IGameInventory | undefined = lifecycle.currentGame?.inventory,
   ) {

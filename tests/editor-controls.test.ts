@@ -47,6 +47,11 @@ import { bindItemEditor } from '../apps/editor-ui/src/itemEditor.js'
 import { bindCombatEditor } from '../apps/editor-ui/src/combatEditor.js'
 import { bindShopEditor } from '../apps/editor-ui/src/shopEditor.js'
 import { bindRulesPanel } from '../apps/editor-ui/src/rulesPanel.js'
+import { builtinSectionDefinitions } from '../apps/editor-ui/src/projectBuiltinSections.js'
+import {
+  ProjectSectionRegistry,
+  projectSelection,
+} from '../apps/editor-ui/src/projectSectionRegistry.js'
 import { ProjectEditorController } from '../apps/editor-ui/src/projectController.js'
 import { EditorClientError } from '../apps/editor-ui/src/editorClient.js'
 import { bindInventoryEditor } from '../apps/editor-ui/src/inventoryEditor.js'
@@ -334,6 +339,178 @@ class ControlDocument {
     return new Control(this, tag)
   }
 }
+
+function ruleWorkspace() {
+  const document = new ControlDocument()
+  const root = document.createElement('section')
+  let localization = editorLocalization()
+  const translate: typeof localization.t = (key, values) => localization.t(key, values)
+  const rules = bindRulesPanel(root.asElement(), () => {}, translate)
+  let source = project()
+
+  for (const ruleId of ['first', 'second'])
+    source = applyCommand(source, {
+      type: 'game.updateRules',
+      ruleId,
+      rules: { state: [], actions: {} },
+    }).project
+
+  const view = inspectProject(source)
+
+  let state: ProjectEditorState = {
+    path: 'game',
+    view,
+    busy: false,
+    error: '',
+    conflict: false,
+    changedElsewhere: false,
+    lastCommand: null,
+    preserveDrafts: true,
+  }
+
+  const noop = () => {}
+
+  const definitions = builtinSectionDefinitions({
+    root: root.asElement(),
+    t: translate,
+    sections: [{ id: 'rules', labelKey: 'rules.heading', nodes: () => [] }],
+    forms: {
+      setVisible: noop,
+      activate: noop,
+      selectedScene: () => '',
+      hasDrafts: () => false,
+      hasSceneDrafts: () => false,
+      clear: noop,
+      selectScene: noop,
+      refreshTranslations: noop,
+      refresh: noop,
+      render: noop,
+      dispose: noop,
+    },
+    takePreferredScene: () => undefined,
+    assetsPanel: { render: noop, dispose: noop, hasDrafts: () => false, navigate: noop },
+    rulesPanel: rules,
+    actionBarPanel: undefined,
+    statusPanel: undefined,
+    itemEditor: undefined,
+    shopEditor: undefined,
+    combatEditor: undefined,
+    levelingEditor: undefined,
+    localizationEditor: undefined,
+    stylesheetEditor: undefined,
+    componentEditor: undefined,
+    storyEditor: undefined,
+    mapEditor: undefined,
+    repairEditor: undefined,
+    sceneControls: undefined,
+    componentClipboard: undefined,
+  })
+
+  const registry = new ProjectSectionRegistry([
+    definitions.find((definition) => definition.tree?.id === 'rules')!,
+  ])
+
+  const selection = () =>
+    projectSelection(
+      {
+        key: 'rule-file:first',
+        section: 'rules',
+        kind: 'rule-file',
+        id: 'first',
+        label: 'first',
+      },
+      state.view,
+    )
+
+  const refresh = (next: Partial<ProjectEditorState> = {}, replace = false) => {
+    state = { ...state, ...next }
+    registry.render(state, replace)
+    registry.show(selection())
+  }
+
+  registry.render(state, true)
+  registry.navigate(selection())
+
+  return {
+    registry,
+    view,
+    refresh,
+    reselect: () => registry.navigate(selection()),
+    triggerTab: () =>
+      root
+        .all()
+        .find(
+          (node) => node.tagName === 'button' && node.textContent === translate('rules.triggers'),
+        )!,
+    filePicker: () =>
+      root
+        .all()
+        .find(
+          (node) => node.tagName === 'select' && node.parent?.ownText === translate('rules.file'),
+        )!,
+    language(language: string) {
+      localization = editorLocalization([language])
+      refresh()
+    },
+  }
+}
+
+describe('rule editor workspace refresh', () => {
+  it('retains the trigger tab across routine, busy, language and unrelated-save renders', () => {
+    const workspace = ruleWorkspace()
+
+    try {
+      workspace.triggerTab().dispatchEvent(new Event('click'))
+      expect(workspace.triggerTab().attributes.get('aria-pressed')).toBe('true')
+      workspace.refresh()
+      expect(workspace.triggerTab().attributes.get('aria-pressed')).toBe('true')
+      workspace.refresh({ busy: true })
+      expect(workspace.triggerTab().attributes.get('aria-pressed')).toBe('true')
+      workspace.refresh({ busy: false })
+      workspace.language('nl')
+      expect(workspace.triggerTab().attributes.get('aria-pressed')).toBe('true')
+      workspace.refresh(
+        {
+          view: { ...workspace.view, revision: 'two' },
+          lastCommand: 'game.updateMetadata',
+        },
+        true,
+      )
+      expect(workspace.triggerTab().attributes.get('aria-pressed')).toBe('true')
+    } finally {
+      workspace.registry.dispose()
+    }
+  })
+
+  it('retains the local file picker target on refresh and honors explicit tree reselection', () => {
+    const workspace = ruleWorkspace()
+
+    try {
+      workspace.filePicker().value = 'second'
+      workspace.filePicker().dispatchEvent(new Event('change'))
+      expect(workspace.filePicker().value).toBe('second')
+      workspace.refresh()
+      expect(workspace.filePicker().value).toBe('second')
+      workspace.refresh({ busy: true })
+      expect(workspace.filePicker().value).toBe('second')
+      workspace.refresh({ busy: false })
+      workspace.language('nl')
+      expect(workspace.filePicker().value).toBe('second')
+      workspace.refresh(
+        {
+          view: { ...workspace.view, revision: 'two' },
+          lastCommand: 'game.updateMetadata',
+        },
+        true,
+      )
+      expect(workspace.filePicker().value).toBe('second')
+      expect(workspace.reselect()).toBe(true)
+      expect(workspace.filePicker().value).toBe('first')
+    } finally {
+      workspace.registry.dispose()
+    }
+  })
+})
 
 function panel(withInput = true) {
   const document = new ControlDocument()

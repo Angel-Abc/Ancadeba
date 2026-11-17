@@ -339,6 +339,7 @@ describe('project duplication', () => {
 
     const failing = new EditorProjectService(
       {
+        capabilities: repository.capabilities,
         duplicate: (input) => repository.duplicate(input),
         load: async (path) => {
           if (path === 'copy') throw new Error('Read failed')

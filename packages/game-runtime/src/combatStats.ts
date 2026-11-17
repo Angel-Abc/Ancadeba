@@ -1,3 +1,4 @@
+import type { CombatStatsService } from './combatCollaborators.js'
 import {
   combatStatNames,
   type CombatBonuses,
@@ -43,7 +44,7 @@ export interface IGameCombatStats {
 }
 
 /** Calculates derived values without changing base fields. Enlists health clamps in inventory commits. */
-export class GameCombatStats implements IGameCombatStats {
+export class GameCombatStats implements CombatStatsService, IGameCombatStats {
   private temporaryEffects: (owner: string) => readonly TemporaryStatContribution[] = () => []
   setTemporaryEffects(read: (owner: string) => readonly TemporaryStatContribution[]): () => void {
     this.temporaryEffects = read
