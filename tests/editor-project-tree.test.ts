@@ -319,6 +319,92 @@ describe('extensible project explorer', () => {
     expect(buildProjectTree(view, editorLocalization(['nl']).t)[1]!.label).toBe('Scènes')
   })
 
+  it('opens the same component from its literal label, a saved translation, or its ID', () => {
+    const { tree, search, row, selections, key } = setup()
+    const placement = { row: 1, column: 1 }
+
+    const play = sceneComponentSchema.parse({
+      id: 'play',
+      type: 'button',
+      label: 'New game',
+      labelKey: 'menu.start',
+      placement,
+    })
+
+    const project = {
+      ...view,
+      translations: { 'menu.start': 'Start adventure' },
+      languageCatalogs: { nl: { 'menu.start': 'Nieuw spel' } },
+      scenes: [{ ...view.scenes[0]!, components: [play] }],
+    }
+
+    tree.render(project, false)
+    const component = 'component:standard:play'
+
+    for (const [query, expectedLabel] of [
+      ['  NEW GAME  ', 'New game'],
+      ['adventure', 'Start adventure'],
+      ['nieuw', 'Nieuw spel'],
+      ['play', 'play'],
+    ] as const) {
+      search.value = query
+      search.dispatchEvent(new Event('input'))
+      expect(row('scene:standard').getAttribute('aria-expanded')).toBe('true')
+      expect(row(component).children[1]!.textContent).toBe(expectedLabel)
+      expect(row(component).children[2]!.textContent).toBe(
+        expectedLabel === 'play' ? 'Button' : 'Button · play',
+      )
+      row(component).focus()
+      key('Enter')
+      expect(selections.at(-1)).toBe(component)
+    }
+
+    search.value = 'nieuw'
+    tree.render({ ...project, languageCatalogs: {} }, false)
+    expect(() => row(component)).toThrow('Missing tree row')
+    tree.dispose()
+  })
+
+  it('finds text, alternative text and nested action labels without matching unrelated fields', () => {
+    const placement = { row: 1, column: 1 }
+
+    const components = [
+      { id: 'intro', type: 'text', textKey: 'intro.title' },
+      { id: 'hero', type: 'graphic', visual: 'portrait', alt: 'A sailor on deck' },
+      {
+        id: 'actions',
+        type: 'action-bar',
+        slots: {
+          '1': { label: 'Cast off', action: { type: 'enter-scene', scene: 'secret-port' } },
+        },
+      },
+    ].map((component) => sceneComponentSchema.parse({ ...component, placement }))
+
+    const nodes = buildProjectTree(
+      {
+        ...view,
+        scenes: [{ ...view.scenes[0]!, components }],
+        translations: { 'intro.title': 'Welcome aboard' },
+      },
+      t,
+    )
+
+    const matches = (query: string) => flattenProjectTree(filterProjectTree(nodes, query))
+
+    for (const [query, id] of [
+      ['aboard', 'intro'],
+      ['sailor', 'hero'],
+      ['cast off', 'actions'],
+    ] as const)
+      expect(matches(query).map((node) => node.key)).toEqual([
+        'scenes',
+        'scene:standard',
+        `component:standard:${id}`,
+      ])
+
+    expect(matches('secret-port')).toEqual([])
+  })
+
   it('navigates visible branches with arrows without selecting until Enter', () => {
     const { row, key, document, selections, tree } = setup()
     row('scene:standard').focus()

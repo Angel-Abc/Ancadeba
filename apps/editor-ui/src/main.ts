@@ -75,6 +75,7 @@ const layout = bindWorkspaceLayout(
   {
     shell: element('#app'),
     modes: element('#layout-modes'),
+    workbench: element('.workbench'),
     workspace: element('#editor-workspace'),
     splitter: element('#preview-splitter'),
     preview: panel,
@@ -186,6 +187,9 @@ const container = new ContainerBuilder({
     content.setAttribute('aria-busy', String(state === 'starting'))
     empty.hidden = state === 'running'
     error.hidden = !message
+
+    if (state === 'running' && document.activeElement === panel)
+      content.querySelector<HTMLElement>('.ancadeba-game')?.focus({ preventScroll: true })
   },
 }).build()
 
@@ -197,11 +201,14 @@ function onStart(event: SubmitEvent): void {
 
   if (projectPath === undefined) return
 
-  layout.revealPreview()
-  void controller.start(projectPath)
+  void controller.start(projectPath, { onStarting: layout.revealPreview })
 }
 
-const onStop = () => controller.stop()
+const onStop = () => {
+  controller.stop()
+
+  if (layout.restoreAfterPlayback()) start.focus({ preventScroll: true })
+}
 
 const onExport = () => {
   if (projectPath !== undefined) void exportController.export(projectPath)
@@ -233,6 +240,8 @@ const projectPanel = bindProjectPanel(
     onNavigate: () => layout.revealEditor(previewState !== 'stopped'),
     onProjectChange(path, storageKey) {
       const restartPreview = previewState !== 'stopped'
+
+      if (path !== projectPath) layout.restoreAfterPlayback()
       projectPath = path
       projectSaveKeys.set(path, storageKey ?? path)
       exportController.reset()
@@ -241,6 +250,7 @@ const projectPanel = bindProjectPanel(
       if (restartPreview) void controller.start(path, { confirm: false })
     },
     onProjectClose() {
+      layout.restoreAfterPlayback()
       projectPath = undefined
       selectedScene = undefined
       exportController.reset()

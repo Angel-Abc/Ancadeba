@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
+  bindWorkspaceLayout,
   previewSizeAfterKey,
   previewSizeRange,
   readLayoutPreferences,
@@ -16,6 +17,50 @@ function storage(values: Record<string, string>): () => LayoutStorage {
 }
 
 describe('workspace layout preferences', () => {
+  it.each(['edit', 'split', 'preview'])(
+    'returns to %s and the same scroll position after compact playback',
+    (layout) => {
+      const compact = { matches: true }
+
+      const shell = {
+        dataset: { layout },
+        ownerDocument: { defaultView: { matchMedia: () => compact } },
+      }
+
+      const modes = Object.assign(new EventTarget(), { querySelectorAll: () => [] })
+      const splitter = Object.assign(new EventTarget(), { setAttribute: vi.fn() })
+      const workbench = { scrollTop: 840 }
+      const preview = { focus: vi.fn(), scrollIntoView: vi.fn(), style: { setProperty: vi.fn() } }
+      const values = { 'ancadeba.editor.layout': layout }
+
+      const binding = bindWorkspaceLayout(
+        // @ts-expect-error -- Only the elements' layout, focus and event APIs are needed here.
+        { shell, modes, workbench, workspace: {}, splitter, preview },
+        storage(values),
+      )
+
+      try {
+        binding.revealPreview()
+        expect(shell.dataset.layout).toBe('preview')
+        expect(values['ancadeba.editor.layout']).toBe(layout)
+        expect(preview.scrollIntoView).toHaveBeenCalledOnce()
+        expect(preview.focus).toHaveBeenCalledOnce()
+        workbench.scrollTop = 70
+        binding.restoreAfterPlayback()
+        expect(shell.dataset.layout).toBe(layout)
+        expect(workbench.scrollTop).toBe(840)
+
+        compact.matches = false
+        binding.revealPreview()
+        expect(shell.dataset.layout).toBe(layout === 'edit' ? 'split' : layout)
+        expect(preview.scrollIntoView).toHaveBeenCalledOnce()
+        expect(binding.restoreAfterPlayback()).toBe(false)
+      } finally {
+        binding.dispose()
+      }
+    },
+  )
+
   it('restores a stored layout and clamps the stored preview size', () => {
     expect(
       readLayoutPreferences(

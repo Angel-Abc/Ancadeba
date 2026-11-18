@@ -13,7 +13,10 @@ export class EditorPreviewController {
     private readonly confirmPreview: () => boolean | Promise<boolean> = () => true,
   ) {}
 
-  async start(folder: string, { confirm = true }: { confirm?: boolean } = {}): Promise<void> {
+  async start(
+    folder: string,
+    { confirm = true, onStarting }: { confirm?: boolean; onStarting?: () => void } = {},
+  ): Promise<void> {
     if (this.disposed || this.engine || this.pendingConfirmation) return
 
     const accepted = confirm ? this.confirmPreview() : true
@@ -36,6 +39,7 @@ export class EditorPreviewController {
     try {
       engine = this.createInstance(folder)
       this.engine = engine
+      onStarting?.()
       this.onStateChange('starting')
       await engine.start()
 

@@ -13,6 +13,7 @@ export const mapGridViewport = () => ({
   viewRows: 16,
   zoom: 100,
   panning: false,
+  viewControlsOpen: false,
 })
 
 /** Tile-aligned camera with a bounded number of visible cells at every zoom level. */

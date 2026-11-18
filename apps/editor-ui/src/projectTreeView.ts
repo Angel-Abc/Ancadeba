@@ -71,14 +71,17 @@ export function bindProjectTree(
         })
         const label = document.createElement('span')
         label.className = 'tree-label'
-        label.textContent = node.label
-        label.title = node.label
+        label.textContent = node.matchedLabel ?? node.label
+        label.title = label.textContent
         row.append(toggle, label)
 
         if (node.detail) {
           const detail = document.createElement('small')
-          detail.textContent = node.detail
-          detail.title = node.detail
+          detail.textContent =
+            node.matchedLabel && node.matchedLabel !== node.label
+              ? `${node.detail} · ${node.label}`
+              : node.detail
+          detail.title = detail.textContent
           row.append(detail)
         }
 

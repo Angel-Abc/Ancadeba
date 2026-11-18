@@ -321,6 +321,13 @@ describe('map editor pages', () => {
       ])
       expect(page(ui, 'paint').hidden).toBe(false)
       expect(page(ui, 'paint').contains(ui.control('Paint terrain'))).toBe(true)
+      const paintElements = page(ui, 'paint').all()
+      const canvas = paintElements.find((element) => element.className === 'map-canvas')!
+      const details = paintElements.find((element) => element.className === 'map-view-details')!
+      expect(paintElements.indexOf(canvas)).toBeLessThan(paintElements.indexOf(details))
+      expect(details.contains(ui.button('Next columns'))).toBe(true)
+      expect(details.contains(ui.button('Pan right'))).toBe(true)
+      expect(details.open).toBe(false)
       expect(page(ui, 'terrain').contains(ui.control('Terrain to edit'))).toBe(true)
       expect(page(ui, 'objects').contains(ui.button('Edit tile-entry triggers'))).toBe(true)
       expect(page(ui, 'settings').contains(ui.control('Width in tiles'))).toBe(true)

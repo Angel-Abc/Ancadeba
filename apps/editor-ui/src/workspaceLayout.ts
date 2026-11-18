@@ -1,4 +1,5 @@
 export const workspaceLayouts = ['edit', 'split', 'preview'] as const
+export const compactWorkspaceQuery = '(max-width: 960px)'
 
 export type WorkspaceLayout = (typeof workspaceLayouts)[number]
 
@@ -7,6 +8,7 @@ export type LayoutStorage = Pick<Storage, 'getItem' | 'setItem'>
 export interface WorkspaceLayoutElements {
   shell: HTMLElement
   modes: HTMLElement
+  workbench: HTMLElement
   workspace: HTMLElement
   splitter: HTMLElement
   preview: HTMLElement
@@ -66,12 +68,14 @@ export function previewSizeAfterKey(size: number, key: string): number | undefin
 }
 
 export function bindWorkspaceLayout(
-  { shell, modes, workspace, splitter, preview }: WorkspaceLayoutElements,
+  { shell, modes, workbench, workspace, splitter, preview }: WorkspaceLayoutElements,
   storage: () => LayoutStorage,
 ) {
   const abort = new AbortController()
   const signal = abort.signal
   let { layout, previewSize } = readLayoutPreferences(storage)
+  const compact = shell.ownerDocument.defaultView?.matchMedia(compactWorkspaceQuery)
+  let beforePlayback: { layout: WorkspaceLayout; scrollTop: number } | undefined
 
   const write = (key: string, value: string) => {
     try {
@@ -91,6 +95,7 @@ export function bindWorkspaceLayout(
   }
 
   const setLayout = (next: WorkspaceLayout) => {
+    beforePlayback = undefined
     layout = next
     write(layoutKey, next)
     apply()
@@ -173,14 +178,32 @@ export function bindWorkspaceLayout(
 
   apply()
 
+  const restoreAfterPlayback = () => {
+    if (!beforePlayback) return false
+    layout = beforePlayback.layout
+    apply()
+    workbench.scrollTop = beforePlayback.scrollTop
+    beforePlayback = undefined
+
+    return true
+  }
+
   return {
     revealEditor(previewActive: boolean) {
+      restoreAfterPlayback()
+
       if (layout === 'preview') setLayout(previewActive ? 'split' : 'edit')
     },
-    /** Starting the game from the editor-only layout brings the preview back into view. */
-    revealPreview() {
-      if (layout === 'edit') setLayout('split')
+    revealPreview(this: void) {
+      if (compact?.matches) {
+        beforePlayback ??= { layout, scrollTop: workbench.scrollTop }
+        layout = 'preview'
+        apply()
+        preview.scrollIntoView({ block: 'start' })
+        preview.focus({ preventScroll: true })
+      } else if (layout === 'edit') setLayout('split')
     },
+    restoreAfterPlayback,
     dispose() {
       abort.abort()
     },

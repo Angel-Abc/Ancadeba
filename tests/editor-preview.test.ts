@@ -86,14 +86,17 @@ describe('editor preview', () => {
   it('cancels before loading or publishing state and permits a later confirmed start', async () => {
     const confirmPreview = vi.fn(() => false)
     const { controller, fetcher, createInstance, onStateChange } = createPreview(confirmPreview)
+    const reveal = vi.fn()
 
     try {
-      await controller.start('basic')
+      await controller.start('basic', { onStarting: reveal })
+      expect(reveal).not.toHaveBeenCalled()
       expect(createInstance).not.toHaveBeenCalled()
       expect(fetcher).not.toHaveBeenCalled()
       expect(onStateChange).not.toHaveBeenCalled()
       confirmPreview.mockReturnValue(true)
-      await controller.start('basic')
+      await controller.start('basic', { onStarting: reveal })
+      expect(reveal).toHaveBeenCalledOnce()
       expect(createInstance).toHaveBeenCalledTimes(1)
       expect(onStateChange.mock.calls).toEqual([['starting'], ['running']])
       await controller.start('ignored')

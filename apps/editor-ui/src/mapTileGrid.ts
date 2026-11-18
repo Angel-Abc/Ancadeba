@@ -223,10 +223,6 @@ export function mapTileGrid(
     spawns,
   })
 
-  const navigation = document.createElement('div')
-  navigation.className = 'map-navigation'
-  navigation.append(controls.element)
-
   const render = () => {
     indexTriggers()
     scrolling?.refresh()
@@ -532,8 +528,8 @@ export function mapTileGrid(
     },
     refreshView: minimap.refreshView,
   })
-  // The grid comes first; the overview and view tips follow it.
-  element.append(navigation, surface, minimap.element, controls.help)
+  controls.details.open = viewport?.viewControlsOpen ?? false
+  element.append(controls.zoomControls, surface, controls.details, minimap.element)
   render()
 
   return {
@@ -560,6 +556,7 @@ export function mapTileGrid(
           focusY: focused.y,
           zoom: camera.zoom,
           panning,
+          viewControlsOpen: controls.details.open,
           viewColumns: camera.viewSize.columns,
           viewRows: camera.viewSize.rows,
         })

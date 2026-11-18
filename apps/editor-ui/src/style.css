@@ -792,7 +792,7 @@ code {
 :is(#editor-fields, #assets-panel) form > button,
 :is(#editor-fields, #assets-panel)
   form
-  > :is(.graphic-placement, .preview-actions, #asset-color-fields) {
+  > :is(.graphic-placement, .preview-actions, .save-bar, #asset-color-fields) {
   grid-column: 1 / -1;
 }
 
@@ -1656,6 +1656,11 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     overflow: visible;
   }
 
+  /* In the stacked layout the workbench scrolls underneath the horizontal section rail. */
+  #editor-metadata > .save-bar {
+    top: 4rem;
+  }
+
   .preview-splitter {
     display: none;
   }
@@ -1664,6 +1669,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     flex-basis: auto;
     min-width: 0;
     height: 70vh;
+    scroll-margin-block-start: 4rem;
   }
 
   :is(#editor-fields, #assets-panel) form,
@@ -1703,7 +1709,11 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 
 .map-editor-header {
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+}
+
+.map-editor-header button {
+  padding-inline: 0.55rem;
 }
 
 .map-draft-status {
@@ -1827,25 +1837,28 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 
 .map-brushes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem;
-}
-
-/* The grid sits near the top now, so its view controls scroll with it under the save bar. */
-.map-navigation {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: start;
-  padding: 0.5rem 0;
-  background: var(--ed-panel);
-}
-
-.map-viewport-controls {
-  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(7rem, 100%), 1fr));
   gap: 0.5rem;
-  flex: 1 1 28rem;
-  min-width: 0;
+}
+
+.map-painter > .map-window-controls {
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.map-painter > .map-window-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.map-painter > .map-window-controls select {
+  width: auto;
+}
+
+.map-view-details,
+.map-view-details > .map-window-controls {
+  margin-top: 0.5rem;
 }
 
 .map-minimap {
@@ -1896,7 +1909,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   font-size: 0.75rem;
 }
 
-.map-viewport-controls button[aria-pressed='true'] {
+.map-window-controls button[aria-pressed='true'] {
   border-color: var(--ed-accent);
   background: var(--ed-selected);
 }

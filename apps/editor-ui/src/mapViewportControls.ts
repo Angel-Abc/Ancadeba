@@ -14,12 +14,16 @@ export function mapViewportControls(
     view?(): { x: number; y: number; columns: number; rows: number }
   },
 ) {
-  const element = document.createElement('div')
-  element.className = 'map-viewport-controls'
   const zoomControls = document.createElement('div')
   zoomControls.className = 'map-window-controls'
   zoomControls.setAttribute('role', 'group')
   zoomControls.setAttribute('aria-label', t('maps.viewControls'))
+  const details = document.createElement('details')
+  details.className = 'map-view-details'
+  const summary = document.createElement('summary')
+  summary.textContent = t('maps.viewControls')
+  const steps = document.createElement('div')
+  steps.className = 'map-window-controls'
   const buttons: { button: HTMLButtonElement; disabled: () => boolean }[] = []
 
   const button = (
@@ -38,12 +42,6 @@ export function mapViewportControls(
     return button
   }
 
-  button(
-    zoomControls,
-    'maps.zoomOut',
-    () => camera.zoomBy(-1),
-    () => !camera.canZoomOut,
-  )
   const label = document.createElement('label')
   label.append(t('maps.zoom'))
   const zoom = document.createElement('select')
@@ -58,39 +56,45 @@ export function mapViewportControls(
   zoom.addEventListener('change', () => options.change(() => camera.zoomTo(Number(zoom.value))))
   label.append(zoom)
   zoomControls.append(label)
+  const pan = button(zoomControls, 'maps.panMap', () => options.setPanning(!options.panning()))
+  pan.addEventListener('click', () => options.focusGrid())
   button(
-    zoomControls,
+    steps,
+    'maps.zoomOut',
+    () => camera.zoomBy(-1),
+    () => !camera.canZoomOut,
+  )
+  button(
+    steps,
     'maps.zoomIn',
     () => camera.zoomBy(1),
     () => !camera.canZoomIn,
   )
-  const pan = button(zoomControls, 'maps.panMap', () => options.setPanning(!options.panning()))
-  pan.addEventListener('click', () => options.focusGrid())
   button(
-    zoomControls,
+    steps,
     'maps.panLeft',
     () => camera.pan(-1, 0),
     () => camera.x === 0,
   )
   button(
-    zoomControls,
+    steps,
     'maps.panRight',
     () => camera.pan(1, 0),
     () => camera.x + camera.columns >= camera.width,
   )
   button(
-    zoomControls,
+    steps,
     'maps.panUp',
     () => camera.pan(0, -1),
     () => camera.y === 0,
   )
   button(
-    zoomControls,
+    steps,
     'maps.panDown',
     () => camera.pan(0, 1),
     () => camera.y + camera.rows >= camera.height,
   )
-  button(zoomControls, 'maps.resetView', () => {
+  button(steps, 'maps.resetView', () => {
     camera.zoomTo(100)
     camera.moveTo(0, 0)
     options.setPanning(false)
@@ -127,7 +131,7 @@ export function mapViewportControls(
   const help = document.createElement('p')
   help.className = 'help'
   help.textContent = t('maps.viewHelp')
-  element.append(zoomControls, pages)
+  details.append(summary, steps, pages, help)
 
   const refresh = () => {
     const view = options.view?.() ?? camera
@@ -145,5 +149,5 @@ export function mapViewportControls(
 
   refresh()
 
-  return { element, help, refresh }
+  return { zoomControls, details, refresh }
 }

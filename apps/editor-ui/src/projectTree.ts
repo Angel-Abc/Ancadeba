@@ -1,4 +1,5 @@
 import type { ProjectView } from '@ancadeba/editor-core'
+import type { SceneComponentDefinition } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 
 export interface ProjectTreeNode {
@@ -9,6 +10,8 @@ export interface ProjectTreeNode {
   id?: string
   parentId?: string
   detail?: string
+  playerLabels?: string[]
+  matchedLabel?: string
   children?: ProjectTreeNode[]
 }
 
@@ -41,6 +44,43 @@ export function sceneTreeLabel(view: ProjectView, scene: ProjectView['scenes'][n
   )
 
   return shared && title !== scene.id ? `${title} (${scene.id})` : title
+}
+
+/** Authored player-facing names in every saved language, including the literal fallback. */
+function componentPlayerLabels(view: ProjectView, component: SceneComponentDefinition): string[] {
+  const labels = new Set<string>()
+
+  const add = (literal: string, key?: string) => {
+    if (literal.trim()) labels.add(literal)
+
+    if (!key) return
+
+    for (const catalog of [view.translations, ...Object.values(view.languageCatalogs ?? {})]) {
+      const text = catalog?.[key]
+
+      if (typeof text === 'string' && text.trim()) labels.add(text)
+    }
+  }
+
+  if ('label' in component) add(component.label, component.labelKey)
+
+  if (component.type === 'text') add(component.text, component.textKey)
+
+  if (component.type === 'graphic') add(component.alt, component.altKey)
+
+  if (component.type === 'action-bar')
+    for (const slot of Object.values(component.slots)) add(slot.label, slot.labelKey)
+
+  if (component.type === 'nearby')
+    for (const entry of Object.values(component.entries)) add(entry.label, entry.labelKey)
+
+  if (component.type === 'status-panel' || component.type === 'character-sheet')
+    for (const row of component.rows) add(row.label, row.labelKey)
+
+  if (component.type === 'status-panel')
+    for (const effect of component.effects) add(effect.label, effect.labelKey)
+
+  return [...labels]
 }
 
 /** Rule files open in the rules editor; selecting one switches the file being edited. */
@@ -187,6 +227,7 @@ export const projectTreeSections: readonly ProjectTreeSection[] = [
             parentId: scene.id,
             label: component.id,
             detail: t(`tree.${component.type}`),
+            playerLabels: componentPlayerLabels(view, component),
           })),
           {
             key: `component-new:${scene.id}`,
@@ -252,10 +293,15 @@ export function filterProjectTree(
   const search = query.trim().toLocaleLowerCase()
 
   return nodes.flatMap((node) => {
-    if (
-      !search ||
-      `${node.label} ${node.id ?? ''} ${node.detail ?? ''}`.toLocaleLowerCase().includes(search)
+    if (!search) return [node]
+
+    const matchedLabel = node.playerLabels?.find((label) =>
+      label.toLocaleLowerCase().includes(search),
     )
+
+    if (matchedLabel) return [{ ...node, matchedLabel }]
+
+    if (`${node.label} ${node.id ?? ''} ${node.detail ?? ''}`.toLocaleLowerCase().includes(search))
       return [node]
     const children = filterProjectTree(node.children ?? [], search)
 

@@ -744,23 +744,21 @@ export function bindMapEditor(
         )
       : undefined
 
-    brushes.append(
-      layerPicker,
-      brushPicker,
-      tileTools.picker,
-      controls.button(t('maps.editTerrain'), () => {
-        terrainState.selected = brush
-        const tile = draft.data.terrain[brush]?.tile
+    brushes.append(layerPicker, brushPicker, tileTools.picker)
 
-        if (tile)
-          Object.assign(tilesetState, {
-            selected: tile.tileset,
-            column: tile.column,
-            row: tile.row,
-          })
-        switchTab('terrain')
-      }),
-    )
+    const editTerrain = controls.button(t('maps.editTerrain'), () => {
+      terrainState.selected = brush
+      const tile = draft.data.terrain[brush]?.tile
+
+      if (tile)
+        Object.assign(tilesetState, {
+          selected: tile.tileset,
+          column: tile.column,
+          row: tile.row,
+        })
+      switchTab('terrain')
+    })
+
     entryEditor = mapEntryTriggerEditor(
       draft,
       Object.keys(view.rules?.actions ?? {}),
@@ -809,7 +807,7 @@ export function bindMapEditor(
     paintCanvas.append(brushes)
 
     if (activeTab !== 'objects') paintCanvas.append(board.element)
-    paintCanvas.append(instructions, fill, tileTools.element)
+    paintCanvas.append(instructions, editTerrain, fill, tileTools.element)
     paintWorkspace.append(paintCanvas, layers)
     pages.paint.append(paintWorkspace)
     pages.terrain.append(terrain.element, tilesetEditor.element)

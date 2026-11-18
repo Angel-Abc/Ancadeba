@@ -6,6 +6,7 @@ import {
 } from './projectSectionRegistry.js'
 import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
 import { renderSceneNavigation } from './sceneNavigation.js'
+import { compactWorkspaceQuery } from './workspaceLayout.js'
 import { refreshSaveStatuses } from './formSaveStatus.js'
 import { captureEditorDrafts, restoreEditorDrafts } from './editorDraftState.js'
 import { type EditorDraftStorage } from './editorDraftStore.js'
@@ -104,7 +105,7 @@ export function bindProjectPanel(
   const recoverFolder = root.querySelector<HTMLInputElement>('#project-recover-folder')
   const recoverCancel = root.querySelector<HTMLButtonElement>('#project-recover-cancel')
   const explorerToggle = root.querySelector<HTMLButtonElement>('#explorer-toggle')
-  const compact = root.ownerDocument.defaultView?.matchMedia?.('(max-width: 960px)')
+  const compact = root.ownerDocument.defaultView?.matchMedia?.(compactWorkspaceQuery)
 
   const setExplorerExpanded = (expanded: boolean) =>
     explorerToggle?.setAttribute('aria-expanded', String(expanded))

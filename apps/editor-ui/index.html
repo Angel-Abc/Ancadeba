@@ -421,6 +421,9 @@
               <fieldset id="editor-fields" disabled>
                 <legend class="sr-only" data-i18n="project.properties">Project properties</legend>
                 <form id="editor-metadata">
+                  <div class="save-bar" data-save-actions>
+                    <button type="submit" data-i18n="game.save">Save game properties</button>
+                  </div>
                   <label for="editor-title" data-i18n="game.title">Game title</label
                   ><input id="editor-title" required />
                   <div class="metadata-translation-field">
@@ -481,9 +484,6 @@
                     gameplay; Escape or Resume returns to it.
                   </p>
                   <div id="editor-character-profile"></div>
-                  <div class="preview-actions" data-save-actions>
-                    <button type="submit" data-i18n="game.save">Save game properties</button>
-                  </div>
                 </form>
                 <label for="editor-scenes" data-i18n="scene.label">Scene</label
                 ><select id="editor-scenes"></select>
@@ -600,6 +600,7 @@
           <section
             id="preview-pane"
             class="preview-pane"
+            tabindex="-1"
             aria-labelledby="preview-heading"
             data-state="stopped"
           >
