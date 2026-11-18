@@ -79,6 +79,60 @@ function project(statRows: StatusRowDefinition[]): ProjectSnapshot {
 }
 
 describe('Rules editing with a character sheet', () => {
+  it('preserves authored row and binding extensions across relabel, reorder, change of type and removal', () => {
+    const value = { source: 'game.state' as const, path: ['health'] }
+
+    const bar = {
+      ...rows[0]!,
+      type: 'bar' as const,
+      value: { ...value, fallback: '40', units: 'hp' },
+      maximum: { ...value, path: ['maximum'], units: 'hp' },
+      color: '#ff0000',
+      designerNote: 'first',
+      visibleWhen: { ...value, path: ['visible'], extra: true },
+    }
+
+    const stat = {
+      id: 'stat',
+      type: 'value' as const,
+      label: 'Statistic',
+      value: 'text',
+      designerNote: 'second',
+    }
+
+    const original = project([bar, stat, { ...stat, id: 'removed' }])
+
+    const save = (snapshot: ProjectSnapshot, nextRows: StatusRowDefinition[]) =>
+      applyCommand(snapshot, {
+        type: 'scene.upsertComponent',
+        sceneId: 'sheet',
+        component: {
+          id: 'character',
+          type: 'character-sheet',
+          label: 'Character',
+          placement: { row: 1, column: 1, rowSpan: 1, columnSpan: 1 },
+          rows: nextRows,
+        },
+      }).project
+
+    const readRows = (snapshot: ProjectSnapshot) =>
+      JSON.parse(JSON.stringify(snapshot.documents['scenes/sheet.json'])).components[0].rows
+
+    const updated = save(original, [
+      { ...stat, label: 'Updated' },
+      { ...bar, label: 'HP', value },
+    ])
+
+    expect(readRows(updated)).toEqual([
+      { ...stat, label: 'Updated' },
+      { ...bar, label: 'HP', value: { ...value, units: 'hp' } },
+    ])
+    const changed = save(updated, [{ id: bar.id, type: 'value', label: 'Health', value: 5 }])
+    expect(readRows(changed)).toEqual([
+      { id: bar.id, type: 'value', label: 'Health', value: 5, designerNote: 'first' },
+    ])
+  })
+
   it.each([{ statRows: [] }, { statRows: rows }])(
     'saves unchanged and updated Rules with $statRows',
     ({ statRows }) => {

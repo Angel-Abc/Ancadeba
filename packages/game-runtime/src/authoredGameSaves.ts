@@ -196,7 +196,8 @@ export function bindAuthoredGameSaves({
     (save) =>
       save.gameId === game.id &&
       save.gameVersion === game.version &&
-      save.contentVersion === (game.saveCompatibility ?? game.version) &&
+      (save.contentVersion === (game.saveCompatibility ?? game.version) ||
+        save.contentVersion === game.legacySaveCompatibility) &&
       game.scenes.get(save.scene)?.type === 'game' &&
       (save.inputContext === undefined ||
         Object.hasOwn(game.input?.contexts ?? {}, save.inputContext)),

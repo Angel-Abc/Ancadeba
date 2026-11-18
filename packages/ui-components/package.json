@@ -25,6 +25,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ancadeba/game-runtime": "workspace:*"
+    "@ancadeba/game-runtime": "workspace:*",
+    "@ancadeba/schemas": "workspace:*",
+    "@ancadeba/utilities": "workspace:*"
   }
 }

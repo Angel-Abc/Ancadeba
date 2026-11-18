@@ -141,33 +141,58 @@ export class GameLoader implements IGameLoader {
       ),
     )
 
-    const gameplayCompatibility = (resolvedCombat: GameData['combat']) =>
-      `gameplay-v1:${saveCompatibility(
-        JSON.stringify([
-          gameplaySaveDefinition(gameSchema, definition),
-          scenes.map(([id, scene]) => [id, gameplaySaveDefinition(sceneSchema, scene)]),
-          [...maps].map(([id, map]) => [id, gameplaySaveDefinition(mapDefinitionSchema, map)]),
-          input,
-          assets,
-          [...inventory].map(([id, value]) => [id, gameplaySaveDefinition(inventorySchema, value)]),
-          [...rules].map(([id, value]) => [id, gameplaySaveDefinition(gameRulesSchema, value)]),
-          [...(resolvedCombat ?? [])].map(([id, value]) => [
-            id,
-            gameplaySaveDefinition(combatDefinitionSchema, value),
-          ]),
-          [...leveling].map(([id, value]) => [
-            id,
-            gameplaySaveDefinition(levelingProfileSchema, value),
-          ]),
-          [...libraries].map(([id, value]) => [
-            id,
-            gameplaySaveDefinition(combatLibrarySchema, value),
-          ]),
-          [...dialogues].map(([id, value]) => [id, gameplaySaveDefinition(dialogueSchema, value)]),
-          [...quests].map(([id, value]) => [id, gameplaySaveDefinition(questSchema, value)]),
-          styling,
+    const gameplayCompatibility = (resolvedCombat: GameData['combat']) => {
+      const game = gameplaySaveDefinition(gameSchema, definition)
+
+      const resources = [
+        [...maps].map(([id, map]) => [id, gameplaySaveDefinition(mapDefinitionSchema, map)]),
+        input,
+        assets,
+        [...inventory].map(([id, value]) => [id, gameplaySaveDefinition(inventorySchema, value)]),
+        [...rules].map(([id, value]) => [id, gameplaySaveDefinition(gameRulesSchema, value)]),
+        [...(resolvedCombat ?? [])].map(([id, value]) => [
+          id,
+          gameplaySaveDefinition(combatDefinitionSchema, value),
         ]),
-      )}`
+        [...leveling].map(([id, value]) => [
+          id,
+          gameplaySaveDefinition(levelingProfileSchema, value),
+        ]),
+        [...libraries].map(([id, value]) => [
+          id,
+          gameplaySaveDefinition(combatLibrarySchema, value),
+        ]),
+        [...dialogues].map(([id, value]) => [id, gameplaySaveDefinition(dialogueSchema, value)]),
+        [...quests].map(([id, value]) => [id, gameplaySaveDefinition(questSchema, value)]),
+        styling,
+      ]
+
+      const fullScenes = scenes.map(([id, scene]) => [
+        id,
+        gameplaySaveDefinition(sceneSchema, scene),
+      ])
+
+      const fingerprint = (sceneData: unknown[]) =>
+        `gameplay-v1:${saveCompatibility(JSON.stringify([game, sceneData, ...resources]))}`
+
+      const gameplayScenes = fullScenes.slice()
+      let hasBackground = false
+
+      for (const [index, [id, scene]] of scenes.entries()) {
+        const components = scene.components.filter(
+          (component) => component.type !== 'background-image',
+        )
+
+        if (components.length === scene.components.length) continue
+        hasBackground = true
+        gameplayScenes[index] = [id, gameplaySaveDefinition(sceneSchema, { ...scene, components })]
+      }
+
+      return {
+        saveCompatibility: fingerprint(gameplayScenes),
+        ...(hasBackground ? { legacySaveCompatibility: fingerprint(fullScenes) } : {}),
+      }
+    }
 
     if (!definition.languages) {
       const data = assembleGameData(
@@ -188,7 +213,7 @@ export class GameLoader implements IGameLoader {
 
       return {
         ...data,
-        saveCompatibility: gameplayCompatibility(data.combat),
+        ...gameplayCompatibility(data.combat),
         ...styling,
       }
     }
@@ -251,7 +276,7 @@ export class GameLoader implements IGameLoader {
 
     return {
       ...variants.get(language)!,
-      saveCompatibility: gameplayCompatibility(variants.get(language)!.combat),
+      ...gameplayCompatibility(variants.get(language)!.combat),
       localization,
       get language() {
         return localization.current.language

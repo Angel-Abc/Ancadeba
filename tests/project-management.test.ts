@@ -435,6 +435,58 @@ describe('project renaming and recoverable deletion', () => {
       (await fetch(`${base}/api/editor/projects/rename`, { method: 'POST', body: '{}' })).status,
     ).toBe(415)
   })
+  it('keeps a scene named game in its owning project, including for direct folder requests', async () => {
+    const owner = await manifest()
+
+    const scene = {
+      ...JSON.parse(await readFile(join(root, 'source/scenes/adventure.json'), 'utf8')),
+      id: 'game',
+    }
+
+    await writeFile(join(root, 'source/scenes/game.json'), JSON.stringify(scene))
+    await writeFile(
+      join(root, 'source/game.json'),
+      JSON.stringify({ ...owner, scenes: [...owner.scenes, 'game'] }),
+    )
+    expect(await listWorkspaceProjects(workspace)).toEqual([{ path: 'source', title: owner.title }])
+    await expect(rename({ folderName: 'moved' }, 'source/scenes')).rejects.toMatchObject({
+      code: 'project_not_found',
+    })
+    await expect(remove('source/scenes')).rejects.toMatchObject({ code: 'project_not_found' })
+    expect((await service.inspect('source')).diagnostics).toEqual([])
+    await mkdir(join(root, 'source/scenes/child'))
+    await writeFile(join(root, 'source/scenes/child/game.json'), '{ broken')
+    expect(await listWorkspaceProjects(workspace)).toContainEqual({
+      path: 'source/scenes/child',
+      title: '',
+    })
+    await expect(remove()).rejects.toMatchObject({ code: 'nested_projects' })
+    await remove('source/scenes/child')
+    expect((await rename({ folderName: 'renamed' })).path).toBe('renamed')
+    expect(await readFile(join(root, 'renamed/scenes/game.json'), 'utf8')).toBe(
+      JSON.stringify(scene),
+    )
+    await expect(remove('renamed')).resolves.toMatchObject({ path: 'renamed' })
+  })
+  it('protects a surviving inventory called game while its parent manifest is missing', async () => {
+    await mkdir(join(root, 'source/inventory'))
+    await writeFile(
+      join(root, 'source/inventory/game.json'),
+      JSON.stringify({
+        'schema-version': '1.0.0',
+        itemTypes: {},
+        owners: {},
+        items: {},
+      }),
+    )
+    await rm(join(root, 'source/game.json'))
+    expect(await listWorkspaceProjects(workspace)).toEqual([
+      { path: 'source', title: '', missingManifest: true },
+    ])
+    await expect(remove('source/inventory')).rejects.toMatchObject({ code: 'project_not_found' })
+    expect((await rename({ folderName: 'recover' })).path).toBe('recover')
+  })
+
   it('renames and deletes a project whose referenced document is named Game.json', async () => {
     await mkdir(join(root, 'source/inventory'))
     await writeFile(
@@ -445,6 +497,8 @@ describe('project renaming and recoverable deletion', () => {
       join(root, 'source/game.json'),
       JSON.stringify({ ...(await manifest()), inventory: ['Game'] }),
     )
+    expect(await listWorkspaceProjects(workspace)).toEqual([{ path: 'source', title: 'Original' }])
+    await expect(remove('source/inventory')).rejects.toMatchObject({ code: 'project_not_found' })
     expect((await service.inspect('source')).diagnostics).toEqual([])
     expect((await rename({ folderName: 'renamed' })).path).toBe('renamed')
     await expect(remove('renamed')).resolves.toMatchObject({ path: 'renamed' })

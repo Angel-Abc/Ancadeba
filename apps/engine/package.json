@@ -16,6 +16,6 @@
     "@ancadeba/utilities": "workspace:*"
   },
   "devDependencies": {
-    "sirv": "3.0.2"
+    "mrmime": "2.0.1"
   }
 }

@@ -1437,6 +1437,10 @@ Existing captured state strings, activity logs and transcript substitutions reta
 their saved values. A removed saved language falls back to the currently selected
 language or the game's default. Bumping the game version still invalidates saves.
 
+Adding, removing, or editing scene background components preserves the gameplay
+fingerprint. A save written by an earlier engine with a background still loads
+against its original definitions. Saving it again applies the new fingerprint.
+
 Saves use a `gameplay-v1:` content fingerprint. Older full-content fingerprints
 are incompatible; there is no upgrade path for those slots.
 Invalid, damaged, incompatible, or oversized saves show an error and preserve the

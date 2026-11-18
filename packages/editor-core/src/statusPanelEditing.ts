@@ -1,6 +1,32 @@
-import type { GameDefinition } from '@ancadeba/schemas'
+import type { GameDefinition, StatusRowDefinition } from '@ancadeba/schemas'
 import type { EditorCommand } from './commands.js'
 import { EditorError, object } from './project.js'
+
+function mergeBinding(previous: unknown, value: StatusRowDefinition['value'] | undefined) {
+  return typeof value === 'object'
+    ? { ...object(previous), ...value, fallback: value.fallback }
+    : value
+}
+
+export function mergeStatusRows(previous: unknown, rows: StatusRowDefinition[]) {
+  const oldRows = new Map(
+    (Array.isArray(previous) ? previous.map(object) : []).map((row) => [row.id, row]),
+  )
+
+  return rows.map((row) => {
+    const old = oldRows.get(row.id)
+
+    return {
+      ...old,
+      ...row,
+      labelKey: row.labelKey,
+      value: mergeBinding(old?.value, row.value),
+      visibleWhen: mergeBinding(old?.visibleWhen, row.visibleWhen),
+      maximum: row.type === 'bar' ? mergeBinding(old?.maximum, row.maximum) : undefined,
+      color: row.type === 'bar' ? row.color : undefined,
+    }
+  })
+}
 
 export function editStatusPanel(
   documents: Record<string, unknown>,
@@ -28,7 +54,6 @@ export function editStatusPanel(
     components.splice(index, 1)
   } else {
     const panel = command.component
-    const oldRows = Array.isArray(previous.rows) ? previous.rows.map(object) : []
     const oldEffects = Array.isArray(previous.effects) ? previous.effects.map(object) : []
 
     const next = {
@@ -38,14 +63,7 @@ export function editStatusPanel(
       nameKey: panel.nameKey,
       portrait: panel.portrait,
       placement: { ...object(previous.placement), ...panel.placement },
-      rows: panel.rows.map((row) => ({
-        ...oldRows.find((old) => old.id === row.id),
-        ...row,
-        labelKey: row.labelKey,
-        visibleWhen: row.visibleWhen,
-        maximum: row.type === 'bar' ? row.maximum : undefined,
-        color: row.type === 'bar' ? row.color : undefined,
-      })),
+      rows: mergeStatusRows(previous.rows, panel.rows),
       effects: panel.effects.map((effect) => ({
         ...oldEffects.find((old) => old.id === effect.id),
         ...effect,

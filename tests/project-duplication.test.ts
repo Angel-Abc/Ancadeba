@@ -366,7 +366,6 @@ describe('project duplication', () => {
           read: async () => new Uint8Array(maxDuplicateProjectBytes + 1),
         },
         'source',
-        new Set(),
       ),
     ).rejects.toMatchObject({
       status: 413,
@@ -385,7 +384,6 @@ describe('project duplication', () => {
           read: async () => new Uint8Array(),
         },
         'source',
-        new Set(),
       ),
     ).rejects.toMatchObject({ status: 413, code: 'project_too_large' })
   })

@@ -1,8 +1,9 @@
-import { lstat, realpath } from 'node:fs/promises'
-import type { ServerResponse } from 'node:http'
+import { lstat, open, realpath } from 'node:fs/promises'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import sirv from 'sirv'
+import { pipeline } from 'node:stream/promises'
+import { lookup } from 'mrmime'
 import type { Plugin } from 'vite-plus'
 
 const sampleGamesDirectory = fileURLToPath(new URL('../../../sample-games/', import.meta.url))
@@ -23,18 +24,17 @@ function within(root: string, target: string): boolean {
   return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path))
 }
 
-async function checkFile(directory: string, url: string): Promise<void> {
-  let path: string
+async function checkFile(directory: string, url: string): Promise<string> {
+  const path = (url.split('?')[0] ?? '').replace(/^\//, '')
+
+  if (!path || path.endsWith('/')) throw new GameFileError(404, 'Game resource not found')
+  let parts: string[]
 
   try {
-    // Match the static server's decoding without normalizing away traversal segments.
-    path = decodeURI(url.split('?')[0] ?? '').replace(/^\//, '')
+    parts = path.split('/').map(decodeURIComponent)
   } catch {
     throw new GameFileError(400, 'Invalid game resource path')
   }
-
-  if (!path || path.endsWith('/')) throw new GameFileError(404, 'Game resource not found')
-  const parts = path.split('/')
 
   if (
     parts.some((part) => {
@@ -42,6 +42,8 @@ async function checkFile(directory: string, url: string): Promise<void> {
 
       return (
         !part ||
+        /[/\\:]/.test(part) ||
+        Array.from(part).some((character) => character.charCodeAt(0) < 32) ||
         name === '.' ||
         name === '..' ||
         /[. ]$/.test(part) ||
@@ -49,9 +51,7 @@ async function checkFile(directory: string, url: string): Promise<void> {
         name === '.env' ||
         name.startsWith('.env.')
       )
-    }) ||
-    /[\\:]/.test(path) ||
-    path.split('').some((character) => character.charCodeAt(0) < 32)
+    })
   ) {
     throw new GameFileError(403, 'Game resource path is not accessible')
   }
@@ -76,6 +76,56 @@ async function checkFile(directory: string, url: string): Promise<void> {
     if (index === parts.length - 1 ? !info.isFile() : !info.isDirectory()) {
       throw new GameFileError(404, 'Game resource not found')
     }
+  }
+
+  return target
+}
+
+/** Stream from the checked filename so reserved URL characters are interpreted only once. */
+async function serveFile(
+  path: string,
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  const file = await open(path, 'r')
+
+  try {
+    const { size, mtime } = await file.stat()
+    const encoding = path.endsWith('.gz') ? 'gzip' : path.endsWith('.br') ? 'br' : undefined
+    const type = lookup(encoding ? path.slice(0, -3) : path) ?? 'application/octet-stream'
+    response.setHeader('Content-Type', type === 'text/html' ? 'text/html;charset=utf-8' : type)
+
+    if (encoding) response.setHeader('Content-Encoding', encoding)
+    response.setHeader('Last-Modified', mtime.toUTCString())
+    response.setHeader('Cache-Control', 'no-store')
+    response.setHeader('Accept-Ranges', 'bytes')
+
+    let start = 0
+    let end = size - 1
+    const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.range ?? '')
+
+    if (range && (range[1] || range[2])) {
+      start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]))
+
+      if (range[1] && range[2]) end = Math.min(end, Number(range[2]))
+
+      if (start > end) {
+        response.writeHead(416, { 'Content-Range': `bytes */${size}` })
+        response.end()
+
+        return
+      }
+
+      response.statusCode = 206
+      response.setHeader('Content-Range', `bytes ${start}-${end}/${size}`)
+    }
+
+    response.setHeader('Content-Length', end - start + 1)
+
+    if (request.method === 'HEAD' || size === 0) response.end()
+    else await pipeline(file.createReadStream({ start, end }), response)
+  } finally {
+    await file.close()
   }
 }
 
@@ -110,7 +160,6 @@ function failure(response: ServerResponse, error: unknown): void {
 
 export function gameFilesPlugin(directory = sampleGamesDirectory): Plugin {
   const root = resolve(directory)
-  const serve = sirv(root, { dev: true, etag: false, extensions: [], single: false })
 
   return {
     name: 'engine-local-game-files',
@@ -128,11 +177,7 @@ export function gameFilesPlugin(directory = sampleGamesDirectory): Plugin {
           }
 
           void checkFile(root, request.url ?? '')
-            .then(() => {
-              serve(request, response, () =>
-                failure(response, new GameFileError(404, 'Game resource not found')),
-              )
-            })
+            .then((path) => serveFile(path, request, response))
             .catch((error: unknown) => failure(response, error))
         })
       }

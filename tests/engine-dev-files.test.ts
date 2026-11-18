@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import { gameFilesPlugin } from '../apps/engine/tooling/gameFiles.js'
 import { engineRuntimeConfigPlugin } from '../apps/engine/tooling/config.js'
 import { ContainerBuilder } from '../apps/engine/src/ioc/containerBuilder.js'
+import { HttpGameResources } from '../apps/engine/src/gameResources.js'
 import { loadRuntimeConfig } from '../apps/engine/src/config.js'
 
 function gameDefinition(title: string) {
@@ -132,6 +133,23 @@ describe('engine development game files', () => {
     expect(await head.text()).toBe('')
   })
 
+  it('serves distinct literal filenames with reserved characters through the game resource loader', async () => {
+    const resources = new HttpGameResources('./sample-games/basic/', `${origin}/nested/`, fetch)
+    const files = ['review#art.svg', 'review%23art.svg', '100%.svg', 'literal%2f.svg']
+
+    for (const name of files)
+      await writeFile(join(games, 'basic/assets', name), `<svg><!--${name}--></svg>`)
+
+    for (const name of files)
+      expect(await resources.readText(`assets/${name}`)).toBe(`<svg><!--${name}--></svg>`)
+    const url = `${origin}/nested/sample-games/basic/assets/review%23art.svg?rev=1`
+    const head = await fetch(url, { method: 'HEAD' })
+    expect(head.headers.get('content-type')).toBe('image/svg+xml')
+    const partial = await fetch(url, { headers: { Range: 'bytes=0-3' } })
+    expect(partial.status).toBe(206)
+    expect(await partial.text()).toBe('<svg')
+  })
+
   it.each(['missing/game.json', 'basic/missing.json', 'basic/assets/missing.png', 'basic/assets/'])(
     'returns a real 404 rather than HTML for %s',
     async (path) => {
@@ -149,6 +167,7 @@ describe('engine development game files', () => {
     'basic/.git./config',
     'basic/.git%20/config',
     'basic/linked/index.html',
+    'basic/assets%2fmy%20sprite.png',
   ])('rejects inaccessible source content %s', async (path) => {
     const response = await fetch(`${origin}/nested/sample-games/${path}`)
     expect(response.status).toBe(403)

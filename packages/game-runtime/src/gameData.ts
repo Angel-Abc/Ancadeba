@@ -156,6 +156,8 @@ export interface SceneData {
 export interface GameData {
   /** Content fingerprint supplied by the loader, independent of the selected language. */
   readonly saveCompatibility?: string
+  /** Earlier fingerprint that included decorative scene backgrounds. */
+  readonly legacySaveCompatibility?: string
   readonly dialogues?: ReadonlyMap<string, DialogueDefinition> | undefined
   readonly quests?: ReadonlyMap<string, QuestDefinition> | undefined
   readonly leveling?: ReadonlyMap<string, LevelingProfile> | undefined

@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
-import { gameSchema, sceneSchema } from '@ancadeba/schemas'
+import { gameSchema } from '@ancadeba/schemas'
 import {
   EditorError,
   deletedProjectSchema,
   projectTrashDirectory,
-  isPrivateProjectEntry,
   object,
   type ProjectSnapshot,
   type RenameProjectRequest,
@@ -17,7 +16,7 @@ import type { ProjectWorkspace } from './editorProjectRepository.js'
 import type { ProjectStorage } from './projectStorage.js'
 import { restoreHistoryFiles, sameBytes, type HistoryFile } from './historyFiles.js'
 import { workspaceError } from './workspace.js'
-import { hasRecoveryResources } from './manifestRecovery.js'
+import { inspectProjectPath, walkProjectDirectories } from './projectBoundary.js'
 import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
 const trashRecordSchema = deletedProjectSchema.extend({
@@ -34,17 +33,16 @@ export class ProjectDirectoryManagement {
   ) {}
 
   private async current(path: string, revision: string): Promise<ProjectSnapshot> {
-    const snapshot = await this.load(path)
+    const { kind } = await inspectProjectPath(this.workspace, path)
 
-    if (
-      snapshot.sourceTexts?.['game.json'] == null &&
-      !hasRecoveryResources(await this.workspace.list(path))
-    )
+    if (kind === 'directory')
       throw new EditorError(
         404,
         'project_not_found',
         'Choose a project containing game.json or recoverable game resources',
       )
+
+    const snapshot = await this.load(path)
 
     if (snapshot.revision !== revision)
       throw new EditorError(409, 'revision_conflict', 'Project changed. Reload before continuing.')
@@ -52,47 +50,14 @@ export class ProjectDirectoryManagement {
     return snapshot
   }
 
-  private async noNestedProjects(path: string, snapshot: ProjectSnapshot): Promise<void> {
-    const pending = ['']
-
-    // Manifest detection ignores case, so its exemption for project documents must as well.
-    const referenced = new Set(Object.keys(snapshot.documents).map((file) => file.toLowerCase()))
-
-    for (const directory of pending) {
-      const { entries } = await this.workspace.list(directory ? `${path}/${directory}` : path)
-
-      if (
-        directory &&
-        entries.some(
-          (entry) => entry.type === 'file' && entry.name.toLowerCase() === 'game.json',
-        ) &&
-        !referenced.has(`${directory}/game.json`.toLowerCase())
-      ) {
-        let isScene = false
-
-        try {
-          isScene = sceneSchema.safeParse(
-            JSON.parse(
-              Buffer.from(await this.workspace.read(`${path}/${directory}/game.json`)).toString(
-                'utf8',
-              ),
-            ),
-          ).success
-        } catch {
-          /* A damaged nested manifest remains protected. */
-        }
-
-        if (!isScene)
-          throw new EditorError(
-            409,
-            'nested_projects',
-            'This folder contains nested projects. Move or delete them separately first.',
-          )
-      }
-
-      for (const entry of entries)
-        if (entry.type === 'directory' && !isPrivateProjectEntry(entry.name))
-          pending.push(directory ? `${directory}/${entry.name}` : entry.name)
+  private async noNestedProjects(path: string): Promise<void> {
+    for await (const { nested } of walkProjectDirectories(this.workspace, path)) {
+      if (nested)
+        throw new EditorError(
+          409,
+          'nested_projects',
+          'This folder contains nested projects. Move or delete them separately first.',
+        )
     }
   }
 
@@ -123,7 +88,7 @@ export class ProjectDirectoryManagement {
 
     if (destination !== request.path) {
       this.requireMoves()
-      await this.noNestedProjects(request.path, source)
+      await this.noNestedProjects(request.path)
     }
 
     let manifest: HistoryFile | undefined
@@ -151,8 +116,8 @@ export class ProjectDirectoryManagement {
       if (destination !== request.path) {
         await this.workspace.moveDirectory!(request.path, destination)
         moved = true
-        const saved = await this.current(destination, request.expectedRevision)
-        await this.noNestedProjects(destination, saved)
+        await this.current(destination, request.expectedRevision)
+        await this.noNestedProjects(destination)
       }
 
       if (manifest) {
@@ -219,7 +184,7 @@ export class ProjectDirectoryManagement {
   async delete(request: DeleteProjectRequest): Promise<DeletedProject> {
     this.requireMoves()
     const source = await this.current(request.path, request.expectedRevision)
-    await this.noNestedProjects(request.path, source)
+    await this.noNestedProjects(request.path)
 
     const record = trashRecordSchema.parse({
       version: 1,
@@ -247,8 +212,8 @@ export class ProjectDirectoryManagement {
       await this.workspace.create(`${folder}/record.json`, bytes)
       await this.workspace.moveDirectory!(request.path, `${folder}/project`)
       moved = true
-      const saved = await this.current(`${folder}/project`, request.expectedRevision)
-      await this.noNestedProjects(`${folder}/project`, saved)
+      await this.current(`${folder}/project`, request.expectedRevision)
+      await this.noNestedProjects(`${folder}/project`)
       await this.storage!.release(request.path)
 
       return deletedProjectSchema.parse(record)

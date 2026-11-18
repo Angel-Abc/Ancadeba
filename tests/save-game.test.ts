@@ -1465,6 +1465,83 @@ describe('persistent player progress', () => {
     expect(engine.lifecycle!.currentGame!.leveling!.snapshot('player')?.available).toBe(true)
   })
 
+  it('loads legacy background saves and keeps new saves through decorative edits', async () => {
+    const store = new MemorySaves()
+
+    const background = {
+      id: 'backdrop',
+      type: 'background-image',
+      placement: { row: 1, column: 1 },
+      image: 'sky',
+      fit: 'cover',
+    }
+
+    const scene = {
+      'schema-version': '1.0.0',
+      id: 'play',
+      title: 'Play',
+      type: 'game',
+      screen: { type: 'grid', grid: { rows: 4, columns: 4 } },
+      components: [background],
+    }
+
+    const docs = {
+      'game.json': {
+        'schema-version': '1.0.0',
+        id: 'background-test',
+        title: 'Background',
+        version: '1',
+        scenes: ['play'],
+        assets: 'art',
+      },
+      'assets/art.json': {
+        'schema-version': '1.0.0',
+        images: {
+          sky: { format: 'svg', source: 'sky.svg', bounds: { x: 0, y: 0, width: 1, height: 1 } },
+        },
+      },
+      'scenes/play.json': scene,
+    }
+
+    const first = await launch(store, docs)
+    first.start('play')
+    expect(first.engine.saves!.save()).toBe(true)
+    const saved = gameSaveSchema.parse(JSON.parse(store.read('background-test')!))
+    // Captured from the original gameplay-v1 loader for the fixture above.
+    const legacy = 'gameplay-v1:f9cd75e27aa918cc'
+    expect(saved.contentVersion).not.toBe(legacy)
+    store.write('background-test', JSON.stringify({ ...saved, contentVersion: legacy }))
+    const upgraded = await launch(store, docs)
+    expect(upgraded.engine.saves!.load()).toBe(true)
+    expect(upgraded.engine.saves!.save()).toBe(true)
+    expect(JSON.parse(store.read('background-test')!).contentVersion).toBe(saved.contentVersion)
+
+    for (const components of [
+      [{ ...background, fit: 'contain' }],
+      [background, { ...background, id: 'second', placement: { row: 2, column: 3 } }],
+      [],
+    ]) {
+      const edited = await launch(store, { ...docs, 'scenes/play.json': { ...scene, components } })
+      expect(edited.engine.saves!.load()).toBe(true)
+      expect(edited.engine.lifecycle!.activeScene?.data.id).toBe('play')
+    }
+
+    const gameplayEdit = await launch(store, {
+      ...docs,
+      'scenes/play.json': {
+        ...scene,
+        components: [
+          background,
+          { id: 'checkpoint', type: 'save-point', placement: { row: 2, column: 2 } },
+        ],
+      },
+    })
+
+    expect(gameplayEdit.engine.saves!.load()).toBe(false)
+    store.write('background-test', JSON.stringify({ ...saved, contentVersion: legacy }))
+    expect(gameplayEdit.engine.saves!.load()).toBe(false)
+  })
+
   it('rejects changed content even if the game version has not been bumped', async () => {
     const store = new MemorySaves()
     const first = await launch(store)

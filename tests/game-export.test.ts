@@ -185,6 +185,53 @@ describe('standalone game export', () => {
     },
   )
 
+  it('excludes independent nested games while keeping owned game.json resources and adjacent files', async () => {
+    const folder = join(temp, 'nested-project-source')
+    const output = join(temp, 'nested-project-output')
+    await cp(source, folder, { recursive: true })
+    await mkdir(join(folder, 'inventory'))
+    const ownedScene = JSON.stringify({ ...scene, id: 'game' })
+
+    const ownedInventory = JSON.stringify({
+      'schema-version': '1.0.0',
+      itemTypes: {},
+      owners: {},
+      items: {},
+    })
+
+    await writeFile(
+      join(folder, 'game.json'),
+      JSON.stringify({ ...game, scenes: [...game.scenes, 'game'], inventory: ['Game'] }),
+    )
+    await writeFile(join(folder, 'scenes/game.json'), ownedScene)
+    await writeFile(join(folder, 'inventory/Game.json'), ownedInventory)
+    await mkdir(join(folder, 'extras/scenes'), { recursive: true })
+    await writeFile(join(folder, 'extras/scenes/credits.txt'), 'artists')
+    await mkdir(join(folder, 'lost/scenes'), { recursive: true })
+    await writeFile(join(folder, 'lost/scenes/start-screen.json'), JSON.stringify(scene))
+    await mkdir(join(folder, 'editions'))
+    await writeFile(join(folder, 'editions/notes.txt'), 'keep')
+    await cp(
+      new URL('../sample-games/square-map/', import.meta.url),
+      join(folder, 'editions/square-map'),
+      { recursive: true },
+    )
+    await mkdir(join(folder, 'scenes/broken'))
+    await writeFile(join(folder, 'scenes/broken/game.json'), '{')
+    await exportGame({ gameDirectory: folder, outputDirectory: output })
+
+    for (const nested of ['editions/square-map', 'scenes/broken', 'lost'])
+      await expect(lstat(join(output, 'game', nested))).rejects.toHaveProperty('code', 'ENOENT')
+
+    for (const [file, contents] of [
+      ['scenes/game.json', ownedScene],
+      ['inventory/Game.json', ownedInventory],
+      ['editions/notes.txt', 'keep'],
+      ['extras/scenes/credits.txt', 'artists'],
+    ] as const)
+      expect(await readFile(join(output, 'game', file), 'utf8')).toBe(contents)
+  })
+
   it('packages language catalogs and validates languages beyond the configured default', async () => {
     const localized = join(temp, 'localized')
     const output = join(temp, 'localized-export')

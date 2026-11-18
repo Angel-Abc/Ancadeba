@@ -1,6 +1,7 @@
 import { buttonActionSchema, type GameDefinition } from '@ancadeba/schemas'
 import { basicComponentSchema, type EditorCommand } from './commands.js'
 import { EditorError, object } from './project.js'
+import { mergeStatusRows } from './statusPanelEditing.js'
 
 const actionFields = new Set(
   buttonActionSchema.options.flatMap((option) => Object.keys(option.shape)),
@@ -44,6 +45,9 @@ export function editComponent(
     ...cleared,
     ...component,
     placement: { ...object(previous.placement), ...component.placement },
+    ...(component.type === 'character-sheet'
+      ? { rows: mergeStatusRows(previous.rows, component.rows) }
+      : {}),
     ...(component.type === 'text'
       ? { presentation: { ...object(previous.presentation), ...component.presentation } }
       : {}),

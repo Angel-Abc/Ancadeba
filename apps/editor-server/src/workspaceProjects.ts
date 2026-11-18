@@ -1,25 +1,6 @@
-import { isPrivateProjectEntry, type ProjectChoice } from '@ancadeba/editor-core'
+import { isPrivateProjectEntry, object, type ProjectChoice } from '@ancadeba/editor-core'
 import { workspaceError, type WorkspaceService } from './workspace.js'
-import { hasRecoveryResources } from './manifestRecovery.js'
-
-function manifestTitle(bytes: Uint8Array): string {
-  try {
-    const manifest: unknown = JSON.parse(Buffer.from(bytes).toString('utf8'))
-
-    if (
-      manifest &&
-      typeof manifest === 'object' &&
-      'title' in manifest &&
-      typeof manifest.title === 'string'
-    ) {
-      return manifest.title.trim()
-    }
-  } catch (error) {
-    if (!(error instanceof SyntaxError)) throw error
-  }
-
-  return ''
-}
+import { inspectProjectDirectory } from './projectBoundary.js'
 
 function unavailable(error: unknown): boolean {
   return [400, 403, 404, 409].includes(workspaceError(error).status)
@@ -28,40 +9,33 @@ function unavailable(error: unknown): boolean {
 export async function listWorkspaceProjects(
   workspace: Pick<WorkspaceService, 'list' | 'read'>,
 ): Promise<ProjectChoice[]> {
-  const pending = ['']
+  const pending: { path: string; parentManifest?: unknown }[] = [{ path: '' }]
   const projects: ProjectChoice[] = []
 
-  for (const path of pending) {
-    const prefix = path ? `${path}/` : ''
-    let listing
-
+  for (const { path, parentManifest } of pending) {
     try {
-      listing = await workspace.list(path)
+      const { directories, manifest, kind, childOwner } = await inspectProjectDirectory(
+        workspace,
+        path,
+        parentManifest,
+      )
+
+      if (kind === 'recoverable') projects.push({ path, title: '', missingManifest: true })
+
+      if (kind === 'project') {
+        const title = object(manifest).title
+        projects.push({ path, title: typeof title === 'string' ? title.trim() : '' })
+      }
+
+      for (const directory of directories) {
+        if (!isPrivateProjectEntry(directory))
+          pending.push({
+            path: path ? `${path}/${directory}` : directory,
+            parentManifest: childOwner,
+          })
+      }
     } catch (error) {
       if (!path || !unavailable(error)) throw error
-
-      continue
-    }
-
-    const { entries } = listing
-
-    // Dependency, version-control and editor-state folders are large and never hold projects.
-    for (const entry of entries) {
-      if (entry.type === 'directory' && !isPrivateProjectEntry(entry.name))
-        pending.push(prefix + entry.name)
-    }
-
-    if (!entries.some((entry) => entry.type === 'file' && entry.name === 'game.json')) {
-      if (hasRecoveryResources(listing)) projects.push({ path, title: '', missingManifest: true })
-
-      continue
-    }
-
-    try {
-      const manifest = await workspace.read(prefix + 'game.json')
-      projects.push({ path, title: manifestTitle(manifest) })
-    } catch (error) {
-      if (!unavailable(error)) throw error
     }
   }
 

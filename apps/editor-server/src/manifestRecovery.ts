@@ -1,31 +1,7 @@
 import { gameIdSchema, languageTagSchema } from '@ancadeba/schemas'
 import type { GameDefinition, WorkspaceListing } from '@ancadeba/schemas'
 import { workspaceError, type WorkspaceService } from './workspace.js'
-
-const resources = [
-  ['scenes', 'scenes'],
-  ['maps', 'maps'],
-  ['inventory', 'inventory'],
-  ['rules', 'rules'],
-  ['dialogues', 'dialogues'],
-  ['quests', 'quests'],
-  ['leveling', 'leveling'],
-  ['combat', 'combat'],
-  ['combatLibraries', 'combat-libraries'],
-  ['assets', 'assets'],
-  ['input', 'input'],
-] as const
-
-export function hasRecoveryResources(listing: WorkspaceListing): boolean {
-  const directories: readonly string[] = [
-    ...resources.map(([, directory]) => directory),
-    'languages',
-  ]
-
-  return listing.entries.some(
-    (entry) => entry.type === 'directory' && directories.includes(entry.name),
-  )
-}
+import { resourceDirectories } from './projectBoundary.js'
 
 /** Suggest references from filenames only; no existing resource is changed or claimed to be valid. */
 export async function suggestRecoveryManifest(
@@ -54,7 +30,7 @@ export async function suggestRecoveryManifest(
     scenes: [],
   }
 
-  for (const [field, directory] of resources) {
+  for (const [field, directory] of resourceDirectories) {
     const ids = (await list(directory))
       .filter((entry) => entry.type === 'file' && entry.name.endsWith('.json'))
       .map((entry) => entry.name.slice(0, -5))

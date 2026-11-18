@@ -15,6 +15,7 @@ import { GameLoader, validateImageSource } from '@ancadeba/game-runtime'
 import { JsonResourceLoader, type ILogger } from '@ancadeba/utilities'
 import { isPrivateProjectEntry } from '@ancadeba/editor-core'
 import { build } from 'vite-plus'
+import { walkProjectDirectories } from '../apps/editor-server/src/projectBoundary.js'
 import { engineRuntimeConfigPlugin } from '../apps/engine/tooling/config.js'
 
 export interface GameExportOptions {
@@ -67,26 +68,51 @@ async function requireNewDestination(path: string): Promise<void> {
   throw new Error(`Export destination already exists: ${path}. Choose a new output directory.`)
 }
 
-async function copyGame(source: string, destination: string): Promise<number> {
-  await mkdir(destination)
-  const entries = await readdir(source)
+async function copyGame(root: string, destination: string): Promise<number> {
+  const reader = {
+    list: async (path: string) => {
+      const directory = join(root, path)
+
+      if ((await lstat(directory)).isSymbolicLink())
+        throw new Error(`Game exports cannot contain links: ${directory}`)
+
+      return {
+        entries: (await readdir(directory, { withFileTypes: true })).map((entry) => ({
+          name: entry.name,
+          type: entry.isDirectory()
+            ? ('directory' as const)
+            : entry.isFile()
+              ? ('file' as const)
+              : ('other' as const),
+        })),
+      }
+    },
+    read: (path: string) => readFile(join(root, path)),
+  }
+
   let fileCount = 0
 
-  for (const name of entries.sort()) {
-    if (isPrivateProjectEntry(name)) continue
-    const from = join(source, name)
-    const to = join(destination, name)
-    const info = await lstat(from)
+  for await (const { path, entries, nested } of walkProjectDirectories(reader, '')) {
+    if (nested) continue
+    const output = join(destination, path)
+    await mkdir(output)
 
-    if (info.isSymbolicLink()) throw new Error(`Game exports cannot contain links: ${from}`)
+    for (const { name } of entries) {
+      if (isPrivateProjectEntry(name)) continue
+      const from = join(root, path, name)
+      const to = join(output, name)
+      const info = await lstat(from)
 
-    if (info.isDirectory()) {
-      fileCount += await copyGame(from, to)
-    } else if (info.isFile()) {
-      await copyFile(from, to)
-      fileCount++
-    } else {
-      throw new Error(`Game exports only support regular files and directories: ${from}`)
+      if (info.isSymbolicLink()) throw new Error(`Game exports cannot contain links: ${from}`)
+
+      if (info.isDirectory()) continue
+
+      if (info.isFile()) {
+        await copyFile(from, to)
+        fileCount++
+      } else {
+        throw new Error(`Game exports only support regular files and directories: ${from}`)
+      }
     }
   }
 

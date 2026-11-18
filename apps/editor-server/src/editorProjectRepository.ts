@@ -42,6 +42,7 @@ import { suggestRecoveryManifest } from './manifestRecovery.js'
 import { ProjectStorage } from './projectStorage.js'
 import { ProjectDirectoryManagement } from './projectDirectoryManagement.js'
 import { readProjectArchive, writeProjectArchive } from './projectArchive.js'
+import { walkProjectDirectories } from './projectBoundary.js'
 import { ProjectArchiveWorkspace } from './projectArchiveWorkspace.js'
 import { encodeProjectDocument } from './projectDocumentEncoding.js'
 
@@ -162,13 +163,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
   }
 
   async duplicate(request: DuplicateProjectRequest): Promise<void> {
-    const referenced = await this.load(request.path)
-
-    const files = await readProjectCopyFiles(
-      this.workspace,
-      request.path,
-      new Set(Object.keys(referenced.documents)),
-    )
+    const files = await readProjectCopyFiles(this.workspace, request.path)
 
     let source: unknown
 
@@ -237,18 +232,10 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
     await requireUnusedProjectFolder(this.workspace, request.destination)
     const files = await readProjectArchive(archive)
 
-    const snapshot = await this.archiveSnapshot(
-      files,
-      () => 'The ZIP must contain a complete editable game project',
-    )
+    await this.archiveSnapshot(files, () => 'The ZIP must contain a complete editable game project')
 
-    // A second game manifest belongs in a separate project, rather than inside this import.
-    for (const path of Object.keys(files)) {
-      if (
-        path !== 'game.json' &&
-        path.toLowerCase().endsWith('/game.json') &&
-        !Object.hasOwn(snapshot.documents, path)
-      )
+    for await (const { nested } of walkProjectDirectories(new ProjectArchiveWorkspace(files), '')) {
+      if (nested)
         throw new EditorError(
           400,
           'nested_projects',
@@ -273,11 +260,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
   }
 
   async exportProject(folder: string, source: ProjectSnapshot): Promise<Uint8Array> {
-    const files = await readProjectCopyFiles(
-      this.workspace,
-      folder,
-      new Set(Object.keys(source.documents)),
-    )
+    const files = await readProjectCopyFiles(this.workspace, folder)
 
     // Archives are case-sensitive; a case-insensitive disk can hide mismatched references.
     const captured = await this.archiveSnapshot(files, (diagnostics) => {
