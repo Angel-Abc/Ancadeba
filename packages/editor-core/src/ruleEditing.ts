@@ -10,6 +10,7 @@ import {
   ruleStateType,
   statusPanelBindings,
   statusPanelComponentSchema,
+  characterSheetComponentSchema,
 } from '@ancadeba/schemas'
 import type { EditorCommand } from './commands.js'
 import { EditorError, object, projectRuleSources } from './project.js'
@@ -105,7 +106,9 @@ export function editRules(
 
         if (button.type === 'status-panel' || button.type === 'character-sheet')
           for (const { binding, expected } of statusPanelBindings(
-            statusPanelComponentSchema.parse(button),
+            button.type === 'character-sheet'
+              ? characterSheetComponentSchema.parse(button)
+              : statusPanelComponentSchema.parse(button),
           )) {
             if (binding.source !== 'game.state') continue
 
