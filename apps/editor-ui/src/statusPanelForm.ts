@@ -2,7 +2,8 @@ import { combatStatNames, levelingBindingFields } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import {
   gameBindingSchema,
-  ruleValueType,
+  ruleStateType,
+  type SceneComponentDefinition,
   type StatusPanelComponentDefinition,
   type StatusValueDefinition,
 } from '@ancadeba/schemas'
@@ -26,7 +27,9 @@ function reorder<T>(entries: T[], index: number, delta: number): void {
 export function statusPanelForm(
   controls: RuleFormControls,
   view: ProjectView,
-  draft: StatusPanelComponentDefinition,
+  draft:
+    | StatusPanelComponentDefinition
+    | Extract<SceneComponentDefinition, { type: 'character-sheet' }>,
   rerender: () => void,
   existing: boolean,
 ): HTMLElement[] {
@@ -79,8 +82,8 @@ export function statusPanelForm(
     ...(view.rules?.state ?? [])
       .filter((field) =>
         expected === 'value'
-          ? ruleValueType(field.value) !== 'boolean'
-          : ruleValueType(field.value) === expected,
+          ? ruleStateType(field) !== 'boolean'
+          : ruleStateType(field) === expected,
       )
       .map(
         (field) =>
@@ -157,36 +160,39 @@ export function statusPanelForm(
     return `${prefix}-${number}`
   }
 
-  const identity = group(
-    t('status.panel'),
-    ...(existing
-      ? []
-      : [
-          input(t('status.componentId'), draft.id, (value) => {
-            draft.id = value.trim()
+  const identity =
+    draft.type === 'status-panel'
+      ? group(
+          t('status.panel'),
+          ...(existing
+            ? []
+            : [
+                input(t('status.componentId'), draft.id, (value) => {
+                  draft.id = value.trim()
+                }),
+              ]),
+          input(t('status.title'), draft.label, (value) => {
+            draft.label = value
           }),
-        ]),
-    input(t('status.title'), draft.label, (value) => {
-      draft.label = value
-    }),
-    translation(t('status.titleTranslation'), draft.labelKey ?? '', keys, (value) => {
-      draft.labelKey = value || undefined
-    }),
-    input(t('status.characterName'), draft.name, (value) => {
-      draft.name = value
-    }),
-    translation(t('status.characterNameTranslation'), draft.nameKey ?? '', keys, (value) => {
-      draft.nameKey = value || undefined
-    }),
-    select(
-      t('form.portrait'),
-      draft.portrait ?? '',
-      [['', t('form.none')], ...visuals],
-      (value) => {
-        draft.portrait = value || undefined
-      },
-    ),
-  )
+          translation(t('status.titleTranslation'), draft.labelKey ?? '', keys, (value) => {
+            draft.labelKey = value || undefined
+          }),
+          input(t('status.characterName'), draft.name, (value) => {
+            draft.name = value
+          }),
+          translation(t('status.characterNameTranslation'), draft.nameKey ?? '', keys, (value) => {
+            draft.nameKey = value || undefined
+          }),
+          select(
+            t('form.portrait'),
+            draft.portrait ?? '',
+            [['', t('form.none')], ...visuals],
+            (value) => {
+              draft.portrait = value || undefined
+            },
+          ),
+        )
+      : undefined
 
   const rows = draft.rows.map((row, index) => {
     const title = t('status.row', { number: index + 1 })
@@ -202,6 +208,14 @@ export function statusPanelForm(
       translation(t('status.translationOf', { title }), row.labelKey ?? '', keys, (value) => {
         row.labelKey = value || undefined
       }),
+      select(
+        t('status.visibilityOf', { title }),
+        row.visibleWhen ? JSON.stringify(row.visibleWhen) : '',
+        [['', t('status.alwaysVisible')], ...bindings('boolean')],
+        (value) => {
+          row.visibleWhen = value ? gameBindingSchema.parse(JSON.parse(value)) : undefined
+        },
+      ),
       ...source(t('status.valueOf', { title }), row.value, row.type === 'bar', (value) => {
         if (row.type === 'value' || typeof value !== 'string') row.value = value
       }),
@@ -232,6 +246,34 @@ export function statusPanelForm(
       ),
     )
   })
+
+  const rowGroup = group(
+    t('status.rows'),
+    ...rows,
+    button(t('status.addValue'), () =>
+      edit(() => {
+        draft.rows.push({
+          id: nextId('value', draft.rows),
+          type: 'value',
+          label: 'Value',
+          value: '',
+        })
+      }),
+    ),
+    button(t('status.addBar'), () =>
+      edit(() => {
+        draft.rows.push({
+          id: nextId('bar', draft.rows),
+          type: 'bar',
+          label: 'Resource',
+          value: 0,
+          maximum: 100,
+        })
+      }),
+    ),
+  )
+
+  if (draft.type === 'character-sheet') return [rowGroup]
 
   const effects = draft.effects.map((effect, index) => {
     const title = t('form.effectNumber', { number: index + 1 })
@@ -293,32 +335,8 @@ export function statusPanelForm(
   })
 
   return [
-    identity,
-    group(
-      t('status.rows'),
-      ...rows,
-      button(t('status.addValue'), () =>
-        edit(() => {
-          draft.rows.push({
-            id: nextId('value', draft.rows),
-            type: 'value',
-            label: 'Value',
-            value: '',
-          })
-        }),
-      ),
-      button(t('status.addBar'), () =>
-        edit(() => {
-          draft.rows.push({
-            id: nextId('bar', draft.rows),
-            type: 'bar',
-            label: 'Resource',
-            value: 0,
-            maximum: 100,
-          })
-        }),
-      ),
-    ),
+    identity!,
+    rowGroup,
     group(
       t('status.effects'),
       ...effects,

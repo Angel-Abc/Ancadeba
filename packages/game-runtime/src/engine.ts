@@ -21,6 +21,7 @@ import type { IStateTransactions } from './stateTransactions.js'
 import type { GameSaves, GameSaveStore, IGameSaves } from './gameSaves.js'
 import { bindAuthoredGameSaves } from './authoredGameSaves.js'
 import { gameplayLifecycle } from './gameplayLifecycle.js'
+import { characterConfirmation, type ConfirmCharacter } from './characterCreation.js'
 
 export type EngineState = 'stopped' | 'starting' | 'running'
 
@@ -39,6 +40,7 @@ export interface EngineRuntimeServices {
 }
 
 export interface EngineHostSession {
+  readonly confirmCharacter?: ConfirmCharacter | undefined
   readonly prepareMenu?: () => boolean
   readonly saves?: IGameSaves | undefined
   readonly lifecycle: IGameLifecycle
@@ -220,6 +222,9 @@ export class Engine implements IEngine {
 
       const playthroughs = new WeakMap<object, AuthoredPlaythrough>()
 
+      const playthroughFor = (instance: GameInstance) =>
+        instance.state instanceof Map ? playthroughs.get(instance.state) : undefined
+
       const lifecycle =
         this.runtime.createGameLifecycle?.(game) ??
         new GameLifecycle(game, {
@@ -242,8 +247,7 @@ export class Engine implements IEngine {
       session.lifecycle = lifecycle
       const gameplay = gameplayLifecycle(lifecycle)
       lifecycle.bindGameRuntime((instance) => {
-        const playthrough =
-          instance.state instanceof Map ? playthroughs.get(instance.state) : undefined
+        const playthrough = playthroughFor(instance)
 
         const rules = playthrough?.createRules(game, instance, lifecycle, this.logger) ??
           this.runtime.createGameRules?.(game, instance) ?? { handlers: new Map() }
@@ -301,8 +305,7 @@ export class Engine implements IEngine {
           isRunning: () => this.session === session && session.game !== undefined,
           settleMessages: () => session.messages.settle(),
           runtimeFor: (instance) => session.gameRuntimes.get(instance),
-          playthroughFor: (instance) =>
-            instance.state instanceof Map ? playthroughs.get(instance.state) : undefined,
+          playthroughFor,
           input: () => session.input,
           onObserverError: (error) => this.logger.error('GameSaves', 'Save observer failed', error),
         })
@@ -354,6 +357,12 @@ export class Engine implements IEngine {
       }
 
       const cleanup = this.host.mount(game, {
+        ...(authored &&
+          game.characterProfile && {
+            confirmCharacter: characterConfirmation(lifecycle, playthroughFor, () =>
+              session.messages.settle(),
+            ),
+          }),
         prepareMenu: () => session.messages.settle(),
         ...(session.saves ? { saves: session.saves } : {}),
         lifecycle,

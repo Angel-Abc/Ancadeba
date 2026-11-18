@@ -1,0 +1,45 @@
+{
+  "schema-version": "1.0.0",
+  "id": "settings",
+  "title": "Settings",
+  "description": "",
+  "type": "stand-alone",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "help",
+      "type": "text",
+      "placement": {
+        "row": 2,
+        "column": 2,
+        "rowSpan": 3,
+        "columnSpan": 14
+      },
+      "text": "Add your game settings here.",
+      "presentation": {
+        "variant": "body",
+        "align": "start"
+      }
+    },
+    {
+      "id": "resume",
+      "type": "button",
+      "placement": {
+        "row": 10,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Resume",
+      "action": {
+        "type": "resume-game"
+      }
+    }
+  ]
+}

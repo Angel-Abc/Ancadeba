@@ -1,0 +1,9 @@
+.ancadeba-scene {
+  --ge-scene-font-size: clamp(14px, 3cqw, 22px);
+  --ge-scene-heading-size: clamp(20px, 5cqw, 36px);
+  --ge-scene-text-padding: 0.5em;
+}
+
+.ancadeba-button {
+  --ge-scene-text-padding: 0.25em;
+}

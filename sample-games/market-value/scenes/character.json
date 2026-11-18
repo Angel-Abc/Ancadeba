@@ -1,0 +1,21 @@
+{
+  "schema-version": "1.0.0",
+  "id": "character",
+  "title": "Character",
+  "type": "stand-alone",
+  "screen": { "type": "grid", "grid": { "rows": 12, "columns": 16 } },
+  "components": [
+    {
+      "id": "sheet",
+      "type": "character-sheet",
+      "placement": { "row": 1, "column": 2, "rowSpan": 10, "columnSpan": 14 }
+    },
+    {
+      "id": "back",
+      "type": "button",
+      "label": "Back to game menu",
+      "placement": { "row": 12, "column": 5, "rowSpan": 1, "columnSpan": 8 },
+      "action": { "type": "open-menu", "scene": "game-menu" }
+    }
+  ]
+}

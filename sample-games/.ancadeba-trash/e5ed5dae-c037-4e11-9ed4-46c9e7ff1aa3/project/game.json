@@ -1,0 +1,15 @@
+{
+  "schema-version": "1.0.0",
+  "id": "market-value",
+  "title": "Market Value",
+  "description": "Everything has a price",
+  "version": "1.0.0",
+  "saving": {
+    "manual": "anywhere",
+    "autosave": "automatic"
+  },
+  "menu-scene": "game-menu",
+  "initial-scene": "start",
+  "stylesheet": "theme.css",
+  "scenes": ["start", "adventure", "game-menu", "save", "load", "settings"]
+}

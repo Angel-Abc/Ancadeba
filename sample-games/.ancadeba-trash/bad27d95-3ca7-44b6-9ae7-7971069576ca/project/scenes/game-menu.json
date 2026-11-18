@@ -1,0 +1,90 @@
+{
+  "schema-version": "1.0.0",
+  "id": "game-menu",
+  "title": "Game menu",
+  "description": "",
+  "type": "stand-alone",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "resume",
+      "type": "button",
+      "placement": {
+        "row": 2,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Resume",
+      "action": {
+        "type": "resume-game"
+      }
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "placement": {
+        "row": 4,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Main menu",
+      "action": {
+        "type": "main-menu",
+        "scene": "start"
+      }
+    },
+    {
+      "id": "save",
+      "type": "button",
+      "placement": {
+        "row": 6,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Save game",
+      "action": {
+        "type": "enter-scene",
+        "scene": "save"
+      }
+    },
+    {
+      "id": "load",
+      "type": "button",
+      "placement": {
+        "row": 8,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Load game",
+      "action": {
+        "type": "enter-scene",
+        "scene": "load"
+      }
+    },
+    {
+      "id": "settings",
+      "type": "button",
+      "placement": {
+        "row": 10,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Settings",
+      "action": {
+        "type": "enter-scene",
+        "scene": "settings"
+      }
+    }
+  ]
+}

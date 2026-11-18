@@ -1,6 +1,7 @@
 import {
   inventoryOwner,
   questRewardItemId,
+  ruleStateType,
   type QuestDefinition,
   type QuestOperation,
   type StoryEffect,
@@ -415,7 +416,8 @@ export class GameQuests implements IGameQuests {
     const values = new Map<string, BindingValue>()
     const items = new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
     const paths = new Map<string, readonly string[]>()
-    const originals = new Map<string, BindingValue>()
+    const originals = new Map<string, BindingValue | undefined>()
+    const stats = new Set<string>()
     const create: InventoryItemSnapshot[] = []
     const remove: string[] = []
     const transfers: { item: string; destination: { type: 'carried'; owner: string } }[] = []
@@ -425,18 +427,23 @@ export class GameQuests implements IGameQuests {
       const key = JSON.stringify(path)
       const field = this.game.data.rules?.state.find((entry) => JSON.stringify(entry.path) === key)
       const before = this.bindings.read({ source: 'game.state', path })
+      const stat = field && 'type' in field
 
       if (
         !field ||
-        before.status !== 'resolved' ||
-        typeof before.value !== typeof value ||
+        ruleStateType(field) !== typeof value ||
+        (before.status !== 'resolved' && (!stat || field.value !== undefined)) ||
+        (before.status === 'resolved' && typeof before.value !== typeof value) ||
         [this.game.data.rules?.clock?.path, this.game.data.rules?.log?.path].some(
           (reserved) => reserved && JSON.stringify(reserved) === key,
         ) ||
-        (typeof value === 'number' && (!Number.isSafeInteger(value) || value < 0))
+        (typeof value === 'number' &&
+          (stat ? !Number.isFinite(value) : !Number.isSafeInteger(value) || value < 0))
       )
         return false
-      originals.set(key, before.value)
+
+      if (stat) stats.add(key)
+      originals.set(key, before.status === 'resolved' ? before.value : undefined)
       paths.set(key, [...path])
       values.set(key, value)
 
@@ -538,23 +545,14 @@ export class GameQuests implements IGameQuests {
     }
 
     const numeric = [...values].flatMap(([key, value]) =>
-      typeof value === 'number' && typeof originals.get(key) === 'number'
+      typeof value === 'number' && !stats.has(key)
         ? [{ path: paths.get(key)!, expected: Number(originals.get(key)), value }]
         : [],
     )
 
     const scalars: StoryStateWrite[] = [...values].flatMap(([key, value]) =>
-      typeof value !== 'number'
-        ? [
-            {
-              path: paths.get(key)!,
-              expected:
-                typeof value === 'boolean'
-                  ? Boolean(originals.get(key))
-                  : String(originals.get(key)),
-              value,
-            },
-          ]
+      typeof value !== 'number' || stats.has(key)
+        ? [{ path: paths.get(key)!, expected: originals.get(key), value }]
         : [],
     )
 

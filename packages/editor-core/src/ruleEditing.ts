@@ -7,7 +7,7 @@ import {
   type GameDefinition,
   type GameRulesDefinition,
   type GameBindingDefinition,
-  ruleValueType,
+  ruleStateType,
   statusPanelBindings,
   statusPanelComponentSchema,
 } from '@ancadeba/schemas'
@@ -41,7 +41,7 @@ function checkBinding(
 
   if (
     binding.source !== 'game.state' ||
-    (booleanOnly ? !field || ruleValueType(field.value) !== 'boolean' : !field && !derived)
+    (booleanOnly ? !field || ruleStateType(field) !== 'boolean' : !field && !derived)
   )
     throw new EditorError(
       422,
@@ -103,7 +103,7 @@ export function editRules(
         const button = object(component)
         const action = object(button.action)
 
-        if (button.type === 'status-panel')
+        if (button.type === 'status-panel' || button.type === 'character-sheet')
           for (const { binding, expected } of statusPanelBindings(
             statusPanelComponentSchema.parse(button),
           )) {
@@ -124,7 +124,7 @@ export function editRules(
             const nextDerived =
               (next.clock && matches(next.clock.path)) || (next.log && matches(next.log.path))
 
-            const type = field ? ruleValueType(field.value) : nextDerived ? 'string' : undefined
+            const type = field ? ruleStateType(field) : nextDerived ? 'string' : undefined
 
             if (!type || (expected === 'value' ? type === 'boolean' : type !== expected))
               throw new EditorError(
@@ -185,7 +185,7 @@ export function editRules(
           checkBinding(next, binding, false)
           const field = next.state.find((field) => matches(field.path))
 
-          if (field && ruleValueType(field.value) === 'boolean')
+          if (field && ruleStateType(field) === 'boolean')
             throw new EditorError(
               422,
               'item_binding_in_use',

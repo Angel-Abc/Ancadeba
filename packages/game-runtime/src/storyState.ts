@@ -2,8 +2,8 @@ import type { PreparedTradeState } from './tradeState.js'
 
 export interface StoryStateWrite {
   readonly path: readonly string[]
-  readonly expected: string | boolean
-  readonly value: string | boolean
+  readonly expected: string | number | boolean | undefined
+  readonly value: string | number | boolean
 }
 
 /** Optional host capability. Preparation is pure; commit is synchronous and invokes no observers. */
@@ -18,7 +18,7 @@ export interface StoryLogAdapter {
   prepare(entries: readonly string[]): PreparedTradeState | undefined
 }
 
-/** Writes only declared string/boolean fields in authored state; bindings remain read-only. */
+/** Writes declared story fields while keeping bindings read-only. */
 export class MapStoryState implements IStoryStateTransactions {
   constructor(
     private readonly root: Map<string, unknown>,
@@ -53,7 +53,8 @@ export class MapStoryState implements IStoryStateTransactions {
       if (
         !node ||
         !key ||
-        typeof write.expected !== typeof write.value ||
+        (write.expected !== undefined && typeof write.expected !== typeof write.value) ||
+        (typeof write.value === 'number' && !Number.isFinite(write.value)) ||
         !this.declared.some((path) => JSON.stringify(path) === JSON.stringify(write.path)) ||
         destinations.some((entry) => entry.node === node && entry.key === key) ||
         Map.prototype.get.call(node, key) !== write.expected

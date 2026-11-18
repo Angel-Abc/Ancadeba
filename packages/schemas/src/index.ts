@@ -105,3 +105,7 @@ export * from './combatScenarioAssertions.js'
 export * from './runtimeText.js'
 
 export * from './saveCompatibility.js'
+
+export * from './characterProfile.js'
+
+export * from './characterProfileValidation.js'

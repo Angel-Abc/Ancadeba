@@ -1,10 +1,9 @@
 import {
-  ruleValueType,
+  ruleStateType,
   type GameRulesDefinition,
   type RuleCondition,
   type RuleEffect,
   type RuleText,
-  type RuleValue,
 } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import { sceneEntranceFields } from './sceneEntranceFields.js'
@@ -61,7 +60,7 @@ export function rulesDefinitionForm(
   const availableFields = [...rules.state, ...otherFields]
   const fields = availableFields.map(({ path }) => statePath(path))
   const firstPath = () => availableFields[0]?.path.slice() ?? ['']
-  const firstValue = () => (availableFields[0] ? defaultValue(availableFields[0].value) : '')
+  const firstValue = () => (availableFields[0] ? defaultValue(availableFields[0]) : '')
 
   const text = (title: string, value: RuleText, update: (value: RuleText) => void) =>
     ruleValueControls(
@@ -76,8 +75,14 @@ export function rulesDefinitionForm(
       ['text', 'translation'],
     )
 
-  function defaultValue(value: RuleValue): string | number | boolean {
-    return typeof value === 'object' ? '' : value
+  function defaultValue(
+    field: GameRulesDefinition['state'][number] | undefined,
+  ): string | number | boolean {
+    if (!field) return ''
+
+    if (field.value === undefined) return 0
+
+    return typeof field.value === 'object' ? '' : field.value
   }
 
   function condition(type: ConditionType): RuleCondition {
@@ -127,7 +132,7 @@ export function rulesDefinitionForm(
     entry: Extract<RuleCondition | RuleEffect, { type: 'state-is' | 'set-state' }>,
   ) {
     const field = availableFields.find(({ path }) => statePath(path) === statePath(entry.path))
-    const type = field && ruleValueType(field.value)
+    const type = field && ruleStateType(field)
 
     const types =
       type === 'string'
@@ -141,9 +146,7 @@ export function rulesDefinitionForm(
     return [
       select(t('form.stateField'), statePath(entry.path), fields, (next) => {
         entry.path = parseStatePath(next)
-        entry.value = defaultValue(
-          availableFields.find(({ path }) => statePath(path) === next)?.value ?? '',
-        )
+        entry.value = defaultValue(availableFields.find(({ path }) => statePath(path) === next))
         rerender()
       }),
       ...ruleValueControls(
@@ -153,7 +156,7 @@ export function rulesDefinitionForm(
         keys,
         (next) => {
           if (entry.type === 'set-state') entry.value = next
-          else entry.value = defaultValue(next)
+          else if (typeof next !== 'object') entry.value = next
         },
         rerender,
         types,
@@ -169,22 +172,38 @@ export function rulesDefinitionForm(
         input(t('rules.bindingPathDotted'), statePath(field.path), (next) => {
           field.path = parseStatePath(next)
         }),
-        ...ruleValueControls(
-          controls,
-          t('rules.initialValue'),
-          field.value,
-          keys,
-          (next) => {
-            field.value = next
-          },
-          rerender,
-        ),
+        ...('type' in field
+          ? [
+              input(
+                t('character.statInitialValue'),
+                field.value === undefined ? '' : String(field.value),
+                (value) => {
+                  field.value = value === '' ? undefined : Number(value)
+                },
+                'number',
+              ),
+            ]
+          : ruleValueControls(
+              controls,
+              t('rules.initialValue'),
+              field.value,
+              keys,
+              (next) => {
+                field.value = next
+              },
+              rerender,
+            )),
         button(t('rules.removeField'), () =>
           change(() => {
             rules.state.splice(index, 1)
           }),
         ),
       ),
+    ),
+    button(t('character.addStat'), () =>
+      change(() => {
+        rules.state.push({ path: [''], type: 'number' })
+      }),
     ),
     button(t('rules.addField'), () =>
       change(() => {

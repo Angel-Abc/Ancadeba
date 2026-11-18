@@ -10,6 +10,7 @@ import type {
   GameData,
   GameSaveFile,
   SceneInstance,
+  ConfirmCharacter,
 } from '@ancadeba/game-runtime'
 import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancadeba/schemas'
 import type { IGraphicResources } from './graphicResources.js'
@@ -23,6 +24,7 @@ type SceneNavigation = Extract<
 >
 
 export interface ComponentRendererOptions {
+  readonly confirmCharacter?: ConfirmCharacter | undefined
   readonly confirm?: GameConfirmation | undefined
   readonly game?: GameData | undefined
   readonly downloadSave?: ((file: GameSaveFile) => void) | undefined
@@ -44,6 +46,8 @@ export interface ComponentRendererOptions {
 }
 
 export interface ComponentRenderContext extends ComponentRendererOptions {
+  readonly characterDrafts?: Map<string, Map<string, string>> | undefined
+  readonly suspendedBindings?: IGameBindings | undefined
   readonly actionInfo?: ActionInfo | undefined
   readonly scene?: SceneInstance | undefined
   readonly onActionBarFocusLost?: (() => void) | undefined

@@ -1,0 +1,78 @@
+{
+  "state": [
+    {
+      "path": ["beach-pickups", "driftwood"],
+      "value": false
+    },
+    {
+      "path": ["beach-pickups", "rope"],
+      "value": false
+    }
+  ],
+  "actions": {
+    "pick-up-driftwood": [
+      {
+        "when": [
+          {
+            "type": "scene-is",
+            "scene": "adventure"
+          },
+          {
+            "type": "state-is",
+            "path": ["beach-pickups", "driftwood"],
+            "value": false
+          },
+          {
+            "type": "item-carried-by",
+            "item": "driftwood",
+            "owner": "shoreline"
+          }
+        ],
+        "effects": [
+          {
+            "type": "collect-items",
+            "items": ["driftwood"],
+            "owner": "player"
+          },
+          {
+            "type": "set-state",
+            "path": ["beach-pickups", "driftwood"],
+            "value": true
+          }
+        ]
+      }
+    ],
+    "pick-up-rope": [
+      {
+        "when": [
+          {
+            "type": "scene-is",
+            "scene": "adventure"
+          },
+          {
+            "type": "state-is",
+            "path": ["beach-pickups", "rope"],
+            "value": false
+          },
+          {
+            "type": "item-carried-by",
+            "item": "rope",
+            "owner": "shoreline"
+          }
+        ],
+        "effects": [
+          {
+            "type": "collect-items",
+            "items": ["rope"],
+            "owner": "player"
+          },
+          {
+            "type": "set-state",
+            "path": ["beach-pickups", "rope"],
+            "value": true
+          }
+        ]
+      }
+    ]
+  }
+}

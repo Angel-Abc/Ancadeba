@@ -4,6 +4,7 @@ import {
   dialogueNodeSchema,
   dialogueChoiceSchema,
   questObjectiveSchema,
+  ruleStateType,
   type DialogueDefinition,
   type QuestDefinition,
   type WorldCondition,
@@ -137,14 +138,12 @@ export function storyConditions(
           (field) => JSON.stringify(field.path) === JSON.stringify(condition.path),
         )
 
+        const type = field && ruleStateType(field)
+
         row.append(
           controls.input(t('story.expectedValue'), String(condition.value), (value) => {
             condition.value =
-              typeof field?.value === 'boolean'
-                ? value === 'true'
-                : typeof field?.value === 'number'
-                  ? Number(value)
-                  : value
+              type === 'boolean' ? value === 'true' : type === 'number' ? Number(value) : value
           }),
         )
       } else
@@ -640,7 +639,7 @@ export function questForm(
           [
             ['', t('story.noProgress')],
             ...(view.rules?.state ?? [])
-              .filter((field) => typeof field.value === 'number')
+              .filter((field) => ruleStateType(field) === 'number')
               .map(
                 (field) =>
                   [

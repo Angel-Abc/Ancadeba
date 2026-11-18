@@ -1049,9 +1049,15 @@ label[for='graphic-existing'] {
 }
 
 .metadata-translation-field,
+#editor-character-profile,
 #editor-metadata > .help,
 #scene-metadata > .help {
   grid-column: 1 / -1;
+}
+
+#editor-character-profile {
+  display: grid;
+  gap: 0.75rem;
 }
 
 .metadata-translation-field {

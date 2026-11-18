@@ -29,7 +29,10 @@ function references(documents: ProjectDocuments, game: GameDefinition): SceneRef
     }
 
     for (const [key, child] of Object.entries(object(value))) {
-      if ((key === 'scene' || key === 'menuScene') && typeof child === 'string')
+      if (
+        ['scene', 'menuScene', 'continueScene', 'backScene'].includes(key) &&
+        typeof child === 'string'
+      )
         result.push({ file, path: [...path, key], scene: child })
       else inspect(child, file, [...path, key])
     }

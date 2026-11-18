@@ -29,6 +29,7 @@ import {
   translationChoices,
   type RuleFormControls,
 } from './ruleFormControls.js'
+import { statusPanelForm } from './statusPanelForm.js'
 import { sceneChoices } from './choiceLabels.js'
 
 type ButtonAction = NonNullable<ButtonComponentDefinition['action']>
@@ -45,6 +46,8 @@ export const editableComponentTypes: readonly string[] = [
   'map-view',
   'nearby',
   'quest-log',
+  'character-creator',
+  'character-sheet',
 ]
 
 const isBasic = (component: { type: string }): component is BasicComponent =>
@@ -55,6 +58,8 @@ const isBasic = (component: { type: string }): component is BasicComponent =>
     'language-select',
     'map-view',
     'quest-log',
+    'character-creator',
+    'character-sheet',
     'save-slots',
     'save-status',
     'save-point',
@@ -516,6 +521,34 @@ function componentFields(
         ),
       ),
     ]
+
+  if (draft.type === 'character-creator') {
+    const destinations = { ...view, scenes: view.scenes.filter((entry) => entry.id !== sceneId) }
+    const origin = view.scenes.find((entry) => entry.id === sceneId)
+
+    return [
+      ...label,
+      select(
+        t('character.continueScene'),
+        draft.continueScene,
+        sceneChoices(destinations, 'game'),
+        (value) => {
+          draft.continueScene = value
+        },
+      ),
+      select(
+        t('character.backScene'),
+        draft.backScene ?? '',
+        [['', t('form.none')], ...sceneChoices(destinations, origin?.type)],
+        (value) => {
+          draft.backScene = value || undefined
+        },
+      ),
+    ]
+  }
+
+  if (draft.type === 'character-sheet')
+    return [...label, ...statusPanelForm(controls, view, draft, render, true)]
 
   if (draft.type === 'language-select') return label
 

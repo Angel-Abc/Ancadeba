@@ -4,6 +4,7 @@ import type {
   SceneData,
   IGameSaves,
   GameSaveFile,
+  ConfirmCharacter,
 } from '@ancadeba/game-runtime'
 import { canEnterScene, runtimeText } from '@ancadeba/game-runtime'
 import { bindKeyboardInput, type KeyboardInputSink } from './keyboardInput.js'
@@ -13,6 +14,7 @@ import type { SceneEntrance } from '@ancadeba/schemas'
 import { GameConfirmationDialog } from './gameConfirmationDialog.js'
 
 export interface GameViewSession {
+  readonly confirmCharacter?: ConfirmCharacter | undefined
   readonly prepareMenu?: () => boolean
   readonly saves?: IGameSaves | undefined
   readonly lifecycle: IGameLifecycle
@@ -249,6 +251,7 @@ export function mountGameView(
     const renderer = new SceneRenderer(viewport, session.lifecycle, {
       ...options,
       game,
+      confirmCharacter: session.confirmCharacter,
       onOpenMenu: openMenu,
       canOpenMenu: () =>
         Boolean(

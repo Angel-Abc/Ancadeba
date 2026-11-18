@@ -14,6 +14,7 @@ export interface SceneRendererOptions extends ComponentRendererOptions {
 
 /** Renders only the active scene. Geometry comes from data; appearance comes from CSS. */
 export class SceneRenderer {
+  private readonly characterDrafts = new WeakMap<SceneInstance, Map<string, Map<string, string>>>()
   private scene: RenderedComponent | undefined
   private unsubscribe: (() => void) | undefined
   private unsubscribeLanguage: (() => void) | undefined
@@ -128,10 +129,21 @@ export class SceneRenderer {
       },
     }
 
+    let drafts = this.characterDrafts.get(scene)
+
+    if (!drafts && data.components.some(({ type }) => type === 'character-creator')) {
+      drafts = new Map()
+      this.characterDrafts.set(scene, drafts)
+    }
+
+    const suspended = this.lifecycle.suspendedScene
+
     const context: ComponentRenderContext = {
       ...this.options,
       document,
       scene,
+      characterDrafts: drafts,
+      suspendedBindings: suspended?.type === 'game' ? suspended.game.bindings : undefined,
       actionInfo: data.components.some((component) => component.type === 'action-info')
         ? new ActionInfo()
         : undefined,

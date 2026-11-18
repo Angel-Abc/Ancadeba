@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { gameIdSchema as baseIdSchema } from './game.js'
+import { gameIdSchema as baseIdSchema } from './gameId.js'
 import { gameBindingSchema } from './bindings.js'
 
 export const assetIdSchema = baseIdSchema.refine(

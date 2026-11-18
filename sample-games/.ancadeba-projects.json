@@ -1,13 +1,7 @@
 {
   "version": 1,
   "projects": [
-    [
-      "marketvalue",
-      "project:3e7d0ae1-b307-4e89-900e-5c743ecd1f80"
-    ],
-    [
-      "market-value",
-      "project:9a2c4f86-9526-4015-9836-881bffaac8ab"
-    ]
+    ["marketvalue", "project:3e7d0ae1-b307-4e89-900e-5c743ecd1f80"],
+    ["market-value", "project:6dc361ec-e7a7-4367-9220-8f8fff429ce7"]
   ]
 }

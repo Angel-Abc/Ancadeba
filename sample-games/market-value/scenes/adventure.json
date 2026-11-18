@@ -16,12 +16,12 @@
       "id": "narrative",
       "type": "text",
       "placement": {
-        "row": 2,
+        "row": 1,
         "column": 2,
-        "rowSpan": 6,
-        "columnSpan": 14
+        "rowSpan": 3,
+        "columnSpan": 9
       },
-      "text": "Edit this scene to tell your story.",
+      "text": "You wake on a beach with wet sand against your cheek. A blinding headache makes you squeeze your eyes shut. You try to remember how you got here, then try to remember your own name. Nothing comes. A few scraps of fabric cling to your skin. They’re all you have.",
       "presentation": {
         "variant": "body",
         "align": "start"
@@ -31,15 +31,67 @@
       "id": "menu",
       "type": "button",
       "placement": {
-        "row": 9,
-        "column": 5,
-        "rowSpan": 2,
-        "columnSpan": 8
+        "row": 12,
+        "column": 11,
+        "rowSpan": 1,
+        "columnSpan": 5
       },
       "label": "Game menu (Escape)",
       "action": {
         "type": "open-menu",
         "scene": "game-menu"
+      }
+    },
+    {
+      "id": "coast-map",
+      "type": "map-view",
+      "placement": {
+        "row": 4,
+        "column": 2,
+        "rowSpan": 8,
+        "columnSpan": 14
+      },
+      "map": "coast",
+      "label": "Coast",
+      "viewport": {
+        "columns": 24,
+        "rows": 14,
+        "x": 0,
+        "y": 0
+      },
+      "playerSpawn": {
+        "x": 8,
+        "y": 9
+      },
+      "interactive": true
+    },
+    {
+      "id": "player-inventory",
+      "type": "inventory",
+      "placement": {
+        "row": 1,
+        "column": 11,
+        "rowSpan": 3,
+        "columnSpan": 5
+      },
+      "label": "Inventory",
+      "owners": ["player"],
+      "previews": {},
+      "readOnly": true
+    },
+    {
+      "id": "pickup-help",
+      "type": "text",
+      "placement": {
+        "row": 12,
+        "column": 2,
+        "rowSpan": 1,
+        "columnSpan": 9
+      },
+      "text": "Use arrow keys to move. Select an item beside you to pick it up.",
+      "presentation": {
+        "variant": "body",
+        "align": "start"
       }
     }
   ]

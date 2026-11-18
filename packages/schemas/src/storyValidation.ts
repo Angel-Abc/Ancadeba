@@ -3,7 +3,7 @@ import { dialogueSchema, questSchema, questRewardItemId } from './story.js'
 import type { WorldCondition } from './storyConditions.js'
 import type { SceneDefinition } from './scene.js'
 import type { GameRulesDefinition } from './rules.js'
-import { ruleValueType } from './rules.js'
+import { ruleStateType, ruleValueType } from './rules.js'
 import { inventoryIssues } from './inventory.js'
 import type { AssetCatalog } from './assets.js'
 import { levelingBindingFields, type LevelingProfile } from './leveling.js'
@@ -27,6 +27,13 @@ export interface StorySources {
 export function storyIssues(sources: StorySources) {
   const issues: { file: string; path: (string | number)[]; message: string }[] = []
   const fields = new Map(sources.rules?.state.map((field) => [JSON.stringify(field.path), field]))
+
+  const numericField = (path: readonly (string | number)[]) => {
+    const field = fields.get(JSON.stringify(path))
+
+    return field !== undefined && ruleStateType(field) === 'number'
+  }
+
   const items = new Set(Object.keys(sources.inventory?.items ?? {}))
 
   for (const quest of sources.quests.values())
@@ -42,7 +49,7 @@ export function storyIssues(sources: StorySources) {
     if (value.type === 'state-is' || value.type === 'state-compare') {
       const field = fields.get(JSON.stringify(value.path))
 
-      if (!field || ruleValueType(field.value) !== typeof value.value)
+      if (!field || ruleStateType(field) !== typeof value.value)
         add(file, 'Unknown or incompatible condition state field')
     }
 
@@ -74,7 +81,7 @@ export function storyIssues(sources: StorySources) {
     } else {
       const field = fields.get(JSON.stringify(value.path))
 
-      if (!field || ruleValueType(field.value) !== ruleValueType(value.value))
+      if (!field || ruleStateType(field) !== ruleValueType(value.value))
         add(file, 'Unknown or incompatible effect state field')
 
       if (
@@ -117,9 +124,7 @@ export function storyIssues(sources: StorySources) {
 
         if (
           objective.progress?.binding.source === 'game.state' &&
-          ruleValueType(
-            fields.get(JSON.stringify(objective.progress.binding.path))?.value ?? '',
-          ) !== 'number'
+          !numericField(objective.progress.binding.path)
         )
           add(file, 'Numeric quest progress requires a declared numeric field')
       }

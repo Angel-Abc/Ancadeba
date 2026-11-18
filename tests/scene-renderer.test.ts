@@ -83,6 +83,7 @@ class TestElement extends EventTarget {
   tabIndex = -1
   title = ''
   value = ''
+  name = ''
   disabled = false
   get unavailable(): boolean {
     return this.disabled || this.attributes.get('aria-disabled') === 'true'
@@ -413,6 +414,265 @@ function withSaveComponents(resources: IResourceSource): IResourceSource {
 }
 
 const saveLoader = new GameLoader(new JsonResourceLoader(withSaveComponents(source), logger))
+
+describe('character creation and stat discovery', () => {
+  const market: IResourceSource = {
+    readText: (path) =>
+      readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url), 'utf8'),
+    readBytes: async (path) =>
+      new Uint8Array(
+        await readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url)),
+      ),
+  }
+
+  const stat = (id: string) => ({ source: 'game.state', path: ['stats', id] }) as const
+
+  async function launch(preview: boolean) {
+    const document = new TestDocument()
+    const target = document.createElement('main')
+    const changes = new Map<string, unknown>()
+    const manifest = JSON.parse(await market.readText('game.json'))
+    const creation = JSON.parse(await market.readText('scenes/create-character.json'))
+    const character = JSON.parse(await market.readText('scenes/character.json'))
+    manifest.scenes.push('story-creator')
+    manifest.quests = ['practice']
+    manifest.rules.push('stats')
+    changes.set('game.json', manifest)
+    changes.set('scenes/story-creator.json', {
+      ...creation,
+      id: 'story-creator',
+      type: 'game',
+      components: [{ ...creation.components[0], backScene: 'adventure' }],
+    })
+    character.components[0].rows = [
+      {
+        id: 'instinct',
+        label: 'Instinct',
+        type: 'value',
+        value: stat('instinct'),
+        visibleWhen: stat('show-instinct'),
+      },
+      {
+        id: 'resolve',
+        label: 'Resolve',
+        type: 'value',
+        value: { ...stat('resolve'), fallback: 'Unknown' },
+        visibleWhen: stat('show-resolve'),
+      },
+    ]
+    changes.set('scenes/character.json', character)
+    changes.set('quests/practice.json', {
+      'schema-version': '1.0.0',
+      id: 'practice',
+      label: 'Practice',
+      stages: [
+        {
+          id: 'begin',
+          objectives: [
+            {
+              id: 'discover',
+              label: 'Discover Resolve',
+              when: [
+                { type: 'state-compare', path: stat('resolve').path, operator: 'eq', value: 0 },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    changes.set('rules/stats.json', {
+      state: [
+        { path: stat('instinct').path, type: 'number', value: 7 },
+        { path: stat('resolve').path, type: 'number' },
+        { path: stat('show-instinct').path, value: false },
+        { path: stat('show-resolve').path, value: true },
+        { path: stat('used').path, value: false },
+        { path: stat('failed').path, value: false },
+      ],
+      actions: {
+        check: [
+          {
+            when: [{ type: 'state-compare', path: stat('resolve').path, operator: 'eq', value: 0 }],
+            effects: [{ type: 'set-state', path: stat('failed').path, value: true }],
+          },
+          {
+            when: [
+              { type: 'state-compare', path: stat('instinct').path, operator: 'gte', value: 7 },
+            ],
+            effects: [{ type: 'set-state', path: stat('used').path, value: true }],
+          },
+        ],
+        hide: [
+          {
+            when: [],
+            effects: [{ type: 'set-state', path: stat('show-resolve').path, value: false }],
+          },
+        ],
+        reveal: [
+          {
+            when: [],
+            effects: [{ type: 'set-state', path: stat('show-instinct').path, value: true }],
+          },
+        ],
+      },
+    })
+
+    const storage = new Map<string, string>()
+
+    const engine = new Engine(
+      new GameLoader(
+        new JsonResourceLoader(
+          {
+            ...market,
+            readText: (path) =>
+              changes.has(path)
+                ? Promise.resolve(JSON.stringify(changes.get(path)))
+                : market.readText(path),
+          },
+          logger,
+        ),
+      ),
+      preview ? new EditorPreviewHost(target.asElement()) : new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      {
+        ...timing,
+        saveStore: {
+          read: (id) => storage.get(id),
+          write: (id, save) => {
+            storage.set(id, save)
+          },
+        },
+      },
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    flush(engine)
+
+    return { engine, target, storage, lifecycle: engine.lifecycle! }
+  }
+
+  const click = (target: TestElement, label: string) =>
+    target.find((element) => element.tagName === 'BUTTON' && element.textContent === label)!.click()
+
+  const choose = (target: TestElement, name: string, value: string) => {
+    const select = target.find((element) => element.name === name)!
+    select.value = value
+    select.dispatchEvent(new Event('change'))
+  }
+
+  const confirm = (target: TestElement) => {
+    const form = target.querySelector('form')!
+    form.dispatchEvent(new Event('submit', { cancelable: true }))
+
+    return form
+  }
+
+  it.each([true, false])(
+    'creates and restores the character, including in preview mode %s',
+    async (preview) => {
+      const { engine, lifecycle, target } = await launch(preview)
+      click(target, 'New game')
+      choose(target, 'hairstyle', 'tied')
+      click(target, 'Back')
+      expect(lifecycle.currentGame).toBeUndefined()
+      expect(engine.saves!.canSave).toBe(false)
+      click(target, 'New game')
+      expect(target.find((element) => element.name === 'hairstyle')?.value).toBe('crop')
+      choose(target, 'gender', 'nonbinary')
+      choose(target, 'hairstyle', 'waves')
+      const priorForm = confirm(target)
+      const gameplay = lifecycle.activeScene!
+      const game = lifecycle.currentGame!
+      priorForm.dispatchEvent(new Event('submit', { cancelable: true }))
+      expect(lifecycle.currentGame).toBe(game)
+      expect(gameplay.data.id).toBe('adventure')
+      expect(target.textContent).toContain('You wake on a beach')
+      expect(game.mapMovement!.getPosition(gameplay, 'coast-map')).toEqual({ x: 8, y: 9 })
+      game.mapMovement!.place(gameplay, 'coast-map', { x: 9, y: 9 })
+      click(target, 'Game menu (Escape)')
+      click(target, 'Character')
+      expect(target.textContent).toContain('Nonbinary')
+      expect(target.textContent).toContain('Wavy')
+      expect(target.querySelector('select')?.name ?? '').toBe('')
+      click(target, 'Back to game menu')
+      click(target, 'Resume')
+      expect(lifecycle.activeScene).toBe(gameplay)
+      expect(game.mapMovement!.getPosition(gameplay, 'coast-map')).toEqual({ x: 9, y: 9 })
+      expect(engine.saves!.save()).toBe(true)
+
+      lifecycle.enterScene('story-creator')
+      expect(target.find((element) => element.name === 'hairstyle')?.value).toBe('waves')
+      choose(target, 'hairstyle', 'tied')
+      click(target, 'Back')
+      lifecycle.enterScene('story-creator')
+      expect(target.find((element) => element.name === 'hairstyle')?.value).toBe('waves')
+      choose(target, 'hairstyle', 'tied')
+      confirm(target)
+      expect(lifecycle.currentGame).toBe(game)
+      expect(
+        game.bindings!.read({ source: 'game.state', path: ['character', 'hairstyle'] }),
+      ).toEqual({ status: 'resolved', value: 'tied' })
+      expect(engine.saves!.load()).toBe(true)
+      flush(engine)
+      lifecycle.openMenu!('character')
+      expect(target.textContent).toContain('Wavy')
+      expect(target.textContent).toContain('Nonbinary')
+    },
+  )
+
+  it('uses hidden stats and assigns unset values through a story transaction before exposing them', async () => {
+    const { engine, lifecycle, target, storage } = await launch(false)
+    click(target, 'New game')
+    confirm(target)
+    const game = lifecycle.currentGame!
+    const scene = lifecycle.activeScene!
+
+    const request = (id: string) => {
+      engine.actions!.request(id)
+      flush(engine)
+    }
+
+    expect(engine.saves!.save()).toBe(true)
+    const before = gameSaveSchema.parse(JSON.parse(storage.get('market-value')!))
+    expect(before.state.some(({ path }) => path.at(-1) === 'resolve')).toBe(false)
+    request('check')
+    expect(game.bindings!.read(stat('used'))).toEqual({ status: 'resolved', value: true })
+    expect(game.bindings!.read(stat('failed'))).toEqual({ status: 'resolved', value: false })
+    lifecycle.openMenu!('character')
+    expect(target.textContent).not.toMatch(/Resolve|Instinct|Unknown/)
+    expect(target.find((element) => Boolean(element.dataset.statusRow))).toBeUndefined()
+    lifecycle.resumeGame!()
+    request('hide')
+    request('reveal')
+
+    const story = game.quests!.prepareEffects(scene, [
+      { type: 'set-state', path: [...stat('resolve').path], value: 0 },
+      { type: 'set-state', path: [...stat('show-resolve').path], value: true },
+    ])!
+
+    expect(story.isCurrent()).toBe(true)
+    story.commit()
+    story.notify()
+    lifecycle.openMenu!('character')
+    expect(target.find((element) => element.dataset.statusRow === 'instinct')?.textContent).toBe(
+      'Instinct 7',
+    )
+    expect(target.find((element) => element.dataset.statusRow === 'resolve')?.textContent).toBe(
+      'Resolve 0',
+    )
+    expect(engine.saves!.save()).toBe(true)
+    const after = gameSaveSchema.parse(JSON.parse(storage.get('market-value')!))
+    expect(after.state).toContainEqual({ path: ['stats', 'resolve'], value: 0 })
+    expect(engine.saves!.load()).toBe(true)
+    flush(engine)
+    lifecycle.openMenu!('character')
+    expect(target.find((element) => element.dataset.statusRow === 'resolve')?.textContent).toBe(
+      'Resolve 0',
+    )
+  })
+})
 
 describe('authored game menus', () => {
   it.each(['slot', 'scene', 'unmount'] as const)(

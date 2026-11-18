@@ -1,0 +1,21 @@
+{
+  "state": [
+    {
+      "path": ["character", "gender"],
+      "value": "undisclosed"
+    },
+    {
+      "path": ["character", "skin-tone"],
+      "value": "warm"
+    },
+    {
+      "path": ["character", "hairstyle"],
+      "value": "crop"
+    },
+    {
+      "path": ["character", "hair-color"],
+      "value": "black"
+    }
+  ],
+  "actions": {}
+}

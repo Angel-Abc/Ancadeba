@@ -33,7 +33,25 @@ export function localizeDefinitions(
     description: text(definition.descriptionKey, definition.description),
   })
 
-  const localizedGame = { ...game, ...metadata(game) }
+  const profile = game.characterProfile
+
+  const localizedGame = {
+    ...game,
+    ...metadata(game),
+    ...(profile && {
+      characterProfile: {
+        ...profile,
+        fields: profile.fields.map((field) => ({
+          ...field,
+          label: text(field.labelKey, field.label, true),
+          options: field.options.map((option) => ({
+            ...option,
+            label: text(option.labelKey, option.label, true),
+          })),
+        })),
+      },
+    }),
+  }
 
   if (!localizedGame.title.trim()) throw new Error('Translated game title must not be empty')
 
@@ -66,75 +84,84 @@ export function localizeDefinitions(
                       label: text(component.labelKey, component.label, true),
                       emptyText: text(component.emptyTextKey, component.emptyText),
                     }
-                  : component.type === 'status-panel'
+                  : component.type === 'character-sheet'
                     ? {
                         ...component,
                         label: text(component.labelKey, component.label, true),
-                        name: text(component.nameKey, component.name),
                         rows: component.rows.map((row) => ({
                           ...row,
                           label: text(row.labelKey, row.label, true),
                         })),
-                        effects: component.effects.map((effect) => ({
-                          ...effect,
-                          label: text(effect.labelKey, effect.label, true),
-                          description: text(effect.descriptionKey, effect.description),
-                        })),
                       }
-                    : component.type === 'nearby'
+                    : component.type === 'status-panel'
                       ? {
                           ...component,
                           label: text(component.labelKey, component.label, true),
-                          entries: Object.fromEntries(
-                            Object.entries(component.entries).map(([id, entry]) => [
-                              id,
-                              {
-                                ...entry,
-                                label: text(entry.labelKey, entry.label, true),
-                                description: text(entry.descriptionKey, entry.description),
-                              },
-                            ]),
-                          ),
+                          name: text(component.nameKey, component.name),
+                          rows: component.rows.map((row) => ({
+                            ...row,
+                            label: text(row.labelKey, row.label, true),
+                          })),
+                          effects: component.effects.map((effect) => ({
+                            ...effect,
+                            label: text(effect.labelKey, effect.label, true),
+                            description: text(effect.descriptionKey, effect.description),
+                          })),
                         }
-                      : component.type === 'action-bar'
+                      : component.type === 'nearby'
                         ? {
                             ...component,
-                            slots: Object.fromEntries(
-                              Object.entries(component.slots).map(([id, slot]) => [
+                            label: text(component.labelKey, component.label, true),
+                            entries: Object.fromEntries(
+                              Object.entries(component.entries).map(([id, entry]) => [
                                 id,
                                 {
-                                  ...slot,
-                                  label: text(slot.labelKey, slot.label, true),
-                                  description: text(slot.descriptionKey, slot.description ?? ''),
-                                  unavailableText: text(
-                                    slot.unavailableTextKey,
-                                    slot.unavailableText ?? '',
-                                  ),
+                                  ...entry,
+                                  label: text(entry.labelKey, entry.label, true),
+                                  description: text(entry.descriptionKey, entry.description),
                                 },
                               ]),
                             ),
                           }
-                        : component.type === 'button'
+                        : component.type === 'action-bar'
                           ? {
                               ...component,
-                              label: text(component.labelKey, component.label, true),
-                              description: text(
-                                component.descriptionKey,
-                                component.description ?? '',
-                              ),
-                              unavailableText: text(
-                                component.unavailableTextKey,
-                                component.unavailableText ?? '',
+                              slots: Object.fromEntries(
+                                Object.entries(component.slots).map(([id, slot]) => [
+                                  id,
+                                  {
+                                    ...slot,
+                                    label: text(slot.labelKey, slot.label, true),
+                                    description: text(slot.descriptionKey, slot.description ?? ''),
+                                    unavailableText: text(
+                                      slot.unavailableTextKey,
+                                      slot.unavailableText ?? '',
+                                    ),
+                                  },
+                                ]),
                               ),
                             }
-                          : component.type === 'graphic'
-                            ? { ...component, alt: text(component.altKey, component.alt) }
-                            : component.type === 'text'
-                              ? { ...component, text: text(component.textKey, component.text) }
-                              : {
-                                  ...component,
-                                  label: text(component.labelKey, component.label, true),
-                                },
+                          : component.type === 'button'
+                            ? {
+                                ...component,
+                                label: text(component.labelKey, component.label, true),
+                                description: text(
+                                  component.descriptionKey,
+                                  component.description ?? '',
+                                ),
+                                unavailableText: text(
+                                  component.unavailableTextKey,
+                                  component.unavailableText ?? '',
+                                ),
+                              }
+                            : component.type === 'graphic'
+                              ? { ...component, alt: text(component.altKey, component.alt) }
+                              : component.type === 'text'
+                                ? { ...component, text: text(component.textKey, component.text) }
+                                : {
+                                    ...component,
+                                    label: text(component.labelKey, component.label, true),
+                                  },
           ),
         }),
       ]),
@@ -159,6 +186,9 @@ export function assertGameLanguages(
   const keyed =
     game.titleKey !== undefined ||
     game.descriptionKey !== undefined ||
+    game.characterProfile?.fields.some(
+      (field) => field.labelKey || field.options.some((option) => option.labelKey),
+    ) ||
     [...scenes.values()].some(
       (scene) =>
         scene.titleKey !== undefined ||
@@ -172,36 +202,39 @@ export function assertGameLanguages(
                 Object.keys(component.messageKeys).length > 0
               : component.type === 'item-details' || component.type === 'action-info'
                 ? component.labelKey !== undefined || component.emptyTextKey !== undefined
-                : component.type === 'status-panel'
+                : component.type === 'character-sheet'
                   ? component.labelKey !== undefined ||
-                    component.nameKey !== undefined ||
-                    component.rows.some((row) => row.labelKey !== undefined) ||
-                    component.effects.some(
-                      (effect) =>
-                        effect.labelKey !== undefined || effect.descriptionKey !== undefined,
-                    )
-                  : component.type === 'nearby'
+                    component.rows.some((row) => row.labelKey !== undefined)
+                  : component.type === 'status-panel'
                     ? component.labelKey !== undefined ||
-                      Object.values(component.entries).some(
-                        (entry) =>
-                          entry.labelKey !== undefined || entry.descriptionKey !== undefined,
+                      component.nameKey !== undefined ||
+                      component.rows.some((row) => row.labelKey !== undefined) ||
+                      component.effects.some(
+                        (effect) =>
+                          effect.labelKey !== undefined || effect.descriptionKey !== undefined,
                       )
-                    : component.type === 'action-bar'
-                      ? Object.values(component.slots).some(
-                          (slot) =>
-                            slot.labelKey !== undefined ||
-                            slot.descriptionKey !== undefined ||
-                            slot.unavailableTextKey !== undefined,
+                    : component.type === 'nearby'
+                      ? component.labelKey !== undefined ||
+                        Object.values(component.entries).some(
+                          (entry) =>
+                            entry.labelKey !== undefined || entry.descriptionKey !== undefined,
                         )
-                      : component.type === 'button'
-                        ? component.labelKey !== undefined ||
-                          component.descriptionKey !== undefined ||
-                          component.unavailableTextKey !== undefined
-                        : component.type === 'graphic'
-                          ? component.altKey !== undefined
-                          : component.type === 'text'
-                            ? component.textKey !== undefined
-                            : component.labelKey !== undefined,
+                      : component.type === 'action-bar'
+                        ? Object.values(component.slots).some(
+                            (slot) =>
+                              slot.labelKey !== undefined ||
+                              slot.descriptionKey !== undefined ||
+                              slot.unavailableTextKey !== undefined,
+                          )
+                        : component.type === 'button'
+                          ? component.labelKey !== undefined ||
+                            component.descriptionKey !== undefined ||
+                            component.unavailableTextKey !== undefined
+                          : component.type === 'graphic'
+                            ? component.altKey !== undefined
+                            : component.type === 'text'
+                              ? component.textKey !== undefined
+                              : component.labelKey !== undefined,
         ),
     )
 

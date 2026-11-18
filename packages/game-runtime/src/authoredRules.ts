@@ -1,5 +1,6 @@
 import {
   getMapMovementCostMs,
+  ruleStateType,
   type GameRulesDefinition,
   type RuleText,
   type RuleValue,
@@ -19,7 +20,7 @@ type Scalar = string | number | boolean
 
 type State = Map<string, State | Scalar>
 
-function set(state: State, path: string[], value: Scalar): void {
+function parent(state: State, path: readonly string[]): State {
   let node = state
 
   for (const segment of path.slice(0, -1)) {
@@ -30,7 +31,11 @@ function set(state: State, path: string[], value: Scalar): void {
     node = child
   }
 
-  node.set(path.at(-1)!, value)
+  return node
+}
+
+function set(state: State, path: readonly string[], value: Scalar): void {
+  parent(state, path).set(path.at(-1)!, value)
 }
 
 function read(state: State, path: string[]): State | Scalar | undefined {
@@ -81,12 +86,16 @@ export class AuthoredPlaythrough {
 
   save(): Pick<GameSave, 'state' | 'log'> {
     return {
-      state: this.rules.state.map(({ path }) => {
+      state: this.rules.state.flatMap((field) => {
+        const { path } = field
         const value = read(this.state, path)
 
-        if (value === undefined || value instanceof Map) throw new Error('Invalid authored state')
+        if (value === undefined && 'type' in field && field.value === undefined) return []
 
-        return { path: [...path], value }
+        if (typeof value !== ruleStateType(field) || value === undefined || value instanceof Map)
+          throw new Error('Invalid authored state')
+
+        return [{ path: [...path], value }]
       }),
       log: [...this.entries],
     }
@@ -94,7 +103,7 @@ export class AuthoredPlaythrough {
 
   restore(save: Pick<GameSave, 'state' | 'log' | 'progression'>): void {
     if (
-      save.state.length !== this.rules.state.length ||
+      save.state.length > this.rules.state.length ||
       save.log.length > (this.rules.log?.capacity ?? 0)
     )
       throw new Error('Incompatible authored state')
@@ -103,12 +112,21 @@ export class AuthoredPlaythrough {
     if (fields.size !== save.state.length) throw new Error('Duplicate saved state field')
 
     for (const field of this.rules.state) {
-      const saved = fields.get(JSON.stringify(field.path))
+      const key = JSON.stringify(field.path)
+      const saved = fields.get(key)
 
-      if (!saved || typeof saved.value !== typeof this.resolve(field.value))
+      if (!saved && 'type' in field && field.value === undefined) {
+        parent(this.state, field.path).delete(field.path.at(-1)!)
+        continue
+      }
+
+      if (!saved || typeof saved.value !== ruleStateType(field))
         throw new Error('Incompatible state field')
       set(this.state, field.path, saved.value)
+      fields.delete(key)
     }
+
+    if (fields.size) throw new Error('Unknown saved state field')
 
     this.entries.splice(0, this.entries.length, ...save.log)
 
@@ -131,7 +149,7 @@ export class AuthoredPlaythrough {
       this.rules.state
         .filter(
           (field) =>
-            typeof field.value !== 'number' &&
+            ('type' in field || typeof field.value !== 'number') &&
             ![this.rules.log?.path, this.rules.clock?.path].some(
               (path) => JSON.stringify(path) === JSON.stringify(field.path),
             ),
@@ -167,7 +185,11 @@ export class AuthoredPlaythrough {
     private readonly rules: GameRulesDefinition,
     private readonly data: GameData,
   ) {
-    for (const { path, value } of rules.state) set(this.state, path, this.resolve(value))
+    for (const { path, value } of rules.state) {
+      if (value === undefined) parent(this.state, path)
+      else set(this.state, path, this.resolve(value))
+    }
+
     this.updateClock(0)
 
     if (rules.log)
@@ -175,6 +197,23 @@ export class AuthoredPlaythrough {
         rules.log.initial.map((value) => this.resolve(value)),
         0,
       )
+  }
+
+  applyCharacterProfile(selections: ReadonlyMap<string, string>): boolean {
+    const profile = this.data.characterProfile
+
+    if (!profile || selections.size !== profile.fields.length) return false
+
+    const writes = profile.fields.map((field) => ({
+      path: field.path,
+      option: field.options.find(({ id }) => id === selections.get(field.id)),
+    }))
+
+    if (writes.some(({ option }) => !option)) return false
+
+    for (const { path, option } of writes) set(this.state, path, option!.id)
+
+    return true
   }
 
   private resolve(value: RuleText): string

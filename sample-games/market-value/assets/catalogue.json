@@ -1,0 +1,282 @@
+{
+  "schema-version": "1.0.0",
+  "images": {
+    "coast-terrain": {
+      "format": "png",
+      "source": "assets/images/coast-terrain-bfba3a25-02e7-4d1a-9517-4c2da2edf426.png",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 192,
+        "height": 72
+      },
+      "colors": {},
+      "palettes": {}
+    },
+    "beach-finds": {
+      "format": "png",
+      "source": "assets/images/beach-finds-e224793b-3c4c-4588-81b2-9789805c2e19.png",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 48,
+        "height": 24
+      },
+      "colors": {},
+      "palettes": {}
+    },
+    "portrait-body": {
+      "format": "svg",
+      "source": "assets/images/portrait-body.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      }
+    },
+    "portrait-hair-crop": {
+      "format": "svg",
+      "source": "assets/images/portrait-hair-crop.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      }
+    },
+    "portrait-hair-waves": {
+      "format": "svg",
+      "source": "assets/images/portrait-hair-waves.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      }
+    },
+    "portrait-hair-tied": {
+      "format": "svg",
+      "source": "assets/images/portrait-hair-tied.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      }
+    }
+  },
+  "parts": {
+    "body": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {
+        "light": {
+          "skin": "#ecc0a5",
+          "shadow": "#ba8476"
+        },
+        "warm": {
+          "skin": "#be886c",
+          "shadow": "#92614f"
+        },
+        "olive": {
+          "skin": "#a98458",
+          "shadow": "#775839"
+        },
+        "brown": {
+          "skin": "#91604a",
+          "shadow": "#684134"
+        },
+        "deep": {
+          "skin": "#694535",
+          "shadow": "#472e26"
+        }
+      },
+      "pieces": [
+        {
+          "id": "body",
+          "image": "portrait-body",
+          "layer": "body",
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ]
+    },
+    "crop": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      },
+      "palettes": {
+        "black": {
+          "hair": "#342a28",
+          "highlight": "#5a4339"
+        },
+        "brown": {
+          "hair": "#614234",
+          "highlight": "#8e6248"
+        },
+        "auburn": {
+          "hair": "#8a4737",
+          "highlight": "#b7684d"
+        },
+        "blond": {
+          "hair": "#a37f4f",
+          "highlight": "#d4b575"
+        }
+      },
+      "pieces": [
+        {
+          "id": "crop",
+          "image": "portrait-hair-crop",
+          "layer": "hair",
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ]
+    },
+    "waves": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      },
+      "palettes": {
+        "black": {
+          "hair": "#342a28",
+          "highlight": "#5a4339"
+        },
+        "brown": {
+          "hair": "#614234",
+          "highlight": "#8e6248"
+        },
+        "auburn": {
+          "hair": "#8a4737",
+          "highlight": "#b7684d"
+        },
+        "blond": {
+          "hair": "#a37f4f",
+          "highlight": "#d4b575"
+        }
+      },
+      "pieces": [
+        {
+          "id": "waves",
+          "image": "portrait-hair-waves",
+          "layer": "hair",
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ]
+    },
+    "tied": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "hair": "#342a28",
+        "highlight": "#5a4339"
+      },
+      "palettes": {
+        "black": {
+          "hair": "#342a28",
+          "highlight": "#5a4339"
+        },
+        "brown": {
+          "hair": "#614234",
+          "highlight": "#8e6248"
+        },
+        "auburn": {
+          "hair": "#8a4737",
+          "highlight": "#b7684d"
+        },
+        "blond": {
+          "hair": "#a37f4f",
+          "highlight": "#d4b575"
+        }
+      },
+      "pieces": [
+        {
+          "id": "tied",
+          "image": "portrait-hair-tied",
+          "layer": "hair",
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ]
+    }
+  },
+  "compositions": {
+    "castaway": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "layers": ["body", "hair"],
+      "anchors": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "slots": {
+        "body": {
+          "parts": ["body"],
+          "default": "body"
+        },
+        "hair": {
+          "parts": ["crop", "waves", "tied"],
+          "default": "crop"
+        }
+      }
+    }
+  }
+}

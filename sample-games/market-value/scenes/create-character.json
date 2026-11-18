@@ -1,0 +1,16 @@
+{
+  "schema-version": "1.0.0",
+  "id": "create-character",
+  "title": "Create character",
+  "type": "stand-alone",
+  "screen": { "type": "grid", "grid": { "rows": 12, "columns": 16 } },
+  "components": [
+    {
+      "id": "creator",
+      "type": "character-creator",
+      "placement": { "row": 1, "column": 2, "rowSpan": 12, "columnSpan": 14 },
+      "continueScene": "adventure",
+      "backScene": "start"
+    }
+  ]
+}

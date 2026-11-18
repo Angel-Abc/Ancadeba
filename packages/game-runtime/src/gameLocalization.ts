@@ -1,6 +1,10 @@
 import type { Unsubscribe } from '@ancadeba/utilities'
 import type { SceneData } from './gameData.js'
-import type { InventoryDefinition, GameTranslation } from '@ancadeba/schemas'
+import type {
+  CharacterProfileDefinition,
+  InventoryDefinition,
+  GameTranslation,
+} from '@ancadeba/schemas'
 
 export interface GameLanguagePreferences {
   read(gameId: string): string | undefined
@@ -8,6 +12,7 @@ export interface GameLanguagePreferences {
 }
 
 export interface LocalizedGameContent {
+  readonly characterProfile?: CharacterProfileDefinition | undefined
   readonly ruleTranslation?: GameTranslation | undefined
   readonly language: string
   readonly title: string

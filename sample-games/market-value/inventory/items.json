@@ -1,0 +1,47 @@
+{
+  "schema-version": "1.0.0",
+  "itemTypes": {
+    "driftwood": {
+      "label": "Driftwood",
+      "description": "A pale branch smoothed by the sea.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    },
+    "rope": {
+      "label": "Piece of rope",
+      "description": "A short length of salt-stiff rope, frayed at one end.",
+      "properties": [],
+      "container": false,
+      "equipmentSlots": []
+    }
+  },
+  "owners": {
+    "player": {
+      "label": "Player",
+      "equipmentSlots": {}
+    },
+    "shoreline": {
+      "label": "Shoreline",
+      "equipmentSlots": {}
+    }
+  },
+  "items": {
+    "driftwood": {
+      "itemType": "driftwood",
+      "placement": {
+        "type": "carried",
+        "owner": "shoreline"
+      },
+      "colors": {}
+    },
+    "rope": {
+      "itemType": "rope",
+      "placement": {
+        "type": "carried",
+        "owner": "shoreline"
+      },
+      "colors": {}
+    }
+  }
+}

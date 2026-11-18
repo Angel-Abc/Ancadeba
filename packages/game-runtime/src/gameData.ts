@@ -45,6 +45,7 @@ import type {
 import type { TextTemplate } from './textBindings.js'
 import {
   assertGameLanguages,
+  characterProfileIssues,
   assertGraphicReference,
   validateInventorySources,
   inventoryPanelIssues,
@@ -92,7 +93,15 @@ export interface LanguageSelectComponentData {
 export type SceneComponentData =
   | Extract<
       SceneComponentDefinition,
-      { type: 'save-slots' | 'save-status' | 'save-point' | 'action-info' }
+      {
+        type:
+          | 'save-slots'
+          | 'save-status'
+          | 'save-point'
+          | 'action-info'
+          | 'character-creator'
+          | 'character-sheet'
+      }
     >
   | Extract<
       SceneDefinition['components'][number],
@@ -152,6 +161,7 @@ export interface GameData {
   readonly assets?: AssetCatalog
   readonly inventory?: InventoryDefinition | undefined
   readonly rules?: GameRulesDefinition
+  readonly characterProfile?: GameDefinition['characterProfile']
   readonly ruleTranslation?: GameTranslation | undefined
   readonly localization?: IGameLocalization
   readonly language?: string
@@ -226,7 +236,10 @@ export function assembleGameData(
   )
 
   const validated = sources.length ? validation : undefined
-  const issue = validation.issues[0]
+
+  const issue =
+    validation.issues[0] ??
+    characterProfileIssues(definition, sceneDefinitions, validation.rules, assets)[0]
 
   if (issue) throw new Error(`${issue.file} (${issue.path.join('.')}): ${issue.message}`)
 
@@ -711,6 +724,7 @@ export function assembleGameData(
       : {}),
     ...(combat.size ? { combat } : {}),
     ...(assets ? { assets } : {}),
+    ...(definition.characterProfile ? { characterProfile: definition.characterProfile } : {}),
     ...(inventory ? { inventory } : {}),
     ...(validated ? { rules: validated.rules } : {}),
     ...(ruleTranslation ? { ruleTranslation } : {}),

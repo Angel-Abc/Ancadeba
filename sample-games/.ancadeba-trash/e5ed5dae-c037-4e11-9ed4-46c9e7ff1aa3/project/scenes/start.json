@@ -1,0 +1,76 @@
+{
+  "schema-version": "1.0.0",
+  "id": "start",
+  "title": "Start",
+  "description": "",
+  "type": "stand-alone",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "title",
+      "type": "text",
+      "placement": {
+        "row": 2,
+        "column": 2,
+        "rowSpan": 3,
+        "columnSpan": 14
+      },
+      "text": "Market Value",
+      "presentation": {
+        "variant": "heading",
+        "align": "center"
+      }
+    },
+    {
+      "id": "description",
+      "type": "text",
+      "placement": {
+        "row": 5,
+        "column": 2,
+        "rowSpan": 3,
+        "columnSpan": 14
+      },
+      "text": "Everything has a price",
+      "presentation": {
+        "variant": "body",
+        "align": "start"
+      }
+    },
+    {
+      "id": "play",
+      "type": "button",
+      "placement": {
+        "row": 9,
+        "column": 5,
+        "rowSpan": 2,
+        "columnSpan": 8
+      },
+      "label": "New game",
+      "action": {
+        "type": "new-game",
+        "scene": "adventure"
+      }
+    },
+    {
+      "id": "load",
+      "type": "button",
+      "placement": {
+        "row": 12,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Load game",
+      "action": {
+        "type": "enter-scene",
+        "scene": "load"
+      }
+    }
+  ]
+}

@@ -42,6 +42,7 @@ export function editStatusPanel(
         ...oldRows.find((old) => old.id === row.id),
         ...row,
         labelKey: row.labelKey,
+        visibleWhen: row.visibleWhen,
         maximum: row.type === 'bar' ? row.maximum : undefined,
         color: row.type === 'bar' ? row.color : undefined,
       })),

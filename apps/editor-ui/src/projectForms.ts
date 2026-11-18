@@ -8,6 +8,7 @@ import { registerEditorDraft } from './editorDraftState.js'
 import { bindMetadataTranslations } from './metadataTranslations.js'
 import { saveStatus } from './formSaveStatus.js'
 import { sceneTitle } from './projectTree.js'
+import { bindCharacterProfileForm } from './characterProfileForm.js'
 
 export function bindProjectForms(
   root: HTMLElement,
@@ -23,6 +24,12 @@ export function bindProjectForms(
   const status = find<HTMLElement>('editor-status')
   const error = find<HTMLElement>('editor-error')
   const dirtyForms = new Set<string>()
+  const profileRoot = root.querySelector<HTMLElement>('#editor-character-profile')
+
+  const profile =
+    profileRoot &&
+    bindCharacterProfileForm(profileRoot, root.ownerDocument, t, () => dirtyForms.add(metadata.id))
+
   let view: ProjectView | undefined
   let busy = false
   const value = (id: string) => find<HTMLInputElement>(id).value
@@ -93,6 +100,7 @@ export function bindProjectForms(
       fields: z.record(z.string(), z.string()),
       dirty: z.array(z.string()),
       scene: z.string(),
+      profile: z.string().optional(),
     }),
     () =>
       dirtyForms.size
@@ -100,6 +108,7 @@ export function bindProjectForms(
             fields: Object.fromEntries(formFields.map((id) => [id, value(id)])),
             dirty: [...dirtyForms],
             scene: scenes.value,
+            profile: profile?.snapshot(),
           }
         : undefined,
     (saved) => {
@@ -108,6 +117,8 @@ export function bindProjectForms(
       for (const id of saved.dirty)
         if ([metadata.id, sceneMetadata.id, layout.id, create.id].includes(id)) dirtyForms.add(id)
       scenes.value = saved.scene
+
+      if (saved.profile) profile?.restore(saved.profile)
 
       for (const id of formFields) if (Object.hasOwn(saved.fields, id)) set(id, saved.fields[id]!)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
@@ -146,8 +157,23 @@ export function bindProjectForms(
       return
     }
 
+    const characterProfile = profile?.read()
+
+    if (characterProfile && !characterProfile.success) {
+      error.textContent = characterProfile.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('\n')
+      error.hidden = false
+
+      return
+    }
+
     save({
       type: 'game.updateMetadata',
+      ...(characterProfile &&
+        (characterProfile.data || view?.game?.characterProfile) && {
+          characterProfile: characterProfile.data,
+        }),
       title: value('editor-title'),
       description: value('editor-description'),
       version: value('editor-version'),
@@ -262,6 +288,7 @@ export function bindProjectForms(
 
       if (!dirtyForms.has(create.id)) create.reset()
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
+      profile?.render(view, !dirtyForms.has(metadata.id))
 
       if (!dirtyForms.has(metadata.id)) {
         set('editor-title', view.game.title)

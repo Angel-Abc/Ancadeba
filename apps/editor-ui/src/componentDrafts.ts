@@ -18,6 +18,8 @@ export const creatableComponentTypes = [
   'map-view',
   'language-select',
   'quest-log',
+  'character-creator',
+  'character-sheet',
 ] as const
 
 export type CreatableComponentType = (typeof creatableComponentTypes)[number]
@@ -30,6 +32,7 @@ export type BasicComponent =
   | MapViewComponentDefinition
   | LanguageSelectComponentDefinition
   | QuestLogComponentDefinition
+  | Extract<SceneComponentDefinition, { type: 'character-creator' | 'character-sheet' }>
 
 /** Supplies unique IDs and grid-sized defaults without mutating the saved project. */
 export function createComponentDraft(
@@ -79,6 +82,18 @@ export function createComponentDraft(
   if (type === 'save-point') return { id, type, label: 'Save game', placement }
 
   if (type === 'language-select') return { id, type, label: 'Language', placement }
+
+  if (type === 'character-creator')
+    return {
+      id,
+      type,
+      label: 'Create character',
+      placement,
+      continueScene:
+        view.scenes.find((entry) => entry.id !== sceneId && entry.type === 'game')?.id ?? '',
+    }
+
+  if (type === 'character-sheet') return { id, type, label: 'Character', placement, rows: [] }
 
   if (type === 'quest-log')
     return { id, type, label: 'Quests', placement, statuses: ['active', 'ready', 'completed'] }

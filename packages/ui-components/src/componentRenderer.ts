@@ -3,6 +3,7 @@ import { SaveSlotsComponentRenderer } from './saveSlotsComponentRenderer.js'
 import { SaveStatusComponentRenderer } from './saveStatusComponentRenderer.js'
 import { SavePointComponentRenderer } from './savePointComponentRenderer.js'
 import { CharacterProgressionComponentRenderer } from './characterProgressionComponentRenderer.js'
+import { CharacterCreatorRenderer, CharacterSheetRenderer } from './characterProfileRenderer.js'
 import type { SceneComponentData } from '@ancadeba/game-runtime'
 import { ButtonComponentRenderer } from './buttonComponentRenderer.js'
 import { TextComponentRenderer } from './textComponentRenderer.js'
@@ -49,6 +50,8 @@ export class ComponentRenderer implements IComponentRenderer {
       combat: new CombatComponentRenderer(),
       'quest-log': new QuestLogComponentRenderer(),
       'character-progression': new CharacterProgressionComponentRenderer(),
+      'character-creator': new CharacterCreatorRenderer(),
+      'character-sheet': new CharacterSheetRenderer(),
       ...renderers,
     }
   }
@@ -65,6 +68,10 @@ export class ComponentRenderer implements IComponentRenderer {
         return this.renderers['quest-log'].render(component, context)
       case 'character-progression':
         return this.renderers['character-progression'].render(component, context)
+      case 'character-creator':
+        return this.renderers['character-creator'].render(component, context)
+      case 'character-sheet':
+        return this.renderers['character-sheet'].render(component, context)
       case 'combat':
         return this.renderers.combat.render(component, context)
       case 'shop':

@@ -36,7 +36,7 @@
         "rowSpan": 3,
         "columnSpan": 14
       },
-      "text": "Everything has a price",
+      "text": "Because everything has a price",
       "presentation": {
         "variant": "body",
         "align": "start"
@@ -53,8 +53,8 @@
       },
       "label": "New game",
       "action": {
-        "type": "new-game",
-        "scene": "adventure"
+        "type": "enter-scene",
+        "scene": "create-character"
       }
     },
     {

@@ -15,6 +15,7 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
   render(
     component: StatusPanelComponentDefinition,
     context: ComponentRenderContext,
+    hideWithoutRows = false,
   ): RenderedComponent {
     const { document, bindings } = context
     const root = document.createElement('section')
@@ -55,6 +56,9 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
         root.append(name)
       }
 
+      const rowGroup = document.createElement('div')
+      root.append(rowGroup)
+
       const rows = component.rows.map((row) => {
         const element = document.createElement('div')
         element.className = `ancadeba-status-row ancadeba-status-row--${row.type}`
@@ -84,9 +88,7 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
           element.append(meter, unavailable)
         }
 
-        root.append(element)
-
-        return { row, value, meter, fill, unavailable }
+        return { row, element, value, meter, fill, unavailable }
       })
 
       const effects = component.effects.map((effect) => {
@@ -103,8 +105,30 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
         if (!active) return
         const issues: string[] = []
 
-        for (const { row, value, meter, fill, unavailable } of rows) {
+        let visibleRows = 0
+
+        for (const { row, element, value, meter, fill, unavailable } of rows) {
+          if (row.visibleWhen) {
+            const visibility = bindings?.read(row.visibleWhen)
+
+            if (visibility?.status !== 'resolved' || visibility.value !== true) {
+              element.remove()
+              continue
+            }
+          }
+
           const current = resolveStatusValue(row.value, bindings, row.type === 'bar')
+
+          const maximum =
+            row.type === 'bar' ? resolveStatusValue(row.maximum, bindings, true) : undefined
+
+          if (row.visibleWhen && (current.issue || maximum?.issue)) {
+            element.remove()
+            continue
+          }
+
+          rowGroup.append(element)
+          visibleRows++
 
           if (current.issue) issues.push(`${row.id}: ${current.issue}`)
 
@@ -113,7 +137,7 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
             continue
           }
 
-          const maximum = resolveStatusValue(row.maximum, bindings, true)
+          if (!maximum) continue
 
           if (maximum.issue) issues.push(`${row.id} maximum: ${maximum.issue}`)
           const percentage = statusBarFill(current.value, maximum.value)
@@ -139,6 +163,8 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
             fill.style.setProperty('--ge-status-fill', `${percentage}%`)
           }
         }
+
+        if (hideWithoutRows) root.hidden = visibleRows === 0
 
         for (const { effect, rendered } of effects) {
           const result = effect.visibleWhen && bindings?.read(effect.visibleWhen)

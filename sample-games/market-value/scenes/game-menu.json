@@ -27,10 +27,17 @@
       }
     },
     {
+      "id": "character",
+      "type": "button",
+      "placement": { "row": 4, "column": 5, "rowSpan": 1, "columnSpan": 8 },
+      "label": "Character",
+      "action": { "type": "open-menu", "scene": "character" }
+    },
+    {
       "id": "main-menu",
       "type": "button",
       "placement": {
-        "row": 4,
+        "row": 6,
         "column": 5,
         "rowSpan": 1,
         "columnSpan": 8
@@ -45,7 +52,7 @@
       "id": "save",
       "type": "button",
       "placement": {
-        "row": 6,
+        "row": 8,
         "column": 5,
         "rowSpan": 1,
         "columnSpan": 8
@@ -60,7 +67,7 @@
       "id": "load",
       "type": "button",
       "placement": {
-        "row": 8,
+        "row": 10,
         "column": 5,
         "rowSpan": 1,
         "columnSpan": 8
@@ -75,7 +82,7 @@
       "id": "settings",
       "type": "button",
       "placement": {
-        "row": 10,
+        "row": 12,
         "column": 5,
         "rowSpan": 1,
         "columnSpan": 8

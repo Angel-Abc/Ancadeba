@@ -507,6 +507,7 @@ export const statusRowSchema = z
       type: z.literal('value'),
       ...statusLabel,
       value: statusValueSchema,
+      visibleWhen: gameBindingSchema.optional(),
     }),
     z.object({
       id: gameIdSchema,
@@ -515,6 +516,7 @@ export const statusRowSchema = z
       value: statusNumberSchema,
       maximum: statusNumberSchema,
       color: colorSchema.optional(),
+      visibleWhen: gameBindingSchema.optional(),
     }),
   ])
   .refine((row) => Boolean(row.label || row.labelKey), {
@@ -573,6 +575,30 @@ export const statusPanelComponentSchema = z
 
 export type StatusPanelComponentDefinition = z.infer<typeof statusPanelComponentSchema>
 
+export const characterCreatorComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('character-creator'),
+  placement: gridPlacementSchema,
+  label: z.string().trim().min(1).default('Create character'),
+  labelKey: translationKeySchema.optional(),
+  continueScene: gameIdSchema,
+  backScene: gameIdSchema.optional(),
+})
+
+export const characterSheetComponentSchema = z
+  .object({
+    id: gameIdSchema,
+    type: z.literal('character-sheet'),
+    placement: gridPlacementSchema,
+    label: z.string().trim().min(1).default('Character'),
+    labelKey: translationKeySchema.optional(),
+    rows: z.array(statusRowSchema).default([]),
+  })
+  .superRefine(({ rows }, context) => {
+    if (new Set(rows.map(({ id }) => id)).size !== rows.length)
+      context.addIssue({ code: 'custom', path: ['rows'], message: 'Stat rows require unique IDs' })
+  })
+
 export type StatusRowDefinition = z.infer<typeof statusRowSchema>
 
 export type StatusEffectDefinition = z.infer<typeof statusEffectSchema>
@@ -609,6 +635,8 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   actionInfoComponentSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
+  characterCreatorComponentSchema,
+  characterSheetComponentSchema,
   itemDetailsComponentSchema,
   equipmentComponentSchema,
   shopComponentSchema,

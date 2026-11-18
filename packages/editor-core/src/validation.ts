@@ -43,6 +43,7 @@ import {
   inventoryPanelIssues,
   validateRuleSources,
   statusPanelIssues,
+  characterProfileIssues,
   localizeInventory,
   equipmentIssues,
   shopIssues,
@@ -376,6 +377,9 @@ export function validateProject(
 
   const validatedRules = validateRuleSources(sources, scenes, maps, inventory, defaultMessages)
   const mergedRules = validatedRules.rules
+
+  for (const issue of characterProfileIssues(game.data, scenes, mergedRules, assets?.data))
+    diagnostics.push({ ...issue, code: 'invalid_character_profile' })
 
   for (const issue of storyIssues({
     dialogues,

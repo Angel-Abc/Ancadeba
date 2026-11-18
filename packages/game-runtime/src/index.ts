@@ -215,3 +215,5 @@ export * from './runtimeText.js'
 export * from './savePoints.js'
 
 export * from './combatCollaborators.js'
+
+export type { ConfirmCharacter } from './characterCreation.js'

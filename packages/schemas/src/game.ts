@@ -1,8 +1,10 @@
 import { z } from 'zod'
 import { gameLanguagesSchema, translationKeySchema } from './languages.js'
+import { gameIdSchema } from './gameId.js'
+import { characterProfileSchema } from './characterProfile.js'
 
-// IDs are also single filename segments when resolving resource references.
-export const gameIdSchema = z.string().regex(/^[a-zA-Z0-9_-]+$/)
+export { gameIdSchema } from './gameId.js'
+
 export const stylesheetPathSchema = z.string().regex(/^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.css$/)
 
 const uniqueFileIds = (ids: string[]) =>
@@ -40,6 +42,7 @@ export const gameSchema = z
     'initial-scene': gameIdSchema.optional(),
     stylesheet: stylesheetPathSchema.optional(),
     assets: gameIdSchema.optional(),
+    characterProfile: characterProfileSchema.optional(),
     inventory: z
       .array(gameIdSchema)
       .refine(uniqueFileIds, { message: 'Inventory references must be unique' })

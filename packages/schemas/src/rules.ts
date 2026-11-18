@@ -59,8 +59,17 @@ const branchSchema = z
       })
   })
 
+const ruleStateSchema = z.union([
+  z.strictObject({ path: pathSchema, value: ruleValueSchema }),
+  z.strictObject({
+    path: pathSchema,
+    type: z.literal('number'),
+    value: z.number().finite().optional(),
+  }),
+])
+
 export const gameRulesSchema = z.strictObject({
-  state: z.array(z.strictObject({ path: pathSchema, value: ruleValueSchema })),
+  state: z.array(ruleStateSchema),
   actions: z.record(id, z.array(branchSchema).min(1)),
   clock: z
     .strictObject({ path: pathSchema, startMinute: z.number().int().min(0).max(1439) })
@@ -82,6 +91,8 @@ export type RuleEffect = z.infer<typeof ruleEffectSchema>
 
 export type RuleValue = z.infer<typeof ruleValueSchema>
 
+export type RuleStateField = z.infer<typeof ruleStateSchema>
+
 export type RuleText = z.infer<typeof ruleTextSchema>
 
 export type RuleBranch = z.infer<typeof branchSchema>
@@ -90,4 +101,8 @@ export function ruleValueType(value: RuleValue): 'string' | 'number' | 'boolean'
   if (typeof value === 'number') return 'number'
 
   return typeof value === 'boolean' ? 'boolean' : 'string'
+}
+
+export function ruleStateType(field: RuleStateField): 'string' | 'number' | 'boolean' {
+  return 'type' in field ? field.type : ruleValueType(field.value)
 }

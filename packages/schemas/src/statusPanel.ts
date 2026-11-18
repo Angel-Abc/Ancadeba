@@ -3,11 +3,14 @@ import type { GameBindingDefinition } from './bindings.js'
 import type { StatusPanelComponentDefinition } from './scene.js'
 
 export function statusPanelBindings(
-  panel: StatusPanelComponentDefinition,
+  panel: Pick<StatusPanelComponentDefinition, 'rows'> &
+    Partial<Pick<StatusPanelComponentDefinition, 'effects'>>,
 ): { binding: GameBindingDefinition; expected: 'number' | 'value' | 'boolean' }[] {
   const result: ReturnType<typeof statusPanelBindings> = []
 
   for (const row of panel.rows) {
+    if (row.visibleWhen) result.push({ binding: row.visibleWhen, expected: 'boolean' })
+
     if (typeof row.value === 'object')
       result.push({ binding: row.value, expected: row.type === 'bar' ? 'number' : 'value' })
 
@@ -15,7 +18,7 @@ export function statusPanelBindings(
       result.push({ binding: row.maximum, expected: 'number' })
   }
 
-  for (const effect of panel.effects)
+  for (const effect of panel.effects ?? [])
     if (effect.visibleWhen) result.push({ binding: effect.visibleWhen, expected: 'boolean' })
 
   return result

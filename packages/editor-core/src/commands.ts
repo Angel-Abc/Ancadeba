@@ -29,6 +29,9 @@ import {
   inventoryItemActionSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
+  characterCreatorComponentSchema,
+  characterSheetComponentSchema,
+  characterProfileSchema,
   itemPresentationSchema,
   itemDetailsComponentSchema,
   equipmentComponentSchema,
@@ -67,6 +70,8 @@ export const basicComponentSchema = z.discriminatedUnion('type', [
   languageSelectComponentSchema,
   actionInfoComponentSchema,
   mapViewComponentSchema,
+  characterCreatorComponentSchema,
+  characterSheetComponentSchema,
 ])
 
 const metadata = {
@@ -85,6 +90,7 @@ export const commandSchema = z.discriminatedUnion('type', [
     version: z.string().trim().min(1),
     saving: savingPolicySchema.optional(),
     menuScene: gameIdSchema.nullable().optional(),
+    characterProfile: characterProfileSchema.nullable().optional(),
   }),
   z.strictObject({
     type: z.literal('scene.create'),

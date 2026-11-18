@@ -8,7 +8,7 @@ import {
 } from './map.js'
 import type { InventoryDefinition } from './inventory.js'
 import type { SceneDefinition } from './scene.js'
-import { ruleValueType, type GameRulesDefinition, type RuleValue } from './rules.js'
+import { ruleStateType, ruleValueType, type GameRulesDefinition, type RuleValue } from './rules.js'
 import { sceneTransitionIssues } from './sceneTransition.js'
 
 export interface RuleSource {
@@ -154,7 +154,7 @@ export function validateRuleSources(
     })
 
   const fields = new Map(
-    merged.rules.state.map(({ path, value }) => [path.join('.'), ruleValueType(value)]),
+    merged.rules.state.map((field) => [field.path.join('.'), ruleStateType(field)]),
   )
 
   const initial = (path: readonly string[]) =>
@@ -203,7 +203,9 @@ export function validateRuleSources(
         report([...source, 'textKey'], `Missing default translation: ${value.textKey}`)
     }
 
-    rules.state.forEach(({ value }, index) => checkText(value, ['state', index, 'value']))
+    rules.state.forEach(({ value }, index) => {
+      if (value !== undefined) checkText(value, ['state', index, 'value'])
+    })
     rules.log?.initial.forEach((value, index) => checkText(value, ['log', 'initial', index]))
 
     const checkField = (path: string[], value: RuleValue, source: (string | number)[]) => {
