@@ -293,6 +293,22 @@ export function bindProjectPanel(
         busy,
         fields.disabled,
       )
+    const operations = root.querySelector<HTMLDetailsElement>('#inspector-actions')
+
+    if (operations) {
+      operations.hidden = node.kind !== 'component' && node.kind !== 'scene'
+
+      if (operations.dataset.selection !== node.key) {
+        operations.open = node.kind === 'scene'
+        operations.dataset.selection = node.key
+      }
+
+      const summary = operations.querySelector('summary')
+
+      if (summary)
+        summary.textContent = t(node.kind === 'component' ? 'component.actions' : 'scene.actions')
+    }
+
     const details = registry.primaryId === 'read-only'
     find('component-details').hidden = !details
     const dataGroup = node.kind === 'data-group'
@@ -332,7 +348,11 @@ export function bindProjectPanel(
       node.kind === 'section'
         ? t('project.heading')
         : [sectionLabel, parentLabel].filter(Boolean).join(' › ')
-    find('workspace-heading').textContent = node.kind === 'section' ? sectionLabel : node.label
+    find('workspace-heading').textContent = component
+      ? t(`tree.${component.type}`) + ' · ' + component.id
+      : node.kind === 'section'
+        ? sectionLabel
+        : node.label
 
     if (explorerToggle) {
       explorerToggle.hidden = !view

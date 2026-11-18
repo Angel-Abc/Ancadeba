@@ -53,6 +53,7 @@ export function bindLevelingEditor(
   let draft: LevelingProfile | undefined
   let component: ReturnType<typeof characterProgressionComponentSchema.parse> | undefined
   let dirty = false
+  let definitionOnly = false
   let busy = false
   let submitted: EditorCommand | undefined
 
@@ -201,14 +202,14 @@ export function bindLevelingEditor(
 
     addProfile.className = 'context-picker'
 
-    fields.append(picker, profiles, addProfile)
+    fields.append(...(!definitionOnly ? [picker] : []), profiles, addProfile)
 
     const displays =
       scene?.components.filter(
         (entry) => entry.type === 'character-progression' && entry.profile === profileId,
       ) ?? []
 
-    if (displays.length > 1) {
+    if (!definitionOnly && displays.length > 1) {
       const display = select(
         t('tree.character-progression'),
         componentId,
@@ -459,37 +460,38 @@ export function bindLevelingEditor(
       )
     }
 
-    form.append(
-      group(
-        t('leveling.displayInScene'),
-        input(t('leveling.displayId'), currentView.id, (value) => {
-          currentView.id = value.trim()
-        }),
-        select(
-          t('leveling.messagesIn'),
-          currentView.textTarget ?? '',
-          [
-            ['', t('leveling.onlyDisplay')],
-            ...scene.components
-              .filter((component) => component.type === 'text')
-              .map((component) => component.id),
-          ],
-          (value) => {
-            currentView.textTarget = value || undefined
-          },
-        ),
-        ...placementFields(t).map(([key, label]) =>
-          input(
-            label,
-            String(currentView.placement[key]),
+    if (!definitionOnly)
+      form.append(
+        group(
+          t('leveling.displayInScene'),
+          input(t('leveling.displayId'), currentView.id, (value) => {
+            currentView.id = value.trim()
+          }),
+          select(
+            t('leveling.messagesIn'),
+            currentView.textTarget ?? '',
+            [
+              ['', t('leveling.onlyDisplay')],
+              ...scene.components
+                .filter((component) => component.type === 'text')
+                .map((component) => component.id),
+            ],
             (value) => {
-              currentView.placement[key] = Number(value)
+              currentView.textTarget = value || undefined
             },
-            'number',
+          ),
+          ...placementFields(t).map(([key, label]) =>
+            input(
+              label,
+              String(currentView.placement[key]),
+              (value) => {
+                currentView.placement[key] = Number(value)
+              },
+              'number',
+            ),
           ),
         ),
-      ),
-    )
+      )
     const messages = document.createElement('details')
     const heading = document.createElement('summary')
     heading.textContent = t('leveling.texts')
@@ -519,14 +521,20 @@ export function bindLevelingEditor(
       submit({
         type: 'game.upsertLeveling',
         profile: current,
-        scene: { id: sceneId, component: { ...currentView, profile: current.id } },
+        ...(definitionOnly
+          ? {}
+          : { scene: { id: sceneId, component: { ...currentView, profile: current.id } } }),
       })
     })
     fields.append(
       form,
-      button(t('leveling.removeDisplay'), () =>
-        submit({ type: 'scene.removeLevelingView', sceneId, componentId: currentView.id }),
-      ),
+      ...(!definitionOnly
+        ? [
+            button(t('leveling.removeDisplay'), () =>
+              submit({ type: 'scene.removeLevelingView', sceneId, componentId: currentView.id }),
+            ),
+          ]
+        : []),
       button(t('leveling.deleteProfile'), () =>
         submit({ type: 'game.removeLeveling', profileId: current.id }),
       ),
@@ -537,14 +545,17 @@ export function bindLevelingEditor(
     root,
     'leveling',
     z.object({
+      definitionOnly: z.boolean().optional(),
       sceneId: z.string(),
       profileId: z.string(),
       componentId: z.string(),
       draft: levelingProfileSchema.optional(),
       component: characterProgressionComponentSchema.optional(),
     }),
-    () => (dirty ? { sceneId, profileId, componentId, draft, component } : undefined),
+    () =>
+      dirty ? { definitionOnly, sceneId, profileId, componentId, draft, component } : undefined,
     (saved) => {
+      definitionOnly = saved.definitionOnly ?? false
       sceneId = saved.sceneId
       profileId = saved.profileId
       componentId = saved.componentId
@@ -562,6 +573,11 @@ export function bindLevelingEditor(
         (nextComponent === undefined || nextComponent === componentId)) ||
       !dirty,
     navigate,
+    setDefinitionOnly(value: boolean) {
+      if (definitionOnly === value) return
+      definitionOnly = value
+      render()
+    },
     hasDrafts: () => dirty,
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()

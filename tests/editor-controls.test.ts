@@ -38,6 +38,8 @@ import {
 import { combatMovesForm } from '../apps/editor-ui/src/combatMovesForm.js'
 import { ruleTriggerForms } from '../apps/editor-ui/src/ruleTriggerForms.js'
 import { nearbyForm } from '../apps/editor-ui/src/nearbyForm.js'
+import { buildProjectTree, flattenProjectTree } from '../apps/editor-ui/src/projectTree.js'
+import { componentUnavailable, inspectorTypes } from '../apps/editor-ui/src/componentRegistry.js'
 import { bindComponentEditor } from '../apps/editor-ui/src/componentEditor.js'
 import { bindSceneControls } from '../apps/editor-ui/src/sceneControls.js'
 import { bindComponentClipboard } from '../apps/editor-ui/src/componentClipboard.js'
@@ -1496,7 +1498,7 @@ describe('nearby component editing', () => {
     const { editor, view, field, edit, submit, commands } = nearbyComponentPanel()
     expect(field('Nearby title').value).toBe('second')
     edit('Nearby title', 'Updated second panel')
-    submit('Save nearby targets')
+    submit('Save component')
     expect(commands).toEqual([
       expect.objectContaining({
         type: 'scene.upsertNearby',
@@ -1533,7 +1535,7 @@ describe('nearby component editing', () => {
     edit('Nearby title', 'Unsaved second panel')
     expect(editor.hasDrafts()).toBe(true)
     expect(editor.navigate('shop', 'description')).toBe(false)
-    click('Discard nearby draft')
+    click('Discard component draft')
     expect(field('Nearby title').value).toBe('second')
     expect(editor.hasDrafts()).toBe(false)
     expect(root.textContent).not.toContain('Save or discard the component draft first.')
@@ -1569,7 +1571,7 @@ describe('nearby component editing', () => {
     assertSuggestions()
     click('Remove nearby target')
     assertSuggestions()
-    click('Discard nearby draft')
+    click('Discard component draft')
     assertSuggestions()
   })
 })
@@ -5871,6 +5873,7 @@ describe('editor draft workflows', () => {
       },
     })
     await ui.controller.load('demo')
+    ui.edit('Text binding', 'quest')
     expect(ui.field('Bound value', 'Binding quest').value).toBe(
       textBindingId({ source: 'game.quests', path: ['delivery', 'status'] }),
     )
@@ -6433,11 +6436,11 @@ describe('editor draft workflows', () => {
     expect(first.field('Display component ID').value).toBe('second-display')
     first.edit('Row', '4')
     expect(first.editor.navigate('shop', 'player', 'progression-player')).toBe(false)
-    first.edit('Level display', 'progression-player')
-    expect(first.field('Level display').value).toBe('second-display')
+    first.edit('Character progression', 'progression-player')
+    expect(first.field('Character progression').value).toBe('second-display')
     first.submit('Save character levels')
     await first.flush()
-    expect(first.field('Level display').value).toBe('second-display')
+    expect(first.field('Character progression').value).toBe('second-display')
     expect(first.field('Display component ID').value).toBe('second-display')
 
     const displays = first
@@ -6448,9 +6451,9 @@ describe('editor draft workflows', () => {
       ['progression-player', 1],
       ['second-display', 4],
     ])
-    first.edit('Level display', 'progression-player')
+    first.edit('Character progression', 'progression-player')
     expect(first.field('Row').value).toBe('1')
-    first.edit('Level display', 'second-display')
+    first.edit('Character progression', 'second-display')
     first.click('Remove level display from scene')
     await first.flush()
     expect(
@@ -6983,4 +6986,212 @@ describe('dialogue and quest editor controls', () => {
       component: { type: 'quest-log', textTarget: 'description', placement: { row: 3 } },
     })
   })
+})
+
+describe('scene inspector registry', () => {
+  async function sample(name: string): Promise<ProjectSnapshot> {
+    const root = new URL('../sample-games/' + name + '/', import.meta.url)
+
+    const files = (await readdir(root, { recursive: true }))
+      .map((file) => file.replaceAll('\\', '/'))
+      .filter((file) => file.endsWith('.json') || file.endsWith('.css'))
+
+    const documents = Object.fromEntries(
+      await Promise.all(
+        files.map(async (file) => {
+          const value = await readFile(new URL(file, root), 'utf8')
+
+          return [file, file.endsWith('.json') ? JSON.parse(value) : value]
+        }),
+      ),
+    )
+
+    const manifest = documents['game.json']
+
+    if (name === 'graphics') {
+      manifest.rules.push('appearance')
+      documents['rules/appearance.json'] = {
+        state: [{ path: ['outfit'], value: 'plain' }],
+        actions: {},
+      }
+      manifest.characterProfile = {
+        fields: [
+          {
+            id: 'outfit',
+            label: 'Outfit',
+            path: ['outfit'],
+            options: [{ id: 'plain', label: 'Plain' }],
+            default: 'plain',
+          },
+        ],
+        portrait: { visual: 'body' },
+      }
+    }
+
+    manifest.scenes.push('empty-room')
+    documents['scenes/empty-room.json'] = {
+      'schema-version': '1.0.0',
+      id: 'empty-room',
+      title: 'Empty room',
+      type: 'game',
+      screen: { type: 'grid', grid: { rows: 12, columns: 12 } },
+      components: [],
+    }
+
+    return { revision: 'inspector', documents }
+  }
+
+  it('opens the exact curator translation and protects an unfinished key', async () => {
+    const ui = panel()
+    const open = vi.fn()
+    const editor = bindComponentEditor(ui.root.asElement(), () => {}, { onOpen: open })
+    editor.render({ ...ui.initial, view: inspectProject(await sample('basic')) }, true)
+    editor.navigate('standard', 'nearby')
+
+    const link = () =>
+      ui.root
+        .all()
+        .find(
+          (node) =>
+            node.tagName === 'button' &&
+            node.attributes.get('aria-label') === 'Edit translation for Target description',
+        )!
+
+    expect(
+      ui.field('Nearby target').children.some((option) => option.textContent === 'The curator'),
+    ).toBe(true)
+    link().dispatchEvent(new Event('click'))
+    expect(open).toHaveBeenCalledWith('localization', 'nearby.curator.description')
+    ui.edit('Target description translation', 'needs.repair')
+    expect(ui.field('Target description translation').validationMessage).toBeTruthy()
+    expect(editor.canNavigate('standard', 'narrative')).toBe(false)
+    ui.click('Discard component draft')
+    expect(ui.field('Target description translation').value).toBe('nearby.curator.description')
+  })
+
+  it.each(['combat', 'leveling'] as const)(
+    'keeps the linked %s specialist save scoped to the definition',
+    async (kind) => {
+      const ui = panel()
+      const source = await sample('basic')
+      const bind = kind === 'combat' ? bindCombatEditor : bindLevelingEditor
+      const editor = bind(ui.root.asElement(), (command) => ui.commands.push(command))
+      editor.render({ ...ui.initial, view: inspectProject(source) }, true)
+      editor.navigate('advanced-training', kind === 'combat' ? 'advanced-training' : 'player')
+      editor.setDefinitionOnly(true)
+      ui.submit(kind === 'combat' ? 'Save combat encounter' : 'Save character levels')
+      expect(ui.commands).toHaveLength(1)
+      expect(ui.commands[0]).not.toHaveProperty('scene')
+      const command = ui.commands[0]!
+
+      if (command.type === 'game.upsertCombat')
+        expect(command.encounter.id).toBe('advanced-training')
+      else expect(command).toMatchObject({ type: 'game.upsertLeveling', profile: { id: 'player' } })
+      expect(
+        applyCommand(source, command).changedFiles.some((file) => file.startsWith('scenes/')),
+      ).toBe(false)
+    },
+  )
+
+  it.each(inspectorTypes)(
+    'creates, restores, discards and saves %s through its scene selection',
+    async (type) => {
+      const source = await sample(
+        ['graphic', 'background-image', 'character-creator', 'character-sheet'].includes(type)
+          ? 'graphics'
+          : 'basic',
+      )
+
+      const view = inspectProject(source)
+      expect(view.diagnostics).toEqual([])
+      const scene = view.scenes.find((entry) => !componentUnavailable(type, entry, view))!
+      expect(scene).toBeDefined()
+      const ui = panel()
+      const created = vi.fn()
+      const cancel = vi.fn()
+
+      const editor = bindComponentEditor(
+        ui.root.asElement(),
+        (command) => ui.commands.push(command),
+        { onCreated: created, onCancel: cancel },
+      )
+
+      const state = { ...ui.initial, view }
+      editor.render(state, true)
+
+      const nodes = (current: typeof view) =>
+        flattenProjectTree(buildProjectTree(current, editorLocalization().t))
+
+      const picker = nodes(view).find(
+        (node) => node.kind === 'new-component' && node.parentId === scene.id,
+      )!
+
+      editor.navigate(projectSelection(picker, view).sceneId, undefined, true)
+      const groups = ui.field('Component type').children
+      expect(groups).toHaveLength(5)
+      expect(groups.flatMap((group) => group.children.map((option) => option.value))).toEqual(
+        inspectorTypes,
+      )
+
+      for (const option of groups.flatMap((group) => group.children)) {
+        const choice = inspectorTypes.find((key) => key === option.value)!
+        expect(option.disabled).toBe(Boolean(componentUnavailable(choice, scene, view)))
+
+        if (option.disabled) expect(option.textContent).toContain(' — ')
+      }
+
+      ui.edit('Component type', type)
+      ui.click('Cancel')
+      expect(cancel).toHaveBeenCalledWith(scene.id)
+      expect(ui.commands).toHaveLength(0)
+      editor.navigate(scene.id)
+      editor.navigate(scene.id, undefined, true)
+      ui.edit('Component type', type)
+      ui.edit('Component ID', 'inspector-test')
+      ui.submit('Create component')
+      expect(ui.commands, ui.root.children[0]?.textContent).toHaveLength(1)
+      const command = ui.commands[0]!
+      const creation = applyCommand(source, command)
+      expect(creation.changedFiles).toEqual(['scenes/' + scene.id + '.json'])
+      const updated = inspectProject(creation.project)
+      editor.render(
+        { ...state, view: updated, lastCommand: command.type, preserveDrafts: true },
+        true,
+      )
+      expect(created).toHaveBeenCalledWith(scene.id, 'inspector-test')
+
+      const node = nodes(updated).find(
+        (entry) => entry.parentId === scene.id && entry.id === 'inspector-test',
+      )!
+
+      const selected = projectSelection(node, updated)
+      expect(selected.component?.type).toBe(type)
+      expect(editor.navigate(selected.sceneId, selected.component?.id)).toBe(true)
+      const oldSpan = ui.field('Column span').value
+      const newSpan = oldSpan === '1' ? '2' : '1'
+      ui.edit('Column span', newSpan)
+      expect(editor.hasDrafts()).toBe(true)
+      const recovery = captureEditorDrafts(ui.root.asElement())
+      ui.click('Discard component draft')
+      expect(ui.field('Column span').value).toBe(oldSpan)
+      restoreEditorDrafts(ui.root.asElement(), recovery)
+      expect(ui.field('Column span').value).toBe(newSpan)
+      ui.submit('Save component')
+      expect(ui.commands, ui.root.children[0]?.textContent).toHaveLength(2)
+      const change = applyCommand(creation.project, ui.commands[1]!)
+      expect(change.changedFiles).toEqual(['scenes/' + scene.id + '.json'])
+
+      const components = inspectProject(change.project).scenes.find(
+        (entry) => entry.id === scene.id,
+      )!.components
+
+      const previous = updated.scenes.find((entry) => entry.id === scene.id)!.components
+      expect(components.filter((entry) => entry.id !== node.id)).toEqual(
+        previous.filter((entry) => entry.id !== node.id),
+      )
+      expect(components.find((entry) => entry.id === node.id)?.placement.columnSpan).toBe(
+        Number(newSpan),
+      )
+    },
+  )
 })

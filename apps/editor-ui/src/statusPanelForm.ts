@@ -32,6 +32,7 @@ export function statusPanelForm(
     | Extract<SceneComponentDefinition, { type: 'character-sheet' }>,
   rerender: () => void,
   existing: boolean,
+  selection?: { row: string; effect: string },
 ): HTMLElement[] {
   const { input, select, button, group, translation, t } = controls
   const keys = translationChoices(view, t('metadata.literalText'))
@@ -194,13 +195,34 @@ export function statusPanelForm(
         )
       : undefined
 
-  const rows = draft.rows.map((row, index) => {
+  if (selection && !draft.rows.some((entry) => entry.id === selection.row))
+    selection.row = draft.rows[0]?.id ?? ''
+
+  const rowsPicker =
+    selection && draft.rows.length
+      ? select(
+          t('status.rows'),
+          selection.row,
+          draft.rows.map((entry) => [entry.id, displayLabel(view, entry.id, entry)] as const),
+          (id) => {
+            selection.row = id
+            rerender()
+          },
+          false,
+        )
+      : undefined
+
+  const rows = draft.rows.flatMap((row, index) => {
+    if (selection && selection.row !== row.id) return []
+
     const title = t('status.row', { number: index + 1 })
 
     return group(
       title,
       input(t('status.idOf', { title }), row.id, (value) => {
         row.id = value.trim()
+
+        if (selection) selection.row = row.id
       }),
       input(t('status.labelOf', { title }), row.label, (value) => {
         row.label = value
@@ -249,6 +271,7 @@ export function statusPanelForm(
 
   const rowGroup = group(
     t('status.rows'),
+    ...(rowsPicker ? [rowsPicker] : []),
     ...rows,
     button(t('status.addValue'), () =>
       edit(() => {
@@ -258,6 +281,8 @@ export function statusPanelForm(
           label: 'Value',
           value: '',
         })
+
+        if (selection) selection.row = draft.rows.at(-1)!.id
       }),
     ),
     button(t('status.addBar'), () =>
@@ -269,19 +294,42 @@ export function statusPanelForm(
           value: 0,
           maximum: 100,
         })
+
+        if (selection) selection.row = draft.rows.at(-1)!.id
       }),
     ),
   )
 
   if (draft.type === 'character-sheet') return [rowGroup]
 
-  const effects = draft.effects.map((effect, index) => {
+  if (selection && !draft.effects.some((entry) => entry.id === selection.effect))
+    selection.effect = draft.effects[0]?.id ?? ''
+
+  const effectsPicker =
+    selection && draft.effects.length
+      ? select(
+          t('status.effects'),
+          selection.effect,
+          draft.effects.map((entry) => [entry.id, displayLabel(view, entry.id, entry)] as const),
+          (id) => {
+            selection.effect = id
+            rerender()
+          },
+          false,
+        )
+      : undefined
+
+  const effects = draft.effects.flatMap((effect, index) => {
+    if (selection && selection.effect !== effect.id) return []
+
     const title = t('form.effectNumber', { number: index + 1 })
 
     return group(
       title,
       input(`${title} ID`, effect.id, (value) => {
         effect.id = value.trim()
+
+        if (selection) selection.effect = effect.id
       }),
       input(t('status.labelOf', { title }), effect.label, (value) => {
         effect.label = value
@@ -339,6 +387,7 @@ export function statusPanelForm(
     rowGroup,
     group(
       t('status.effects'),
+      ...(effectsPicker ? [effectsPicker] : []),
       ...effects,
       button(t('status.addEffect'), () =>
         edit(() => {
@@ -347,21 +396,27 @@ export function statusPanelForm(
             label: 'Effect',
             description: '',
           })
+
+          if (selection) selection.effect = draft.effects.at(-1)!.id
         }),
       ),
     ),
-    group(
-      t('status.placement'),
-      ...placementFields(t).map(([key, label]) =>
-        input(
-          t('status.placementField', { field: label.toLowerCase() }),
-          String(draft.placement[key]),
-          (value) => {
-            draft.placement[key] = Number(value)
-          },
-          'number',
-        ),
-      ),
-    ),
+    ...(!selection
+      ? [
+          group(
+            t('status.placement'),
+            ...placementFields(t).map(([key, label]) =>
+              input(
+                t('status.placementField', { field: label.toLowerCase() }),
+                String(draft.placement[key]),
+                (value) => {
+                  draft.placement[key] = Number(value)
+                },
+                'number',
+              ),
+            ),
+          ),
+        ]
+      : []),
   ]
 }

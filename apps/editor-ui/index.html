@@ -412,6 +412,8 @@
                 <h2 id="editor-heading" data-i18n="project.heading">Game project</h2>
                 <h3 id="workspace-heading" tabindex="-1"></h3>
               </div>
+              <button type="button" id="inspector-return" hidden></button>
+              <span id="inspector-navigation-status" role="status"></span>
               <div id="scene-header-actions" class="preview-actions" hidden></div>
             </header>
             <div class="editor-pane-body">
@@ -583,8 +585,11 @@
                 <pre id="component-json"></pre>
               </section>
               <!-- Structural actions follow the selected editor so its fields come first. -->
-              <section id="scene-controls" hidden></section>
-              <section id="component-clipboard" hidden></section>
+              <details id="inspector-actions" hidden>
+                <summary></summary>
+                <section id="scene-controls" hidden></section>
+                <section id="component-clipboard" hidden></section>
+              </details>
             </div>
           </section>
           <div

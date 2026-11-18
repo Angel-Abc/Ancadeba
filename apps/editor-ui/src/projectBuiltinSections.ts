@@ -1,3 +1,4 @@
+import { componentGroups } from './componentRegistry.js'
 import type { Translate } from '@ancadeba/utilities'
 import type { bindProjectForms } from './projectForms.js'
 import type { bindAssetsPanel } from './assetsPanel.js'
@@ -10,7 +11,7 @@ import type { bindCombatEditor } from './combatEditor.js'
 import type { bindLevelingEditor } from './levelingEditor.js'
 import type { bindLocalizationEditor } from './localizationEditor.js'
 import type { bindStylesheetEditor } from './stylesheetEditor.js'
-import { editableComponentTypes, type bindComponentEditor } from './componentEditor.js'
+import type { bindComponentEditor } from './componentEditor.js'
 import type { bindStoryEditor } from './storyEditor.js'
 import type { bindMapEditor } from './mapEditor.js'
 import type { bindProjectRepair } from './projectRepair.js'
@@ -47,29 +48,13 @@ interface BuiltinEditors {
   componentClipboard: ReturnType<typeof bindComponentClipboard> | undefined
 }
 
-const componentOwners = {
-  graphic: 'assets',
-  'action-bar': 'controls',
-  'status-panel': 'status',
-  'character-progression': 'leveling',
-  combat: 'combat',
-  shop: 'shops',
-  'item-details': 'items',
-  equipment: 'items',
-  inventory: 'items',
-}
-
 function target({ node, component }: ProjectSelection): string {
   if (node.section === 'scenes') {
     if (node.kind === 'new-graphic') return 'assets'
 
     if (node.kind === 'new-component') return 'component'
 
-    if (component)
-      return (
-        Object.entries(componentOwners).find(([type]) => type === component.type)?.[1] ??
-        (editableComponentTypes.includes(component.type) ? 'component' : 'read-only')
-      )
+    if (component) return Object.hasOwn(componentGroups, component.type) ? 'component' : 'read-only'
 
     if (['section', 'scene', 'new-scene'].includes(node.kind)) return 'forms'
 

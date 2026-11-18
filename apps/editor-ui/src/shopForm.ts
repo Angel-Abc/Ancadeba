@@ -18,10 +18,13 @@ export function shopForm(
   view: ProjectView,
   sceneId: string,
   shop: ShopComponentDefinition,
-  panels: InventoryComponentDefinition[],
+  panels: InventoryComponentDefinition[] | undefined,
   render: () => void,
+  inspector = false,
+  selection?: { price: string; message: string },
+  onPanelIdChange?: () => void,
 ): HTMLElement[] {
-  const { input, select, group, button, create, translation, t } = controls
+  const { input, select, group, button, translation, t } = controls
   const keys = translationChoices(view)
 
   const existing = view.scenes
@@ -62,7 +65,7 @@ export function shopForm(
     )
 
   const result: HTMLElement[] = [
-    identity,
+    ...(!inspector ? [identity] : []),
     input(t('shops.title'), shop.label, (value) => {
       shop.label = value
     }),
@@ -119,8 +122,39 @@ export function shopForm(
   )
 
   for (const [index, side] of [t('form.player'), t('shops.merchant')].entries()) {
-    const panel = panels[index]!
     const link = index === 0 ? 'playerInventory' : 'merchantInventory'
+
+    if (!panels) {
+      const other = index === 0 ? shop.merchantInventory : shop.playerInventory
+
+      const otherPanel = scene?.components.find(
+        (entry) => entry.id === other && entry.type === 'inventory',
+      )
+
+      result.push(
+        select(
+          t('shops.inventoryPanel', { side }),
+          shop[link],
+          scene?.components
+            .filter(
+              (entry) =>
+                entry.type === 'inventory' &&
+                entry.readOnly &&
+                entry.owners.length === 1 &&
+                entry.id !== other &&
+                (otherPanel?.type !== 'inventory' || entry.owners[0] !== otherPanel.owners[0]),
+            )
+            .map((entry) => entry.id) ?? [],
+          (id) => {
+            shop[link] = id
+            render()
+          },
+        ),
+      )
+      continue
+    }
+
+    const panel = panels[index]!
     result.push(
       group(
         t('shops.inventoryReadOnly', { side }),
@@ -143,6 +177,7 @@ export function shopForm(
         input(t('shops.panelId', { side }), panel.id, (value) => {
           panel.id = value.trim()
           shop[link] = panel.id
+          onPanelIdChange?.()
         }),
         input(t('shops.panelLabel', { side }), panel.label, (value) => {
           panel.label = value
@@ -162,7 +197,26 @@ export function shopForm(
     )
   }
 
+  const pricesIds = Object.keys(shop.prices)
+
+  if (selection && !pricesIds.includes(selection.price)) selection.price = pricesIds[0] ?? ''
+
+  if (selection && pricesIds.length)
+    result.push(
+      select(
+        t('inspector.shopPrices'),
+        selection.price,
+        pricesIds,
+        (id) => {
+          selection.price = id
+          render()
+        },
+        false,
+      ),
+    )
+
   for (const [id, prices] of Object.entries(shop.prices)) {
+    if (selection && id !== selection.price) continue
     const box = group(t('shops.prices', { id }))
 
     for (const operation of ['buy', 'sell'] as const) {
@@ -242,6 +296,8 @@ export function shopForm(
         () => {
           if (itemType) {
             shop.prices[itemType] = { buy: 1 }
+
+            if (selection) selection.price = itemType
             controls.markEdited()
             render()
           }
@@ -250,12 +306,29 @@ export function shopForm(
       ),
     ),
   )
-  const messages = create('details')
-  const summary = create('summary')
-  summary.textContent = t('shops.feedback')
-  messages.append(summary)
+  const messages = controls.fold('shop-messages', t('shops.feedback'), false)
 
-  for (const code of shopMessageSchema.options)
+  if (selection) {
+    selection.message ||= shopMessageSchema.options[0]!
+    messages.append(
+      select(
+        t('inspector.message'),
+        selection.message,
+        shopMessageSchema.options.map((code) => [code, humanizeCode(code)] as const),
+        (id) => {
+          selection.message = id
+          render()
+        },
+        false,
+      ),
+    )
+    messages.open = controls.folds.get('shop-messages') ?? false
+    messages.addEventListener('toggle', () => controls.folds.set('shop-messages', messages.open))
+  }
+
+  for (const code of shopMessageSchema.options.filter(
+    (code) => !selection || selection.message === code,
+  ))
     messages.append(
       group(
         humanizeCode(code),
@@ -273,7 +346,9 @@ export function shopForm(
         ),
       ),
     )
-  result.push(messages, group(t('shops.placement'), ...placement(shop)))
+  result.push(messages)
+
+  if (!inspector) result.push(group(t('shops.placement'), ...placement(shop)))
 
   return result
 }

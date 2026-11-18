@@ -29,6 +29,52 @@ export type SceneGraphicPreviewFactory = (
   startingValues: boolean,
 ) => RenderedGraphic | undefined
 
+export function sceneGraphicPreview(
+  draft: GraphicComponentDefinition,
+  view: ProjectView,
+  startingValues: boolean,
+  t: Translate,
+) {
+  if (!view.assets) throw new Error(t('graphic.artFirst'))
+  const parsed = graphicComponentSchema.parse(draft)
+  assertGraphicReference(view.assets, parsed.visual, parsed.appearance)
+
+  const component = startingValues
+    ? parsed
+    : {
+        ...parsed,
+        appearance: {
+          ...parsed.appearance,
+          bindings: undefined,
+          slots: Object.fromEntries(
+            Object.entries(parsed.appearance.slots).map(([id, slot]) => [
+              id,
+              { ...slot, bindings: undefined, partBinding: undefined },
+            ]),
+          ),
+        },
+      }
+
+  const resolution = resolveGraphic(
+    view.assets,
+    component.visual,
+    component.appearance,
+    startingValues ? startingGameBindings(view) : undefined,
+  )
+
+  const mode = startingValues ? t('graphic.startingValues') : t('graphic.staticValues')
+
+  const summary = resolution.visible
+    ? t('graphic.statusPieces', { mode, count: resolution.pieces.length })
+    : t('graphic.statusHidden', { mode })
+
+  const diagnostics = resolution.diagnostics
+    .map((entry) => `${entry.target}: ${entry.message}`)
+    .join('; ')
+
+  return { component, status: diagnostics ? `${summary} ${diagnostics}` : summary }
+}
+
 /** Owns per-instance appearance drafts independently of shared asset definitions. */
 export function bindSceneGraphicEditor(
   root: HTMLElement,
@@ -76,43 +122,8 @@ export function bindSceneGraphicEditor(
     }
 
     try {
-      const parsed = graphicComponentSchema.parse(draft)
-      assertGraphicReference(view.assets, parsed.visual, parsed.appearance)
-
-      const component = startingValues
-        ? parsed
-        : {
-            ...parsed,
-            appearance: {
-              ...parsed.appearance,
-              bindings: undefined,
-              slots: Object.fromEntries(
-                Object.entries(parsed.appearance.slots).map(([id, slot]) => [
-                  id,
-                  { ...slot, bindings: undefined, partBinding: undefined },
-                ]),
-              ),
-            },
-          }
-
-      const resolution = resolveGraphic(
-        view.assets,
-        component.visual,
-        component.appearance,
-        startingValues ? startingGameBindings(view) : undefined,
-      )
-
-      const mode = startingValues ? t('graphic.startingValues') : t('graphic.staticValues')
-
-      const summary = resolution.visible
-        ? t('graphic.statusPieces', { mode, count: resolution.pieces.length })
-        : t('graphic.statusHidden', { mode })
-
-      const diagnostics = resolution.diagnostics
-        .map((entry) => `${entry.target}: ${entry.message}`)
-        .join('; ')
-
-      previewStatus.textContent = diagnostics ? `${summary} ${diagnostics}` : summary
+      const { component, status } = sceneGraphicPreview(draft, view, startingValues, t)
+      previewStatus.textContent = status
       preview = createPreview?.(component, view, startingValues)
 
       if (preview) previewRoot.append(preview.element)

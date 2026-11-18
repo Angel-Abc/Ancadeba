@@ -30,6 +30,7 @@ export function textBindingsForm(
   gameScene: boolean,
   rerender: () => void,
   append: (placeholder: string) => void,
+  selection?: { binding: string },
 ) {
   const { group, create, input, select, button, t } = controls
   const root = group(t('bindings.dynamic'))
@@ -77,7 +78,27 @@ export function textBindingsForm(
   root.append(heading, preview, diagnostics)
 
   if (draft.bindings !== undefined && gameScene) {
+    const aliases = Object.keys(draft.bindings)
+
+    if (selection && aliases.length) {
+      if (!aliases.includes(selection.binding)) selection.binding = aliases[0]!
+      root.append(
+        select(
+          t('inspector.binding'),
+          selection.binding,
+          aliases,
+          (id) => {
+            selection.binding = id
+            rerender()
+          },
+          false,
+        ),
+      )
+    }
+
     for (const [alias, binding] of Object.entries(draft.bindings)) {
+      if (selection && selection.binding !== alias) continue
+
       const selected = choices.some((choice) => choice.id === textBindingId(binding))
         ? textBindingId(binding)
         : 'custom'
@@ -247,6 +268,8 @@ export function textBindingsForm(
         if (!choice) return
         change(() => {
           draft.bindings = { ...draft.bindings, [pending.alias]: structuredClone(choice.binding) }
+
+          if (selection) selection.binding = pending.alias
           pending.alias = ''
           pending.value = ''
         })

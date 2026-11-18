@@ -236,13 +236,6 @@ export const projectTreeSections: readonly ProjectTreeSection[] = [
             parentId: scene.id,
             label: t('component.add'),
           },
-          {
-            key: `graphic-new:${scene.id}`,
-            section: 'scenes',
-            kind: 'new-graphic',
-            parentId: scene.id,
-            label: t('tree.addGraphic'),
-          },
         ],
       })),
       { key: 'scene-new', section: 'scenes', kind: 'new-scene', label: t('scene.add') },

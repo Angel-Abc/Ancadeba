@@ -408,6 +408,20 @@ export function bindLocalizationEditor(
 
   return {
     hasDrafts: () => dirty,
+    openKey(key: string) {
+      if (dirty || !translationKeySchema.safeParse(key).success) return false
+
+      if (keys().includes(key)) selected = key
+      else {
+        newKey = key
+        selected = ''
+        dirty = true
+      }
+
+      render()
+
+      return true
+    },
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()
       const projectChanged = path !== state.path

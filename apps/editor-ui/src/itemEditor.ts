@@ -1,3 +1,4 @@
+import { itemViewFields } from './itemViewFields.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -18,12 +19,10 @@ import {
 } from '@ancadeba/schemas'
 import type { ProjectEditorState } from './projectController.js'
 import {
-  yesNoChoices,
   onOffChoices,
   placementFields,
   ruleFormControls,
   saveBar,
-  translationChoices,
   languageWatcher,
 } from './ruleFormControls.js'
 import { itemUseForm } from './itemUseForm.js'
@@ -342,180 +341,19 @@ export function bindItemEditor(
     const source = scene?.components.find((entry) => entry.id === target.slice(5))
 
     if (component && scene) {
-      const draft = component
-
-      const identity = controls.input(t('items.viewId'), draft.id, (value) => {
-        if (creating) draft.id = value.trim()
-      })
-
-      identity.querySelector('input')!.readOnly = !creating
       form.append(
-        ...(draft.type !== 'inventory'
-          ? [
-              controls.select(
-                t('items.showStats'),
-                String(draft.showCombatStats ?? false),
-                yesNoChoices(t),
-                (value) => {
-                  draft.showCombatStats = value === 'true'
-                },
-              ),
-            ]
-          : []),
-        identity,
-        controls.input(t('items.viewLabel'), draft.label, (value) => {
-          draft.label = value
-        }),
-        controls.translation(
-          t('items.viewLabelTranslation'),
-          draft.labelKey ?? '',
-          translationChoices(view),
-          (value) => {
-            draft.labelKey = value || undefined
-          },
-        ),
-        ...(draft.type !== 'inventory'
-          ? [
-              controls.select(
-                t('items.sourceInventory'),
-                draft.inventory,
-                scene.components
-                  .filter((entry) => entry.type === 'inventory')
-                  .map((entry) => entry.id),
-                (value) => {
-                  draft.inventory = value
-                  render()
-                },
-              ),
-            ]
-          : []),
+        ...itemViewFields(controls, view, scene, component, creating, render, hiddenPreviews),
         ...placementFields(t).map(([key, label]) =>
           controls.input(
             label,
-            String(draft.placement[key]),
+            String(component!.placement[key]),
             (value) => {
-              draft.placement[key] = Number(value)
+              component!.placement[key] = Number(value)
             },
             'number',
           ),
         ),
       )
-
-      if (draft.type === 'item-details')
-        form.append(
-          controls.select(
-            t('items.comparisonEquipment'),
-            draft.equipment ?? '',
-            [
-              '',
-              ...scene.components
-                .filter(
-                  (entry) => entry.type === 'equipment' && entry.inventory === draft.inventory,
-                )
-                .map((entry) => entry.id),
-            ],
-            (value) => {
-              draft.equipment = value || undefined
-            },
-          ),
-          controls.input(t('items.emptyText'), draft.emptyText, (value) => {
-            draft.emptyText = value
-          }),
-          controls.translation(
-            t('items.emptyTextTranslation'),
-            draft.emptyTextKey ?? '',
-            translationChoices(view),
-            (value) => {
-              draft.emptyTextKey = value || undefined
-            },
-          ),
-        )
-      else if (draft.type === 'inventory') {
-        form.append(
-          ...Object.entries(view.inventory?.owners ?? {}).map(([id, owner]) =>
-            controls.select(
-              t('items.showOwner', { owner: owner.label }),
-              String(draft.owners.includes(id)),
-              yesNoChoices(t),
-              (value) => {
-                draft.owners =
-                  value === 'true'
-                    ? [...new Set([...draft.owners, id])]
-                    : draft.owners.filter((owner) => owner !== id)
-
-                if (value === 'false') {
-                  if (draft.previews[id]) hiddenPreviews[id] = draft.previews[id]
-                  delete draft.previews[id]
-                } else if (hiddenPreviews[id]) {
-                  draft.previews[id] = hiddenPreviews[id]
-                  delete hiddenPreviews[id]
-                }
-              },
-            ),
-          ),
-          controls.select(
-            t('items.readOnlyInventory'),
-            String(draft.readOnly ?? false),
-            yesNoChoices(t),
-            (value) => {
-              draft.readOnly = value === 'true'
-            },
-          ),
-          controls.select(
-            t('items.detailsTarget'),
-            draft.descriptionTarget ?? '',
-            [
-              '',
-              ...scene.components.filter((value) => value.type === 'text').map((value) => value.id),
-            ],
-            (value) => {
-              draft.descriptionTarget = value || undefined
-            },
-          ),
-        )
-      } else {
-        const inventory = scene.components.find(
-          (entry) => entry.id === draft.inventory && entry.type === 'inventory',
-        )
-
-        form.append(
-          controls.select(
-            t('items.equipmentOwner'),
-            draft.owner,
-            inventory?.type === 'inventory' ? inventory.owners : [],
-            (value) => {
-              draft.owner = value
-              draft.order = []
-              render()
-            },
-          ),
-          controls.input(
-            t('items.gridColumns'),
-            String(draft.columns),
-            (value) => {
-              draft.columns = Number(value)
-            },
-            'number',
-          ),
-          controls.select(
-            t('items.equipmentChanges'),
-            String(draft.readOnly),
-            [
-              ['false', t('items.allowChanges')],
-              ['true', t('items.readOnly')],
-            ],
-            (value) => {
-              draft.readOnly = value === 'true'
-            },
-          ),
-          controls.input(t('items.slotOrder'), draft.order.join(', '), (value) => {
-            draft.order = value
-              .split(',')
-              .map((value) => value.trim())
-              .filter(Boolean)
-          }),
-        )
-      }
     }
 
     if (!item && !slots && !component) return

@@ -45,6 +45,8 @@ export function graphicAppearanceForm(
   gameScene: boolean,
   change: (operation: () => void) => void,
   edited: () => void,
+  entry?: { graphicSlot: string; graphicColor: string },
+  redraw?: () => void,
 ): HTMLElement {
   const { group, select, button, input, create, t } = controls
   const root = group(t('graphic.appearance'))
@@ -161,7 +163,25 @@ export function graphicAppearanceForm(
         ),
       )
 
+    if (entry && colors.length) {
+      if (!colors.includes(entry.graphicColor)) entry.graphicColor = colors[0]!
+      box.append(
+        select(
+          t('inspector.color'),
+          entry.graphicColor,
+          colors,
+          (id) => {
+            entry.graphicColor = id
+            redraw?.()
+          },
+          false,
+        ),
+      )
+    }
+
     for (const color of colors) {
+      if (entry && entry.graphicColor !== color) continue
+
       const colorBox = group(
         t('form.color', { id: color }),
         select(
@@ -242,7 +262,26 @@ export function graphicAppearanceForm(
   if (asset) root.append(colorsAndPalettes(appearance, [asset], t('graphic.colors')))
   const composition = catalog.compositions[visual]
 
+  const slots = Object.keys(composition?.slots ?? {})
+
+  if (entry && slots.length) {
+    if (!slots.includes(entry.graphicSlot)) entry.graphicSlot = slots[0]!
+    root.append(
+      select(
+        t('inspector.artSlot'),
+        entry.graphicSlot,
+        slots,
+        (id) => {
+          entry.graphicSlot = id
+          redraw?.()
+        },
+        false,
+      ),
+    )
+  }
+
   for (const [slot, definition] of Object.entries(composition?.slots ?? {})) {
+    if (entry && entry.graphicSlot !== slot) continue
     const selection = appearance.slots[slot] ?? { colors: {}, visible: true }
 
     const store = () => {

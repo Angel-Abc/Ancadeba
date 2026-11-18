@@ -700,9 +700,20 @@ code {
 
 /* The breadcrumb always sits above the title, so the header keeps one shape on every page. */
 .editor-pane > .pane-header {
+  flex: 0 0 auto;
   column-gap: 1.25rem;
 }
 
+#inspector-navigation-status {
+  flex-basis: 100%;
+}
+#inspector-navigation-status:empty {
+  display: none;
+}
+#inspector-return {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .pane-titles {
   min-width: 0;
 }
@@ -2195,4 +2206,96 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   box-sizing: border-box;
   width: 100%;
   min-height: 14rem;
+}
+
+/* Component forms respond to the pane, including a narrow desktop split. */
+#component-editor {
+  container-type: inline-size;
+}
+#component-editor .scene-inspector,
+#component-editor .component-form {
+  display: block;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+#component-editor .error:empty {
+  display: none;
+}
+#component-editor .component-form > .fold {
+  margin: 0;
+  padding: 0.6rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--ed-border);
+  border-radius: 0;
+  background: transparent;
+}
+#component-editor summary,
+#inspector-actions > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.35rem 0;
+}
+#component-editor .inspector-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  align-items: start;
+  margin-block: 0.5rem;
+}
+#component-editor .inspector-fields > :is(fieldset, details, div, p, .help),
+#component-editor label:has(textarea) {
+  grid-column: 1 / -1;
+}
+#component-editor .inspector-fields :is(label, input, textarea, select, fieldset, details) {
+  min-width: 0;
+  max-width: 100%;
+}
+#component-editor .inspector-localized {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}
+#component-editor .inspector-localized > :is(p, div, details) {
+  grid-column: 1 / -1;
+}
+#component-editor .inspector-localized > button {
+  margin: 0;
+  font-size: 0.8rem;
+}
+#component-editor .inspector-translated-value {
+  white-space: pre-wrap;
+  margin: 0.3rem 0;
+  font-size: 1rem;
+}
+#component-editor .inspector-localized > .fold {
+  border: 0;
+  padding: 0;
+  margin: 0.25rem 0;
+  background: transparent;
+}
+#component-editor .translation-preview {
+  white-space: normal;
+}
+#component-editor .scene-graphic-preview {
+  min-height: 6rem;
+  max-height: 16rem;
+}
+#inspector-actions {
+  margin-block: 1rem;
+}
+@container (max-width: 32rem) {
+  #component-editor .inspector-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 960px) {
+  #component-editor .component-form > .save-bar {
+    top: 4rem;
+  }
 }

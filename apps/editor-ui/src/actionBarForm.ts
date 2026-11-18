@@ -35,20 +35,32 @@ export function actionBarForm(
   selectSlot: (id: string) => void,
   change: (edit: () => void) => void,
   sceneId?: string,
+  inspector = false,
 ): HTMLElement[] {
   const { create, input, select, button, group, translation, t } = controls
   const render = () => selectSlot(selectedSlot)
   const grid = create('div')
   grid.className = 'action-bar-slot-grid'
 
+  const slots: [string, string][] = []
+
   for (let index = 1; index <= 15; index++) {
     const id = String(index)
     const slot = draft.slots[id]
     const keys = shortcut(view, slot?.inputBinding)
-    const label = slot?.label || slot?.labelKey || t('controls.empty')
+
+    const label =
+      (slot?.labelKey && view.translations?.[slot.labelKey]) ||
+      slot?.label ||
+      slot?.labelKey ||
+      t('controls.empty')
+
+    const title = `${t('form.slot', { id })} · ${label}${keys ? ` · ${keys}` : ''}`
+    slots.push([id, title])
+
+    if (inspector) continue
     const control = button('', () => selectSlot(id))
     control.className = 'action-bar-slot'
-    const title = `${t('form.slot', { id })} · ${label}${keys ? ` · ${keys}` : ''}`
     control.title = title
     control.setAttribute('aria-label', title)
     const heading = create('span')
@@ -516,6 +528,9 @@ export function actionBarForm(
       detail.append(keys)
     }
   }
+
+  if (inspector)
+    return [select(t('inspector.slot'), selectedSlot, slots, selectSlot, false), detail]
 
   const placement = group(
     t('controls.barPlacement'),

@@ -24,7 +24,7 @@ import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
 import { EditorWorkspaceResources } from './workspaceResources.js'
 import { bindGraphicDefinitionsEditor } from './graphicDefinitionsEditor.js'
-import { bindSceneGraphicEditor } from './sceneGraphicEditor.js'
+import { bindSceneGraphicEditor, type SceneGraphicPreviewFactory } from './sceneGraphicEditor.js'
 import { startingGameBindings } from './textBindingChoices.js'
 
 export interface AssetPanelActions {
@@ -236,21 +236,23 @@ export function bindAssetsPanel(
     t,
   )
 
+  const createScenePreview: SceneGraphicPreviewFactory = (component, view, startingValues) =>
+    resources
+      ? renderer.render(component, {
+          document,
+          assets: view.assets,
+          graphics: resources,
+          bindingMode: 'editor',
+          ...(startingValues ? { bindings: startingGameBindings(view) } : {}),
+        })
+      : undefined
+
   const sceneGraphicEditor = bindSceneGraphicEditor(
     find('scene-graphic-editor'),
     (command) => {
       void actions.save(command)
     },
-    (component, view, startingValues) =>
-      resources
-        ? renderer.render(component, {
-            document,
-            assets: view.assets,
-            graphics: resources,
-            bindingMode: 'editor',
-            ...(startingValues ? { bindings: startingGameBindings(view) } : {}),
-          })
-        : undefined,
+    createScenePreview,
     t,
   )
 
@@ -589,6 +591,7 @@ export function bindAssetsPanel(
     registerFormDraft(find(id), id, () => dirty.has(id))
 
   return {
+    createScenePreview,
     hasDrafts: () =>
       dirty.size > 0 || definitionsEditor.hasDrafts() || sceneGraphicEditor.hasDrafts(),
     navigate(kind: string, id?: string, sceneId?: string, preserveDefinitionSelection = false) {

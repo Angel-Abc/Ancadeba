@@ -174,18 +174,10 @@ describe('extensible project explorer', () => {
     list.children[0]!.children[0]!.dispatchEvent(new Event('click'))
     show(scenes.children![0]!)
     expect(list.children).toHaveLength(0)
-    expect(actions.children.map((button) => button.textContent)).toEqual([
-      'Add component',
-      'Add graphic',
-    ])
+    expect(actions.children.map((button) => button.textContent)).toEqual(['Add component'])
 
     for (const button of actions.children) button.dispatchEvent(new Event('click'))
-    expect(selected).toEqual([
-      'scene-new',
-      'scene:standard',
-      'component-new:standard',
-      'graphic-new:standard',
-    ])
+    expect(selected).toEqual(['scene-new', 'scene:standard', 'component-new:standard'])
   })
   it('separates scene components from shared assets and marks startup and scene context', () => {
     const nodes = buildProjectTree(view, t)

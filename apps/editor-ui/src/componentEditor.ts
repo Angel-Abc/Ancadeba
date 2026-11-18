@@ -1,46 +1,37 @@
-import { saveStatus } from './formSaveStatus.js'
-import { registerEditorDraft } from './editorDraftState.js'
-import { sceneEntranceFields } from './sceneEntranceFields.js'
-import { mapInteractFields } from './mapInteractFields.js'
-import { actionDescriptionFields } from './actionDescriptionFields.js'
 import { z } from 'zod'
+import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import {
-  basicComponentSchema,
-  commandSchema,
-  type EditorCommand,
-  type ProjectView,
-} from '@ancadeba/editor-core'
-import { resolveMapView, type ButtonComponentDefinition } from '@ancadeba/schemas'
+  sceneComponentSchema,
+  inventoryComponentSchema,
+  resolveMapView,
+  assertGraphicReference,
+  type SceneComponentDefinition,
+  type InventoryComponentDefinition,
+} from '@ancadeba/schemas'
+import type { RenderedGraphic } from '@ancadeba/ui-components'
 import type { Translate } from '@ancadeba/utilities'
+import { registerEditorDraft } from './editorDraftState.js'
 import { editorLocalization } from './localization.js'
-import {
-  createComponentDraft,
-  creatableComponentTypes,
-  type BasicComponent,
-  type CreatableComponentType,
-} from './componentDrafts.js'
+import { saveStatus } from './formSaveStatus.js'
+import { placementFields, ruleFormControls, saveBar, scopedFolds } from './ruleFormControls.js'
 import type { ProjectEditorState } from './projectController.js'
-import { nearbyForm } from './nearbyForm.js'
-import { textBindingsForm, type TextBindingPending } from './textBindingsForm.js'
 import {
-  placementFields,
-  ruleFormControls,
-  saveBar,
-  translationChoices,
-  type RuleFormControls,
-} from './ruleFormControls.js'
-import { statusPanelForm } from './statusPanelForm.js'
-import { sceneChoices } from './choiceLabels.js'
+  componentGroups,
+  componentSaveCommand,
+  componentUnavailable,
+  inspectorTypes,
+  newInspectorComponent,
+  shopCreationPanels,
+  type ComponentType,
+} from './componentRegistry.js'
+import {
+  inspectorFields,
+  inspectorSelectionSchema,
+  type OpenSpecialist,
+} from './inspectorFields.js'
+import { inspectorTranslations } from './inspectorTranslations.js'
+import type { SceneGraphicPreviewFactory } from './sceneGraphicEditor.js'
 
-type ButtonAction = NonNullable<ButtonComponentDefinition['action']>
-
-/** Component types this editor authors; other types keep their own editors or stay read-only. */
-export const editableComponentTypes: readonly string[] = [...creatableComponentTypes, 'nearby']
-
-const isBasic = (component: { type: string }): component is BasicComponent =>
-  creatableComponentTypes.some((type) => type === component.type)
-
-/** Edits one scene component selected in the project explorer. */
 export function bindComponentEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
@@ -48,10 +39,14 @@ export function bindComponentEditor(
     t = editorLocalization().t,
     onCreated,
     onCancel,
+    onOpen,
+    createPreview,
   }: {
     t?: Translate
     onCreated?: (sceneId: string, componentId: string) => void
     onCancel?: (sceneId: string) => void
+    onOpen?: OpenSpecialist
+    createPreview?: SceneGraphicPreviewFactory
   } = {},
 ) {
   const document = root.ownerDocument
@@ -59,212 +54,303 @@ export function bindComponentEditor(
   error.className = 'error'
   error.setAttribute('role', 'alert')
   const fields = document.createElement('fieldset')
+  fields.className = 'scene-inspector'
   root.replaceChildren(error, fields)
   let view: ProjectView | undefined
   let path: string | undefined
-  let sceneId = ''
-  let componentId = ''
-  let draft: BasicComponent | undefined
-  let dirty = false
-  let busy = false
-  let creating = false
-  let newType: CreatableComponentType = 'text'
-  let submitted: { type: EditorCommand['type']; sceneId: string; componentId: string } | undefined
-  let addLabel = t('component.add')
-  let nearbyEditor: HTMLElement | undefined
-  const bindingPending: TextBindingPending = { alias: '', value: '' }
 
-  const controls = ruleFormControls(
+  let sceneId = '',
+    componentId = ''
+
+  let newType: ComponentType = 'text'
+
+  let creating = false,
+    dirty = false,
+    busy = false
+
+  let draft: SceneComponentDefinition | undefined
+  let panels: InventoryComponentDefinition[] = []
+  let selection = inspectorSelectionSchema.parse({})
+  let hiddenPreviews: InventoryComponentDefinition['previews'] = {}
+  let preview: RenderedGraphic | undefined
+  const bindingPending = { alias: '', value: '' }
+  let submitted: { type: EditorCommand['type']; id: string } | undefined
+  let language = t('component.add')
+
+  let discard: HTMLButtonElement | undefined
+
+  const base = ruleFormControls(
     document,
     () => {
       dirty = true
+
+      if (discard) discard.hidden = false
     },
     t,
   )
 
-  const scene = () => view?.scenes.find((scene) => scene.id === sceneId)
-  const component = () => scene()?.components.find((component) => component.id === componentId)
+  const scene = () => view?.scenes.find((entry) => entry.id === sceneId)
 
-  const submit = (command: EditorCommand) => {
-    if (busy) return
-    const parsed = commandSchema.safeParse(command)
-    error.textContent = parsed.success
-      ? ''
-      : parsed.error.issues.map(({ path, message }) => `${path.join('.')}: ${message}`).join('\n')
-
-    if (parsed.success) {
-      if (command.type === 'scene.upsertComponent' || command.type === 'scene.upsertNearby')
-        submitted = {
-          type: command.type,
-          sceneId: command.sceneId,
-          componentId: command.component.id,
-        }
-      save(parsed.data)
-    }
+  const replacePreview = (next: RenderedGraphic | undefined) => {
+    preview?.dispose()
+    preview = next
   }
 
-  const reset = () => {
-    nearbyEditor = undefined
-    const current = component()
-    draft =
-      creating && view
-        ? createComponentDraft(view, sceneId, newType)
-        : current && isBasic(current)
-          ? structuredClone(current)
-          : undefined
-    dirty = false
-    bindingPending.alias = ''
-    bindingPending.value = ''
-    error.textContent = ''
-    render()
-  }
-
-  const render = () => {
-    fields.replaceChildren()
-    const current = component()
-
-    if (!view || !scene()) return
-
-    if (!creating && current?.type === 'nearby') {
-      if (!dirty || !nearbyEditor)
-        nearbyEditor = nearbyForm(controls, view, submit, sceneId, {
-          componentId,
-          onDiscard: () => {
-            dirty = false
-            error.textContent = ''
-          },
-        })
-      fields.append(nearbyEditor)
+  const open: OpenSpecialist = (kind, id) => {
+    if (dirty || creating) {
+      error.textContent = t('inspector.saveFirst')
 
       return
     }
 
-    if (!draft) return
+    onOpen?.(kind, id)
+  }
+
+  function reset(resetSelection = false) {
+    const current = scene()
+    draft =
+      current && view
+        ? creating
+          ? newInspectorComponent(newType, current, view)
+          : structuredClone(current.components.find((entry) => entry.id === componentId))
+        : undefined
+    panels =
+      creating && draft?.type === 'shop' && current && view ? shopCreationPanels(current, view) : []
+
+    if (resetSelection) selection = inspectorSelectionSchema.parse({})
+
+    if (draft?.type === 'nearby' && !Object.hasOwn(draft.entries, selection.selected))
+      selection.selected = Object.keys(draft.entries)[0] ?? ''
+    selection.newTarget = ''
+    selection.newAction = ''
+    hiddenPreviews = {}
+    bindingPending.alias = ''
+    bindingPending.value = ''
+    error.textContent = ''
+    dirty = false
+    render()
+  }
+
+  function showError(message: string, form: HTMLElement, section?: string) {
+    error.textContent = message
+
+    for (const detail of form.querySelectorAll<HTMLDetailsElement>('details')) {
+      if (
+        detail.tagName.toLowerCase() === 'details' &&
+        (!section || detail.getAttribute('data-section') === section)
+      )
+        detail.open = true
+    }
+  }
+
+  function render() {
+    replacePreview(undefined)
+    fields.replaceChildren()
+    const current = scene()
+
+    if (!view || !current) return
+    const model = draft
     const form = document.createElement('form')
     form.className = 'component-form'
-    const saveButton = document.createElement('button')
-    saveButton.type = 'submit'
-    saveButton.textContent = t(creating ? 'component.create' : 'component.save')
-    saveButton.disabled =
-      (draft.type === 'map-view' && !view.game?.maps?.length) ||
-      (draft.type === 'background-image' && !Object.keys(view.assets?.images ?? {}).length)
+    const type = creating ? newType : model?.type
 
-    if (creating) {
-      const picker = controls.select(
-        t('component.type'),
-        newType,
-        creatableComponentTypes.map((type) => [type, t(`tree.${type}`)] as const),
-        (type) => {
-          if (dirty) {
-            picker.querySelector('select')!.value = newType
-            error.textContent = t('component.discardFirst')
+    const translated = inspectorTranslations(
+      scopedFolds(base, [path, sceneId, componentId || 'new', type].join('/')),
+      (id) => open('localization', id),
+    )
 
-            return
-          }
-
-          newType = type
-          reset()
-        },
-        false,
-      )
-
-      form.append(
-        picker,
-        controls.input(t('component.id'), draft.id, (id) => {
-          draft!.id = id.trim()
-        }),
-      )
-    }
-
-    if (draft.type === 'language-select' && !view.game?.languages) {
-      const help = document.createElement('p')
-      help.className = 'help'
-      help.textContent = t('component.languageHelp')
-      form.append(help)
-    }
-
-    if (draft.type === 'map-view' && !view.game?.maps?.length) {
-      const help = document.createElement('p')
-      help.className = 'help'
-      help.textContent = t('component.mapHelp')
-      form.append(help)
-    }
-
+    const controls = translated.controls
+    const reason = creating ? componentUnavailable(newType, current, view) : undefined
+    const submit = document.createElement('button')
+    submit.type = 'submit'
+    submit.textContent = t(creating ? 'component.create' : 'component.save')
+    submit.disabled = !model || Boolean(reason)
+    discard = controls.button(t('component.discard'), () => reset())
+    discard.hidden = creating && !dirty
     form.append(
       saveBar(
         document,
-        saveButton,
+        submit,
         saveStatus(document, t, () => dirty),
-        controls.button(t('component.discard'), reset),
+        discard,
         ...(creating
           ? [
               controls.button(t('component.cancel'), () => {
-                reset()
+                reset(true)
                 onCancel?.(sceneId)
               }),
             ]
           : []),
       ),
-      ...componentFields(controls, view, sceneId, draft, render, bindingPending),
-      controls.group(
-        t('component.placement'),
-        ...placementFields(t).map(([key, label]) =>
-          controls.input(
-            label,
-            String(draft!.placement[key]),
-            (value) => {
-              draft!.placement[key] = Number(value)
-            },
-            'number',
-          ),
-        ),
-      ),
+    )
+
+    if (creating) {
+      const picker = document.createElement('select')
+      const label = document.createElement('label')
+      label.append(t('component.type'), picker)
+
+      for (const group of new Set(Object.values(componentGroups))) {
+        const options = document.createElement('optgroup')
+        options.label = t(`inspector.${group}`)
+
+        for (const entry of inspectorTypes.filter((key) => componentGroups[key] === group)) {
+          const option = document.createElement('option')
+          option.value = entry
+          const missing = componentUnavailable(entry, current, view)
+          option.textContent = t(`tree.${entry}`) + (missing ? ' — ' + t(missing) : '')
+          option.disabled = Boolean(missing)
+          options.append(option)
+        }
+
+        picker.append(options)
+      }
+
+      picker.value = newType
+      picker.addEventListener('change', () => {
+        if (dirty) {
+          picker.value = newType
+          error.textContent = t('component.discardFirst')
+
+          return
+        }
+
+        const selectedType = inspectorTypes.find((key) => key === picker.value)
+
+        if (selectedType) {
+          newType = selectedType
+          reset(true)
+        }
+      })
+      form.append(label)
+
+      if (model)
+        form.append(
+          controls.input(t('component.id'), model.id, (id) => {
+            model.id = id.trim()
+          }),
+        )
+    }
+
+    if (reason || (model?.type === 'language-select' && !view.game?.languages)) {
+      const help = document.createElement('p')
+      help.className = 'help'
+      help.textContent = t(reason ?? 'component.languageHelp')
+      form.append(help)
+    }
+
+    if (model && !reason) {
+      const sections = inspectorFields({
+        controls,
+        view,
+        scene: current,
+        draft: model,
+        selection,
+        creating,
+        error,
+        bindingPending,
+        panels,
+        hiddenPreviews,
+        render,
+        open,
+        createPreview,
+        replacePreview,
+      })
+
+      for (const [key, children] of [
+        ['content', sections.main],
+        ['behavior', sections.behavior],
+        [
+          'layout',
+          [
+            ...sections.layout,
+            ...placementFields(t).map(([key, label]) =>
+              controls.input(
+                label,
+                String(model.placement[key]),
+                (value) => {
+                  model.placement[key] = Number(value)
+                },
+                'number',
+              ),
+            ),
+          ],
+        ],
+      ] as const) {
+        if (!children.length) continue
+        const body = controls.create('div')
+        body.className = 'inspector-fields'
+        body.append(...children)
+        const wrapper = controls.fold(key, t(`inspector.${key}`), key === 'content', body)
+        wrapper.setAttribute('data-section', key)
+        translated.arrange(wrapper)
+        form.append(wrapper)
+      }
+    }
+
+    form.addEventListener(
+      'invalid',
+      (event) => {
+        const target = event.target
+
+        if (!(target instanceof HTMLElement)) return
+        let ancestor = target.parentElement
+
+        while (ancestor && ancestor !== form) {
+          if (ancestor instanceof HTMLDetailsElement) ancestor.open = true
+          ancestor = ancestor.parentElement
+        }
+      },
+      true,
     )
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
-      if (!draft) return
-      const target = scene()
+      if (!model || busy || !view || reason) return
+      error.textContent = ''
 
-      if (!target) {
-        error.textContent = t('component.sceneMissing')
-
-        return
-      }
-
-      if (draft.type === 'text' && bindingPending.alias) {
-        error.textContent = t('component.pendingBinding')
+      if (model.type === 'text' && bindingPending.alias) {
+        showError(t('component.pendingBinding'), form, 'behavior')
 
         return
       }
 
-      if (creating && target.components.some(({ id }) => id === draft!.id)) {
+      if (creating && current.components.some((entry) => entry.id === model.id)) {
         error.textContent = t('component.duplicateId')
 
         return
       }
 
-      if (draft.type === 'map-view') {
+      if (model.type === 'map-view' || model.type === 'graphic') {
         try {
-          resolveMapView(
-            new Map(Object.entries(view?.maps ?? {})),
-            draft.map,
-            draft.viewport,
-            draft.playerSpawn,
-          )
+          if (model.type === 'map-view')
+            resolveMapView(
+              new Map(Object.entries(view.maps ?? {})),
+              model.map,
+              model.viewport,
+              model.playerSpawn,
+            )
+          else if (view.assets) assertGraphicReference(view.assets, model.visual, model.appearance)
         } catch (cause) {
-          error.textContent = cause instanceof Error ? cause.message : String(cause)
+          showError(cause instanceof Error ? cause.message : String(cause), form)
 
           return
         }
       }
 
-      submit({
-        type: 'scene.upsertComponent',
-        sceneId,
-        component: draft,
-        ...(creating ? { createOnly: true } : {}),
-      })
+      const parsed = commandSchema.safeParse(componentSaveCommand(sceneId, model, creating, panels))
+
+      if (!parsed.success) {
+        showError(
+          parsed.error.issues.map((issue) => issue.path.join('.') + ' ' + issue.message).join('\n'),
+          form,
+          parsed.error.issues[0]?.path.includes('placement') ? 'layout' : undefined,
+        )
+
+        return
+      }
+
+      submitted = { type: parsed.data.type, id: model.id }
+      save(parsed.data)
     })
     fields.append(form)
   }
@@ -275,33 +361,52 @@ export function bindComponentEditor(
     z.object({
       sceneId: z.string(),
       componentId: z.string(),
-      draft: basicComponentSchema.optional(),
+      draft: sceneComponentSchema.optional(),
       creating: z.boolean(),
-      newType: z.enum(creatableComponentTypes),
+      newType: z.enum(inspectorTypes),
       bindingPending: z.object({ alias: z.string(), value: z.string() }),
+      selection: inspectorSelectionSchema.optional(),
+      panels: z.array(inventoryComponentSchema).optional(),
+      hiddenPreviews: inventoryComponentSchema.shape.previews.optional(),
     }),
-    () => (dirty ? { sceneId, componentId, draft, creating, newType, bindingPending } : undefined),
+    () =>
+      dirty
+        ? {
+            sceneId,
+            componentId,
+            draft,
+            creating,
+            newType,
+            bindingPending,
+            selection,
+            panels,
+            hiddenPreviews,
+          }
+        : undefined,
     (saved) => {
       sceneId = saved.sceneId
       componentId = saved.componentId
       draft = saved.draft
       creating = saved.creating
       newType = saved.newType
+      panels = saved.panels ?? []
+      hiddenPreviews = saved.hiddenPreviews ?? {}
+      selection = saved.selection ?? inspectorSelectionSchema.parse({})
       Object.assign(bindingPending, saved.bindingPending)
       dirty = true
       render()
     },
   )
 
+  const same = (id?: string, component?: string, add = false) =>
+    sceneId === (id ?? '') && componentId === (component ?? '') && creating === add
+
   return {
     hasDrafts: () => dirty,
-    /** Shows a component; refuses to leave another component with unsaved changes. */
-    canNavigate: (nextScene: string | undefined, nextComponent: string | undefined, add = false) =>
-      (nextScene === sceneId && (nextComponent ?? '') === componentId && add === creating) ||
-      !dirty,
-    navigate(nextScene: string | undefined, nextComponent: string | undefined, add = false) {
-      if (nextScene === sceneId && (nextComponent ?? '') === componentId && add === creating)
-        return true
+    canNavigate: (id?: string, component?: string, add = false) =>
+      same(id, component, add) || !dirty,
+    navigate(id?: string, component?: string, add = false) {
+      if (same(id, component, add)) return true
 
       if (dirty) {
         error.textContent = t('component.discardFirst')
@@ -309,536 +414,47 @@ export function bindComponentEditor(
         return false
       }
 
-      sceneId = nextScene ?? ''
-      componentId = nextComponent ?? ''
+      sceneId = id ?? ''
+      componentId = component ?? ''
       creating = add
+      newType = 'text'
       submitted = undefined
-      reset()
+      reset(true)
 
       return true
     },
-    render(state: ProjectEditorState, replaceFields: boolean) {
+    render(state: ProjectEditorState, replace: boolean) {
       const projectChanged = path !== state.path
       const changed = view !== state.view
+      const translated = language !== t('component.add')
+      language = t('component.add')
       path = state.path
       view = state.view
       busy = state.busy
 
       const saved =
-        replaceFields && submitted?.type === state.lastCommand && submitted !== undefined
+        submitted && replace && !busy && !state.error && submitted.type === state.lastCommand
+          ? submitted
+          : undefined
 
-      const created = saved && creating ? submitted : undefined
+      const created = creating && saved
 
       if (created) {
+        componentId = created.id
         creating = false
-        componentId = created.componentId
       }
 
-      if (!state.busy) submitted = undefined
+      if (!busy) submitted = undefined
 
-      const replace = projectChanged || (replaceFields && !state.preserveDrafts)
+      if (projectChanged || saved || (replace && !state.preserveDrafts) || (changed && !dirty))
+        reset(projectChanged)
+      else if (translated || changed) render()
 
-      const languageChanged = addLabel !== t('component.add')
-      addLabel = t('component.add')
-
-      if (replace || saved || (changed && !dirty)) reset()
-      else if (
-        draft &&
-        (languageChanged || (changed && ['text', 'background-image'].includes(draft.type)))
-      )
-        render()
+      if (state.error && dirty) showError(state.error, fields)
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
 
-      if (created) onCreated?.(created.sceneId, created.componentId)
+      if (created) onCreated?.(sceneId, componentId)
     },
+    dispose: () => replacePreview(undefined),
   }
-}
-
-function componentFields(
-  controls: RuleFormControls,
-  view: ProjectView,
-  sceneId: string,
-  draft: BasicComponent,
-  render: () => void,
-  bindingPending: TextBindingPending,
-): HTMLElement[] {
-  const { input, select, translation, create, t } = controls
-
-  if (draft.type === 'background-image') {
-    const images = Object.keys(view.assets?.images ?? {})
-
-    if (images.length === 0) {
-      const help = create('p')
-      help.className = 'help'
-      help.textContent = t('graphic.artFirst')
-
-      return [help]
-    }
-
-    return [
-      select(t('assets.image'), draft.image, images, (value) => {
-        draft.image = value
-      }),
-      select(
-        t('assets.fit'),
-        draft.fit,
-        [
-          ['cover', t('assets.cover')],
-          ['contain', t('assets.contain')],
-        ],
-        (value) => {
-          draft.fit = value
-        },
-      ),
-    ]
-  }
-
-  const literal = (title: string, emptyLabel: string) =>
-    translation(
-      title,
-      draft.type === 'text' ? (draft.textKey ?? '') : (draft.labelKey ?? ''),
-      translationChoices(view, emptyLabel),
-      (value) => {
-        if (draft.type === 'text') draft.textKey = value || undefined
-        else draft.labelKey = value || undefined
-      },
-    )
-
-  if (draft.type === 'text') {
-    const text = create('textarea')
-    text.rows = 4
-    text.value = draft.text
-
-    const bindings = textBindingsForm(
-      controls,
-      view,
-      draft,
-      bindingPending,
-      view.scenes.find((scene) => scene.id === sceneId)?.type === 'game',
-      render,
-      (placeholder) => {
-        draft.text += `${draft.text && !/\s$/.test(draft.text) ? ' ' : ''}${placeholder}`
-        text.value = draft.text
-      },
-    )
-
-    text.addEventListener('input', () => {
-      draft.text = text.value
-      controls.markEdited()
-      bindings.refresh()
-    })
-    const textField = create('label')
-    textField.append(t('tree.text'), text)
-
-    return [
-      textField,
-      translation(
-        t('component.textTranslation'),
-        draft.textKey ?? '',
-        translationChoices(view, t('metadata.literalText')),
-        (value) => {
-          draft.textKey = value || undefined
-          bindings.refresh()
-        },
-      ),
-      bindings.element,
-      select(
-        t('component.style'),
-        draft.presentation.variant,
-        [
-          ['body', t('component.bodyText')],
-          ['heading', t('component.headingStyle')],
-        ],
-        (value) => {
-          draft.presentation.variant = value
-        },
-      ),
-      select(
-        t('component.alignment'),
-        draft.presentation.align,
-        [
-          ['start', t('component.alignStart')],
-          ['center', t('component.alignCenter')],
-          ['end', t('component.alignEnd')],
-        ],
-        (value) => {
-          draft.presentation.align = value
-        },
-      ),
-    ]
-  }
-
-  const label = [
-    input(t('form.label'), draft.label, (value) => {
-      draft.label = value
-    }),
-    literal(t('form.labelTranslation'), t('form.literalLabel')),
-  ]
-
-  if (draft.type === 'action-info') {
-    const help = create('p')
-    help.className = 'help'
-    help.textContent = t('actionInfo.help')
-
-    return [
-      ...label,
-      input(t('items.emptyText'), draft.emptyText, (value) => {
-        draft.emptyText = value
-      }),
-      translation(
-        t('items.emptyTextTranslation'),
-        draft.emptyTextKey ?? '',
-        translationChoices(view, t('form.literalText')),
-        (value) => {
-          draft.emptyTextKey = value || undefined
-        },
-      ),
-      help,
-    ]
-  }
-
-  if (draft.type === 'quest-log')
-    return [
-      ...label,
-      input(t('component.questIds'), draft.quests?.join(', ') ?? '', (value) => {
-        draft.quests = value.trim() ? value.split(',').map((id) => id.trim()) : undefined
-      }),
-      select(
-        t('component.mainTextTarget'),
-        draft.textTarget ?? '',
-        [
-          '',
-          ...(view.scenes
-            .find((scene) => scene.id === sceneId)
-            ?.components.filter((component) => component.type === 'text')
-            .map((component) => component.id) ?? []),
-        ],
-        (value) => {
-          draft.textTarget = value || undefined
-        },
-      ),
-      ...(['not-started', 'active', 'ready', 'completed'] as const).map((status) =>
-        select(
-          t('component.showStatus', { status }),
-          String(draft.statuses.includes(status)),
-          ['true', 'false'],
-          (value) => {
-            draft.statuses =
-              value === 'true'
-                ? [...new Set([...draft.statuses, status])]
-                : draft.statuses.filter((entry) => entry !== status)
-          },
-        ),
-      ),
-    ]
-
-  if (draft.type === 'character-creator') {
-    const destinations = { ...view, scenes: view.scenes.filter((entry) => entry.id !== sceneId) }
-    const origin = view.scenes.find((entry) => entry.id === sceneId)
-
-    return [
-      ...label,
-      select(
-        t('character.continueScene'),
-        draft.continueScene,
-        sceneChoices(destinations, 'game'),
-        (value) => {
-          draft.continueScene = value
-        },
-      ),
-      select(
-        t('character.backScene'),
-        draft.backScene ?? '',
-        [['', t('form.none')], ...sceneChoices(destinations, origin?.type)],
-        (value) => {
-          draft.backScene = value || undefined
-        },
-      ),
-    ]
-  }
-
-  if (draft.type === 'character-sheet')
-    return [...label, ...statusPanelForm(controls, view, draft, render, true)]
-
-  if (draft.type === 'language-select') return label
-
-  if (draft.type === 'save-status') return label
-
-  if (draft.type === 'save-slots')
-    return [
-      ...label,
-      select(t('saving.showName'), String(draft.showName), ['true', 'false'], (value) => {
-        draft.showName = value === 'true'
-      }),
-    ]
-
-  if (draft.type === 'save-point') {
-    const mapViews =
-      view.scenes
-        .find((scene) => scene.id === sceneId)
-        ?.components.filter(
-          (component) =>
-            component.type === 'map-view' &&
-            component.playerSpawn &&
-            component.interactive !== false,
-        ) ?? []
-
-    return [
-      ...label,
-      select(
-        t('saving.saveMenu'),
-        draft.menuScene ?? '',
-        [
-          ['', t('saving.directSave')],
-          ...view.scenes
-            .filter((scene) => scene.type === 'stand-alone')
-            .map((scene) => [scene.id, scene.title || scene.id] as const),
-        ],
-        (value) => {
-          draft.menuScene = value || undefined
-        },
-      ),
-      select(
-        t('saving.pointLocation'),
-        draft.location?.mapView ?? '',
-        [
-          ['', t('saving.wholeScene')],
-          ...mapViews.map((component) => [component.id, component.id] as const),
-        ],
-        (value) => {
-          draft.location = value
-            ? { mapView: value, position: { x: 0, y: 0 }, radius: 0 }
-            : undefined
-          render()
-        },
-      ),
-      ...(draft.location
-        ? [
-            ...(['x', 'y'] as const).map((axis) =>
-              input(
-                axis === 'x' ? t('component.playerColumn') : t('component.playerRow'),
-                String(draft.location!.position[axis]),
-                (value) => {
-                  draft.location!.position[axis] = Number(value)
-                },
-                'number',
-              ),
-            ),
-            input(
-              t('saving.radius'),
-              String(draft.location.radius),
-              (value) => {
-                draft.location!.radius = Number(value)
-              },
-              'number',
-            ),
-          ]
-        : []),
-    ]
-  }
-
-  if (draft.type === 'map-view') {
-    const viewport = draft.viewport
-
-    return [
-      ...label,
-      select(t('maps.map'), draft.map, view.game?.maps ?? [], (value) => {
-        draft.map = value
-        const map = view.maps?.[value]
-
-        if (map) {
-          viewport.columns = Math.min(viewport.columns, map.width)
-          viewport.rows = Math.min(viewport.rows, map.height)
-        }
-
-        render()
-      }),
-      select(
-        t('component.interactive'),
-        String(draft.interactive !== false),
-        [
-          ['true', t('component.interactiveYes')],
-          ['false', t('component.interactiveNo')],
-        ],
-        (value) => {
-          draft.interactive = value === 'true' ? undefined : false
-        },
-      ),
-      controls.group(
-        t('component.visibleArea'),
-        ...(
-          [
-            ['columns', t('grid.columns')],
-            ['rows', t('grid.rows')],
-            ['x', t('component.leftColumn')],
-            ['y', t('component.topRow')],
-          ] as const
-        ).map(([key, title]) =>
-          input(
-            title,
-            String(viewport[key]),
-            (value) => {
-              viewport[key] = Number(value)
-            },
-            'number',
-          ),
-        ),
-      ),
-      controls.group(
-        t('component.playerMarker'),
-        select(
-          t('component.showPlayer'),
-          String(Boolean(draft.playerSpawn)),
-          [
-            ['false', t('component.panMap')],
-            ['true', t('component.movePlayer')],
-          ],
-          (value) => {
-            draft.playerSpawn = value === 'true' ? { x: 0, y: 0 } : undefined
-            render()
-          },
-        ),
-        ...(draft.playerSpawn
-          ? (['x', 'y'] as const).map((key) =>
-              input(
-                key === 'x' ? t('component.playerColumn') : t('component.playerRow'),
-                String(draft.playerSpawn![key]),
-                (value) => {
-                  draft.playerSpawn![key] = Number(value)
-                },
-                'number',
-              ),
-            )
-          : []),
-      ),
-    ]
-  }
-
-  const scenes = view.scenes.map((scene) => scene.id)
-  const gameScenes = view.scenes.filter((scene) => scene.type === 'game').map((scene) => scene.id)
-  const actions = Object.keys(view.rules?.actions ?? {})
-
-  const mapViews =
-    view.scenes
-      .find((scene) => scene.id === sceneId)
-      ?.components.filter(
-        (component) =>
-          component.type === 'map-view' && component.playerSpawn && component.interactive !== false,
-      )
-      .map((component) => component.id) ?? []
-
-  const action = draft.action
-
-  const defaults = (type: string): ButtonAction | undefined =>
-    type === 'save-game' ||
-    type === 'load-game' ||
-    type === 'resume-game' ||
-    type === 'load-autosave' ||
-    type === 'delete-save' ||
-    type === 'export-save' ||
-    type === 'import-save'
-      ? { type }
-      : type === 'open-menu' || type === 'main-menu'
-        ? { type, scene: view.scenes.find((scene) => scene.type === 'stand-alone')?.id ?? '' }
-        : type === 'new-game' || type === 'enter-scene'
-          ? { type, scene: (type === 'new-game' ? gameScenes : scenes)[0] ?? '' }
-          : type === 'request-action'
-            ? { type, action: actions[0] ?? '' }
-            : type === 'interact-map'
-              ? { type, mapView: mapViews[0] ?? '' }
-              : type === 'move-map'
-                ? { type, mapView: mapViews[0] ?? '', direction: 'north' }
-                : undefined
-
-  return [
-    ...label,
-    ...actionDescriptionFields(controls, view, draft),
-    select(
-      t('form.action'),
-      action?.type ?? '',
-      [
-        ['', t('component.noAction')],
-        ['new-game', t('component.startNewGame')],
-        ['enter-scene', t('component.goToScene')],
-        ['request-action', t('component.runAction')],
-        ['move-map', t('component.moveOnMap')],
-        ['interact-map', t('maps.interact')],
-        ['save-game', t('component.saveProgress')],
-        ['load-game', t('component.loadProgress')],
-        ...(
-          [
-            'load-autosave',
-            'delete-save',
-            'export-save',
-            'import-save',
-            'open-menu',
-            'resume-game',
-            'main-menu',
-          ] as const
-        ).map((type) => [type, t(`saving.${type}`)] as const),
-      ],
-      (value) => {
-        draft.action = defaults(value)
-        render()
-      },
-    ),
-    ...(action?.type === 'new-game' ||
-    action?.type === 'enter-scene' ||
-    action?.type === 'open-menu' ||
-    action?.type === 'main-menu'
-      ? [
-          select(
-            t('form.targetScene'),
-            action.scene,
-            sceneChoices(
-              view,
-              action.type === 'new-game'
-                ? 'game'
-                : action.type === 'open-menu' || action.type === 'main-menu'
-                  ? 'stand-alone'
-                  : undefined,
-            ),
-            (value) => {
-              action.scene = value
-
-              if (action.type === 'enter-scene') {
-                delete action.mapView
-                delete action.position
-                render()
-              }
-            },
-          ),
-          ...(action.type === 'enter-scene'
-            ? sceneEntranceFields(controls, view, action, render)
-            : []),
-        ]
-      : action?.type === 'request-action'
-        ? [
-            select(t('component.ruleAction'), action.action, actions, (value) => {
-              action.action = value
-            }),
-          ]
-        : action?.type === 'interact-map'
-          ? mapInteractFields(controls, view, sceneId, action, render)
-          : action?.type === 'move-map'
-            ? [
-                select(t('tree.map-view'), action.mapView, mapViews, (value) => {
-                  action.mapView = value
-                }),
-                select(
-                  t('form.direction'),
-                  action.direction,
-                  [
-                    ['north', t('component.north')],
-                    ['east', t('component.east')],
-                    ['south', t('component.south')],
-                    ['west', t('component.west')],
-                  ],
-                  (value) => {
-                    action.direction = value
-                  },
-                ),
-              ]
-            : []),
-  ]
 }

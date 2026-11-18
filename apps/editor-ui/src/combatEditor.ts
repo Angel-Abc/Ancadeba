@@ -42,6 +42,7 @@ export function bindCombatEditor(
   let draft: CombatSource | undefined
   let component: ReturnType<typeof combatComponentSchema.parse> | undefined
   let dirty = false
+  let definitionOnly = false
   let busy = false
   let creating = false
   let playerHealth = ''
@@ -196,7 +197,7 @@ export function bindCombatEditor(
     // Creating an encounter is folded away while one is open, so its form starts near the top.
     // Each case keeps its own fold state; a fold that starts open records itself as opened.
     fields.append(
-      picker,
+      ...(!definitionOnly ? [picker] : []),
       encounters,
       controls.fold(
         draft ? 'new-encounter:editing' : 'new-encounter:empty',
@@ -331,52 +332,56 @@ export function bindCombatEditor(
         ),
       ),
       ...combatForm(scopedFolds(controls, `encounter:${draft.id}`), view, draft, render, creating),
-      controls.section(
-        'encounter-view',
-        controls.group(
-          t('form.combatView'),
-          controls.input(t('combat.componentId'), current.id, (value) => {
-            current.id = value.trim()
-          }),
-          controls.select(
-            t('combat.mainTextTarget'),
-            current.textTarget ?? '',
-            [
-              '',
-              ...scene.components
-                .filter((component) => component.type === 'text')
-                .map((component) => component.id),
-            ],
-            (value) => {
-              current.textTarget = value || undefined
-            },
-          ),
-          controls.select(
-            t('combat.lootInventory'),
-            current.lootInventory ?? '',
-            [
-              '',
-              ...scene.components
-                .filter((component) => component.type === 'inventory')
-                .map((component) => component.id),
-            ],
-            (value) => {
-              current.lootInventory = value || undefined
-            },
-          ),
-          ...placementFields(t).map(([key, label]) =>
-            controls.input(
-              label,
-              String(current.placement[key]),
+    )
+
+    if (!definitionOnly)
+      form.append(
+        controls.section(
+          'encounter-view',
+          controls.group(
+            t('form.combatView'),
+            controls.input(t('combat.componentId'), current.id, (value) => {
+              current.id = value.trim()
+            }),
+            controls.select(
+              t('combat.mainTextTarget'),
+              current.textTarget ?? '',
+              [
+                '',
+                ...scene.components
+                  .filter((component) => component.type === 'text')
+                  .map((component) => component.id),
+              ],
               (value) => {
-                current.placement[key] = Number(value)
+                current.textTarget = value || undefined
               },
-              'number',
+            ),
+            controls.select(
+              t('combat.lootInventory'),
+              current.lootInventory ?? '',
+              [
+                '',
+                ...scene.components
+                  .filter((component) => component.type === 'inventory')
+                  .map((component) => component.id),
+              ],
+              (value) => {
+                current.lootInventory = value || undefined
+              },
+            ),
+            ...placementFields(t).map(([key, label]) =>
+              controls.input(
+                label,
+                String(current.placement[key]),
+                (value) => {
+                  current.placement[key] = Number(value)
+                },
+                'number',
+              ),
             ),
           ),
         ),
-      ),
-    )
+      )
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
@@ -385,14 +390,20 @@ export function bindCombatEditor(
           type: 'game.upsertCombat',
           encounter: draft,
           createOnly: creating,
-          scene: { id: sceneId, component: { ...component, encounter: draft.id } },
+          ...(definitionOnly
+            ? {}
+            : { scene: { id: sceneId, component: { ...component, encounter: draft.id } } }),
         })
     })
     fields.append(
       form,
-      controls.button(t('combat.removeView'), () =>
-        submit({ type: 'scene.setCombat', sceneId, component: null }),
-      ),
+      ...(!definitionOnly
+        ? [
+            controls.button(t('combat.removeView'), () =>
+              submit({ type: 'scene.setCombat', sceneId, component: null }),
+            ),
+          ]
+        : []),
       controls.button(
         t('combat.deleteEncounter'),
         () => {
@@ -407,6 +418,7 @@ export function bindCombatEditor(
     root,
     'combat',
     z.object({
+      definitionOnly: z.boolean().optional(),
       sceneId: z.string(),
       encounterId: z.string(),
       draft: combatSourceSchema.optional(),
@@ -426,10 +438,12 @@ export function bindCombatEditor(
             creating,
             playerHealth,
             enemyHealth,
+            definitionOnly,
             encounterDirty: dirty,
           }
         : undefined,
     (saved) => {
+      definitionOnly = saved.definitionOnly ?? false
       sceneId = saved.sceneId
       encounterId = saved.encounterId
       draft = saved.draft
@@ -448,6 +462,11 @@ export function bindCombatEditor(
         (nextEncounter === undefined || nextEncounter === encounterId)) ||
       (!dirty && !simulation.hasDrafts()),
     navigate,
+    setDefinitionOnly(value: boolean) {
+      if (definitionOnly === value) return
+      definitionOnly = value
+      render()
+    },
     hasDrafts: () => dirty || libraryEditor.hasDrafts() || simulation.hasDrafts(),
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()

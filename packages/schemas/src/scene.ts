@@ -285,7 +285,7 @@ export const graphicComponentSchema = z.object({
   alt: z.string(),
   altKey: translationKeySchema.optional(),
   fit: z.enum(['contain', 'cover']).default('contain'),
-  appearance: graphicAppearanceSchema.default({ colors: {}, visible: true, slots: {} }),
+  appearance: graphicAppearanceSchema.prefault({}),
 })
 
 export const backgroundImageComponentSchema = z.object({

@@ -359,6 +359,41 @@ export function createProjectSections({
       t,
     )
 
+  const returnButton = root.querySelector<HTMLButtonElement>('#inspector-return')
+  let currentPath = ''
+  let linked: { origin: string; destination: string; path: string | undefined } | undefined
+
+  const linkStatus = root.querySelector<HTMLElement>('#inspector-navigation-status')
+
+  const clearLink = () => {
+    if (linkStatus) linkStatus.textContent = ''
+
+    if (linked?.destination === 'combat') combatEditor?.setDefinitionOnly(false)
+
+    if (linked?.destination === 'leveling') levelingEditor?.setDefinitionOnly(false)
+    linked = undefined
+
+    if (returnButton) returnButton.hidden = true
+  }
+
+  const hasBlockingDraft = () => {
+    if (!hasDrafts()) return false
+
+    if (linkStatus) linkStatus.textContent = t('inspector.saveFirst')
+
+    return true
+  }
+
+  const goBack = () => {
+    if (!linked || hasBlockingDraft()) return
+    const origin = linked.origin
+    selectKey(origin)
+
+    if (state.selection.key === origin) clearLink()
+  }
+
+  returnButton?.addEventListener('click', goBack)
+
   if (componentElement)
     componentEditor = bindComponentEditor(
       componentElement,
@@ -367,6 +402,51 @@ export function createProjectSections({
       },
       {
         t,
+        createPreview: (component, view, starting) =>
+          assetsPanel?.createScenePreview?.(component, view, starting),
+        onOpen(kind, id) {
+          if (hasBlockingDraft()) return
+          const origin = state.selection
+          const sceneId = origin.parentId
+
+          const destination =
+            kind === 'character-profile'
+              ? 'game'
+              : kind === 'asset'
+                ? 'asset:' + id
+                : kind === 'maps'
+                  ? 'map:' + id
+                  : kind === 'component'
+                    ? 'component:' + sceneId + ':' + id
+                    : kind
+
+          selectKey(destination)
+
+          if (state.selection.key !== destination) return
+
+          if (kind === 'character-profile')
+            root.querySelector<HTMLSelectElement>('#editor-character-profile select')?.focus()
+
+          if (kind === 'localization') localizationEditor?.openKey(id)
+
+          if (kind === 'combat') {
+            combatEditor?.navigate(sceneId, id)
+            combatEditor?.setDefinitionOnly(true)
+          }
+
+          if (kind === 'leveling') {
+            levelingEditor?.navigate(sceneId, id, origin.id)
+            levelingEditor?.setDefinitionOnly(true)
+          }
+
+          linked = { origin: origin.key, destination, path: currentPath }
+
+          if (returnButton) {
+            returnButton.hidden = false
+            returnButton.disabled = false
+            returnButton.textContent = t('inspector.return', { id: origin.id ?? '' })
+          }
+        },
         onCreated(sceneId, componentId) {
           state.selection = {
             key: `component:${sceneId}:${componentId}`,
@@ -432,5 +512,23 @@ export function createProjectSections({
         },
     ),
     ...registrations.filter((entry) => !entry.tree),
+    {
+      create: () => ({
+        id: 'inspector-return',
+        role: 'adjunct',
+        canNavigate: ({ node }) =>
+          !linked || node.key === linked.destination || !hasBlockingDraft(),
+        matches: () => false,
+        selectionChanged: ({ node }) => {
+          if (linked && linked.destination !== node.key) clearLink()
+        },
+        render: (next) => {
+          currentPath = next.path
+
+          if (linked && linked.path !== next.path) clearLink()
+        },
+        dispose: () => returnButton?.removeEventListener('click', goBack),
+      }),
+    },
   ]
 }
