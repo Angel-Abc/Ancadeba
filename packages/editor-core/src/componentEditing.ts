@@ -6,7 +6,7 @@ const actionFields = new Set(
   buttonActionSchema.options.flatMap((option) => Object.keys(option.shape)),
 )
 
-/** Saves a text, button, language selector, or map view in place, keeping its list position. */
+/** Saves components without dedicated commands in place, keeping their list position. */
 export function editComponent(
   documents: Record<string, unknown>,
   game: GameDefinition,

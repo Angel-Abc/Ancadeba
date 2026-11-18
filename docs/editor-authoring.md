@@ -572,7 +572,7 @@ manifest before deleting old scenes, and attempt byte-checked rollback on storag
 failures. An uncertain result asks for inspection before retrying. This protects
 same-server commands; it does not add a cross-process transaction or crash journal.
 
-Expand a scene and choose **Add component** to create text, buttons, map views,
+Expand a scene and choose **Add component** to create text, buttons, map views, background images,
 language selectors, quest logs, save slots, save status, or save points. Choose a type, set its unique ID, edit its
 settings, and choose **Create component**. Suggested placements fit the scene's
 grid; edit Row, Column, and spans to position the component. Saving selects the new
@@ -581,6 +581,12 @@ use `scene.upsertComponent` with `createOnly: true`, so an ID collision cannot
 replace an existing component. Conflicts and rejected settings preserve the draft.
 Save or discard edits before switching the component type or another component.
 **Cancel** returns to the scene without saving.
+
+Choose **Background image** to use an image from **Assets** behind the scene's other
+components. A new background spans the current grid and uses **Cover** to fill its
+area. Use **Contain** to show the whole image, or edit the placement to cover part
+of the grid. When backgrounds overlap, the one later in the component list appears
+on top of the other backgrounds.
 
 Text supports literal content, translation keys, dynamic bindings, heading/body
 styles, and alignment. Buttons support scene navigation, starting a new game, rule actions,

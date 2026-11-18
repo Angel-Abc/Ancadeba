@@ -160,6 +160,12 @@ export class SceneRenderer {
         components.push(rendered)
         const { element } = rendered
         element.classList.add('ancadeba-scene-item')
+
+        if (component.type === 'background-image') {
+          root.classList.add('ancadeba-scene--with-background')
+          element.classList.add('ancadeba-scene-item--background')
+        }
+
         element.dataset.componentId = component.id
         const { row, column, rowSpan, columnSpan } = component.placement
         element.style.setProperty('--ge-component-row', String(row))

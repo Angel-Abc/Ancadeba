@@ -30,12 +30,14 @@ import type {
 export class ComponentRenderer implements IComponentRenderer {
   private readonly renderers: ComponentRenderers
   constructor(renderers: Partial<ComponentRenderers> = {}) {
+    const graphics = new GraphicComponentRenderer()
     this.renderers = {
       'save-slots': new SaveSlotsComponentRenderer(),
       'save-status': new SaveStatusComponentRenderer(),
       'save-point': new SavePointComponentRenderer(),
       text: new TextComponentRenderer(),
-      graphic: new GraphicComponentRenderer(),
+      graphic: graphics,
+      'background-image': graphics,
       button: new ButtonComponentRenderer(),
       'language-select': new LanguageSelectComponentRenderer(),
       'map-view': new MapViewComponentRenderer(),
@@ -90,6 +92,8 @@ export class ComponentRenderer implements IComponentRenderer {
         return this.renderers['action-info'].render(component, context)
       case 'graphic':
         return this.renderers.graphic.render(component, context)
+      case 'background-image':
+        return this.renderers['background-image'].render(component, context)
       case 'text':
         return this.renderers.text.render(component, context)
       case 'button':

@@ -236,6 +236,7 @@
   "actionInfo.unavailableTranslation": "Unavailable explanation translation",
   "tree.language-select": "Language selector",
   "tree.graphic": "Graphic",
+  "tree.background-image": "Background image",
   "tree.map-view": "Map view",
   "tree.images": "Images",
   "tree.parts": "Parts",

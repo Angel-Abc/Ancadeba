@@ -64,7 +64,9 @@ export function localizeDefinitions(
           ...scene,
           ...metadata(scene),
           components: scene.components.map((component) =>
-            component.type === 'combat' || component.type === 'character-progression'
+            component.type === 'combat' ||
+            component.type === 'character-progression' ||
+            component.type === 'background-image'
               ? component
               : component.type === 'shop'
                 ? {
@@ -194,7 +196,9 @@ export function assertGameLanguages(
         scene.titleKey !== undefined ||
         scene.descriptionKey !== undefined ||
         scene.components.some((component) =>
-          component.type === 'combat' || component.type === 'character-progression'
+          component.type === 'combat' ||
+          component.type === 'character-progression' ||
+          component.type === 'background-image'
             ? false
             : component.type === 'shop'
               ? component.labelKey !== undefined ||

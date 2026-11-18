@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   assetCatalogSchema,
+  backgroundImageComponentSchema,
   graphicAppearanceSchema,
   graphicComponentSchema,
 } from '@ancadeba/schemas'
@@ -104,6 +105,13 @@ const component = graphicComponentSchema.parse({
   placement: { row: 1, column: 1 },
 })
 
+const background = backgroundImageComponentSchema.parse({
+  id: 'background',
+  type: 'background-image',
+  image: 'art',
+  placement: { row: 1, column: 1 },
+})
+
 describe('asynchronous graphic rendering', () => {
   it('keeps a complete appearance visible and ignores late older results', async () => {
     const document = new SurfaceDocument()
@@ -194,4 +202,59 @@ describe('asynchronous graphic rendering', () => {
     )
     rendered.dispose()
   })
+
+  it.each([
+    ['cover', 'xMidYMid slice'],
+    ['contain', 'xMidYMid meet'],
+  ] as const)(
+    'renders a decorative background with %s fit and releases its image',
+    async (fit, ratio) => {
+      const release = vi.fn()
+
+      const rendered = new GraphicComponentRenderer().render(
+        { ...background, fit },
+        {
+          document: new SurfaceDocument().asDocument(),
+          assets: catalog,
+          graphics: { acquire: async () => ({ url: 'art', release }) },
+        },
+      )
+
+      await vi.waitFor(() =>
+        expect(rendered.element.querySelector('svg')?.getAttribute('preserveAspectRatio')).toBe(
+          ratio,
+        ),
+      )
+      expect(rendered.element.getAttribute('aria-hidden')).toBe('true')
+      expect(rendered.element.querySelector('image')?.getAttribute('href')).toBe('art')
+      rendered.dispose()
+      expect(release).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it.each(['editor', 'standalone'] as const)(
+    'handles an unavailable background in %s',
+    async (bindingMode) => {
+      const rendered = new GraphicComponentRenderer().render(background, {
+        document: new SurfaceDocument().asDocument(),
+        assets: catalog,
+        bindingMode,
+        graphics: {
+          acquire: async () => {
+            throw new Error('art.svg: missing file')
+          },
+        },
+      })
+
+      await vi.waitFor(() =>
+        expect(rendered.element.dataset.graphicDiagnostics).toContain('missing file'),
+      )
+      expect(rendered.element.getAttribute('aria-hidden')).toBe('true')
+      expect(rendered.element.textContent).toBe('')
+      expect(Boolean(rendered.element.querySelector('.ancadeba-graphic-diagnostic'))).toBe(
+        bindingMode === 'editor',
+      )
+      rendered.dispose()
+    },
+  )
 })

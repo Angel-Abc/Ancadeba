@@ -33,6 +33,7 @@ import {
   type SceneDefinition,
   assetCatalogSchema,
   assetCatalogFile,
+  assertBackgroundImageReference,
   assertGraphicReference,
   mapDefinitionSchema,
   resolveMapView,
@@ -304,6 +305,19 @@ export function validateProject(
               ? 'Choose an existing target scene'
               : 'New game buttons must target a game scene',
           })
+      }
+
+      if (component.type === 'background-image') {
+        try {
+          assertBackgroundImageReference(assets?.success ? assets.data : undefined, component.image)
+        } catch (error) {
+          diagnostics.push({
+            code: 'invalid_background_image',
+            file: `scenes/${id}.json`,
+            path: ['components', index, 'image'],
+            message: error instanceof Error ? error.message : String(error),
+          })
+        }
       }
 
       if (component.type !== 'graphic' && component.type !== 'map-view') return

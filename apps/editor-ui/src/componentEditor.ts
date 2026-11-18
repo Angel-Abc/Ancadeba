@@ -35,35 +35,10 @@ import { sceneChoices } from './choiceLabels.js'
 type ButtonAction = NonNullable<ButtonComponentDefinition['action']>
 
 /** Component types this editor authors; other types keep their own editors or stay read-only. */
-export const editableComponentTypes: readonly string[] = [
-  'save-slots',
-  'save-status',
-  'save-point',
-  'text',
-  'button',
-  'action-info',
-  'language-select',
-  'map-view',
-  'nearby',
-  'quest-log',
-  'character-creator',
-  'character-sheet',
-]
+export const editableComponentTypes: readonly string[] = [...creatableComponentTypes, 'nearby']
 
 const isBasic = (component: { type: string }): component is BasicComponent =>
-  [
-    'text',
-    'button',
-    'action-info',
-    'language-select',
-    'map-view',
-    'quest-log',
-    'character-creator',
-    'character-sheet',
-    'save-slots',
-    'save-status',
-    'save-point',
-  ].includes(component.type)
+  creatableComponentTypes.some((type) => type === component.type)
 
 /** Edits one scene component selected in the project explorer. */
 export function bindComponentEditor(
@@ -170,7 +145,9 @@ export function bindComponentEditor(
     const saveButton = document.createElement('button')
     saveButton.type = 'submit'
     saveButton.textContent = t(creating ? 'component.create' : 'component.save')
-    saveButton.disabled = draft.type === 'map-view' && !view.game?.maps?.length
+    saveButton.disabled =
+      (draft.type === 'map-view' && !view.game?.maps?.length) ||
+      (draft.type === 'background-image' && !Object.keys(view.assets?.images ?? {}).length)
 
     if (creating) {
       const picker = controls.select(
@@ -365,7 +342,11 @@ export function bindComponentEditor(
       addLabel = t('component.add')
 
       if (replace || saved || (changed && !dirty)) reset()
-      else if (draft && (languageChanged || (changed && draft.type === 'text'))) render()
+      else if (
+        draft &&
+        (languageChanged || (changed && ['text', 'background-image'].includes(draft.type)))
+      )
+        render()
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
 
       if (created) onCreated?.(created.sceneId, created.componentId)
@@ -382,6 +363,35 @@ function componentFields(
   bindingPending: TextBindingPending,
 ): HTMLElement[] {
   const { input, select, translation, create, t } = controls
+
+  if (draft.type === 'background-image') {
+    const images = Object.keys(view.assets?.images ?? {})
+
+    if (images.length === 0) {
+      const help = create('p')
+      help.className = 'help'
+      help.textContent = t('graphic.artFirst')
+
+      return [help]
+    }
+
+    return [
+      select(t('assets.image'), draft.image, images, (value) => {
+        draft.image = value
+      }),
+      select(
+        t('assets.fit'),
+        draft.fit,
+        [
+          ['cover', t('assets.cover')],
+          ['contain', t('assets.contain')],
+        ],
+        (value) => {
+          draft.fit = value
+        },
+      ),
+    ]
+  }
 
   const literal = (title: string, emptyLabel: string) =>
     translation(

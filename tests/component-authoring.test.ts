@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { basicComponentSchema, object } from '@ancadeba/editor-core'
 import { GameLoader } from '@ancadeba/game-runtime'
+import { backgroundImageComponentSchema } from '@ancadeba/schemas'
 import { JsonResourceLoader, type ILogger } from '@ancadeba/utilities'
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { EditorCoordinator } from '../apps/editor-server/src/editorCoordinator.js'
@@ -200,6 +201,104 @@ describe('scene component authoring API', () => {
         },
       }),
     ).rejects.toMatchObject({ code: 'revision_conflict' })
+  })
+
+  it('validates image references and copies a background into another scene', async () => {
+    const bounds = { x: 0, y: 0, width: 20, height: 10 }
+    const file = 'game/game.json'
+    const manifest = object(JSON.parse(await readFile(join(root, file), 'utf8')))
+    await workspace.write(file, Buffer.from(JSON.stringify({ ...manifest, assets: 'art' })))
+    await workspace.write(
+      'game/assets/art.json',
+      Buffer.from(
+        JSON.stringify({
+          'schema-version': '1.0.0',
+          images: { sky: { format: 'svg', source: 'assets/sky.svg', bounds } },
+          parts: { layer: { bounds, pieces: [{ id: 'sky', image: 'sky', layer: 'sky' }] } },
+        }),
+      ),
+    )
+    await workspace.write(
+      'game/assets/sky.svg',
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"/>'),
+    )
+
+    const view = await client.inspect('game')
+
+    const background = backgroundImageComponentSchema.parse({
+      id: 'sky',
+      type: 'background-image',
+      image: 'sky',
+      placement: { ...placement, rowSpan: 2, columnSpan: 3 },
+    })
+
+    const save = (component: typeof background) =>
+      client.apply({
+        path: 'game',
+        expectedRevision: view.revision,
+        command: { type: 'scene.upsertComponent', sceneId: 'adventure', component },
+      })
+
+    for (const image of ['missing', 'layer']) {
+      await expect(save({ ...background, image })).rejects.toMatchObject({
+        code: 'invalid_project',
+        diagnostics: expect.arrayContaining([
+          expect.objectContaining({
+            code: 'invalid_background_image',
+            message: `Unknown image asset: ${image}`,
+          }),
+        ]),
+      })
+    }
+
+    await expect(
+      save({ ...background, placement: { ...background.placement, row: 99 } }),
+    ).rejects.toMatchObject({ code: 'invalid_project' })
+
+    const saved = await save(background)
+
+    const clipboard = await client.copyComponent({
+      path: 'game',
+      expectedRevision: saved.revision,
+      sceneId: 'adventure',
+      componentId: background.id,
+    })
+
+    expect(clipboard.component).toEqual(background)
+
+    const pasted = await client.apply({
+      path: 'game',
+      expectedRevision: saved.revision,
+      command: {
+        type: 'scene.pasteComponent',
+        sceneId: 'start',
+        newId: 'sky-copy',
+        component: clipboard.component,
+      },
+    })
+
+    expect(pasted.diagnostics).toEqual([])
+
+    const game = await new GameLoader(
+      new JsonResourceLoader(new EditorWorkspaceResources('game', fetcher), logger),
+    ).load()
+
+    expect(game.scenes.get('start')?.components.at(-1)).toEqual({ ...background, id: 'sky-copy' })
+
+    // Remove the part first so only the two scene backgrounds reference the image.
+    const withoutPart = await client.apply({
+      path: 'game',
+      expectedRevision: pasted.revision,
+      command: { type: 'assets.remove', kind: 'parts', id: 'layer' },
+    })
+
+    await expect(
+      client.apply({
+        path: 'game',
+        expectedRevision: withoutPart.revision,
+        command: { type: 'assets.remove', kind: 'images', id: 'sky' },
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_project' })
   })
 
   it.each([

@@ -26,6 +26,7 @@ import type {
   ButtonComponentDefinition,
   LanguageSelectComponentDefinition,
   GraphicComponentDefinition,
+  BackgroundImageComponentDefinition,
   MapDefinition,
   MapViewComponentDefinition,
   AssetCatalog,
@@ -45,6 +46,7 @@ import type {
 import type { TextTemplate } from './textBindings.js'
 import {
   assertGameLanguages,
+  assertBackgroundImageReference,
   characterProfileIssues,
   assertGraphicReference,
   validateInventorySources,
@@ -111,6 +113,7 @@ export type SceneComponentData =
   | ButtonComponentData
   | LanguageSelectComponentData
   | GraphicComponentDefinition
+  | BackgroundImageComponentDefinition
   | MapViewComponentData
   | InventoryComponentData
   | ActionBarComponentDefinition
@@ -673,6 +676,9 @@ export function assembleGameData(
         if (!assets) throw new Error(`Graphic ${component.id} requires an asset catalogue`)
         assertGraphicReference(assets, component.visual, component.appearance)
       }
+
+      if (component.type === 'background-image')
+        assertBackgroundImageReference(assets, component.image)
 
       if (component.type === 'inventory') {
         const issue = inventoryPanelIssues(

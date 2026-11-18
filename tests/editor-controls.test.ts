@@ -770,7 +770,11 @@ function addingComponentPanel(withResources = true) {
       'game.json': {
         ...object(source.documents['game.json']),
         ...(withResources
-          ? { maps: ['coast'], languages: { default: 'en', available: ['en', 'nl'] } }
+          ? {
+              maps: ['coast'],
+              assets: 'art',
+              languages: { default: 'en', available: ['en', 'nl'] },
+            }
           : {}),
       },
       'scenes/other.json': {
@@ -779,6 +783,25 @@ function addingComponentPanel(withResources = true) {
       },
       ...(withResources
         ? {
+            'assets/art.json': {
+              'schema-version': '1.0.0',
+              images: Object.fromEntries(
+                ['dawn', 'dusk'].map((id) => [
+                  id,
+                  {
+                    source: `assets/${id}.svg`,
+                    format: 'svg',
+                    bounds: { x: 0, y: 0, width: 20, height: 10 },
+                  },
+                ]),
+              ),
+              parts: {
+                landscape: {
+                  bounds: { x: 0, y: 0, width: 20, height: 10 },
+                  pieces: [{ id: 'sky', image: 'dawn', layer: 'sky' }],
+                },
+              },
+            },
             'maps/coast.json': {
               'schema-version': '1.0.0',
               type: 'square-grid',
@@ -1273,6 +1296,38 @@ describe('scene controls', () => {
 })
 
 describe('adding scene components', () => {
+  it('adds a full-grid background using only image assets and edits its fit and placement', () => {
+    const { edit, field, submit, persist, created } = addingComponentPanel()
+    edit('Component type', 'background-image')
+    expect(field('Image').children.map(({ value }) => value)).toEqual(['dawn', 'dusk'])
+    expect(field('Fit').value).toBe('cover')
+    expect(field('Row span').value).toBe('6')
+    expect(field('Column span').value).toBe('5')
+    submit('Create component')
+    expect(persist().scenes[0]!.components.at(-1)).toMatchObject({
+      id: 'background-image',
+      type: 'background-image',
+      image: 'dawn',
+      fit: 'cover',
+      placement: { row: 1, column: 1, rowSpan: 6, columnSpan: 5 },
+    })
+    expect(created).toEqual(['shop:background-image'])
+
+    edit('Image', 'dusk')
+    edit('Fit', 'contain')
+    edit('Column', '2')
+    edit('Column span', '4')
+    submit('Save component')
+
+    const updated = persist().scenes[0]!.components.filter(
+      ({ type }) => type === 'background-image',
+    )
+
+    expect(updated).toMatchObject([
+      { image: 'dusk', fit: 'contain', placement: { column: 2, columnSpan: 4 } },
+    ])
+  })
+
   it('creates and edits action information panels and ordinary button descriptions', () => {
     const { editor, edit, field, submit, persist } = addingComponentPanel()
     edit('Component type', 'action-info')
@@ -1392,10 +1447,18 @@ describe('adding scene components', () => {
     expect(editor.navigate('other', undefined, true)).toBe(true)
   })
 
-  it('explains missing map and language resources and cancels without writing', () => {
+  it('explains missing component resources and cancels without writing', () => {
     const { editor, root, edit, click, commands, cancelled } = addingComponentPanel(false)
     edit('Component type', 'map-view')
     expect(root.textContent).toContain('Create one in the Maps workspace')
+    expect(
+      root
+        .all()
+        .find((node) => node.tagName === 'button' && node.textContent === 'Create component')
+        ?.disabled,
+    ).toBe(true)
+    edit('Component type', 'background-image')
+    expect(root.textContent).toContain('Import or register artwork in Assets first')
     expect(
       root
         .all()

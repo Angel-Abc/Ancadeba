@@ -288,6 +288,14 @@ export const graphicComponentSchema = z.object({
   appearance: graphicAppearanceSchema.default({ colors: {}, visible: true, slots: {} }),
 })
 
+export const backgroundImageComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('background-image'),
+  placement: gridPlacementSchema,
+  image: assetIdSchema,
+  fit: z.enum(['contain', 'cover']).default('cover'),
+})
+
 export const mapViewComponentSchema = z
   .object({
     id: gameIdSchema,
@@ -629,6 +637,7 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   buttonComponentSchema,
   languageSelectComponentSchema,
   graphicComponentSchema,
+  backgroundImageComponentSchema,
   mapViewComponentSchema,
   inventoryComponentSchema,
   actionBarComponentSchema,
@@ -955,6 +964,8 @@ export type SceneDefinition = z.infer<typeof sceneSchema>
 export type SceneComponentDefinition = z.infer<typeof sceneComponentSchema>
 
 export type GraphicComponentDefinition = z.infer<typeof graphicComponentSchema>
+
+export type BackgroundImageComponentDefinition = z.infer<typeof backgroundImageComponentSchema>
 
 export type MapViewComponentDefinition = z.infer<typeof mapViewComponentSchema>
 

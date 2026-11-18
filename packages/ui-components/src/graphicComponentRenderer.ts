@@ -9,7 +9,11 @@ import type {
   RenderedComponent,
 } from './componentRendering.js'
 import type { GraphicLease } from './graphicResources.js'
-import type { GraphicAppearance } from '@ancadeba/schemas'
+import {
+  assertBackgroundImageReference,
+  type BackgroundImageComponentDefinition,
+  type GraphicAppearance,
+} from '@ancadeba/schemas'
 
 export interface RenderedGraphic extends RenderedComponent {
   setAppearance(appearance: GraphicAppearance): void
@@ -17,13 +21,33 @@ export interface RenderedGraphic extends RenderedComponent {
 
 const namespace = 'http://www.w3.org/2000/svg'
 
-export class GraphicComponentRenderer implements IComponentRenderer<GraphicComponentData> {
-  render(initial: GraphicComponentData, context: ComponentRenderContext): RenderedGraphic {
-    let component = initial
+export class GraphicComponentRenderer implements IComponentRenderer<
+  GraphicComponentData | BackgroundImageComponentDefinition
+> {
+  render(
+    initial: GraphicComponentData | BackgroundImageComponentDefinition,
+    context: ComponentRenderContext,
+  ): RenderedGraphic {
+    const background = initial.type === 'background-image'
+    const bindings = background ? undefined : context.bindings
+
+    let component: GraphicComponentData = background
+      ? {
+          id: initial.id,
+          type: 'graphic',
+          placement: initial.placement,
+          visual: initial.image,
+          fit: initial.fit,
+          alt: '',
+          appearance: { colors: {}, visible: true, slots: {} },
+        }
+      : initial
+
     const { document } = context
     const root = document.createElement('div')
     root.className = 'ancadeba-graphic'
-    root.setAttribute('role', 'img')
+
+    if (!background) root.setAttribute('role', 'img')
 
     if (component.alt) root.setAttribute('aria-label', component.alt)
     else root.setAttribute('aria-hidden', 'true')
@@ -113,11 +137,13 @@ export class GraphicComponentRenderer implements IComponentRenderer<GraphicCompo
       try {
         if (!context.assets) throw new Error('The game has no asset catalogue')
 
+        if (background) assertBackgroundImageReference(context.assets, initial.image)
+
         const resolution = resolveGraphic(
           context.assets,
           component.visual,
           component.appearance,
-          context.bindings,
+          bindings,
         )
 
         root.hidden = !resolution.visible
@@ -151,19 +177,24 @@ export class GraphicComponentRenderer implements IComponentRenderer<GraphicCompo
       release(leases)
       leases = []
       root.replaceChildren()
-      root.classList.add('ancadeba-graphic--unavailable')
-      root.textContent = component.alt ? `${component.alt} — unavailable` : 'Graphic unavailable'
-      root.removeAttribute('aria-hidden')
-      root.setAttribute('aria-label', root.textContent)
+
+      if (!background) {
+        root.classList.add('ancadeba-graphic--unavailable')
+        root.textContent = component.alt ? `${component.alt} — unavailable` : 'Graphic unavailable'
+        root.removeAttribute('aria-hidden')
+        root.setAttribute('aria-label', root.textContent)
+      }
+
       report([error instanceof Error ? error.message : String(error)])
     }
 
-    const unsubscribe = context.bindings?.subscribeChanges(update)
+    const unsubscribe = bindings?.subscribeChanges(update)
     update()
 
     return {
       element: root,
       setAppearance(appearance) {
+        if (background) return
         component = { ...component, appearance }
         update()
       },

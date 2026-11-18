@@ -30,6 +30,15 @@
   grid-column: var(--ge-component-column) / span var(--ge-component-column-span);
 }
 
+.ancadeba-scene--with-background {
+  isolation: isolate;
+}
+
+.ancadeba-scene > .ancadeba-scene-item--background {
+  z-index: -1;
+  pointer-events: none;
+}
+
 .ancadeba-text {
   margin: 0;
   text-align: var(--ge-component-text-align);

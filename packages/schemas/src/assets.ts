@@ -225,6 +225,15 @@ export function graphicHasBindings(appearance: GraphicAppearance): boolean {
   return has(appearance) || Object.values(appearance.slots).some(has)
 }
 
+export function assertBackgroundImageReference(
+  catalog: AssetCatalog | undefined,
+  image: string,
+): void {
+  if (!catalog) throw new Error('Background image requires a valid asset catalogue')
+
+  if (!Object.hasOwn(catalog.images, image)) throw new Error(`Unknown image asset: ${image}`)
+}
+
 /** Validate a visual selection against its catalogue without browser or runtime dependencies. */
 export function assertGraphicReference(
   catalog: AssetCatalog,

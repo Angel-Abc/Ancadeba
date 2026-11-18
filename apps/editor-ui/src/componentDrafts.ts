@@ -1,12 +1,5 @@
 import type { ProjectView } from '@ancadeba/editor-core'
-import {
-  type ButtonComponentDefinition,
-  type LanguageSelectComponentDefinition,
-  type MapViewComponentDefinition,
-  type QuestLogComponentDefinition,
-  type TextComponentDefinition,
-  type SceneComponentDefinition,
-} from '@ancadeba/schemas'
+import type { SceneComponentDefinition } from '@ancadeba/schemas'
 
 export const creatableComponentTypes = [
   'save-slots',
@@ -16,6 +9,7 @@ export const creatableComponentTypes = [
   'button',
   'action-info',
   'map-view',
+  'background-image',
   'language-select',
   'quest-log',
   'character-creator',
@@ -24,15 +18,7 @@ export const creatableComponentTypes = [
 
 export type CreatableComponentType = (typeof creatableComponentTypes)[number]
 
-export type BasicComponent =
-  | Extract<SceneComponentDefinition, { type: 'save-slots' | 'save-status' | 'save-point' }>
-  | TextComponentDefinition
-  | ButtonComponentDefinition
-  | Extract<SceneComponentDefinition, { type: 'action-info' }>
-  | MapViewComponentDefinition
-  | LanguageSelectComponentDefinition
-  | QuestLogComponentDefinition
-  | Extract<SceneComponentDefinition, { type: 'character-creator' | 'character-sheet' }>
+export type BasicComponent = Extract<SceneComponentDefinition, { type: CreatableComponentType }>
 
 /** Supplies unique IDs and grid-sized defaults without mutating the saved project. */
 export function createComponentDraft(
@@ -54,6 +40,20 @@ export function createComponentDraft(
     rowSpan: Math.min(type === 'map-view' ? 6 : type === 'text' ? 3 : 2, scene.screen.grid.rows),
     columnSpan: Math.min(type === 'button' ? 4 : 8, scene.screen.grid.columns),
   }
+
+  if (type === 'background-image')
+    return {
+      id,
+      type,
+      image: Object.keys(view.assets?.images ?? {})[0] ?? '',
+      fit: 'cover',
+      placement: {
+        row: 1,
+        column: 1,
+        rowSpan: scene.screen.grid.rows,
+        columnSpan: scene.screen.grid.columns,
+      },
+    }
 
   if (type === 'text')
     return {
