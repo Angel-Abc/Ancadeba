@@ -164,6 +164,8 @@ export function bindInventoryEditor(
       false,
     )
 
+    picker.setAttribute('data-file-navigation', '')
+
     const name = controls.input(t('items.inventoryId'), id, (value) => {
       id = value.trim()
     })

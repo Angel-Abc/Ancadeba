@@ -75,8 +75,12 @@ export function inspectorFields(context: FieldContext) {
     render()
   }
 
-  const link = (kind: Specialist, id: string, key: string) =>
-    button(t(key), () => open(kind, id), !id || context.creating)
+  const link = (kind: Specialist, id: string, key: string) => {
+    const control = button(t(key), () => open(kind, id), !id || context.creating)
+    control.setAttribute('data-inspector-link', kind + '/' + id)
+
+    return control
+  }
 
   const main: HTMLElement[] = []
   const behavior: HTMLElement[] = []

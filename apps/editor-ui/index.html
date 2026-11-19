@@ -417,6 +417,7 @@
               <div id="scene-header-actions" class="preview-actions" hidden></div>
             </header>
             <div class="editor-pane-body">
+              <section id="recovered-components" hidden></section>
               <p id="editor-error" class="error" role="alert" hidden></p>
               <ul id="scene-list" class="scene-list" hidden></ul>
               <section id="project-repair" class="project-repair" hidden></section>
@@ -425,7 +426,11 @@
                 <form id="editor-metadata">
                   <div class="save-bar" data-save-actions>
                     <button type="submit" data-i18n="game.save">Save game properties</button>
+                    <button type="button" data-discard data-i18n="form.discardChanges">
+                      Discard
+                    </button>
                   </div>
+
                   <label for="editor-title" data-i18n="game.title">Game title</label
                   ><input id="editor-title" required />
                   <div class="metadata-translation-field">
@@ -490,6 +495,12 @@
                 <label for="editor-scenes" data-i18n="scene.label">Scene</label
                 ><select id="editor-scenes"></select>
                 <form id="scene-metadata" hidden>
+                  <div class="save-bar" data-save-actions>
+                    <button type="submit" data-i18n="scene.save">Save scene properties</button>
+                    <button type="button" data-discard data-i18n="form.discardChanges">
+                      Discard
+                    </button>
+                  </div>
                   <label for="scene-title" data-i18n="scene.title">Scene title</label
                   ><input id="scene-title" required />
                   <div class="metadata-translation-field">
@@ -525,18 +536,18 @@
                     Choose keys saved in Localization. Leave a key empty to use literal text.
                     Missing language translations use the default-language text.
                   </p>
-                  <div class="preview-actions" data-save-actions>
-                    <button type="submit" data-i18n="scene.save">Save scene properties</button>
-                  </div>
                 </form>
                 <form id="scene-layout" hidden>
+                  <div class="save-bar" data-save-actions>
+                    <button type="submit" data-i18n="grid.save">Save grid</button>
+                    <button type="button" data-discard data-i18n="form.discardChanges">
+                      Discard
+                    </button>
+                  </div>
                   <label for="scene-rows" data-i18n="grid.rows">Rows</label
                   ><input id="scene-rows" type="number" min="1" step="1" required />
                   <label for="scene-columns" data-i18n="grid.columns">Columns</label
                   ><input id="scene-columns" type="number" min="1" step="1" required />
-                  <div class="preview-actions" data-save-actions>
-                    <button type="submit" data-i18n="grid.save">Save grid</button>
-                  </div>
                 </form>
                 <form id="scene-create">
                   <h3 data-i18n="scene.add">Add scene</h3>
@@ -578,6 +589,10 @@
               <section id="localization-editor" hidden></section>
               <section id="stylesheet-editor" hidden></section>
               <section id="component-editor" hidden></section>
+              <details id="data-file-source" hidden>
+                <summary data-i18n="inspector.source">View source</summary>
+                <pre></pre>
+              </details>
               <section id="component-details" hidden>
                 <p id="component-help" class="help" data-i18n="tree.readOnly">
                   This component is available for inspection. Editing is not yet supported.

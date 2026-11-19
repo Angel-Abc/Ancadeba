@@ -74,10 +74,51 @@ export function bindProjectForms(
     }
   }
 
+  const fillProject = () => {
+    if (!view?.game) return
+    profile?.render(view, !dirtyForms.has(metadata.id))
+
+    if (!dirtyForms.has(metadata.id)) {
+      set('editor-title', view.game.title)
+      set('editor-description', view.game.description)
+      set('editor-version', view.game.version)
+
+      if (root.querySelector('#editor-manual-saving')) {
+        set('editor-manual-saving', view.game.saving?.manual ?? 'anywhere')
+        set('editor-autosave', view.game.saving?.autosave ?? 'automatic')
+      }
+
+      const menu = root.querySelector<HTMLSelectElement>('#editor-menu-scene')
+
+      if (menu) {
+        menu.replaceChildren(
+          ...[
+            ['', t('saving.disabled')],
+            ...view.scenes
+              .filter((scene) => scene.type === 'stand-alone')
+              .map((scene) => [scene.id, scene.title || scene.id]),
+          ].map(([id, title]) => {
+            const option = root.ownerDocument.createElement('option')
+            option.value = id!
+            option.textContent = title!
+
+            return option
+          }),
+        )
+        menu.value = view.game['menu-scene'] ?? ''
+      }
+
+      projectTranslations.render(view, view.game, true)
+    }
+  }
+
   const formFields = [
     'editor-title',
     'editor-description',
     'editor-version',
+    ...['editor-manual-saving', 'editor-autosave', 'editor-menu-scene'].filter((id) =>
+      root.querySelector('#' + id),
+    ),
     'editor-title-key',
     'editor-description-key',
     'scene-title',
@@ -129,6 +170,17 @@ export function bindProjectForms(
     form
       .querySelector?.('[data-save-actions]')
       ?.append(saveStatus(root.ownerDocument, t, () => dirtyForms.has(form.id)))
+    const discard = form.querySelector?.('[data-discard]')
+
+    if (discard)
+      on(discard, 'click', () => {
+        dirtyForms.delete(form.id)
+
+        if (form === metadata) fillProject()
+        else fillScene()
+        scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
+        error.hidden = true
+      })
     on(form, 'input', () => {
       dirtyForms.add(form.id)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
@@ -288,40 +340,7 @@ export function bindProjectForms(
 
       if (!dirtyForms.has(create.id)) create.reset()
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
-      profile?.render(view, !dirtyForms.has(metadata.id))
-
-      if (!dirtyForms.has(metadata.id)) {
-        set('editor-title', view.game.title)
-        set('editor-description', view.game.description)
-        set('editor-version', view.game.version)
-
-        if (root.querySelector('#editor-manual-saving')) {
-          set('editor-manual-saving', view.game.saving?.manual ?? 'anywhere')
-          set('editor-autosave', view.game.saving?.autosave ?? 'automatic')
-        }
-
-        const menu = root.querySelector<HTMLSelectElement>('#editor-menu-scene')
-
-        if (menu) {
-          menu.replaceChildren(
-            ...[
-              ['', t('saving.disabled')],
-              ...view.scenes
-                .filter((scene) => scene.type === 'stand-alone')
-                .map((scene) => [scene.id, scene.title || scene.id]),
-            ].map(([id, title]) => {
-              const option = root.ownerDocument.createElement('option')
-              option.value = id!
-              option.textContent = title!
-
-              return option
-            }),
-          )
-          menu.value = view.game['menu-scene'] ?? ''
-        }
-
-        projectTranslations.render(view, view.game, true)
-      }
+      fillProject()
 
       const selected = preferredScene ?? scenes.value
       const currentView = view

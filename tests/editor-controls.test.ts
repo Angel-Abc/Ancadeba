@@ -1624,7 +1624,7 @@ describe('action bar editor controls', () => {
     )
     expect(field('Item consumption').value).toBe('keep')
     expect(field('Item use noEffect text').value).toBe('Nothing to restore.')
-    submit('Save items and equipment')
+    submit('Save item settings')
     expect(commands[0]).toMatchObject({
       type: 'inventory.setItemPresentation',
       use: {
@@ -2101,7 +2101,7 @@ describe('action bar editor controls', () => {
       true,
     )
     expect(field('Property value').value).toBe('12')
-    submit('Save items and equipment')
+    submit('Save item settings')
     expect(commands[0]).toMatchObject({
       type: 'inventory.setItemPresentation',
       itemType: 'cloak',
@@ -2192,7 +2192,7 @@ describe('action bar editor controls', () => {
       false,
     )
     expect(field('Value', 'Base defense').value).toBe('3')
-    submit('Save items and equipment')
+    submit('Save owner settings')
     expect(commands[0]).toMatchObject({
       type: 'inventory.setEquipmentSlots',
       owner: 'player',
@@ -4906,11 +4906,11 @@ describe('editor draft workflows', () => {
     item.edit('Item editing target', 'item:tidal-charm')
     item.edit('Shared passive to grant', 'environments/current-reserve')
     item.click('Grant shared passive')
-    item.submit('Save items and equipment')
+    item.submit('Save item settings')
     await item.flush()
     expect(item.read().inventory!.itemTypes['tidal-charm']!.combatEffects!.passives).toHaveLength(2)
     item.click('Clear passive grants')
-    item.submit('Save items and equipment')
+    item.submit('Save item settings')
     await item.flush()
     expect(item.read().inventory!.itemTypes['tidal-charm']!.combatEffects!.passives).toBeUndefined()
     const ui = await connected(bindCombatEditor, source)
@@ -5033,7 +5033,7 @@ describe('editor draft workflows', () => {
     ui.edit('Blocked move categories (comma-separated)', 'weapon')
     ui.edit('Shared move to grant', 'environments/purge-valve')
     ui.click('Grant shared move')
-    ui.submit('Save items and equipment')
+    ui.submit('Save item settings')
     await ui.flush()
     expect(ui.read().inventory!.itemTypes['diving-suit']!.combatEffects).toMatchObject({
       damageDefenses: { resistances: { water: 40 } },
@@ -5044,7 +5044,7 @@ describe('editor draft workflows', () => {
     })
     expect(ui.read().diagnostics).toEqual([])
     ui.edit('Equipment combat mechanics', 'disabled')
-    ui.submit('Save items and equipment')
+    ui.submit('Save item settings')
     await ui.flush()
     expect(ui.read().inventory!.itemTypes['diving-suit']!.combatEffects).toBeUndefined()
     expect(ui.read().inventory!.itemTypes['diving-suit']!.equipmentSlots).toEqual(['body'])
@@ -7041,6 +7041,128 @@ describe('scene inspector registry', () => {
     return { revision: 'inspector', documents }
   }
 
+  it.each(['status-panel', 'shop'] as const)(
+    'opens the same %s from its specialist and saves only the selected component',
+    async (type) => {
+      const ui = panel()
+      const source = await sample('basic')
+      const view = inspectProject(source)
+
+      const scene = view.scenes.find((scene) =>
+        scene.components.some((component) => component.type === type),
+      )!
+
+      const saved = scene.components.find((component) => component.type === type)!
+      const open = vi.fn()
+      const bind = type === 'shop' ? bindShopEditor : bindStatusPanelEditor
+      const specialist = bind(ui.root.asElement(), vi.fn(), editorLocalization().t, open)
+      specialist.render({ ...ui.initial, view }, true)
+      specialist.navigate(scene.id)
+
+      const shortcut = ui.root
+        .all()
+        .find(
+          (control) => control.attributes.get('data-inspector-link') === scene.id + '/' + saved.id,
+        )!
+
+      shortcut.dispatchEvent(new Event('click'))
+      expect(open).toHaveBeenCalledWith(scene.id, type, saved.id)
+
+      const editor = bindComponentEditor(ui.root.asElement(), (command) =>
+        ui.commands.push(command),
+      )
+
+      editor.render({ ...ui.initial, view }, true)
+      editor.navigate(scene.id, saved.id)
+      ui.edit('Row', String(saved.placement.row === 1 ? 2 : 1))
+      const recovery = captureEditorDrafts(ui.root.asElement())
+      ui.click('Discard component draft')
+      expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
+      ui.submit('Save component')
+      const command = ui.commands[0]!
+      expect(command).not.toHaveProperty('panels')
+      const result = applyCommand(source, command)
+      expect(result.changedFiles).toEqual(['scenes/' + scene.id + '.json'])
+
+      const others = inspectProject(result.project).scenes.find(
+        (entry) => entry.id === scene.id,
+      )!.components
+
+      expect(others.filter((component) => component.id !== saved.id)).toEqual(
+        scene.components.filter((component) => component.id !== saved.id),
+      )
+    },
+  )
+
+  it('recovers old shop and inventory-panel edits into independent inspector drafts', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+    const scene = view.scenes.find((scene) => scene.id === 'shop')!
+    const original = scene.components.find((component) => component.type === 'shop')!
+    const panels = scene.components.filter((component) => component.type === 'inventory')
+    const shop = bindShopEditor(ui.root.asElement(), vi.fn(), editorLocalization().t, vi.fn())
+    shop.render({ ...ui.initial, view }, true)
+
+    const snapshot = {
+      shop: {
+        model: {
+          sceneId: scene.id,
+          draft: { ...original, label: 'Edited shop' },
+          panels: panels.map((panel, index) =>
+            index ? panel : { ...panel, label: 'Recovered panel' },
+          ),
+        },
+        fields: [],
+      },
+    }
+
+    expect(restoreEditorDrafts(ui.root.asElement(), snapshot)).toEqual([])
+    const recovered = shop.takeRecoveredComponents()
+    expect(recovered.map((entry) => entry.component.type)).toEqual(['shop', 'inventory'])
+    expect(shop.hasDrafts()).toBe(false)
+    const editor = bindComponentEditor(ui.root.asElement(), (command) => ui.commands.push(command))
+    editor.render({ ...ui.initial, view }, true)
+
+    for (const entry of recovered) {
+      editor.navigate(entry.sceneId, entry.existingId)
+      editor.resumeDraft(entry)
+      ui.submit('Save component')
+      ui.click('Discard component draft')
+    }
+
+    expect(ui.commands).toMatchObject([
+      { type: 'scene.upsertShop', component: { label: 'Edited shop' } },
+      { type: 'scene.upsertItemView', component: { label: 'Recovered panel' } },
+    ])
+    expect(ui.commands[0]).not.toHaveProperty('panels')
+  })
+
+  it('keeps a rule button preset and its enabled condition through recovery', async () => {
+    const ui = panel()
+    const source = await sample('basic')
+    const view = inspectProject(source)
+    const editor = bindComponentEditor(ui.root.asElement(), (command) => ui.commands.push(command))
+    editor.render({ ...ui.initial, view }, true)
+    const action = Object.keys(view.rules!.actions)[0]!
+    const condition = view.rules!.state.find((field) => typeof field.value === 'boolean')!
+    editor.navigate('standard', undefined, true)
+    editor.startCreation('button', action)
+    expect(ui.field('Component type').value).toBe('button')
+    ui.edit('Enable when true', JSON.stringify({ source: 'game.state', path: condition.path }))
+    const saved = captureEditorDrafts(ui.root.asElement())
+    ui.click('Discard component draft')
+    expect(restoreEditorDrafts(ui.root.asElement(), saved)).toEqual([])
+    ui.submit('Create component')
+    expect(ui.commands).toMatchObject([
+      {
+        type: 'scene.upsertComponent',
+        component: {
+          action: { type: 'request-action', action, enabledWhen: { path: condition.path } },
+        },
+      },
+    ])
+  })
+
   it('opens the exact curator translation and protects an unfinished key', async () => {
     const ui = panel()
     const open = vi.fn()
@@ -7075,11 +7197,18 @@ describe('scene inspector registry', () => {
       const ui = panel()
       const source = await sample('basic')
       const bind = kind === 'combat' ? bindCombatEditor : bindLevelingEditor
-      const editor = bind(ui.root.asElement(), (command) => ui.commands.push(command))
+
+      const editor = bind(
+        ui.root.asElement(),
+        (command) => ui.commands.push(command),
+        editorLocalization().t,
+        vi.fn(),
+      )
+
       editor.render({ ...ui.initial, view: inspectProject(source) }, true)
       editor.navigate('advanced-training', kind === 'combat' ? 'advanced-training' : 'player')
-      editor.setDefinitionOnly(true)
-      ui.submit(kind === 'combat' ? 'Save combat encounter' : 'Save character levels')
+      ui.edit(kind === 'combat' ? 'Encounter name' : 'Profile label', 'Definition edit')
+      ui.submit(kind === 'combat' ? 'Save combat encounter' : 'Save leveling profile')
       expect(ui.commands).toHaveLength(1)
       expect(ui.commands[0]).not.toHaveProperty('scene')
       const command = ui.commands[0]!
@@ -7087,9 +7216,9 @@ describe('scene inspector registry', () => {
       if (command.type === 'game.upsertCombat')
         expect(command.encounter.id).toBe('advanced-training')
       else expect(command).toMatchObject({ type: 'game.upsertLeveling', profile: { id: 'player' } })
-      expect(
-        applyCommand(source, command).changedFiles.some((file) => file.startsWith('scenes/')),
-      ).toBe(false)
+      expect(applyCommand(source, command).changedFiles).toEqual([
+        kind === 'combat' ? 'combat/advanced-training.json' : 'leveling/player.json',
+      ])
     },
   )
 

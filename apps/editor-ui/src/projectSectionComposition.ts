@@ -1,3 +1,5 @@
+import { bindRecoveredComponents } from './recoveredSceneComponents.js'
+import type { OpenSceneComponent } from './componentShortcuts.js'
 import { type ProjectSectionDefinition } from './projectSectionRegistry.js'
 import { builtinSectionDefinitions } from './projectBuiltinSections.js'
 import { bindProjectForms } from './projectForms.js'
@@ -239,6 +241,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (mapElement)
@@ -260,6 +263,7 @@ export function createProjectSections({
           renderTree(state.selection.key)
         },
         onSaved(id) {
+          if (state.selection.key === 'data-file:maps:' + id) return
           state.selection = id
             ? { key: `map:${id}`, section: 'maps', kind: 'map', id, label: id }
             : { key: 'map-new', section: 'maps', kind: 'new-map', label: t('maps.new') }
@@ -274,6 +278,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (statusPanelElement)
@@ -283,6 +288,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (levelingElement)
@@ -292,6 +298,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (localizationElement)
@@ -330,6 +337,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (combatElement)
@@ -339,6 +347,10 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
+      (id) => {
+        visit('data-file:combatLibraries:' + id)
+      },
     )
 
   if (shopElement)
@@ -348,6 +360,7 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   if (itemElement)
@@ -357,40 +370,125 @@ export function createProjectSections({
         void controller.save(command)
       },
       t,
+      openSceneComponent,
     )
 
   const returnButton = root.querySelector<HTMLButtonElement>('#inspector-return')
-  let currentPath = ''
-  let linked: { origin: string; destination: string; path: string | undefined } | undefined
-
   const linkStatus = root.querySelector<HTMLElement>('#inspector-navigation-status')
+  let currentPath = ''
+  let travelling = false
+  const history: { origin: string; destination: string; label: string; restore: () => void }[] = []
 
-  const clearLink = () => {
+  function updateBack() {
+    const step = history.at(-1)
+
     if (linkStatus) linkStatus.textContent = ''
 
-    if (linked?.destination === 'combat') combatEditor?.setDefinitionOnly(false)
+    if (!returnButton) return
+    returnButton.hidden = !step
+    returnButton.disabled = !step
 
-    if (linked?.destination === 'leveling') levelingEditor?.setDefinitionOnly(false)
-    linked = undefined
-
-    if (returnButton) returnButton.hidden = true
+    if (step) returnButton.textContent = t('inspector.return', { id: step.label })
   }
 
-  const hasBlockingDraft = () => {
-    if (!hasDrafts()) return false
+  function hasBlockingDraft() {
+    if (!hasDrafts(['recovered-components'])) return false
 
     if (linkStatus) linkStatus.textContent = t('inspector.saveFirst')
 
     return true
   }
 
-  const goBack = () => {
-    if (!linked || hasBlockingDraft()) return
-    const origin = linked.origin
-    selectKey(origin)
+  function travel(key: string) {
+    travelling = true
 
-    if (state.selection.key === origin) clearLink()
+    try {
+      selectKey(key)
+
+      return state.selection.key === key
+    } finally {
+      travelling = false
+    }
   }
+
+  function visit(destination: string) {
+    if (hasBlockingDraft()) return false
+    const origin = state.selection
+    const active = root.ownerDocument.activeElement
+    const focus = active instanceof HTMLElement ? active : undefined
+    const identity = focus?.getAttribute('data-inspector-link')
+    const restoreEntry = origin.kind === 'component' ? componentEditor?.rememberEntry() : undefined
+    const restoreTab = origin.section === 'rules' ? rulesPanel?.rememberTab() : undefined
+
+    const restoreDefinition =
+      origin.section === 'combat'
+        ? combatEditor?.rememberSelection()
+        : origin.section === 'leveling'
+          ? levelingEditor?.rememberSelection()
+          : undefined
+
+    if (!travel(destination)) return false
+    history.push({
+      origin: origin.key,
+      label:
+        origin.id ??
+        t(sections.find((section) => section.id === origin.section)?.labelKey ?? origin.label),
+      destination,
+      restore() {
+        restoreEntry?.()
+        restoreTab?.()
+        restoreDefinition?.()
+
+        const trigger = focus?.isConnected
+          ? focus
+          : identity
+            ? Array.from(root.querySelectorAll<HTMLElement>('[data-inspector-link]')).find(
+                (element) =>
+                  element.getAttribute('data-inspector-link') === identity &&
+                  !element.closest('[hidden]'),
+              )
+            : undefined
+
+        trigger?.focus()
+      },
+    })
+    updateBack()
+
+    return true
+  }
+
+  function goBack() {
+    const step = history.at(-1)
+
+    if (!step || hasBlockingDraft() || !travel(step.origin)) return
+    history.pop()
+    updateBack()
+    step.restore()
+  }
+
+  function openSceneComponent(...[scene, type, id, reference]: Parameters<OpenSceneComponent>) {
+    if (!visit(id ? 'component:' + scene + ':' + id : 'component-new:' + scene)) return
+
+    if (!id) componentEditor?.startCreation(type, reference)
+  }
+
+  const recoveryRoot = treeElement && root.querySelector<HTMLElement>('#recovered-components')
+
+  const recovered =
+    recoveryRoot &&
+    bindRecoveredComponents(recoveryRoot, t, (draft) => {
+      if (!componentEditor) return false
+
+      const destination = draft.existingId
+        ? 'component:' + draft.sceneId + ':' + draft.existingId
+        : 'component-new:' + draft.sceneId
+
+      if (hasBlockingDraft() || (state.selection.key !== destination && !visit(destination)))
+        return false
+      componentEditor.resumeDraft(draft)
+
+      return true
+    })
 
   returnButton?.addEventListener('click', goBack)
 
@@ -405,7 +503,6 @@ export function createProjectSections({
         createPreview: (component, view, starting) =>
           assetsPanel?.createScenePreview?.(component, view, starting),
         onOpen(kind, id) {
-          if (hasBlockingDraft()) return
           const origin = state.selection
           const sceneId = origin.parentId
 
@@ -420,34 +517,22 @@ export function createProjectSections({
                     ? 'component:' + sceneId + ':' + id
                     : kind
 
-          selectKey(destination)
-
-          if (state.selection.key !== destination) return
+          if (!visit(destination)) return
 
           if (kind === 'character-profile')
             root.querySelector<HTMLSelectElement>('#editor-character-profile select')?.focus()
 
           if (kind === 'localization') localizationEditor?.openKey(id)
 
-          if (kind === 'combat') {
-            combatEditor?.navigate(sceneId, id)
-            combatEditor?.setDefinitionOnly(true)
-          }
+          if (kind === 'combat') combatEditor?.navigate(sceneId, id)
 
-          if (kind === 'leveling') {
-            levelingEditor?.navigate(sceneId, id, origin.id)
-            levelingEditor?.setDefinitionOnly(true)
-          }
-
-          linked = { origin: origin.key, destination, path: currentPath }
-
-          if (returnButton) {
-            returnButton.hidden = false
-            returnButton.disabled = false
-            returnButton.textContent = t('inspector.return', { id: origin.id ?? '' })
-          }
+          if (kind === 'leveling') levelingEditor?.navigate(sceneId, id, origin.id)
         },
         onCreated(sceneId, componentId) {
+          const step = history.at(-1)
+
+          if (step?.destination === 'component-new:' + sceneId)
+            step.destination = 'component:' + sceneId + ':' + componentId
           state.selection = {
             key: `component:${sceneId}:${componentId}`,
             section: 'scenes',
@@ -458,7 +543,8 @@ export function createProjectSections({
           }
         },
         onCancel(sceneId) {
-          selectKey(`scene:${sceneId}`)
+          if (history.at(-1)?.destination === state.selection.key) goBack()
+          else selectKey(`scene:${sceneId}`)
         },
       },
     )
@@ -514,18 +600,50 @@ export function createProjectSections({
     ...registrations.filter((entry) => !entry.tree),
     {
       create: () => ({
+        id: 'recovered-components',
+        role: 'adjunct',
+        matches: () => false,
+        hasDrafts: () => recovered?.hasDrafts() ?? false,
+        afterRestore() {
+          if (recovered)
+            recovered.add(
+              [
+                statusPanel,
+                shopEditor,
+                actionBarPanel,
+                storyEditor,
+                itemEditor,
+                combatEditor,
+                levelingEditor,
+                rulesPanel,
+              ].flatMap((editor) => editor?.takeRecoveredComponents() ?? []),
+            )
+        },
+        render(next, replace) {
+          if (currentPath !== next.path || (replace && !next.preserveDrafts)) recovered?.clear()
+        },
+      }),
+    },
+    {
+      create: () => ({
         id: 'inspector-return',
         role: 'adjunct',
         canNavigate: ({ node }) =>
-          !linked || node.key === linked.destination || !hasBlockingDraft(),
+          !history.length || node.key === state.selection.key || !hasBlockingDraft(),
         matches: () => false,
         selectionChanged: ({ node }) => {
-          if (linked && linked.destination !== node.key) clearLink()
+          if (!travelling && history.length && history.at(-1)?.destination !== node.key) {
+            history.length = 0
+            updateBack()
+          }
         },
         render: (next) => {
-          currentPath = next.path
+          if (currentPath !== next.path) {
+            history.length = 0
+            updateBack()
+          }
 
-          if (linked && linked.path !== next.path) clearLink()
+          currentPath = next.path
         },
         dispose: () => returnButton?.removeEventListener('click', goBack),
       }),

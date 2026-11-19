@@ -48,7 +48,7 @@ interface BuiltinEditors {
   componentClipboard: ReturnType<typeof bindComponentClipboard> | undefined
 }
 
-function target({ node, component }: ProjectSelection): string {
+function target({ node, component, resource }: ProjectSelection): string {
   if (node.section === 'scenes') {
     if (node.kind === 'new-graphic') return 'assets'
 
@@ -63,9 +63,7 @@ function target({ node, component }: ProjectSelection): string {
 
   if (node.section === 'game') return 'forms'
 
-  if (node.kind === 'data-file' && node.parentId === 'maps') return 'maps'
-
-  if (node.kind === 'data-file' && node.parentId === 'inventories') return 'items'
+  if (node.kind === 'data-file' && resource?.editSection) return resource.editSection
 
   return node.section
 }
@@ -103,9 +101,16 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
         activate(selection) {
           element?.setAttribute(
             'data-scope',
-            selection.node.kind === 'component' ? 'component' : 'section',
+            selection.node.kind === 'data-file'
+              ? 'file'
+              : selection.node.kind === 'component'
+                ? 'component'
+                : 'section',
           )
           options.activate?.(selection)
+          const identity = element?.querySelector<HTMLInputElement>('[data-file-identity]')
+
+          if (identity) identity.readOnly = selection.node.kind === 'data-file'
         },
       }),
     })
@@ -302,21 +307,37 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
   })
   const combat = editors.combatEditor
 
-  const encounter = ({ component }: ProjectSelection) =>
-    component?.type === 'combat' ? component.encounter : undefined
+  const encounter = ({ component, node }: ProjectSelection) =>
+    node.kind === 'data-file' && node.parentId === 'combat'
+      ? node.id
+      : component?.type === 'combat'
+        ? component.encounter
+        : undefined
 
   add('combat', 'combat-editor', combat, {
     canNavigate: (selection) =>
       target(selection) !== 'combat' ||
-      combat!.canNavigate(selection.sceneId, encounter(selection)),
+      (combat!.canOpenFile(
+        selection.node.kind === 'data-file' ? selection.node.key : '',
+        selection.node.parentId === 'combatLibraries',
+      ) &&
+        combat!.canNavigate(selection.sceneId, encounter(selection))),
     activate: (selection) => {
+      combat!.openFile(
+        selection.node.kind === 'data-file' ? selection.node.key : '',
+        selection.node.parentId === 'combatLibraries' ? selection.node.id : undefined,
+      )
       combat!.navigate(selection.sceneId, encounter(selection))
     },
   })
   const leveling = editors.levelingEditor
 
-  const profile = ({ component }: ProjectSelection) =>
-    component?.type === 'character-progression' ? component.profile : undefined
+  const profile = ({ component, node }: ProjectSelection) =>
+    node.kind === 'data-file'
+      ? node.id
+      : component?.type === 'character-progression'
+        ? component.profile
+        : undefined
 
   add('leveling', 'leveling-editor', leveling, {
     canNavigate: (selection) =>
@@ -379,7 +400,23 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
     },
   })
   add('localization', 'localization-editor', editors.localizationEditor)
-  add('story', 'story-editor', editors.storyEditor)
+
+  const storyKey = ({ node }: ProjectSelection) =>
+    node.kind === 'data-file'
+      ? (node.parentId === 'dialogues' ? 'dialogue:' : 'quest:') + node.id
+      : ''
+
+  add('story', 'story-editor', editors.storyEditor, {
+    canNavigate: (selection) =>
+      target(selection) !== 'story' ||
+      !storyKey(selection) ||
+      editors.storyEditor!.canOpenDefinition(storyKey(selection)),
+    activate: (selection) => {
+      const key = storyKey(selection)
+
+      if (key) editors.storyEditor!.openDefinition(key)
+    },
+  })
   add('repair', undefined, editors.repairEditor, { role: 'adjunct', matches: () => false })
   definitions.push({ create: () => ({ id: 'read-only', role: 'fallback', matches: () => true }) })
 

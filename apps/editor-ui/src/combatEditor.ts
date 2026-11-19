@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -24,6 +26,8 @@ export function bindCombatEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
+  openLibrary?: (id: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -37,12 +41,14 @@ export function bindCombatEditor(
   const libraryEditor = bindCombatLibraryEditor(libraryRoot, save, t)
   let view: ProjectView | undefined
   let path: string | undefined
+  let fileKey: string | undefined
+  let submitted: EditorCommand['type'] | undefined
   let sceneId = ''
   let encounterId = ''
   let draft: CombatSource | undefined
   let component: ReturnType<typeof combatComponentSchema.parse> | undefined
   let dirty = false
-  let definitionOnly = false
+  let definitionOnly = Boolean(openComponent)
   let busy = false
   let creating = false
   let playerHealth = ''
@@ -62,7 +68,13 @@ export function bindCombatEditor(
   const reset = () => {
     const scene = view?.scenes.find((scene) => scene.id === sceneId)
     const found = scene?.components.find((component) => component.type === 'combat')
-    encounterId = encounterId || (found?.type === 'combat' ? found.encounter : '')
+    encounterId =
+      encounterId ||
+      (found?.type === 'combat'
+        ? found.encounter
+        : definitionOnly
+          ? (Object.keys(view?.combatSources ?? {})[0] ?? '')
+          : '')
     draft =
       encounterId && view?.combatSources?.[encounterId]
         ? structuredClone(view.combatSources[encounterId])
@@ -125,6 +137,16 @@ export function bindCombatEditor(
 
     if (parsed.success) {
       if (parsed.data.type === 'game.upsertCombat') encounterId = parsed.data.encounter.id
+
+      if (
+        [
+          'game.upsertCombat',
+          'game.removeCombat',
+          'scene.setCombat',
+          'combat.copySharedEntry',
+        ].includes(parsed.data.type)
+      )
+        submitted = parsed.data.type
       save(parsed.data)
     }
   }
@@ -175,7 +197,7 @@ export function bindCombatEditor(
       sceneId,
       sceneChoices(view, 'game'),
       (value) => {
-        if (!navigate(value)) picker.querySelector('select')!.value = sceneId
+        if (!navigate(value, encounterId)) picker.querySelector('select')!.value = sceneId
       },
       false,
     )
@@ -196,7 +218,10 @@ export function bindCombatEditor(
 
     // Creating an encounter is folded away while one is open, so its form starts near the top.
     // Each case keeps its own fold state; a fold that starts open records itself as opened.
-    fields.append(
+    const fileNavigation = controls.create('div')
+    fileNavigation.setAttribute('data-file-navigation', '')
+    fields.append(fileNavigation)
+    fileNavigation.append(
       ...(!definitionOnly ? [picker] : []),
       encounters,
       controls.fold(
@@ -236,8 +261,7 @@ export function bindCombatEditor(
           const enemyField = healthFields.find((field) => fieldId(field.path) === enemyHealth)
 
           if (
-            !scene ||
-            scene.type !== 'game' ||
+            (!definitionOnly && scene?.type !== 'game') ||
             !playerField ||
             !enemyField ||
             playerHealth === enemyHealth
@@ -299,12 +323,24 @@ export function bindCombatEditor(
       ),
     )
 
-    if (!draft || !scene || !component) return
+    if (!draft || (!scene && !definitionOnly) || !component) return
     const current = component
     const form = document.createElement('form')
     const button = document.createElement('button')
     button.type = 'submit'
     button.textContent = t('combat.saveEncounter')
+
+    const placement =
+      openComponent && scene && view.combatSources?.[encounterId]
+        ? controls.fold(
+            'scene-placement',
+            t('inspector.addToScene'),
+            false,
+            picker,
+            componentShortcuts(controls, view, scene, ['combat'], openComponent, encounterId),
+          )
+        : undefined
+
     form.append(
       saveBar(
         document,
@@ -312,6 +348,7 @@ export function bindCombatEditor(
         saveStatus(document, t, () => dirty),
         controls.button(t('combat.discard'), reset),
       ),
+      ...(placement ? [placement] : []),
       controls.section(
         'encounter-shared',
         sharedCombatForm(
@@ -319,7 +356,7 @@ export function bindCombatEditor(
           view,
           draft,
           render,
-          (library) => libraryEditor.navigate(library),
+          (library) => (openLibrary ? openLibrary(library) : libraryEditor.navigate(library)),
           (command) => {
             if (dirty) {
               error.textContent = t('combat.saveFirstCopy')
@@ -334,7 +371,7 @@ export function bindCombatEditor(
       ...combatForm(scopedFolds(controls, `encounter:${draft.id}`), view, draft, render, creating),
     )
 
-    if (!definitionOnly)
+    if (!definitionOnly && scene)
       form.append(
         controls.section(
           'encounter-view',
@@ -454,18 +491,42 @@ export function bindCombatEditor(
       dirty = saved.encounterDirty
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
+    takeRecoveredComponents() {
+      if (definitionOnly || !openComponent) return []
+      const drafts = dirty && component ? [recoveredComponent(view, sceneId, component)] : []
+      definitionOnly = true
+      render()
+
+      return drafts
+    },
     canNavigate: (id?: string, nextEncounter?: string) =>
       ((id === undefined || id === sceneId) &&
         (nextEncounter === undefined || nextEncounter === encounterId)) ||
       (!dirty && !simulation.hasDrafts()),
     navigate,
-    setDefinitionOnly(value: boolean) {
-      if (definitionOnly === value) return
-      definitionOnly = value
-      render()
+    rememberSelection() {
+      const scene = sceneId
+      const encounter = encounterId
+
+      return () => navigate(scene, encounter)
+    },
+    canOpenFile(key: string, library: boolean) {
+      if (key === fileKey) return true
+
+      return !libraryEditor.hasDrafts() && (!library || (!dirty && !simulation.hasDrafts()))
+    },
+    openFile(key: string, library?: string) {
+      if (key === fileKey) return
+      fileKey = key
+      fields.hidden = Boolean(library)
+      simulationRoot.hidden = Boolean(library)
+      libraryRoot.hidden = Boolean(key && !library)
+
+      if (library) libraryEditor.navigate(library)
     },
     hasDrafts: () => dirty || libraryEditor.hasDrafts() || simulation.hasDrafts(),
     render(state: ProjectEditorState, replaceFields: boolean) {
@@ -489,17 +550,13 @@ export function bindCombatEditor(
         )
 
       const saved =
-        replaceFields &&
-        [
-          'game.upsertCombat',
-          'game.removeCombat',
-          'scene.setCombat',
-          'combat.copySharedEntry',
-        ].includes(state.lastCommand ?? '')
+        submitted && !busy && !state.error && replaceFields && submitted === state.lastCommand
 
+      if (!busy) submitted = undefined
       const resetFields = projectChanged || (replaceFields && !state.preserveDrafts)
 
       if (resetFields) {
+        fileKey = undefined
         simulation.reset()
         sceneId = view?.scenes.find((scene) => scene.type === 'game')?.id ?? ''
         encounterId = ''

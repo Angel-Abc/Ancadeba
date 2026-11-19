@@ -1668,7 +1668,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   }
 
   /* In the stacked layout the workbench scrolls underneath the horizontal section rail. */
-  #editor-metadata > .save-bar {
+  .editor-pane-body .save-bar {
     top: 4rem;
   }
 
@@ -2297,5 +2297,52 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 @media (max-width: 960px) {
   #component-editor .component-form > .save-bar {
     top: 4rem;
+  }
+}
+
+[data-scope='file'] [data-file-navigation] {
+  display: none;
+}
+.component-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 0.5rem;
+}
+.component-shortcuts small {
+  color: var(--ed-muted);
+}
+.component-shortcuts button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+#data-file-source pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.editor-pane-body {
+  container: editing-pane / inline-size;
+}
+.editor-pane-body :is(fieldset, form, label, details, select, input, textarea) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.editor-pane-body form label:has(textarea),
+:is(
+  #editor-description,
+  #scene-description,
+  label[for='editor-description'],
+  label[for='scene-description']
+) {
+  grid-column: 1 / -1;
+}
+@container editing-pane (max-width: 32rem) {
+  :is(#editor-fields, #assets-panel) form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .save-bar button {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }

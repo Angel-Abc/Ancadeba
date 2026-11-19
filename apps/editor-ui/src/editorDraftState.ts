@@ -21,7 +21,11 @@ const fieldSchema = z.object({
   checked: z.boolean(),
 })
 
-const snapshotSchema = z.object({ model: z.unknown(), fields: z.array(fieldSchema) })
+const snapshotSchema = z.object({
+  model: z.unknown(),
+  fieldLayout: z.string().optional(),
+  fields: z.array(fieldSchema),
+})
 
 function draftFields(root: HTMLElement) {
   return Array.from(
@@ -95,6 +99,7 @@ export function registerEditorDraft<T extends z.ZodType>(
   schema: T,
   capture: () => z.output<T> | undefined,
   restore: (value: z.output<T>) => void,
+  fieldLayout?: string,
 ): void {
   // SAFETY: structuralSchema preserves output types, optionality and discriminants, relaxing only value checks.
   const structure = structuralSchema(schema) as z.ZodType<z.output<T>>
@@ -108,6 +113,7 @@ export function registerEditorDraft<T extends z.ZodType>(
         ? undefined
         : {
             model,
+            fieldLayout,
             fields: draftFields(root).map((field, index) => ({
               index,
               tag: field.tagName,
@@ -120,8 +126,9 @@ export function registerEditorDraft<T extends z.ZodType>(
     restore: (value) => {
       const saved = snapshotSchema.parse(value)
       restore(structure.parse(saved.model))
+
       // Pending identifiers and partially typed numeric text can live outside the main model.
-      restoreFields(root, saved.fields)
+      if (saved.fieldLayout === fieldLayout) restoreFields(root, saved.fields)
     },
   })
 }

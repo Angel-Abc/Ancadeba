@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -16,6 +18,7 @@ export function bindStatusPanelEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -110,6 +113,13 @@ export function bindStatusPanelEditor(
     fields.append(picker)
 
     if (!scene) return
+
+    if (openComponent && !dirty) {
+      fields.append(componentShortcuts(controls, view, scene, ['status-panel'], openComponent))
+
+      return
+    }
+
     const panels = scene.components.filter((component) => component.type === 'status-panel')
 
     if (panels.length) {
@@ -225,6 +235,15 @@ export function bindStatusPanelEditor(
   )
 
   return {
+    takeRecoveredComponents() {
+      if (!dirty || !draft) return []
+      const entry = recoveredComponent(view, sceneId, draft)
+
+      if (creating) delete entry.existingId
+      reset()
+
+      return [entry]
+    },
     canNavigate: (nextScene?: string, nextPanel?: string) =>
       ((!nextScene || nextScene === sceneId) && (!nextPanel || nextPanel === componentId)) ||
       !dirty,

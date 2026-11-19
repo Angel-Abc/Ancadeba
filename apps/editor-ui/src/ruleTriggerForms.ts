@@ -1,8 +1,10 @@
+import { recoveredComponent, type RecoveredComponent } from './recoveredSceneComponents.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerFormDraft } from './editorDraftState.js'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
 import type { GameBindingDefinition, ButtonComponentDefinition } from '@ancadeba/schemas'
 import {
+  saveBar,
   displayLabel,
   parseStatePath,
   placementFields,
@@ -24,11 +26,20 @@ export const ruleTriggerSections = ['buttons', 'inspection', 'actions', 'nearby'
 
 export type RuleTriggerSection = (typeof ruleTriggerSections)[number]
 
-function submit(form: HTMLFormElement, title: string, status: HTMLElement, action: () => void) {
+function submit(
+  form: HTMLFormElement,
+  title: string,
+  status: HTMLElement,
+  action: () => void,
+  discard?: HTMLElement,
+) {
   const button = form.ownerDocument.createElement('button')
   button.textContent = title
   button.type = 'submit'
-  form.append(button, status)
+  form.replaceChildren(
+    saveBar(form.ownerDocument, button, status, ...(discard ? [discard] : [])),
+    ...Array.from(form.children),
+  )
   form.addEventListener('submit', (event) => {
     event.preventDefault()
     action()
@@ -39,6 +50,7 @@ function buttonTriggers(
   owner: RuleFormControls,
   view: ProjectView,
   save: (command: EditorCommand) => void,
+  onRecovery?: (read: () => RecoveredComponent) => void,
 ): HTMLElement {
   const { t } = owner
   const buttons = owner.group(t('rules.sceneButtons'))
@@ -159,31 +171,36 @@ function buttonTriggers(
           },
         ),
       )
+
+      const readButton = (): Extract<
+        EditorCommand,
+        { type: 'scene.upsertRuleButton' }
+      >['component'] => ({
+        id,
+        type: 'button',
+        label,
+        placement,
+        ...(labelKey ? { labelKey } : {}),
+        ...(action
+          ? {
+              action: {
+                type: 'request-action',
+                action,
+                ...(enabled ? { enabledWhen: binding(enabled) } : {}),
+              },
+            }
+          : {}),
+      })
+
+      onRecovery?.(() => ({
+        ...recoveredComponent(view, scene.id, readButton()),
+        existingId: current?.id,
+      }))
       submit(
         form,
         t('rules.saveButton'),
         saveStatus(form.ownerDocument, t, () => dirty),
-        () =>
-          save({
-            type: 'scene.upsertRuleButton',
-            sceneId: scene.id,
-            component: {
-              id,
-              type: 'button',
-              label,
-              placement,
-              ...(labelKey ? { labelKey } : {}),
-              ...(action
-                ? {
-                    action: {
-                      type: 'request-action',
-                      action,
-                      ...(enabled ? { enabledWhen: binding(enabled) } : {}),
-                    },
-                  }
-                : {}),
-            },
-          }),
+        () => save({ type: 'scene.upsertRuleButton', sceneId: scene.id, component: readButton() }),
       )
       formArea.replaceChildren(form)
     }
@@ -223,6 +240,7 @@ function inspectionTriggers(
   owner: RuleFormControls,
   view: ProjectView,
   save: (command: EditorCommand) => void,
+  discard: () => void,
 ): HTMLElement {
   const { t } = owner
   const inspection = owner.group(t('rules.inspection'))
@@ -280,7 +298,9 @@ function inspectionTriggers(
           },
         ),
       )
-      form.append(t('rules.inspectionHelp'))
+      const help = create('p')
+      help.textContent = t('rules.inspectionHelp')
+      form.append(help)
       submit(
         form,
         t('rules.saveInspection'),
@@ -291,6 +311,11 @@ function inspectionTriggers(
             itemType,
             inspection: action ? { action, details: binding(path), inline } : null,
           }),
+        controls.button(t('form.discardChanges'), () => {
+          dirty = false
+          discard()
+          render()
+        }),
       )
       formArea.replaceChildren(form)
     }
@@ -332,6 +357,8 @@ export function ruleTriggerForms(
   save: (command: EditorCommand) => void,
   options: {
     controls?: (section: RuleTriggerSection) => RuleFormControls
+    recovery?: (section: RuleTriggerSection, read: () => RecoveredComponent) => void
+    shortcut?: (section: RuleTriggerSection) => HTMLElement | undefined
     retained?: ReadonlyMap<RuleTriggerSection, HTMLElement>
     discarded?: (section: RuleTriggerSection) => void
   } = {},
@@ -339,19 +366,22 @@ export function ruleTriggerForms(
   return ruleTriggerSections.map((section) => {
     const retained = options.retained?.get(section)
 
-    if (retained) return retained
+    const existing = retained ?? options.shortcut?.(section)
+
+    if (existing) return existing
     const scoped = options.controls?.(section) ?? controls
 
     switch (section) {
       case 'buttons':
-        return buttonTriggers(scoped, view, save)
+        return buttonTriggers(scoped, view, save, (read) => options.recovery?.(section, read))
       case 'inspection':
-        return inspectionTriggers(scoped, view, save)
+        return inspectionTriggers(scoped, view, save, () => options.discarded?.(section))
       case 'actions':
         return inventoryActionsForm(scoped, view, save, () => options.discarded?.(section))
       case 'nearby':
         return nearbyForm(scoped, view, save, undefined, {
           onDiscard: () => options.discarded?.(section),
+          recovery: (read) => options.recovery?.(section, read),
         })
     }
   })

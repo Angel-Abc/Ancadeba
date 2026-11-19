@@ -70,6 +70,7 @@ export function inspectorTranslations(controls: RuleFormControls, openKey: (key:
       value.className = 'inspector-translated-value'
       caption.textContent = literal ? (labels.get(literal) ?? literal.textContent) : data.title
       const edit = controls.button(t('inspector.editTranslation'), () => openKey(input.value))
+      edit.setAttribute('data-inspector-link', 'translation/' + input.value + '/' + data.title)
       edit.setAttribute(
         'aria-label',
         t('inspector.editField', { field: caption.textContent ?? data.title }),

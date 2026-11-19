@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -35,6 +37,7 @@ export function bindActionBarPanel(
   panel: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = panel.ownerDocument
   const navigation = document.createElement('div')
@@ -137,6 +140,12 @@ export function bindActionBarPanel(
 
     if (!scene) {
       barFields.append(t('controls.selectScene'))
+
+      return
+    }
+
+    if (openComponent && !barDirty) {
+      barFields.append(componentShortcuts(barControls, view, scene, ['action-bar'], openComponent))
 
       return
     }
@@ -246,12 +255,6 @@ export function bindActionBarPanel(
 
     const form = document.createElement('form')
 
-    if (!view.game.input)
-      form.append(
-        inputControls.input(t('controls.inputFileId'), inputId, (value) => {
-          inputId = value.trim()
-        }),
-      )
     const location = document.createElement('p')
     location.textContent = t('controls.inputFile', { id: view.game.input ?? inputId })
     const help = document.createElement('p')
@@ -260,13 +263,21 @@ export function bindActionBarPanel(
     saveButton.type = 'submit'
     saveButton.textContent = t('controls.saveInput')
     form.append(
-      location,
-      help,
       saveBar(
         document,
         saveButton,
         saveStatus(document, t, () => inputDirty),
+        inputControls.button(t('controls.discardInput'), resetInput),
       ),
+      location,
+      help,
+      ...(!view.game.input
+        ? [
+            inputControls.input(t('controls.inputFileId'), inputId, (value) => {
+              inputId = value.trim()
+            }),
+          ]
+        : []),
       ...inputDefinitionForm(
         inputControls,
         inputDraft,
@@ -289,13 +300,7 @@ export function bindActionBarPanel(
         error.textContent = failure instanceof Error ? failure.message : String(failure)
       }
     })
-    inputFields.append(
-      form,
-      inputControls.button(t('controls.discardInput'), () => {
-        resetInput()
-        error.textContent = ''
-      }),
-    )
+    inputFields.append(form)
   }
 
   registerEditorDraft(
@@ -333,9 +338,17 @@ export function bindActionBarPanel(
       renderBar()
       renderInput()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
+    takeRecoveredComponents() {
+      if (!barDirty || !barDraft) return []
+      const entry = { ...recoveredComponent(view, sceneId, barDraft), slot: selectedSlot }
+      resetBar()
+
+      return [entry]
+    },
     canNavigate: (nextScene?: string) => !nextScene || nextScene === sceneId || !barDirty,
     navigate,
     hasDrafts: () => barDirty || inputDirty,

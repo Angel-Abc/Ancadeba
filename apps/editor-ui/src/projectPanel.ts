@@ -309,6 +309,18 @@ export function bindProjectPanel(
         summary.textContent = t(node.kind === 'component' ? 'component.actions' : 'scene.actions')
     }
 
+    const source = root.querySelector<HTMLDetailsElement>('#data-file-source')
+
+    if (source) {
+      source.hidden = !dataFile
+
+      if (source.dataset.selection !== node.key) source.open = false
+      source.dataset.selection = node.key
+      const content = source.querySelector('pre')
+
+      if (content) content.textContent = dataFile ? JSON.stringify(dataFile.content, null, 2) : ''
+    }
+
     const details = registry.primaryId === 'read-only'
     find('component-details').hidden = !details
     const dataGroup = node.kind === 'data-group'
@@ -645,6 +657,18 @@ export function bindProjectPanel(
   }
 
   if (treeElement) {
+    const revealInvalid = (event: Event) => {
+      if (!(event.target instanceof HTMLElement)) return
+      let parent = event.target.parentElement
+
+      while (parent && parent !== workspace) {
+        if (parent instanceof HTMLDetailsElement) parent.open = true
+        parent = parent.parentElement
+      }
+    }
+
+    workspace.addEventListener('invalid', revealInvalid, true)
+    listeners.push(() => workspace.removeEventListener('invalid', revealInvalid, true))
     const refresh = () => queueMicrotask(() => refreshSaveStatuses(workspace))
 
     for (const event of ['input', 'change', 'click', 'keyup']) on(workspace, event, refresh)

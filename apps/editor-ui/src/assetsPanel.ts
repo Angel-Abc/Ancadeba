@@ -73,26 +73,43 @@ export function bindAssetsPanel(
   panel.innerHTML = `
     <p id="asset-intro" class="help" data-i18n="assets.help"></p>
     <div id="asset-gallery" class="asset-gallery"></div>
-    <div id="asset-empty" class="asset-empty" hidden><p id="asset-empty-text"></p><button type="button" id="asset-empty-action"></button></div><div id="asset-workshop">
-    <label for="asset-select" data-i18n="assets.visual"></label><select id="asset-select"></select>
-    <div id="asset-preview" class="asset-preview"></div><div id="asset-preview-controls" class="asset-preview-controls"></div>
-    <p class="help" data-i18n="assets.temporary"></p>
-    <form id="asset-palettes"><h4 data-i18n="assets.colors"></h4><div id="asset-color-fields"></div>
-      <label for="asset-preset-name" data-i18n="assets.presetName"></label><input id="asset-preset-name" pattern="[a-zA-Z0-9_-]+" />
-      <div class="preview-actions" data-save-actions><button type="button" id="asset-save-defaults" data-i18n="assets.saveDefaults"></button><button type="submit" data-i18n="assets.savePreset"></button><button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button></div>
-    </form>
-    </div><form id="asset-image"><h4 id="asset-image-heading" data-i18n="assets.import"></h4>
+    <div id="asset-empty" class="asset-empty" hidden><p id="asset-empty-text"></p><button type="button" id="asset-empty-action"></button></div>
+    <form id="asset-image">
+      <div class="save-bar" data-save-actions>
+        <button type="submit" data-i18n="assets.saveImage"></button>
+        <button type="button" data-discard data-i18n="form.discardChanges"></button>
+      </div>
+      <h4 id="asset-image-heading" data-i18n="assets.import"></h4>
       <label for="asset-image-id" data-i18n="metadata.id"></label><input id="asset-image-id" required pattern="[a-zA-Z0-9_-]+" />
       <label for="asset-format" data-i18n="assets.format"></label><select id="asset-format"><option>svg</option><option>png</option><option>jpeg</option><option>webp</option></select>
       <label for="asset-file" data-i18n="assets.file"></label><input id="asset-file" type="file" accept=".svg,.png,.jpg,.jpeg,.webp" />
       <label for="asset-source" data-i18n="assets.source"></label><input id="asset-source" placeholder="assets/images/tunic.svg" />
-      <div class="preview-actions" data-save-actions><button type="submit" data-i18n="assets.saveImage"></button></div>
+
     </form>
+    <div id="asset-workshop">
+    <label for="asset-select" data-i18n="assets.visual"></label><select id="asset-select"></select>
+    <div id="asset-preview" class="asset-preview"></div><div id="asset-preview-controls" class="asset-preview-controls"></div>
+    <p class="help" data-i18n="assets.temporary"></p>
+    <form id="asset-palettes">
+      <div class="save-bar" data-save-actions>
+        <button type="button" id="asset-save-defaults" data-i18n="assets.saveDefaults"></button>
+        <button type="submit" data-i18n="assets.savePreset"></button>
+        <button type="button" data-discard data-i18n="form.discardChanges"></button>
+      </div>
+      <h4 data-i18n="assets.colors"></h4><div id="asset-color-fields"></div>
+      <label for="asset-preset-name" data-i18n="assets.presetName"></label><input id="asset-preset-name" pattern="[a-zA-Z0-9_-]+" />
+      <button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button>
+    </form>
+    </div>
     <details><summary data-i18n="assets.definitions"></summary><form id="asset-definition">
+      <div class="save-bar" data-save-actions>
+        <button type="submit" data-i18n="assets.saveDefinition"></button>
+        <button type="button" data-discard data-i18n="form.discardChanges"></button>
+      </div>
       <label for="asset-kind" data-i18n="assets.kind"></label><select id="asset-kind"><option value="images" data-i18n="assets.image"></option><option value="parts" data-i18n="assets.part"></option><option value="compositions" data-i18n="assets.composition"></option></select>
       <label for="asset-definition-id" data-i18n="metadata.id"></label><input id="asset-definition-id" required pattern="[a-zA-Z0-9_-]+" />
       <label for="asset-json" data-i18n="assets.definitionJson"></label><textarea id="asset-json" rows="12" spellcheck="false"></textarea>
-      <div class="preview-actions" data-save-actions><button type="submit" data-i18n="assets.saveDefinition"></button><button id="asset-remove" type="button" data-i18n="assets.remove"></button></div>
+      <button id="asset-remove" type="button" data-i18n="assets.remove"></button>
     </form></details>
     <section id="graphic-definitions-editor" hidden></section>
     <section id="scene-graphic-editor" hidden></section>
@@ -543,6 +560,44 @@ export function bindAssetsPanel(
     find(id)
       .querySelector?.('[data-save-actions]')
       ?.append(saveStatus(document, t, () => dirty.has(id)))
+    find(id)
+      .querySelector?.('[data-discard]')
+      ?.addEventListener(
+        'click',
+        () => {
+          dirty.delete(id)
+          find<HTMLFormElement>(id).reset()
+
+          if (id === 'asset-palettes') {
+            appearance = graphicAppearanceSchema.parse({ ...appearance, colors: {} })
+            set('asset-preset-name', appearance.palette ?? '')
+            renderColors()
+            updatePreview()
+          } else if (id === 'asset-definition') {
+            const existing = selected && navigationKey.startsWith('asset:')
+
+            if (existing) {
+              const kind = kindOf(selected)
+              set('asset-kind', kind)
+              set('asset-definition-id', selected)
+              set('asset-json', JSON.stringify(catalog()[kind][selected], null, 2))
+            } else set('asset-json', '{}')
+          } else if (navigationKey.startsWith('asset:')) {
+            const image = catalog().images[selected]
+
+            if (image) {
+              set('asset-image-id', selected)
+              set('asset-format', image.format)
+              set('asset-source', image.source)
+            }
+          }
+
+          find<HTMLSelectElement>('asset-select').disabled =
+            dirty.has('asset-definition') || dirty.has('asset-palettes')
+          find('asset-error').hidden = true
+        },
+        { signal: abort.signal },
+      )
     on(id, 'input', (event) => {
       if (id === 'asset-palettes' && event.target instanceof HTMLSelectElement) return
       dirty.add(id)

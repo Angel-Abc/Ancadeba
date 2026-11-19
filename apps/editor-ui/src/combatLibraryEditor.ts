@@ -116,32 +116,33 @@ export function bindCombatLibraryEditor(
       false,
     )
 
-    fields.append(
-      controls.group(
-        t('tree.files.combatLibraries'),
-        picker,
-        controls.button(t('combat.addLibrary'), () => {
-          if (dirty) {
-            error.textContent = t('combat.librarySaveFirst')
+    const fileNavigation = controls.group(
+      t('tree.files.combatLibraries'),
+      picker,
+      controls.button(t('combat.addLibrary'), () => {
+        if (dirty) {
+          error.textContent = t('combat.librarySaveFirst')
 
-            return
-          }
+          return
+        }
 
-          let id = 'common'
-          let number = 1
+        let id = 'common'
+        let number = 1
 
-          while (
-            view?.game?.combatLibraries?.some((entry) => entry.toLowerCase() === id.toLowerCase())
-          )
-            id = `common-${number++}`
-          libraryId = id
-          draft = combatLibrarySchema.parse({ 'schema-version': '1.0.0', id })
-          creating = true
-          dirty = true
-          render()
-        }),
-      ),
+        while (
+          view?.game?.combatLibraries?.some((entry) => entry.toLowerCase() === id.toLowerCase())
+        )
+          id = `common-${number++}`
+        libraryId = id
+        draft = combatLibrarySchema.parse({ 'schema-version': '1.0.0', id })
+        creating = true
+        dirty = true
+        render()
+      }),
     )
+
+    fileNavigation.setAttribute('data-file-navigation', '')
+    fields.append(fileNavigation)
 
     if (!draft) return
     const current = draft
@@ -211,6 +212,7 @@ export function bindCombatLibraryEditor(
         document,
         saveButton,
         saveStatus(document, t, () => dirty),
+        controls.button(t('combat.discardLibrary'), reset),
       ),
       usage,
       entryUsage,
@@ -227,7 +229,6 @@ export function bindCombatLibraryEditor(
     })
     fields.append(
       form,
-      controls.button(t('combat.discardLibrary'), reset),
       controls.button(
         t('combat.deleteLibrary'),
         () => submit({ type: 'game.removeCombatLibrary', libraryId }),

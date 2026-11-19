@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -33,6 +35,7 @@ export function bindStoryEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -207,12 +210,16 @@ export function bindStoryEditor(
       false,
     )
 
-    fields.append(
+    const fileNavigation = controls.create('div')
+    fileNavigation.setAttribute('data-file-navigation', '')
+    fields.append(fileNavigation)
+    fileNavigation.append(
       picker,
       controls.button(t('story.addDialogue'), () => add('dialogue')),
       controls.button(t('story.addQuest'), () => add('quest')),
     )
     const journals = journalControls.group(t('story.journalPlacement'))
+    journals.setAttribute('data-file-navigation', '')
     journals.append(
       journalControls.select(
         t('story.journalScene'),
@@ -237,7 +244,13 @@ export function bindStoryEditor(
       ),
     )
 
-    if (journal && journalScene) {
+    const scene = view.scenes.find(({ id }) => id === journalScene)
+
+    if (openComponent && !journalDirty && scene)
+      journals.append(
+        componentShortcuts(journalControls, view, scene, ['quest-log'], openComponent),
+      )
+    else if (journal && journalScene) {
       const current = journal
       const form = document.createElement('form')
       const button = document.createElement('button')
@@ -337,6 +350,14 @@ export function bindStoryEditor(
     button.type = 'submit'
     button.textContent =
       current.kind === 'dialogue' ? t('story.saveDialogue') : t('story.saveQuest')
+
+    const identity = controls.input(t('story.definitionId'), current.data.id, (value) => {
+      current.data.id = value.trim()
+    })
+
+    const identityInput = identity.querySelector('input')!
+    identityInput.setAttribute('data-file-identity', '')
+    identityInput.readOnly = root.getAttribute?.('data-scope') === 'file'
     form.append(
       saveBar(
         document,
@@ -344,9 +365,7 @@ export function bindStoryEditor(
         saveStatus(document, t, () => dirty),
         controls.button(t('story.discard'), reset),
       ),
-      controls.input(t('story.definitionId'), current.data.id, (value) => {
-        current.data.id = value.trim()
-      }),
+      identity,
       ...(current.kind === 'dialogue'
         ? dialogueForm(controls, view, current.data, render)
         : questForm(controls, view, current.data, render)),
@@ -423,10 +442,25 @@ export function bindStoryEditor(
       journal = saved.journal
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
     hasDrafts: () => dirty || journalDirty,
+    takeRecoveredComponents() {
+      if (!journalDirty || !journal) return []
+      const entry = recoveredComponent(view, journalScene, journal)
+      resetJournal()
+      render()
+
+      return [entry]
+    },
+    canOpenDefinition: (key: string) => selection === key || !dirty,
+    openDefinition(key: string) {
+      if (key === selection || dirty) return
+      selection = key
+      reset()
+    },
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()
       const projectChanged = path !== state.path

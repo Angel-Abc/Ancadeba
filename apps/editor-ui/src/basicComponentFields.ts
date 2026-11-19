@@ -1,3 +1,4 @@
+import { gameBindingSchema } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import type { ButtonComponentDefinition } from '@ancadeba/schemas'
 import type { BasicComponent } from './componentDrafts.js'
@@ -383,6 +384,22 @@ export function basicComponentFields(
   const scenes = view.scenes.map((scene) => scene.id)
   const gameScenes = view.scenes.filter((scene) => scene.type === 'game').map((scene) => scene.id)
   const actions = Object.keys(view.rules?.actions ?? {})
+  const conditions: (readonly [string, string])[] = [['null', t('form.always')]]
+
+  for (const field of view.rules?.state ?? []) {
+    if (typeof field.value === 'boolean')
+      conditions.push([
+        JSON.stringify({ source: 'game.state', path: field.path }),
+        field.path.join('.'),
+      ])
+  }
+
+  if (draft.action?.type === 'request-action' && draft.action.enabledWhen) {
+    const current = draft.action.enabledWhen
+
+    if (!conditions.some(([value]) => value === JSON.stringify(current)))
+      conditions.push([JSON.stringify(current), current.path.join('.')])
+  }
 
   const mapViews =
     view.scenes
@@ -482,6 +499,15 @@ export function basicComponentFields(
             select(t('component.ruleAction'), action.action, actions, (value) => {
               action.action = value
             }),
+            select(
+              t('form.enableWhenTrue'),
+              JSON.stringify(action.enabledWhen ?? null),
+              conditions,
+              (value) => {
+                if (value === 'null') delete action.enabledWhen
+                else action.enabledWhen = gameBindingSchema.parse(JSON.parse(value))
+              },
+            ),
           ]
         : action?.type === 'interact-map'
           ? mapInteractFields(controls, view, sceneId, action, render)

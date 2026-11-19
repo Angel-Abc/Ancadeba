@@ -1,3 +1,4 @@
+import type { RecoveredComponent } from './recoveredSceneComponents.js'
 import { z } from 'zod'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import {
@@ -62,6 +63,7 @@ export function bindComponentEditor(
   let sceneId = '',
     componentId = ''
 
+  let preset: string | undefined
   let newType: ComponentType = 'text'
 
   let creating = false,
@@ -114,6 +116,15 @@ export function bindComponentEditor(
           ? newInspectorComponent(newType, current, view)
           : structuredClone(current.components.find((entry) => entry.id === componentId))
         : undefined
+
+    if (creating && draft && preset) {
+      if (draft.type === 'combat') draft.encounter = preset
+
+      if (draft.type === 'character-progression') draft.profile = preset
+
+      if (draft.type === 'button') draft.action = { type: 'request-action', action: preset }
+    }
+
     panels =
       creating && draft?.type === 'shop' && current && view ? shopCreationPanels(current, view) : []
 
@@ -217,6 +228,7 @@ export function bindComponentEditor(
         const selectedType = inspectorTypes.find((key) => key === picker.value)
 
         if (selectedType) {
+          preset = undefined
           newType = selectedType
           reset(true)
         }
@@ -364,6 +376,7 @@ export function bindComponentEditor(
       draft: sceneComponentSchema.optional(),
       creating: z.boolean(),
       newType: z.enum(inspectorTypes),
+      preset: z.string().optional(),
       bindingPending: z.object({ alias: z.string(), value: z.string() }),
       selection: inspectorSelectionSchema.optional(),
       panels: z.array(inventoryComponentSchema).optional(),
@@ -377,6 +390,7 @@ export function bindComponentEditor(
             draft,
             creating,
             newType,
+            preset,
             bindingPending,
             selection,
             panels,
@@ -388,6 +402,7 @@ export function bindComponentEditor(
       componentId = saved.componentId
       draft = saved.draft
       creating = saved.creating
+      preset = saved.preset
       newType = saved.newType
       panels = saved.panels ?? []
       hiddenPreviews = saved.hiddenPreviews ?? {}
@@ -396,6 +411,7 @@ export function bindComponentEditor(
       dirty = true
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   const same = (id?: string, component?: string, add = false) =>
@@ -405,6 +421,32 @@ export function bindComponentEditor(
     hasDrafts: () => dirty,
     canNavigate: (id?: string, component?: string, add = false) =>
       same(id, component, add) || !dirty,
+    resumeDraft(entry: RecoveredComponent) {
+      newType = entry.component.type
+      draft = structuredClone(entry.component)
+      panels = structuredClone(entry.panels ?? [])
+      hiddenPreviews = structuredClone(entry.hiddenPreviews ?? {})
+      selection = inspectorSelectionSchema.parse({ slot: entry.slot })
+
+      if (draft.type === 'nearby')
+        Object.assign(selection, entry.nearby ?? { selected: Object.keys(draft.entries)[0] ?? '' })
+      dirty = true
+      render()
+    },
+    startCreation(type: ComponentType, reference?: string) {
+      if (!creating || dirty) return
+      preset = reference
+      newType = type
+      reset(true)
+    },
+    rememberEntry() {
+      const entry = structuredClone(selection)
+
+      return () => {
+        selection = entry
+        render()
+      }
+    },
     navigate(id?: string, component?: string, add = false) {
       if (same(id, component, add)) return true
 
@@ -416,6 +458,7 @@ export function bindComponentEditor(
 
       sceneId = id ?? ''
       componentId = component ?? ''
+      preset = undefined
       creating = add
       newType = 'text'
       submitted = undefined

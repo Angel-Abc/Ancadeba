@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { itemViewFields } from './itemViewFields.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -36,6 +38,7 @@ export function bindItemEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -99,6 +102,7 @@ export function bindItemEditor(
 
   const viewButton = controls.button(t('items.views'), () => showDefinitions(false))
 
+  navigation.setAttribute('data-file-navigation', '')
   navigation.append(definitionButton, viewButton)
   showDefinitions(true)
 
@@ -128,14 +132,17 @@ export function bindItemEditor(
       ? structuredClone(view?.inventory?.owners[target.slice(6)]?.combatStats)
       : undefined
 
-    const source = view?.scenes
-      .find((scene) => scene.id === sceneId)
-      ?.components.find((entry) => entry.id === target.slice(5))
+    const source =
+      target.startsWith('view:') &&
+      view?.scenes
+        .find((scene) => scene.id === sceneId)
+        ?.components.find((entry) => entry.id === target.slice(5))
 
     component =
-      source?.type === 'item-details' ||
-      source?.type === 'equipment' ||
-      source?.type === 'inventory'
+      source &&
+      (source.type === 'item-details' ||
+        source?.type === 'equipment' ||
+        source?.type === 'inventory')
         ? structuredClone(source)
         : undefined
     dirty = false
@@ -188,11 +195,11 @@ export function bindItemEditor(
       ...Object.keys(view.inventory?.owners ?? {}).map(
         (id) => [`owner:${id}`, t('items.ownerSlots', { id })] as const,
       ),
-      ...(scene?.components
+      ...(openComponent && (!component || !dirty) ? [] : (scene?.components ?? []))
         .filter((component) => ['inventory', 'item-details', 'equipment'].includes(component.type))
         .map(
           (component) => [`view:${component.id}`, `${component.type}: ${component.id}`] as const,
-        ) ?? []),
+        ),
     ]
 
     const picker = controls.select(
@@ -217,7 +224,17 @@ export function bindItemEditor(
 
     fields.append(scenePicker, picker)
 
-    if (scene)
+    if (scene && openComponent) {
+      const links = componentShortcuts(
+        controls,
+        view,
+        scene,
+        ['inventory', 'item-details', 'equipment'],
+        openComponent,
+      )
+
+      fields.append(controls.fold('item-scene-views', t('items.views'), !item && !slots, links))
+    } else if (scene)
       for (const type of ['inventory', 'item-details', 'equipment'] as const)
         fields.append(
           controls.button(t('items.addView', { type }), () => {
@@ -273,12 +290,15 @@ export function bindItemEditor(
     const form = document.createElement('form')
     const button = document.createElement('button')
     button.type = 'submit'
-    button.textContent = t('items.save')
+    button.textContent = t(
+      item ? 'items.saveItemSettings' : slots ? 'items.saveOwnerSettings' : 'items.save',
+    )
     form.append(
       saveBar(
         document,
         button,
         saveStatus(document, t, () => dirty),
+        controls.button(t('items.discard'), reset),
       ),
     )
 
@@ -394,7 +414,7 @@ export function bindItemEditor(
         submit({ type: 'scene.upsertItemView', sceneId, component, createOnly: creating })
       }
     })
-    fields.append(form, controls.button(t('items.discard'), reset))
+    fields.append(form)
 
     if (component && source && !creating)
       fields.append(
@@ -449,9 +469,20 @@ export function bindItemEditor(
       dirty = !definitions
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
+    takeRecoveredComponents() {
+      if (!dirty || !component || !target.startsWith('view:')) return []
+      const entry = { ...recoveredComponent(view, sceneId, component), hiddenPreviews }
+
+      if (creating) delete entry.existingId
+      target = ''
+      reset()
+
+      return [entry]
+    },
     canNavigate: (nextScene?: string, nextComponent?: string) =>
       !(nextComponent && definitions && (dirty || inventoryEditor.hasDrafts())) &&
       (((!nextScene || nextScene === sceneId) &&

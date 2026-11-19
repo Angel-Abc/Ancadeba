@@ -105,7 +105,6 @@ export const mapFileNodes = (view: ProjectView, t: Translate): ProjectTreeNode[]
   { key: 'map-new', section: 'maps', kind: 'new-map', label: t('maps.new') },
 ]
 
-/** Game data without an editor yet is listed for reference and shown read-only. */
 /** One group of game files listed under Data files, with the section that edits them. */
 interface DataFileGroup {
   id: string
@@ -172,7 +171,7 @@ export function dataFileContent(
   return content === undefined ? undefined : { content, editSection: group.editSection }
 }
 
-/** Read-only game files that have no dedicated tree entries elsewhere. */
+/** File selections carry both the specialist route and the saved source document. */
 export const dataFilesSection: ProjectTreeSection = {
   id: 'data',
   labelKey: 'tree.data',

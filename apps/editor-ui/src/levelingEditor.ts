@@ -1,3 +1,5 @@
+import { recoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -38,6 +40,7 @@ export function bindLevelingEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -53,7 +56,7 @@ export function bindLevelingEditor(
   let draft: LevelingProfile | undefined
   let component: ReturnType<typeof characterProgressionComponentSchema.parse> | undefined
   let dirty = false
-  let definitionOnly = false
+  let definitionOnly = Boolean(openComponent)
   let busy = false
   let submitted: EditorCommand | undefined
 
@@ -144,7 +147,7 @@ export function bindLevelingEditor(
       sceneId,
       sceneChoices(view, 'game'),
       (value) => {
-        if (!navigate(value)) picker.querySelector('select')!.value = sceneId
+        if (!navigate(value, profileId)) picker.querySelector('select')!.value = sceneId
       },
       false,
     )
@@ -202,6 +205,8 @@ export function bindLevelingEditor(
 
     addProfile.className = 'context-picker'
 
+    profiles.setAttribute('data-file-navigation', '')
+    addProfile.setAttribute('data-file-navigation', '')
     fields.append(...(!definitionOnly ? [picker] : []), profiles, addProfile)
 
     const displays =
@@ -225,7 +230,7 @@ export function bindLevelingEditor(
       fields.append(display)
     }
 
-    if (!draft || !component || !scene) return
+    if (!draft || !component || (!scene && !definitionOnly)) return
     const current = draft
     const currentView = component
 
@@ -253,7 +258,33 @@ export function bindLevelingEditor(
     const form = document.createElement('form')
     const saveButton = document.createElement('button')
     saveButton.type = 'submit'
-    saveButton.textContent = t('leveling.save')
+    saveButton.textContent = t(openComponent ? 'leveling.saveProfile' : 'leveling.save')
+
+    const placement =
+      openComponent && scene && view.leveling?.[profileId]
+        ? controls.fold(
+            'scene-placement',
+            t('inspector.addToScene'),
+            false,
+            picker,
+            componentShortcuts(
+              controls,
+              view,
+              scene,
+              ['character-progression'],
+              openComponent,
+              profileId,
+            ),
+          )
+        : undefined
+
+    const identity = input(t('leveling.profileId'), current.id, (value) => {
+      current.id = value.trim()
+    })
+
+    const identityInput = identity.querySelector('input')!
+    identityInput.setAttribute('data-file-identity', '')
+    identityInput.readOnly = root.getAttribute?.('data-scope') === 'file'
     form.append(
       saveBar(
         document,
@@ -261,9 +292,8 @@ export function bindLevelingEditor(
         saveStatus(document, t, () => dirty),
         button(t('leveling.discard'), reset),
       ),
-      input(t('leveling.profileId'), current.id, (value) => {
-        current.id = value.trim()
-      }),
+      ...(placement ? [placement] : []),
+      identity,
       input(t('leveling.profileLabel'), current.label, (value) => {
         current.label = value
       }),
@@ -460,7 +490,7 @@ export function bindLevelingEditor(
       )
     }
 
-    if (!definitionOnly)
+    if (!definitionOnly && scene)
       form.append(
         group(
           t('leveling.displayInScene'),
@@ -564,20 +594,31 @@ export function bindLevelingEditor(
       dirty = true
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
+    takeRecoveredComponents() {
+      if (definitionOnly || !openComponent) return []
+      const drafts = dirty && component ? [recoveredComponent(view, sceneId, component)] : []
+      definitionOnly = true
+      render()
+
+      return drafts
+    },
+    rememberSelection() {
+      const scene = sceneId
+      const profile = profileId
+      const display = componentId
+
+      return () => navigate(scene, profile, display)
+    },
     canNavigate: (id?: string, nextProfile?: string, nextComponent?: string) =>
       ((id === undefined || id === sceneId) &&
         (nextProfile === undefined || nextProfile === profileId) &&
         (nextComponent === undefined || nextComponent === componentId)) ||
       !dirty,
     navigate,
-    setDefinitionOnly(value: boolean) {
-      if (definitionOnly === value) return
-      definitionOnly = value
-      render()
-    },
     hasDrafts: () => dirty,
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()

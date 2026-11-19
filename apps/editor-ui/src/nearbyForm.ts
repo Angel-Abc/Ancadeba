@@ -1,3 +1,4 @@
+import { recoveredComponent, type RecoveredComponent } from './recoveredSceneComponents.js'
 import { nearbyFields } from './nearbyFields.js'
 import { saveBar } from './ruleFormControls.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -15,7 +16,15 @@ export function nearbyForm(
   view: ProjectView,
   save: (command: EditorCommand) => void,
   initialScene?: string,
-  { componentId, onDiscard }: { componentId?: string; onDiscard?: () => void } = {},
+  {
+    componentId,
+    onDiscard,
+    recovery,
+  }: {
+    componentId?: string
+    onDiscard?: () => void
+    recovery?: (read: () => RecoveredComponent) => void
+  } = {},
 ): HTMLElement {
   const { t } = controls
   const root = controls.group(t('nearby.heading'))
@@ -148,6 +157,7 @@ export function nearbyForm(
   root.append(picker, error, area)
   reset()
 
+  recovery?.(() => ({ ...recoveredComponent(view, sceneId, draft), nearby: { ...state } }))
   registerEditorDraft(
     root,
     `nearby:${initialScene ?? 'rules'}:${componentId ?? ''}`,

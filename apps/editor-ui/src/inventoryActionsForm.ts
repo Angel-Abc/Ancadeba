@@ -3,7 +3,7 @@ import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
 import { gameBindingSchema, type GameBindingDefinition } from '@ancadeba/schemas'
-import { displayLabel, statePath, type RuleFormControls } from './ruleFormControls.js'
+import { saveBar, displayLabel, statePath, type RuleFormControls } from './ruleFormControls.js'
 
 /** Item action IDs are resolved by reserved inventory slots in the scene's bar. */
 export function inventoryActionsForm(
@@ -83,7 +83,9 @@ export function inventoryActionsForm(
     const submit = create('button')
     submit.type = 'submit'
     submit.textContent = t('items.saveItemActions')
-    form.append(
+
+    const bar = saveBar(
+      form.ownerDocument,
       submit,
       saveStatus(form.ownerDocument, t, () => dirty),
       button(t('items.discardItemActions'), () => {
@@ -91,6 +93,8 @@ export function inventoryActionsForm(
         onDiscard()
       }),
     )
+
+    form.replaceChildren(bar, ...Array.from(form.children))
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 

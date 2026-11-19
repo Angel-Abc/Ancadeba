@@ -147,7 +147,10 @@ export function bindLocalizationEditor(
     label.append(t('form.translationKey'), picker)
     fill()
 
-    return [searchLabel, scopeLabel, label, count]
+    return [
+      label,
+      controls.fold('key-filters', t('localization.find'), false, searchLabel, scopeLabel, count),
+    ]
   }
 
   const reset = () => {
@@ -196,93 +199,104 @@ export function bindLocalizationEditor(
         saveStatus(document, t, () => dirty),
         button(t('localization.discard'), reset),
       ),
-      help,
+      ...keyPicker(),
     )
-    form.append(
-      group(
-        t('localization.languages'),
-        input(t('localization.newTag'), newLanguage, (value) => {
-          newLanguage = value.trim()
-        }),
-        button(t('localization.addLanguage'), () => {
-          if (
-            !languageTagSchema.safeParse(newLanguage).success ||
-            languages.available.some((tag) => tag.toLowerCase() === newLanguage.toLowerCase())
-          ) {
-            error.textContent = t('localization.invalidTag')
+
+    const languageSetup = controls.fold(
+      'language-setup',
+      t('localization.languages'),
+      !languages.available.length,
+      help,
+      input(t('localization.newTag'), newLanguage, (value) => {
+        newLanguage = value.trim()
+      }),
+      button(t('localization.addLanguage'), () => {
+        if (
+          !languageTagSchema.safeParse(newLanguage).success ||
+          languages.available.some((tag) => tag.toLowerCase() === newLanguage.toLowerCase())
+        ) {
+          error.textContent = t('localization.invalidTag')
+
+          return
+        }
+
+        change(() => {
+          languages.available.push(newLanguage)
+          catalogs[newLanguage] = {}
+
+          if (!languages.default) languages.default = newLanguage
+          newLanguage = ''
+        })
+      }),
+      ...(languages.available.length
+        ? [
+            select(
+              t('localization.defaultLanguage'),
+              languages.default,
+              languages.available,
+              (value) => change(() => makeDefault(value)),
+            ),
+          ]
+        : []),
+      ...languages.available.map((language) =>
+        group(
+          language === languages.default
+            ? t('localization.languageDefault', { language })
+            : language,
+          button(
+            t('localization.removeLanguage', { language }),
+            () =>
+              change(() => {
+                languages.available = languages.available.filter((tag) => tag !== language)
+
+                if (languages.default === language) makeDefault(languages.available[0]!)
+                delete catalogs[language]
+
+                if (!keys().includes(selected)) selected = keys()[0] ?? ''
+              }),
+            languages.available.length <= 1,
+          ),
+        ),
+      ),
+    )
+
+    const keySetup = controls.fold(
+      'key-setup',
+      t('localization.keys'),
+      false,
+      input(t('localization.newKey'), newKey, (value) => {
+        newKey = value.trim()
+      }),
+      button(
+        t('localization.addKey'),
+        () => {
+          if (!translationKeySchema.safeParse(newKey).success || keys().includes(newKey)) {
+            error.textContent = t('localization.invalidKey')
 
             return
           }
 
           change(() => {
-            languages.available.push(newLanguage)
-            catalogs[newLanguage] = {}
-
-            if (!languages.default) languages.default = newLanguage
-            newLanguage = ''
+            catalogs[languages.default] = { ...catalogs[languages.default], [newKey]: '' }
+            selected = newKey
+            newKey = ''
           })
-        }),
-        ...(languages.available.length
-          ? [
-              select(
-                t('localization.defaultLanguage'),
-                languages.default,
-                languages.available,
-                (value) => change(() => makeDefault(value)),
-              ),
-            ]
-          : []),
-        ...languages.available.map((language) =>
-          group(
-            language === languages.default
-              ? t('localization.languageDefault', { language })
-              : language,
-            button(
-              t('localization.removeLanguage', { language }),
-              () =>
-                change(() => {
-                  languages.available = languages.available.filter((tag) => tag !== language)
-
-                  if (languages.default === language) makeDefault(languages.available[0]!)
-                  delete catalogs[language]
-
-                  if (!keys().includes(selected)) selected = keys()[0] ?? ''
-                }),
-              languages.available.length <= 1,
-            ),
-          ),
-        ),
-      ),
-      group(
-        t('localization.keys'),
-        ...keyPicker(),
-        input(t('localization.newKey'), newKey, (value) => {
-          newKey = value.trim()
-        }),
-        button(
-          t('localization.addKey'),
-          () => {
-            if (!translationKeySchema.safeParse(newKey).success || keys().includes(newKey)) {
-              error.textContent = t('localization.invalidKey')
-
-              return
-            }
-
-            change(() => {
-              catalogs[languages.default] = { ...catalogs[languages.default], [newKey]: '' }
-              selected = newKey
-              newKey = ''
-            })
-          },
-          !languages.available.length,
-        ),
+        },
+        !languages.available.length,
       ),
     )
+
+    keySetup.querySelector('input')?.setAttribute('data-new-key', '')
+
+    if (newKey) keySetup.open = true
 
     if (selected) {
       const inherited: HTMLTextAreaElement[] = []
 
-      for (const language of languages.available) {
+      for (const language of [
+        languages.default,
+        ...languages.available.filter((tag) => tag !== languages.default),
+      ].filter(Boolean)) {
         const catalog = catalogs[language] ?? {}
         const fallback = language !== languages.default && !Object.hasOwn(catalog, selected)
         const parts: HTMLElement[] = []
@@ -333,7 +347,7 @@ export function bindLocalizationEditor(
         )
       }
 
-      form.append(
+      keySetup.append(
         button(t('localization.removeKey'), () =>
           change(() => {
             for (const catalog of Object.values(catalogs)) delete catalog[selected]
@@ -343,12 +357,16 @@ export function bindLocalizationEditor(
       )
     }
 
+    form.append(languageSetup, keySetup)
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
       if (busy) return
 
       if (newLanguage || newKey) {
+        if (newLanguage) languageSetup.open = true
+
+        if (newKey) keySetup.open = true
         error.textContent = t('localization.pendingSave')
 
         return
@@ -404,6 +422,7 @@ export function bindLocalizationEditor(
       dirty = true
       render()
     },
+    'specialist-inspectors-v2',
   )
 
   return {
@@ -419,6 +438,13 @@ export function bindLocalizationEditor(
       }
 
       render()
+
+      const field = selected
+        ? fields.querySelector('textarea')
+        : fields.querySelector<HTMLInputElement>('details[open] input[data-new-key]')
+
+      field?.focus?.()
+      field?.scrollIntoView?.({ block: 'nearest' })
 
       return true
     },

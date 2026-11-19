@@ -1,3 +1,6 @@
+import type { RecoveredComponent } from './recoveredSceneComponents.js'
+import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
+import { sceneChoices } from './choiceLabels.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -21,6 +24,7 @@ export function bindRulesPanel(
   panel: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openComponent?: OpenSceneComponent,
 ) {
   const document = panel.ownerDocument
   const rulesFields = document.createElement('fieldset')
@@ -40,6 +44,8 @@ export function bindRulesPanel(
   let selected = ''
   let rulesDirty = false
   const dirtyTriggers = new Set<RuleTriggerSection>()
+  const triggerRecovery = new Map<RuleTriggerSection, () => RecoveredComponent>()
+  const placementScenes = new Map<RuleTriggerSection, string>()
   let triggerForms = new Map<RuleTriggerSection, HTMLElement>()
   let busy = false
 
@@ -74,6 +80,7 @@ export function bindRulesPanel(
   showTriggers(false)
 
   function showTriggers(show: boolean) {
+    if (show && openComponent) renderTriggers()
     rulesFields.hidden = show
     triggerFields.hidden = !show
     definitions.setAttribute('aria-pressed', String(!show))
@@ -185,6 +192,50 @@ export function bindRulesPanel(
 
     const forms = ruleTriggerForms(triggerControls, view, submit, {
       retained,
+      recovery: (section, read) => triggerRecovery.set(section, read),
+      shortcut(section) {
+        if (
+          !openComponent ||
+          dirtyTriggers.has(section) ||
+          (section !== 'buttons' && section !== 'nearby') ||
+          !view
+        )
+          return
+        const project = view
+        const choices = sceneChoices(project, 'game')
+
+        const group = triggerControls.group(
+          t(section === 'buttons' ? 'rules.sceneButtons' : 'tree.nearby'),
+        )
+
+        const scene =
+          project.scenes.find((scene) => scene.id === placementScenes.get(section)) ??
+          project.scenes.find((scene) => scene.type === 'game')
+
+        if (!scene) return group
+        group.append(
+          triggerControls.select(
+            t('form.gameScene'),
+            scene.id,
+            choices,
+            (id) => {
+              placementScenes.set(section, id)
+              renderTriggers()
+            },
+            false,
+          ),
+          componentShortcuts(
+            triggerControls,
+            project,
+            scene,
+            [section === 'buttons' ? 'button' : 'nearby'],
+            openComponent,
+            section === 'buttons' ? selected : undefined,
+          ),
+        )
+
+        return group
+      },
       controls: (section) => ruleFormControls(document, () => dirtyTriggers.add(section), t),
       discarded: (section) => {
         dirtyTriggers.delete(section)
@@ -194,12 +245,16 @@ export function bindRulesPanel(
 
     triggerForms = new Map(ruleTriggerSections.map((section, index) => [section, forms[index]!]))
     triggerFields.replaceChildren(
-      triggerControls.button(t('rules.discardTrigger'), () => {
-        dirtyTriggers.clear()
-        error.textContent = ''
-        renderTriggers()
-      }),
-      ...forms,
+      ...(!openComponent || dirtyTriggers.has('buttons')
+        ? [
+            triggerControls.button(t('rules.discardTrigger'), () => {
+              dirtyTriggers.clear()
+              error.textContent = ''
+              renderTriggers()
+            }),
+          ]
+        : []),
+      ...(openComponent ? [forms[0]!, forms[3]!, forms[1]!, forms[2]!] : forms),
     )
   }
 
@@ -248,11 +303,14 @@ export function bindRulesPanel(
       rulesDirty = saved.rulesDirty
       dirtyTriggers.clear()
 
+      triggerForms.clear()
+
       for (const section of saved.dirtyTriggers) dirtyTriggers.add(section)
       renderRules()
       renderTriggers()
       showTriggers(saved.triggers)
     },
+    'specialist-inspectors-v2',
   )
 
   return {
@@ -289,6 +347,7 @@ export function bindRulesPanel(
         ruleId = view?.game?.rules?.[0] ?? defaultRuleId
         newRuleId = ''
         dirtyTriggers.clear()
+        placementScenes.clear()
         triggerForms.clear()
         submitted = undefined
       }
@@ -315,6 +374,27 @@ export function bindRulesPanel(
       triggerFields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
     },
     hasDrafts: () => rulesDirty || dirtyTriggers.size > 0,
+    takeRecoveredComponents() {
+      const drafts: RecoveredComponent[] = []
+
+      for (const section of ['buttons', 'nearby'] as const) {
+        const read = triggerRecovery.get(section)
+
+        if (dirtyTriggers.has(section) && read) {
+          drafts.push(read())
+          dirtyTriggers.delete(section)
+        }
+      }
+
+      if (drafts.length) renderTriggers()
+
+      return drafts
+    },
+    rememberTab() {
+      const triggers = !triggerFields.hidden
+
+      return () => showTriggers(triggers)
+    },
     /** Opens a rule file's definitions; refuses while the current file has a draft. */
     canNavigate: (id: string) => id === ruleId || !rulesDirty,
     navigate(id: string) {
