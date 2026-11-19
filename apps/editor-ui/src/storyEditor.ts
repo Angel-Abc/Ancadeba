@@ -7,6 +7,8 @@ import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import {
+  dialogueFile,
+  questFile,
   dialogueSchema,
   questSchema,
   questLogComponentSchema,
@@ -24,6 +26,14 @@ import {
   placementFields,
   languageWatcher,
 } from './ruleFormControls.js'
+import { inspectorTranslations } from './inspectorTranslations.js'
+import {
+  fieldPath,
+  focusIssue,
+  rememberEntryFocus,
+  type EntrySelections,
+} from './specialistEntries.js'
+import { scopedFolds } from './ruleFormControls.js'
 import { dialogueForm, questForm } from './storyForms.js'
 import { questChoices, questStatusLabels, sceneChoices } from './choiceLabels.js'
 
@@ -36,6 +46,7 @@ export function bindStoryEditor(
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
   openComponent?: OpenSceneComponent,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -47,6 +58,7 @@ export function bindStoryEditor(
   let path: string | undefined
   let draft: Draft | undefined
   let selection = ''
+  let entries: EntrySelections = {}
   let dirty = false
   let journalDirty = false
   let busy = false
@@ -114,6 +126,8 @@ export function bindStoryEditor(
       ? ''
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
 
+    if (!parsed.success) focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
+
     if (parsed.success) {
       submitted = structuredClone(parsed.data)
       save(parsed.data)
@@ -131,6 +145,7 @@ export function bindStoryEditor(
     let number = 1
 
     while (view?.dialogues?.[id] || view?.quests?.[id]) id = `${kind}-${number++}`
+    entries = {}
     selection = `${kind}:${id}`
     draft =
       kind === 'dialogue'
@@ -175,6 +190,7 @@ export function bindStoryEditor(
   }
 
   function render(): void {
+    const restoreFocus = rememberEntryFocus(fields)
     fields.replaceChildren()
 
     if (!view?.game) return
@@ -204,6 +220,7 @@ export function bindStoryEditor(
           return
         }
 
+        entries = {}
         selection = value
         reset()
       },
@@ -338,11 +355,7 @@ export function bindStoryEditor(
     }
 
     // The journal applies to quests, so it follows the chosen definition.
-    if (!draft) {
-      fields.append(journals)
-
-      return
-    }
+    if (!draft) return
 
     const current = draft
     const form = document.createElement('form')
@@ -358,6 +371,8 @@ export function bindStoryEditor(
     const identityInput = identity.querySelector('input')!
     identityInput.setAttribute('data-file-identity', '')
     identityInput.readOnly = root.getAttribute?.('data-scope') === 'file'
+    const localized = inspectorTranslations(scopedFolds(controls, selection), openKey)
+    const storyControls = { ...localized.controls, arrange: localized.arrange }
     form.append(
       saveBar(
         document,
@@ -365,10 +380,16 @@ export function bindStoryEditor(
         saveStatus(document, t, () => dirty),
         controls.button(t('story.discard'), reset),
       ),
-      identity,
       ...(current.kind === 'dialogue'
-        ? dialogueForm(controls, view, current.data, render)
-        : questForm(controls, view, current.data, render)),
+        ? dialogueForm(
+            storyControls,
+            view,
+            current.data,
+            render,
+            entries,
+            fieldPath(identity, 'id'),
+          )
+        : questForm(storyControls, view, current.data, render, entries, fieldPath(identity, 'id'))),
     )
     const messages = controls.group(t('story.feedback'))
     const values: Record<string, string> = current.data.messages
@@ -376,10 +397,10 @@ export function bindStoryEditor(
 
     for (const [key, value] of Object.entries(values))
       messages.append(
-        controls.input(t('story.message', { key }), value, (value) => {
+        storyControls.input(t('story.message', { key }), value, (value) => {
           values[key] = value
         }),
-        controls.translation(
+        storyControls.translation(
           t('story.messageTranslation', { key }),
           keys[key] ?? '',
           translationChoices(view),
@@ -389,7 +410,8 @@ export function bindStoryEditor(
           },
         ),
       )
-    form.append(messages)
+    localized.arrange(messages)
+    form.append(controls.section('feedback', fieldPath(messages, 'messages')))
     form.addEventListener('submit', (event) => {
       event.preventDefault()
       submit(
@@ -407,8 +429,9 @@ export function bindStoryEditor(
             : { type: 'game.removeQuest', questId: current.data.id },
         ),
       ),
-      journals,
+      ...(current.kind === 'quest' ? [controls.section('journal', journals)] : []),
     )
+    restoreFocus?.()
   }
 
   registerEditorDraft(
@@ -422,6 +445,7 @@ export function bindStoryEditor(
         ])
         .optional(),
       selection: z.string(),
+      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
       dirty: z.boolean(),
       journalDirty: z.boolean(),
       journalScene: z.string(),
@@ -430,11 +454,12 @@ export function bindStoryEditor(
     }),
     () =>
       dirty || journalDirty
-        ? { draft, selection, dirty, journalDirty, journalScene, journalId, journal }
+        ? { draft, selection, entries, dirty, journalDirty, journalScene, journalId, journal }
         : undefined,
     (saved) => {
       draft = saved.draft
       selection = saved.selection
+      entries = saved.entries ?? {}
       dirty = saved.dirty
       journalDirty = saved.journalDirty
       journalScene = saved.journalScene
@@ -442,7 +467,7 @@ export function bindStoryEditor(
       journal = saved.journal
       render()
     },
-    'specialist-inspectors-v2',
+    'selected-story-v1',
   )
 
   return {
@@ -458,6 +483,7 @@ export function bindStoryEditor(
     canOpenDefinition: (key: string) => selection === key || !dirty,
     openDefinition(key: string) {
       if (key === selection || dirty) return
+      entries = {}
       selection = key
       reset()
     },
@@ -473,6 +499,16 @@ export function bindStoryEditor(
         submitted && !busy && replaceFields && !state.error && state.lastCommand === submitted.type
           ? submitted
           : undefined
+
+      const file =
+        submitted?.type === 'game.upsertDialogue'
+          ? dialogueFile(submitted.dialogue.id)
+          : submitted?.type === 'game.upsertQuest'
+            ? questFile(submitted.quest.id)
+            : undefined
+
+      const issue =
+        !busy && state.error && state.validationIssues?.find((issue) => issue.file === file)
 
       if (!busy) submitted = undefined
 
@@ -496,7 +532,10 @@ export function bindStoryEditor(
       }
 
       if (projectChanged) {
-        selection = ''
+        entries = {}
+        const dialogue = Object.keys(view?.dialogues ?? {})[0]
+        const quest = Object.keys(view?.quests ?? {})[0]
+        selection = dialogue ? 'dialogue:' + dialogue : quest ? 'quest:' + quest : ''
         journalScene = ''
         journalId = ''
         journal = undefined
@@ -511,6 +550,11 @@ export function bindStoryEditor(
       if (resetFields || storySaved || (changed && !dirty)) reset()
       else if (changed || journalSaved || translated) render()
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
+
+      if (issue) {
+        error.textContent = issue.message
+        focusIssue(fields, issue.path)
+      }
     },
   }
 }

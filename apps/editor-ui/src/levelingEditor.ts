@@ -1,3 +1,5 @@
+import { levelingFile } from '@ancadeba/schemas'
+import { linkedTranslationFields } from './inspectorTranslations.js'
 import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -22,6 +24,13 @@ import {
   translationChoices,
   languageWatcher,
 } from './ruleFormControls.js'
+import {
+  entryEditor,
+  fieldPath,
+  focusIssue,
+  rememberEntryFocus,
+  type EntrySelections,
+} from './specialistEntries.js'
 import { sceneChoices } from './choiceLabels.js'
 
 /** Readable names for the profile's display texts, keyed by schema key. */
@@ -41,6 +50,7 @@ export function bindLevelingEditor(
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
   openComponent?: OpenSceneComponent,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -52,6 +62,7 @@ export function bindLevelingEditor(
   let path: string | undefined
   let sceneId = ''
   let profileId = ''
+  let entries: EntrySelections = {}
   let componentId = ''
   let draft: LevelingProfile | undefined
   let component: ReturnType<typeof characterProgressionComponentSchema.parse> | undefined
@@ -62,12 +73,15 @@ export function bindLevelingEditor(
 
   const languageChanged = languageWatcher(t)
 
-  const controls = ruleFormControls(
-    document,
-    () => {
-      dirty = true
-    },
-    t,
+  const controls = linkedTranslationFields(
+    ruleFormControls(
+      document,
+      () => {
+        dirty = true
+      },
+      t,
+    ),
+    openKey,
   )
 
   const reset = () => {
@@ -114,6 +128,7 @@ export function bindLevelingEditor(
       return false
     }
 
+    if (nextProfile !== profileId) entries = {}
     sceneId = id ?? sceneId
     profileId = nextProfile ?? ''
     componentId = nextComponent ?? ''
@@ -129,6 +144,8 @@ export function bindLevelingEditor(
       ? ''
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
 
+    if (!parsed.success) focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
+
     if (parsed.success) {
       submitted = structuredClone(parsed.data)
       save(parsed.data)
@@ -136,6 +153,7 @@ export function bindLevelingEditor(
   }
 
   function render() {
+    const restoreFocus = rememberEntryFocus(fields)
     fields.replaceChildren()
 
     if (!view?.game) return
@@ -191,6 +209,7 @@ export function bindLevelingEditor(
         level: { source: 'game.state', path: path('level') },
         levels: [{ xp: 0 }, { xp: 10 }],
       })
+      entries = {}
       profileId = id
       component = characterProgressionComponentSchema.parse({
         id: `progression-${id}`,
@@ -292,11 +311,19 @@ export function bindLevelingEditor(
         saveStatus(document, t, () => dirty),
         button(t('leveling.discard'), reset),
       ),
-      ...(placement ? [placement] : []),
-      identity,
-      input(t('leveling.profileLabel'), current.label, (value) => {
-        current.label = value
-      }),
+    )
+
+    const settings = controls.fold(
+      'profile',
+      t('specialist.levelSettings'),
+      false,
+      fieldPath(identity, 'id'),
+      fieldPath(
+        input(t('leveling.profileLabel'), current.label, (value) => {
+          current.label = value
+        }),
+        'label',
+      ),
       controls.translation(
         t('leveling.profileLabelTranslation'),
         current.labelKey ?? '',
@@ -305,125 +332,148 @@ export function bindLevelingEditor(
           current.labelKey = value || undefined
         },
       ),
-      field(t('leveling.xpField'), current.xp, (value) => {
-        current.xp = value
-      }),
-      field(t('leveling.levelField'), current.level, (value) => {
-        current.level = value
-      }),
+      fieldPath(
+        field(t('leveling.xpField'), current.xp, (value) => {
+          current.xp = value
+        }),
+        'xp',
+      ),
+      fieldPath(
+        field(t('leveling.levelField'), current.level, (value) => {
+          current.level = value
+        }),
+        'level',
+      ),
     )
-    const preview = document.createElement('ol')
-    preview.className = 'level-table'
-    preview.setAttribute('aria-label', t('leveling.table'))
 
-    const updatePreview = () => {
-      preview.replaceChildren(
-        ...current.levels.map((row, index) => {
-          const item = document.createElement('li')
+    form.append(
+      entryEditor(
+        controls,
+        entries,
+        'level',
+        t('leveling.table'),
+        current.levels,
+        (row, index) =>
+          [
+            t('leveling.levelNumber', { number: index + 1 }),
+            String(row.xp) + ' XP',
+            ...row.gains.map((gain) => displayLabel(view!, gain.id, gain) + ' +' + gain.amount),
+          ].join(' · '),
+        (row, index) => {
+          const start = document.createElement('p')
+          start.className = 'help'
+          start.textContent = t('leveling.firstLevelHelp')
 
-          const gains = row.gains.map(
-            (gain) => `${displayLabel(view!, gain.id, gain)} +${gain.amount}`,
+          const box = group(
+            t('leveling.levelNumber', { number: index + 1 }),
+            index === 0
+              ? start
+              : input(
+                  t('leveling.xpNeeded'),
+                  String(row.xp),
+                  (value) => {
+                    row.xp = Number(value)
+                  },
+                  'number',
+                ),
           )
 
-          item.textContent = [
-            t('leveling.levelNumber', { number: index + 1 }),
-            `${row.xp} XP`,
-            ...gains,
-          ].join(' · ')
-
-          return item
-        }),
-      )
-    }
-
-    updatePreview()
-    form.append(preview)
-    current.levels.forEach((row, index) => {
-      const start = document.createElement('p')
-      start.className = 'help'
-      start.textContent = t('leveling.firstLevelHelp')
-
-      const box = group(
-        t('leveling.levelNumber', { number: index + 1 }),
-        index === 0
-          ? start
-          : input(
-              t('leveling.xpNeeded'),
-              String(row.xp),
-              (value) => {
-                row.xp = Number(value)
-                updatePreview()
-              },
-              'number',
+          row.gains.forEach((gain, position) =>
+            box.append(
+              group(
+                t('leveling.gainTitle', { level: index + 1, gain: position + 1 }),
+                fieldPath(
+                  input(t('leveling.statId'), gain.id, (value) => {
+                    gain.id = value.trim()
+                  }),
+                  'levels',
+                  index,
+                  'gains',
+                  position,
+                  'id',
+                ),
+                fieldPath(
+                  input(t('leveling.statLabel'), gain.label, (value) => {
+                    gain.label = value
+                  }),
+                  'levels',
+                  index,
+                  'gains',
+                  position,
+                  'label',
+                ),
+                controls.translation(
+                  t('leveling.statLabelTranslation'),
+                  gain.labelKey ?? '',
+                  keys,
+                  (value) => {
+                    gain.labelKey = value || undefined
+                  },
+                ),
+                fieldPath(
+                  field(t('leveling.increasesField'), gain.field, (value) => {
+                    gain.field = value
+                  }),
+                  'levels',
+                  index,
+                  'gains',
+                  position,
+                  'field',
+                ),
+                fieldPath(
+                  input(
+                    t('leveling.amountAdded'),
+                    String(gain.amount),
+                    (value) => {
+                      gain.amount = Number(value)
+                    },
+                    'number',
+                  ),
+                  'levels',
+                  index,
+                  'gains',
+                  position,
+                  'amount',
+                ),
+                button(t('leveling.removeGain', { level: index + 1, gain: position + 1 }), () => {
+                  row.gains.splice(position, 1)
+                  controls.markEdited()
+                  render()
+                }),
+              ),
             ),
-      )
+          )
 
-      row.gains.forEach((gain, position) =>
-        box.append(
-          group(
-            t('leveling.gainTitle', { level: index + 1, gain: position + 1 }),
-            input(t('leveling.statId'), gain.id, (value) => {
-              gain.id = value.trim()
-            }),
-            input(t('leveling.statLabel'), gain.label, (value) => {
-              gain.label = value
-              updatePreview()
-            }),
-            controls.translation(
-              t('leveling.statLabelTranslation'),
-              gain.labelKey ?? '',
-              keys,
-              (value) => {
-                gain.labelKey = value || undefined
-                updatePreview()
-              },
-            ),
-            field(t('leveling.increasesField'), gain.field, (value) => {
-              gain.field = value
-            }),
-            input(
-              t('leveling.amountAdded'),
-              String(gain.amount),
-              (value) => {
-                gain.amount = Number(value)
-                updatePreview()
-              },
-              'number',
-            ),
-            button(t('leveling.removeGain', { level: index + 1, gain: position + 1 }), () => {
-              row.gains.splice(position, 1)
-              controls.markEdited()
-              render()
-            }),
-          ),
-        ),
-      )
+          if (index > 0)
+            box.append(
+              button(t('leveling.addGain', { level: index + 1 }), () => {
+                let id = 'stat'
+                let number = 1
 
-      if (index > 0)
-        box.append(
-          button(t('leveling.addGain', { level: index + 1 }), () => {
-            let id = 'stat'
-            let number = 1
+                while (row.gains.some((gain) => gain.id === id)) id = `stat-${number++}`
+                row.gains.push({
+                  id,
+                  label: 'Maximum health',
+                  amount: 5,
+                  field: {
+                    source: 'game.state',
+                    path: view?.rules?.state.find((field) => field.path.at(-1) === 'maximumHealth')
+                      ?.path ?? ['maximumHealth'],
+                  },
+                })
+                controls.markEdited()
+                render()
+              }),
+            )
 
-            while (row.gains.some((gain) => gain.id === id)) id = `stat-${number++}`
-            row.gains.push({
-              id,
-              label: 'Maximum health',
-              amount: 5,
-              field: {
-                source: 'game.state',
-                path: view?.rules?.state.find((field) => field.path.at(-1) === 'maximumHealth')
-                  ?.path ?? ['maximumHealth'],
-              },
-            })
-            controls.markEdited()
-            render()
-          }),
-        )
-      form.append(box)
-    })
+          return fieldPath(box, 'levels', index)
+        },
+        { path: ['levels'] },
+      ),
+    )
     form.append(
       button(t('leveling.addLevel'), () => {
+        entries.level = current.levels.length
         current.levels.push({ xp: current.levels.at(-1)!.xp + 10, gains: [] })
         controls.markEdited()
         render()
@@ -437,6 +487,13 @@ export function bindLevelingEditor(
         },
         current.levels.length <= 1,
       ),
+      settings,
+    )
+
+    const healthSettings = controls.fold(
+      'health',
+      t('specialist.health'),
+      false,
       select(
         t('leveling.healthOnLevelUp'),
         current.health ? 'yes' : 'no',
@@ -468,7 +525,7 @@ export function bindLevelingEditor(
 
     if (current.health) {
       const health = current.health
-      form.append(
+      healthSettings.append(
         field(t('form.currentHealthField'), health.current, (value) => {
           health.current = value
         }),
@@ -489,6 +546,10 @@ export function bindLevelingEditor(
         ),
       )
     }
+
+    form.append(healthSettings)
+
+    if (placement) form.append(placement)
 
     if (!definitionOnly && scene)
       form.append(
@@ -522,15 +583,12 @@ export function bindLevelingEditor(
           ),
         ),
       )
-    const messages = document.createElement('details')
-    const heading = document.createElement('summary')
-    heading.textContent = t('leveling.texts')
-    messages.append(heading)
+    const messages = controls.fold('texts', t('leveling.texts'), false)
 
     for (const key of levelingTextSchema.keyof().options)
       messages.append(
         group(
-          textNames[key],
+          t(textNames[key]),
           input(t('tree.text'), current.messages[key], (value) => {
             current.messages[key] = value
           }),
@@ -569,6 +627,7 @@ export function bindLevelingEditor(
         submit({ type: 'game.removeLeveling', profileId: current.id }),
       ),
     )
+    restoreFocus?.()
   }
 
   registerEditorDraft(
@@ -576,6 +635,7 @@ export function bindLevelingEditor(
     'leveling',
     z.object({
       definitionOnly: z.boolean().optional(),
+      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
       sceneId: z.string(),
       profileId: z.string(),
       componentId: z.string(),
@@ -583,8 +643,11 @@ export function bindLevelingEditor(
       component: characterProgressionComponentSchema.optional(),
     }),
     () =>
-      dirty ? { definitionOnly, sceneId, profileId, componentId, draft, component } : undefined,
+      dirty
+        ? { definitionOnly, entries, sceneId, profileId, componentId, draft, component }
+        : undefined,
     (saved) => {
+      entries = saved.entries ?? {}
       definitionOnly = saved.definitionOnly ?? false
       sceneId = saved.sceneId
       profileId = saved.profileId
@@ -594,7 +657,7 @@ export function bindLevelingEditor(
       dirty = true
       render()
     },
-    'specialist-inspectors-v2',
+    'selected-levels-v1',
   )
 
   return {
@@ -633,6 +696,15 @@ export function bindLevelingEditor(
           ? submitted
           : undefined
 
+      const savedFileId =
+        submitted?.type === 'game.upsertLeveling' ? submitted.profile.id : undefined
+
+      const issue =
+        !busy &&
+        state.error &&
+        savedFileId &&
+        state.validationIssues?.find((issue) => issue.file === levelingFile(savedFileId))
+
       if (!busy) submitted = undefined
 
       if (saved?.type === 'game.upsertLeveling') {
@@ -646,6 +718,7 @@ export function bindLevelingEditor(
       const resetFields = projectChanged || (replaceFields && !state.preserveDrafts)
 
       if (resetFields) {
+        entries = {}
         sceneId = view?.scenes.find((scene) => scene.type === 'game')?.id ?? ''
         profileId = ''
         componentId = ''
@@ -654,6 +727,11 @@ export function bindLevelingEditor(
       if (resetFields || saved || (changed && !dirty)) reset()
       else if (changed || translated) render()
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
+
+      if (issue) {
+        error.textContent = issue.message
+        focusIssue(fields, issue.path)
+      }
     },
   }
 }

@@ -242,6 +242,7 @@ export function createProjectSections({
       },
       t,
       openSceneComponent,
+      openTranslation,
     )
 
   if (mapElement)
@@ -299,6 +300,7 @@ export function createProjectSections({
       },
       t,
       openSceneComponent,
+      openTranslation,
     )
 
   if (localizationElement)
@@ -338,6 +340,7 @@ export function createProjectSections({
       },
       t,
       openSceneComponent,
+      openTranslation,
     )
 
   if (combatElement)
@@ -351,6 +354,7 @@ export function createProjectSections({
       (id) => {
         visit('data-file:combatLibraries:' + id)
       },
+      openTranslation,
     )
 
   if (shopElement)
@@ -457,6 +461,10 @@ export function createProjectSections({
     return true
   }
 
+  function openTranslation(key: string) {
+    if (visit('localization')) localizationEditor?.openKey(key)
+  }
+
   function goBack() {
     const step = history.at(-1)
 
@@ -524,7 +532,7 @@ export function createProjectSections({
 
           if (kind === 'localization') localizationEditor?.openKey(id)
 
-          if (kind === 'combat') combatEditor?.navigate(sceneId, id)
+          if (kind === 'combat' && combatEditor?.navigate(sceneId, id)) combatEditor.showEncounter()
 
           if (kind === 'leveling') levelingEditor?.navigate(sceneId, id, origin.id)
         },

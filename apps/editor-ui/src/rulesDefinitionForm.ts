@@ -1,10 +1,12 @@
 import {
   ruleStateType,
   type GameRulesDefinition,
+  type RuleBranch,
   type RuleCondition,
   type RuleEffect,
   type RuleText,
 } from '@ancadeba/schemas'
+import { entryEditor, fieldPath, type EntrySelections } from './specialistEntries.js'
 import type { ProjectView } from '@ancadeba/editor-core'
 import { sceneEntranceFields } from './sceneEntranceFields.js'
 import {
@@ -38,6 +40,7 @@ export function rulesDefinitionForm(
   change: (edit: () => void) => void,
   rerender: () => void,
   otherFields: GameRulesDefinition['state'],
+  entries: EntrySelections,
 ): HTMLElement[] {
   const { button, create, group, input, select, t } = controls
   const keys = translationChoices(view, false)
@@ -164,14 +167,49 @@ export function rulesDefinitionForm(
     ]
   }
 
+  function describeCondition(condition: RuleCondition) {
+    const label = t(conditionTypeLabels.get(condition.type)!)
+
+    switch (condition.type) {
+      case 'scene-is':
+        return label + ' · ' + condition.scene
+      case 'state-is':
+        return statePath(condition.path) + ' = ' + String(condition.value)
+      case 'state-compare':
+        return [
+          statePath(condition.path),
+          t(comparisonLabels.get(condition.operator)!),
+          condition.value,
+        ].join(' ')
+      case 'quest-state':
+        return [condition.quest, t(questStatusLabels.get(condition.status)!), condition.stage]
+          .filter(Boolean)
+          .join(' · ')
+      case 'combat-outcome':
+        return condition.encounter + ' · ' + t(combatOutcomeLabels.get(condition.outcome)!)
+      case 'item-owned-by':
+      case 'item-carried-by':
+        return [label, condition.item, condition.owner].join(' · ')
+      case 'payload-is-target':
+        return label + ' · ' + condition.target
+      case 'payload-is-item':
+        return label + ' · ' + condition.item
+    }
+  }
+
   const state = group(
     t('rules.initialState'),
     ...rules.state.map((field, index) =>
       group(
         t('rules.field', { number: index + 1 }),
-        input(t('rules.bindingPathDotted'), statePath(field.path), (next) => {
-          field.path = parseStatePath(next)
-        }),
+        fieldPath(
+          input(t('rules.bindingPathDotted'), statePath(field.path), (next) => {
+            field.path = parseStatePath(next)
+          }),
+          'state',
+          index,
+          'path',
+        ),
         ...('type' in field
           ? [
               input(
@@ -220,17 +258,25 @@ export function rulesDefinitionForm(
     clock
       ? group(
           t('rules.clock'),
-          input(t('form.bindingPath'), statePath(clock.path), (next) => {
-            clock.path = parseStatePath(next)
-          }),
-          input(
-            t('rules.startTime'),
-            `${String(Math.floor(clock.startMinute / 60)).padStart(2, '0')}:${String(clock.startMinute % 60).padStart(2, '0')}`,
-            (next) => {
-              const [hours, minutes] = next.split(':').map(Number)
-              clock.startMinute = hours! * 60 + minutes!
-            },
-            'time',
+          fieldPath(
+            input(t('form.bindingPath'), statePath(clock.path), (next) => {
+              clock.path = parseStatePath(next)
+            }),
+            'clock',
+            'path',
+          ),
+          fieldPath(
+            input(
+              t('rules.startTime'),
+              `${String(Math.floor(clock.startMinute / 60)).padStart(2, '0')}:${String(clock.startMinute % 60).padStart(2, '0')}`,
+              (next) => {
+                const [hours, minutes] = next.split(':').map(Number)
+                clock.startMinute = hours! * 60 + minutes!
+              },
+              'time',
+            ),
+            'clock',
+            'startMinute',
           ),
           button(t('rules.removeClock'), () =>
             change(() => {
@@ -246,16 +292,24 @@ export function rulesDefinitionForm(
     log
       ? group(
           t('rules.log'),
-          input(t('form.bindingPath'), statePath(log.path), (next) => {
-            log.path = parseStatePath(next)
-          }),
-          input(
-            t('rules.maxEntries'),
-            String(log.capacity),
-            (next) => {
-              log.capacity = Number(next)
-            },
-            'number',
+          fieldPath(
+            input(t('form.bindingPath'), statePath(log.path), (next) => {
+              log.path = parseStatePath(next)
+            }),
+            'log',
+            'path',
+          ),
+          fieldPath(
+            input(
+              t('rules.maxEntries'),
+              String(log.capacity),
+              (next) => {
+                log.capacity = Number(next)
+              },
+              'number',
+            ),
+            'log',
+            'capacity',
           ),
           ...log.initial.map((value, index) =>
             group(
@@ -320,18 +374,36 @@ export function rulesDefinitionForm(
   })
 
   newId.addEventListener('input', () => newId.setCustomValidity(''))
-  actions.append(newId, addAction)
+
+  const add = controls.fold(
+    'new-action',
+    t('specialist.newAction'),
+    !actionIds.length,
+    newId,
+    addAction,
+  )
 
   const branches = Object.hasOwn(rules.actions, selected) ? rules.actions[selected] : undefined
 
   if (branches) {
-    branches.forEach((branch, index) => {
+    const branchKey = 'branches/' + selected
+
+    const branchTitle = (branch: RuleBranch, index: number) => {
+      const first = branch.when[0]
+      const summary = first ? describeCondition(first) : t('form.always')
+      const more = branch.when.length > 1 ? ' (+' + (branch.when.length - 1) + ')' : ''
+
+      return t('rules.branch', { number: index + 1 }) + ' · ' + summary + more
+    }
+
+    const branchFields = (branch: RuleBranch, index: number) => {
       const row = group(
         t('rules.branch', { number: index + 1 }),
         button(
           t('rules.moveUp'),
           () =>
             change(() => {
+              entries[branchKey] = index - 1
               branches.splice(index - 1, 0, branches.splice(index, 1)[0]!)
             }),
           index === 0,
@@ -340,6 +412,7 @@ export function rulesDefinitionForm(
           t('rules.moveDown'),
           () =>
             change(() => {
+              entries[branchKey] = index + 1
               branches.splice(index + 1, 0, branches.splice(index, 1)[0]!)
             }),
           index === branches.length - 1,
@@ -484,7 +557,7 @@ export function rulesDefinitionForm(
             }),
           ),
         )
-        conditions.append(field)
+        conditions.append(fieldPath(field, 'actions', selected, index, 'when', position))
       })
       conditions.append(
         button(t('form.addCondition'), () =>
@@ -603,7 +676,7 @@ export function rulesDefinitionForm(
             }),
           ),
         )
-        effects.append(field)
+        effects.append(fieldPath(field, 'actions', selected, index, 'effects', position))
       })
       effects.append(
         button(t('form.addEffect'), () =>
@@ -613,11 +686,26 @@ export function rulesDefinitionForm(
         ),
       )
       row.append(conditions, effects)
-      actions.append(row)
-    })
+
+      return fieldPath(row, 'actions', selected, index)
+    }
+
+    actions.append(
+      entryEditor(
+        controls,
+        entries,
+        branchKey,
+        t('specialist.branches'),
+        branches,
+        branchTitle,
+        branchFields,
+        { path: ['actions', selected] },
+      ),
+    )
     actions.append(
       button(t('rules.addBranch'), () =>
         change(() => {
+          entries[branchKey] = branches.length
           branches.push({ when: [], effects: [] })
         }),
       ),
@@ -630,5 +718,7 @@ export function rulesDefinitionForm(
     )
   }
 
-  return [actions, state, display]
+  actions.append(add)
+
+  return [fieldPath(actions, 'actions'), fieldPath(state, 'state'), display]
 }

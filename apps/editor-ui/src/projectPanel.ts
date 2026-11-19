@@ -612,7 +612,13 @@ export function bindProjectPanel(
         const fromPane = interactive && workspace.contains(root.ownerDocument.activeElement)
         const selected = navigate(node)
 
-        if (interactive && !selected && compact?.matches) setExplorerExpanded(true)
+        if (
+          interactive &&
+          !selected &&
+          compact?.matches &&
+          treeElement.contains(root.ownerDocument.activeElement)
+        )
+          setExplorerExpanded(true)
 
         if (interactive && selected) {
           onNavigate?.()
@@ -673,6 +679,17 @@ export function bindProjectPanel(
 
     for (const event of ['input', 'change', 'click', 'keyup']) on(workspace, event, refresh)
   }
+
+  if (compact)
+    on(compact, 'change', () => {
+      if (
+        compact.matches &&
+        view &&
+        openControls.hidden &&
+        !treeElement?.contains(root.ownerDocument.activeElement)
+      )
+        setExplorerExpanded(false)
+    })
 
   if (explorerToggle)
     on(explorerToggle, 'click', () => {

@@ -1,16 +1,18 @@
+import { linkedTranslationFields } from './inspectorTranslations.js'
 import type { RecoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { sceneChoices } from './choiceLabels.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
-import { gameRulesSchema } from '@ancadeba/schemas'
+import { gameRulesSchema, ruleFile } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import type { GameRulesDefinition } from '@ancadeba/schemas'
 import type { ProjectEditorState } from './projectController.js'
 import { ruleFormControls, saveBar, languageWatcher } from './ruleFormControls.js'
+import { focusIssue, rememberEntryFocus, type EntrySelections } from './specialistEntries.js'
 import { rulesDefinitionForm } from './rulesDefinitionForm.js'
 import {
   ruleTriggerForms,
@@ -25,6 +27,7 @@ export function bindRulesPanel(
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
   openComponent?: OpenSceneComponent,
+  openKey?: (key: string) => void,
 ) {
   const document = panel.ownerDocument
   const rulesFields = document.createElement('fieldset')
@@ -42,6 +45,10 @@ export function bindRulesPanel(
   let newRuleId = ''
   let submitted: EditorCommand | undefined
   let selected = ''
+  let entries: EntrySelections = {}
+  const ruleViews = ['actions', 'state', 'display'] as const
+  let ruleView: (typeof ruleViews)[number] = 'actions'
+  let triggerView: RuleTriggerSection = 'buttons'
   let rulesDirty = false
   const dirtyTriggers = new Set<RuleTriggerSection>()
   const triggerRecovery = new Map<RuleTriggerSection, () => RecoveredComponent>()
@@ -49,12 +56,30 @@ export function bindRulesPanel(
   let triggerForms = new Map<RuleTriggerSection, HTMLElement>()
   let busy = false
 
+  function revealRuleIssue(path: readonly PropertyKey[]) {
+    ruleView =
+      path[0] === 'state'
+        ? 'state'
+        : path[0] === 'clock' || path[0] === 'log'
+          ? 'display'
+          : 'actions'
+
+    if (path[0] === 'actions' && typeof path[1] === 'string') selected = path[1]
+    renderRules()
+    focusIssue(rulesFields, path)
+  }
+
   const submit = (command: EditorCommand) => {
     if (busy) return
     const parsed = commandSchema.safeParse(command)
     error.textContent = parsed.success
       ? ''
       : parsed.error.issues.map(({ path, message }) => `${path.join('.')}: ${message}`).join('\n')
+
+    if (!parsed.success && command.type === 'game.updateRules') {
+      const path = parsed.error.issues[0]!.path.slice(1)
+      revealRuleIssue(path)
+    }
 
     if (parsed.success) {
       submitted = structuredClone(parsed.data)
@@ -64,12 +89,15 @@ export function bindRulesPanel(
 
   const languageChanged = languageWatcher(t)
 
-  const rulesControls = ruleFormControls(
-    document,
-    () => {
-      rulesDirty = true
-    },
-    t,
+  const rulesControls = linkedTranslationFields(
+    ruleFormControls(
+      document,
+      () => {
+        rulesDirty = true
+      },
+      t,
+    ),
+    openKey,
   )
 
   const triggerControls = ruleFormControls(document, () => {}, t)
@@ -98,6 +126,7 @@ export function bindRulesPanel(
   }
 
   function renderRules() {
+    const restoreFocus = rememberEntryFocus(rulesFields)
     rulesFields.replaceChildren()
 
     if (!view?.game) return
@@ -117,6 +146,8 @@ export function bindRulesPanel(
           return
         }
 
+        entries = {}
+        ruleView = 'actions'
         ruleId = next
         newRuleId = ''
         error.textContent = ''
@@ -152,20 +183,59 @@ export function bindRulesPanel(
           error.textContent = ''
         }),
       ),
-      ...rulesDefinitionForm(
-        rulesControls,
-        view,
-        draft,
-        selected,
-        (id) => {
-          selectAction(id)
-          renderRules()
-        },
-        change,
-        renderRules,
-        otherFields,
-      ),
     )
+
+    const groups = rulesDefinitionForm(
+      rulesControls,
+      view,
+      draft,
+      selected,
+      (id) => {
+        selectAction(id)
+        renderRules()
+      },
+      change,
+      renderRules,
+      otherFields,
+      entries,
+    )
+
+    const showView = () =>
+      groups.forEach((group, index) => {
+        group.hidden = ruleViews[index] !== ruleView
+      })
+
+    const viewPicker = rulesControls.select(
+      t('specialist.view'),
+      ruleView,
+      [
+        ['actions', t('rules.actions')],
+        ['state', t('rules.initialState')],
+        ['display', t('rules.clockAndLog')],
+      ],
+      (value) => {
+        ruleView = value
+        showView()
+      },
+      false,
+    )
+
+    form.append(viewPicker, ...groups)
+    form.addEventListener(
+      'invalid',
+      (event) => {
+        const index = groups.findIndex(
+          (group) => event.target instanceof Node && group.contains(event.target),
+        )
+
+        if (index < 0) return
+        ruleView = ruleViews[index]!
+        viewPicker.querySelector('select')!.value = ruleView
+        showView()
+      },
+      true,
+    )
+    showView()
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
@@ -178,6 +248,7 @@ export function bindRulesPanel(
       submit({ type: 'game.updateRules', ruleId: ruleId || newRuleId, rules: draft })
     })
     rulesFields.append(form)
+    restoreFocus?.()
   }
 
   function renderTriggers() {
@@ -244,18 +315,30 @@ export function bindRulesPanel(
     })
 
     triggerForms = new Map(ruleTriggerSections.map((section, index) => [section, forms[index]!]))
+
+    const showTask = () => {
+      for (const [section, form] of triggerForms) form.hidden = section !== triggerView
+    }
+
     triggerFields.replaceChildren(
-      ...(!openComponent || dirtyTriggers.has('buttons')
-        ? [
-            triggerControls.button(t('rules.discardTrigger'), () => {
-              dirtyTriggers.clear()
-              error.textContent = ''
-              renderTriggers()
-            }),
-          ]
-        : []),
-      ...(openComponent ? [forms[0]!, forms[3]!, forms[1]!, forms[2]!] : forms),
+      triggerControls.select(
+        t('specialist.trigger'),
+        triggerView,
+        [
+          ['buttons', t('rules.sceneButtons')],
+          ['nearby', t('tree.nearby')],
+          ['inspection', t('rules.inspection')],
+          ['actions', t('specialist.itemActions')],
+        ],
+        (value) => {
+          triggerView = value
+          showTask()
+        },
+        false,
+      ),
+      ...forms,
     )
+    showTask()
   }
 
   function resetRules() {
@@ -280,6 +363,9 @@ export function bindRulesPanel(
       newRuleId: z.string(),
       selected: z.string(),
       rulesDirty: z.boolean(),
+      ruleView: z.enum(ruleViews).optional(),
+      triggerView: z.enum(ruleTriggerSections).optional(),
+      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
       dirtyTriggers: z.array(z.enum(ruleTriggerSections)),
       triggers: z.boolean(),
     }),
@@ -291,6 +377,9 @@ export function bindRulesPanel(
             newRuleId,
             selected,
             rulesDirty,
+            entries,
+            ruleView,
+            triggerView,
             dirtyTriggers: [...dirtyTriggers],
             triggers: !triggerFields.hidden,
           }
@@ -300,6 +389,9 @@ export function bindRulesPanel(
       ruleId = saved.ruleId
       newRuleId = saved.newRuleId
       selected = saved.selected
+      ruleView = saved.ruleView ?? 'actions'
+      triggerView = saved.triggerView ?? 'buttons'
+      entries = saved.entries ?? {}
       rulesDirty = saved.rulesDirty
       dirtyTriggers.clear()
 
@@ -310,7 +402,7 @@ export function bindRulesPanel(
       renderTriggers()
       showTriggers(saved.triggers)
     },
-    'specialist-inspectors-v2',
+    'selected-rules-v1',
   )
 
   return {
@@ -326,6 +418,12 @@ export function bindRulesPanel(
         submitted && !busy && replaceFields && !state.error && state.lastCommand === submitted.type
           ? submitted
           : undefined
+
+      const issue =
+        !busy &&
+        state.error &&
+        submitted?.type === 'game.updateRules' &&
+        state.validationIssues?.find((issue) => issue.file === ruleFile(ruleId || newRuleId))
 
       if (!busy) submitted = undefined
       const rulesSaved = saved?.type === 'game.updateRules'
@@ -344,6 +442,9 @@ export function bindRulesPanel(
       const reset = projectChanged || (replaceFields && !state.preserveDrafts)
 
       if (reset) {
+        ruleView = 'actions'
+        triggerView = 'buttons'
+        entries = {}
         ruleId = view?.game?.rules?.[0] ?? defaultRuleId
         newRuleId = ''
         dirtyTriggers.clear()
@@ -372,6 +473,11 @@ export function bindRulesPanel(
       if (reset || rulesSaved || triggerSection) error.textContent = ''
       rulesFields.disabled = busy || !view?.game
       triggerFields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
+
+      if (issue) {
+        error.textContent = issue.message
+        revealRuleIssue(issue.path)
+      }
     },
     hasDrafts: () => rulesDirty || dirtyTriggers.size > 0,
     takeRecoveredComponents() {
@@ -406,6 +512,8 @@ export function bindRulesPanel(
 
       if (rulesDirty) return false
       ruleId = id
+      entries = {}
+      ruleView = 'actions'
       newRuleId = ''
       error.textContent = ''
       showTriggers(false)

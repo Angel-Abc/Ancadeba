@@ -1,3 +1,5 @@
+import { linkedTranslationFields } from './inspectorTranslations.js'
+import { fieldPath, focusIssue } from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
 import { combatPassivesForm } from './combatPassiveForms.js'
 import { combatRulesetReferences } from '@ancadeba/schemas'
@@ -6,7 +8,12 @@ import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
-import { combatLibrarySchema, resolveCombatSource, type CombatLibrary } from '@ancadeba/schemas'
+import {
+  combatLibrarySchema,
+  combatLibraryFile,
+  resolveCombatSource,
+  type CombatLibrary,
+} from '@ancadeba/schemas'
 import type { ProjectEditorState } from './projectController.js'
 import { ruleFormControls, saveBar, languageWatcher, scopedFolds } from './ruleFormControls.js'
 import { combatMovesForm } from './combatMovesForm.js'
@@ -18,6 +25,7 @@ export function bindCombatLibraryEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -36,12 +44,15 @@ export function bindCombatLibraryEditor(
 
   const languageChanged = languageWatcher(t)
 
-  const controls = ruleFormControls(
-    document,
-    () => {
-      dirty = true
-    },
-    t,
+  const controls = linkedTranslationFields(
+    ruleFormControls(
+      document,
+      () => {
+        dirty = true
+      },
+      t,
+    ),
+    openKey,
   )
 
   const reset = () => {
@@ -93,6 +104,9 @@ export function bindCombatLibraryEditor(
     error.textContent = parsed.success
       ? ''
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
+
+    if (!parsed.success && command.type === 'game.upsertCombatLibrary')
+      focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
 
     if (parsed.success) {
       submittedId =
@@ -216,7 +230,7 @@ export function bindCombatLibraryEditor(
       ),
       usage,
       entryUsage,
-      identity,
+      fieldPath(identity, 'id'),
       ...combatMovesForm(entries, view, current, render),
       combatStatusesForm(entries, view, current, render),
       combatRulesetsForm(entries, view, current, render),
@@ -286,6 +300,17 @@ export function bindCombatLibraryEditor(
         reset()
       else if (changed || translated) render()
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
+
+      if (!busy && submittedId && state.error) {
+        const file = combatLibraryFile(submittedId)
+        const issue = state.validationIssues?.find((issue) => issue.file === file)
+        submittedId = undefined
+
+        if (issue) {
+          error.textContent = issue.message
+          focusIssue(fields, issue.path)
+        }
+      }
     },
   }
 }

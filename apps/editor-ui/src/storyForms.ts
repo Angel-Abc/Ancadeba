@@ -29,35 +29,58 @@ import {
   sceneChoices,
 } from './choiceLabels.js'
 
+import { entryEditor, fieldPath, type EntrySelections } from './specialistEntries.js'
+
+type StoryControls = RuleFormControls & { arrange: (parent: HTMLElement) => void }
+
 type Presentation = Pick<QuestDefinition, 'label' | 'labelKey' | 'description' | 'descriptionKey'>
 
-export function storyPresentation(
-  controls: RuleFormControls,
+function presentationName(view: ProjectView, data: Presentation & { id: string }) {
+  return (data.labelKey && view.translations?.[data.labelKey]) || data.label || data.id
+}
+
+function storyPresentation(
+  controls: StoryControls,
   view: ProjectView,
   draft: Presentation,
+  path: (string | number)[],
+  name = controls.t('form.name'),
 ): HTMLElement[] {
-  const { t } = controls
-  const keys = translationChoices(view, t('metadata.literalText'))
+  const keys = translationChoices(view, controls.t('metadata.literalText'))
 
-  return [
-    controls.input(t('form.name'), draft.label, (value) => {
-      draft.label = value
-    }),
-    controls.translation(t('form.nameTranslation'), draft.labelKey ?? '', keys, (value) => {
-      draft.labelKey = value || undefined
-    }),
-    controls.input(t('metadata.description'), draft.description, (value) => {
-      draft.description = value
-    }),
-    controls.translation(
-      t('form.descriptionTranslation'),
-      draft.descriptionKey ?? '',
-      keys,
-      (value) => {
-        draft.descriptionKey = value || undefined
-      },
-    ),
-  ]
+  return (['label', 'description'] as const).map((property) => {
+    const key = property === 'label' ? 'labelKey' : 'descriptionKey'
+    const title = property === 'label' ? name : controls.t('metadata.description')
+    const box = fieldPath(controls.create('div'), ...path, property)
+    box.append(
+      controls.input(title, draft[property], (value) => {
+        draft[property] = value
+      }),
+      controls.translation(
+        controls.t(property === 'label' ? 'form.nameTranslation' : 'form.descriptionTranslation'),
+        draft[key] ?? '',
+        keys,
+        (value) => {
+          draft[key] = value || undefined
+        },
+      ),
+    )
+    controls.arrange(box)
+
+    return box
+  })
+}
+
+function unusedId(prefix: string, used: { id: string }[]) {
+  let number = used.length + 1
+
+  while (used.some((entry) => entry.id === prefix + number)) number++
+
+  return prefix + number
+}
+
+function wording(view: ProjectView, value: RuleText) {
+  return typeof value === 'string' ? value : view.translations?.[value.textKey] || value.textKey
 }
 
 export function storyConditions(
@@ -245,31 +268,39 @@ export function storyConditions(
 }
 
 function textField(
-  controls: RuleFormControls,
+  controls: StoryControls,
   view: ProjectView,
   title: string,
   value: RuleText,
   update: (value: RuleText) => void,
   render: () => void,
 ): HTMLElement {
-  return controls.group(
+  const [mode, field] = ruleValueControls(
+    controls,
     title,
-    ...ruleValueControls(
-      controls,
-      title,
-      value,
-      translationChoices(view),
-      (value) => {
-        if (typeof value === 'string' || typeof value === 'object') update(value)
-      },
-      render,
-      ['text', 'translation'],
-    ),
+    value,
+    translationChoices(view),
+    (next) => {
+      if (typeof next === 'string' || typeof next === 'object') update(next)
+    },
+    render,
+    ['text', 'translation'],
   )
+
+  const box = controls.create('div')
+  box.append(field!)
+  controls.arrange(box)
+  // Keep the choice of literal or catalog wording secondary to the wording itself.
+  const settings = box.querySelector('details')
+
+  if (settings) settings.append(mode!)
+  else box.append(controls.fold('mode/' + title, controls.t('form.valueType'), false, mode!))
+
+  return box
 }
 
 function effectsForm(
-  controls: RuleFormControls,
+  controls: StoryControls,
   view: ProjectView,
   effects: StoryEffect[],
   render: () => void,
@@ -419,303 +450,474 @@ const count = (t: Translate, amount: number, kind: 'line' | 'choice' | 'conditio
   amount === 1 ? t(`story.count.${kind}`) : t(`story.count.${kind}s`, { count: amount })
 
 export function dialogueForm(
-  controls: RuleFormControls,
+  controls: StoryControls,
   view: ProjectView,
   draft: DialogueDefinition,
   render: () => void,
+  selected: EntrySelections,
+  identity: HTMLElement,
 ): HTMLElement[] {
   const { t } = controls
-  const root = controls.group(t('story.nodes'))
+  const ids = Object.keys(draft.nodes)
+  const root = controls.create('div')
+  root.append(
+    entryEditor(
+      controls,
+      selected,
+      'nodes',
+      t('story.nodes'),
+      ids,
+      (id) => {
+        const line = draft.nodes[id]?.lines[0]
 
-  for (const [id, node] of Object.entries(draft.nodes)) {
-    const section = controls.group(t('story.node', { id }))
-    section.append(
-      controls.select(t('story.terminal'), String(node.terminal), yesNoChoices(t), (value) => {
-        node.terminal = value === 'true'
-      }),
-      controls.button(t('story.removeNode'), () => {
-        delete draft.nodes[id]
-        controls.markEdited()
-        render()
-      }),
-    )
-    node.lines.forEach((line, index) =>
-      section.append(
-        controls.group(
-          t('story.line', { number: index + 1 }),
-          textField(
-            controls,
-            view,
-            t('story.speaker'),
-            line.speaker ?? '',
-            (value) => {
-              line.speaker = value
-            },
-            render,
-          ),
-          textField(
-            controls,
-            view,
-            t('story.dialogueText'),
-            line.text,
-            (value) => {
-              line.text = value
-            },
-            render,
-          ),
-          line.bindings
-            ? lineBindings(controls, view, line.bindings, render)
-            : controls.button(t('story.addLineBindings'), () => {
-                line.bindings = {}
-                controls.markEdited()
-                render()
-              }),
-          controls.button(t('story.removeLine'), () => {
-            node.lines.splice(index, 1)
+        return line ? id + ' · ' + wording(view, line.text) : id
+      },
+      (id) => {
+        const node = draft.nodes[id]!
+        const section = controls.create('div')
+        const linesKey = 'lines/' + id
+        const choicesKey = 'choices/' + id
+
+        const lineFields = (line: (typeof node.lines)[number], index: number) => {
+          const path = ['nodes', id, 'lines', index]
+          const box = fieldPath(controls.create('div'), ...path)
+          box.append(
+            fieldPath(
+              textField(
+                controls,
+                view,
+                t('story.speaker'),
+                line.speaker ?? '',
+                (value) => {
+                  line.speaker = value
+                },
+                render,
+              ),
+              ...path,
+              'speaker',
+            ),
+            fieldPath(
+              textField(
+                controls,
+                view,
+                t('story.dialogueText'),
+                line.text,
+                (value) => {
+                  line.text = value
+                },
+                render,
+              ),
+              ...path,
+              'text',
+            ),
+            line.bindings
+              ? controls.section(
+                  'bindings/' + id + '/' + index,
+                  lineBindings(controls, view, line.bindings, render),
+                )
+              : controls.button(t('story.addLineBindings'), () => {
+                  line.bindings = {}
+                  controls.markEdited()
+                  render()
+                }),
+            controls.button(t('story.removeLine'), () => {
+              node.lines.splice(index, 1)
+              controls.markEdited()
+              render()
+            }),
+          )
+
+          return box
+        }
+
+        section.append(
+          node.lines.length === 1
+            ? lineFields(node.lines[0]!, 0)
+            : entryEditor(
+                controls,
+                selected,
+                linesKey,
+                t('specialist.lines'),
+                node.lines,
+                (line, i) => wording(view, line.text) || t('story.line', { number: i + 1 }),
+                lineFields,
+                { path: ['nodes', id, 'lines'] },
+              ),
+          controls.button(t('story.addLine'), () => {
+            selected[linesKey] = node.lines.length
+            node.lines.push({ text: '' })
             controls.markEdited()
             render()
           }),
-        ),
-      ),
-    )
-    section.append(
-      controls.button(t('story.addLine'), () => {
-        node.lines.push({ text: '' })
-        controls.markEdited()
-        render()
-      }),
-    )
-    node.choices.forEach((choice, index) => {
-      const box = controls.group(t('story.choice', { number: index + 1 }))
-      box.append(
-        controls.input(t('story.choiceId'), choice.id, (value) => {
-          choice.id = value
-        }),
-        ...storyPresentation(controls, view, choice),
-        controls.select(
-          t('story.choiceDestination'),
-          choice.end ? '__end' : (choice.next ?? ''),
-          [['__end', t('story.endConversation')], ...Object.keys(draft.nodes)],
-          (value) => {
-            choice.end = value === '__end'
-            choice.next = choice.end ? undefined : value
-          },
-        ),
-        controls.select(
-          t('story.sceneAfter'),
-          choice.scene ?? '',
-          [['', t('story.stayInScene')], ...sceneChoices(view, 'game')],
-          (value) => {
-            choice.scene = value || undefined
-          },
-        ),
-        // Conditions and effects fold away so a node's choices can be scanned.
-        controls.fold(
-          `dialogue:${draft.id}/node:${id}/choice:${index}`,
-          t('story.conditionsAndEffects', {
-            conditions: count(t, choice.visibleWhen.length + choice.when.length, 'condition'),
-            effects: count(t, choice.effects.length, 'effect'),
-          }),
-          false,
-          textField(
+          entryEditor(
             controls,
-            view,
-            t('story.unavailable'),
-            choice.unavailableText ?? '',
-            (value) => {
-              choice.unavailableText = value
-            },
-            render,
-          ),
-          storyConditions(controls, view, t('story.visibleWhen'), choice.visibleWhen, render),
-          storyConditions(controls, view, t('story.enabledWhen'), choice.when, render),
-          effectsForm(controls, view, choice.effects, render),
-        ),
-        controls.button(
-          t('story.moveChoiceEarlier'),
-          () => {
-            if (index) {
-              node.choices.splice(index, 1)
-              node.choices.splice(index - 1, 0, choice)
-              controls.markEdited()
-              render()
-            }
-          },
-          index === 0,
-        ),
-        controls.button(t('story.removeChoice'), () => {
-          node.choices.splice(index, 1)
-          controls.markEdited()
-          render()
-        }),
-      )
-      section.append(box)
-    })
-    section.append(
-      controls.button(t('story.addChoice'), () => {
-        let number = node.choices.length + 1
+            selected,
+            choicesKey,
+            t('specialist.choices'),
+            node.choices,
+            (choice) => presentationName(view, choice),
+            (choice, index) => {
+              const choicePath = ['nodes', id, 'choices', index]
+              const box = controls.group(t('story.choice', { number: index + 1 }))
+              box.append(
+                ...storyPresentation(
+                  controls,
+                  view,
+                  choice,
+                  choicePath,
+                  t('specialist.choiceName'),
+                ),
+                fieldPath(
+                  controls.input(t('story.choiceId'), choice.id, (value) => {
+                    choice.id = value
+                  }),
+                  ...choicePath,
+                  'id',
+                ),
+                fieldPath(
+                  controls.select(
+                    t('story.choiceDestination'),
+                    choice.end ? '__end' : (choice.next ?? ''),
+                    [['__end', t('story.endConversation')], ...Object.keys(draft.nodes)],
+                    (value) => {
+                      choice.end = value === '__end'
+                      choice.next = choice.end ? undefined : value
+                    },
+                  ),
+                  ...choicePath,
+                  'next',
+                ),
+                controls.select(
+                  t('story.sceneAfter'),
+                  choice.scene ?? '',
+                  [['', t('story.stayInScene')], ...sceneChoices(view, 'game')],
+                  (value) => {
+                    choice.scene = value || undefined
+                  },
+                ),
+                // Conditions and effects fold away so a node's choices can be scanned.
+                controls.fold(
+                  `dialogue:${draft.id}/node:${id}/choice:${index}`,
+                  t('story.conditionsAndEffects', {
+                    conditions: count(
+                      t,
+                      choice.visibleWhen.length + choice.when.length,
+                      'condition',
+                    ),
+                    effects: count(t, choice.effects.length, 'effect'),
+                  }),
+                  false,
+                  textField(
+                    controls,
+                    view,
+                    t('story.unavailable'),
+                    choice.unavailableText ?? '',
+                    (value) => {
+                      choice.unavailableText = value
+                    },
+                    render,
+                  ),
+                  storyConditions(
+                    controls,
+                    view,
+                    t('story.visibleWhen'),
+                    choice.visibleWhen,
+                    render,
+                  ),
+                  storyConditions(controls, view, t('story.enabledWhen'), choice.when, render),
+                  effectsForm(controls, view, choice.effects, render),
+                ),
+                controls.button(
+                  t('story.moveChoiceEarlier'),
+                  () => {
+                    if (index) {
+                      node.choices.splice(index, 1)
+                      node.choices.splice(index - 1, 0, choice)
+                      selected[choicesKey] = index - 1
+                      controls.markEdited()
+                      render()
+                    }
+                  },
+                  index === 0,
+                ),
+                controls.button(t('story.removeChoice'), () => {
+                  node.choices.splice(index, 1)
+                  controls.markEdited()
+                  render()
+                }),
+              )
 
-        while (node.choices.some((choice) => choice.id === `choice-${number}`)) number++
-        node.choices.push(
-          dialogueChoiceSchema.parse({ id: `choice-${number}`, label: 'Reply', end: true }),
+              return fieldPath(box, ...choicePath)
+            },
+            { path: ['nodes', id, 'choices'] },
+          ),
+          controls.button(t('story.addChoice'), () => {
+            let number = node.choices.length + 1
+
+            while (node.choices.some((choice) => choice.id === 'choice-' + number)) number++
+            selected[choicesKey] = node.choices.length
+            node.choices.push(
+              dialogueChoiceSchema.parse({ id: 'choice-' + number, label: 'Reply', end: true }),
+            )
+            controls.markEdited()
+            render()
+          }),
+          controls.select(t('story.terminal'), String(node.terminal), yesNoChoices(t), (value) => {
+            node.terminal = value === 'true'
+          }),
+          controls.button(t('story.removeNode'), () => {
+            delete draft.nodes[id]
+            controls.markEdited()
+            render()
+          }),
         )
+
+        return fieldPath(section, 'nodes', id)
+      },
+      { initial: ids.indexOf(draft.entry), path: ['nodes'], ids },
+    ),
+  )
+  let newId = ''
+  root.append(
+    controls.fold(
+      'new-node',
+      t('specialist.newNode'),
+      false,
+      controls.input(t('story.newNodeId'), '', (value) => {
+        newId = value
+      }),
+      controls.button(t('story.addNode'), () => {
+        if (!newId || Object.hasOwn(draft.nodes, newId)) return
+        Object.defineProperty(draft.nodes, newId, {
+          value: dialogueNodeSchema.parse({}),
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        })
+        selected.nodes = Object.keys(draft.nodes).indexOf(newId)
         controls.markEdited()
         render()
       }),
-    )
-    const start = id === draft.entry ? t('story.start') : ''
-    root.append(
-      controls.fold(
-        `dialogue:${draft.id}/node:${id}`,
-        t('story.nodeSummary', {
-          id,
-          start,
-          lines: count(t, node.lines.length, 'line'),
-          choices: count(t, node.choices.length, 'choice'),
-        }),
-        id === draft.entry,
-        section,
-      ),
-    )
-  }
-
-  let id = ''
-  root.append(
-    controls.input(t('story.newNodeId'), '', (value) => {
-      id = value
-    }),
-    controls.button(t('story.addNode'), () => {
-      if (!id || Object.hasOwn(draft.nodes, id)) return
-      draft.nodes[id] = dialogueNodeSchema.parse({})
-      controls.markEdited()
-      render()
-    }),
+    ),
   )
 
   return [
-    ...storyPresentation(controls, view, draft),
-    controls.select(t('story.entryNode'), draft.entry, Object.keys(draft.nodes), (value) => {
-      draft.entry = value
-    }),
-    controls.input(
-      t('story.transcriptCapacity'),
-      String(draft.transcriptCapacity),
-      (value) => {
-        draft.transcriptCapacity = Number(value)
-      },
-      'number',
-    ),
     root,
+    controls.fold(
+      'metadata',
+      t('specialist.metadata'),
+      false,
+      identity,
+      ...storyPresentation(controls, view, draft, []),
+      fieldPath(
+        controls.select(t('story.entryNode'), draft.entry, ids, (value) => {
+          draft.entry = value
+        }),
+        'entry',
+      ),
+      fieldPath(
+        controls.input(
+          t('story.transcriptCapacity'),
+          String(draft.transcriptCapacity),
+          (value) => {
+            draft.transcriptCapacity = Number(value)
+          },
+          'number',
+        ),
+        'transcriptCapacity',
+      ),
+    ),
   ]
 }
 
 export function questForm(
-  controls: RuleFormControls,
+  controls: StoryControls,
   view: ProjectView,
   draft: QuestDefinition,
   render: () => void,
+  selected: EntrySelections,
+  identity: HTMLElement,
 ): HTMLElement[] {
   const { t } = controls
-  const stages = controls.group(t('story.stages'))
-  draft.stages.forEach((stage, index) => {
-    const box = controls.group(t('story.stage', { number: index + 1 }))
-    box.append(
-      controls.input(t('story.stageId'), stage.id, (value) => {
-        stage.id = value
-      }),
-      ...storyPresentation(controls, view, stage),
-    )
-    stage.objectives.forEach((objective, objectiveIndex) => {
-      const row = controls.group(t('story.objective', { number: objectiveIndex + 1 }))
-      row.append(
-        controls.input(t('story.objectiveId'), objective.id, (value) => {
-          objective.id = value
-        }),
-        ...storyPresentation(controls, view, objective),
-        storyConditions(controls, view, t('story.objectiveConditions'), objective.when, render),
-        controls.select(
-          t('story.progressField'),
-          objective.progress ? JSON.stringify(objective.progress.binding) : '',
-          [
-            ['', t('story.noProgress')],
-            ...(view.rules?.state ?? [])
-              .filter((field) => ruleStateType(field) === 'number')
-              .map(
-                (field) =>
-                  [
-                    JSON.stringify({ source: 'game.state', path: field.path }),
-                    field.path.join('.'),
-                  ] as const,
-              ),
-          ],
-          (value) => {
-            objective.progress = value
-              ? { binding: JSON.parse(value), target: objective.progress?.target ?? 1 }
-              : undefined
-            render()
-          },
-        ),
-      )
-
-      if (objective.progress) {
-        const progress = objective.progress
-        row.append(
-          controls.input(
-            t('story.progressTarget'),
-            String(progress.target),
-            (value) => {
-              progress.target = Number(value)
-            },
-            'number',
+  const stages = controls.create('div')
+  stages.append(
+    entryEditor(
+      controls,
+      selected,
+      'stages',
+      t('story.stages'),
+      draft.stages,
+      (stage) => presentationName(view, stage),
+      (stage, index) => {
+        const stagePath = ['stages', index]
+        const box = controls.group(t('story.stage', { number: index + 1 }))
+        box.append(
+          ...storyPresentation(controls, view, stage, stagePath, t('specialist.stageName')),
+          fieldPath(
+            controls.input(t('story.stageId'), stage.id, (value) => {
+              selected['objectives/' + value] = selected['objectives/' + stage.id] ?? 0
+              stage.id = value
+            }),
+            ...stagePath,
+            'id',
           ),
         )
-      }
+        const objectivesKey = 'objectives/' + stage.id
+        box.append(
+          entryEditor(
+            controls,
+            selected,
+            objectivesKey,
+            t('specialist.objectives'),
+            stage.objectives,
+            (objective) => presentationName(view, objective),
+            (objective, objectiveIndex) => {
+              const objectivePath = [...stagePath, 'objectives', objectiveIndex]
+              const row = controls.group(t('story.objective', { number: objectiveIndex + 1 }))
+              row.append(
+                ...storyPresentation(
+                  controls,
+                  view,
+                  objective,
+                  objectivePath,
+                  t('specialist.objectiveName'),
+                ),
+                fieldPath(
+                  controls.input(t('story.objectiveId'), objective.id, (value) => {
+                    objective.id = value
+                  }),
+                  ...objectivePath,
+                  'id',
+                ),
+                fieldPath(
+                  storyConditions(
+                    controls,
+                    view,
+                    t('story.objectiveConditions'),
+                    objective.when,
+                    render,
+                  ),
+                  ...objectivePath,
+                  'when',
+                ),
+                controls.select(
+                  t('story.progressField'),
+                  objective.progress ? JSON.stringify(objective.progress.binding) : '',
+                  [
+                    ['', t('story.noProgress')],
+                    ...(view.rules?.state ?? [])
+                      .filter((field) => ruleStateType(field) === 'number')
+                      .map(
+                        (field) =>
+                          [
+                            JSON.stringify({ source: 'game.state', path: field.path }),
+                            field.path.join('.'),
+                          ] as const,
+                      ),
+                  ],
+                  (value) => {
+                    objective.progress = value
+                      ? { binding: JSON.parse(value), target: objective.progress?.target ?? 1 }
+                      : undefined
+                    render()
+                  },
+                ),
+              )
 
-      row.append(
-        controls.button(t('story.removeObjective'), () => {
-          stage.objectives.splice(objectiveIndex, 1)
-          controls.markEdited()
-          render()
-        }),
-      )
-      box.append(row)
-    })
-    box.append(
-      controls.button(t('story.addObjective'), () => {
-        stage.objectives.push(
-          questObjectiveSchema.parse({
-            id: `objective-${draft.stages.flatMap((entry) => entry.objectives).length + 1}`,
-            label: 'Objective',
-            when: [{ type: 'state-is', path: view.rules?.state[0]?.path ?? ['flag'], value: true }],
-          }),
+              if (objective.progress) {
+                const progress = objective.progress
+                row.append(
+                  fieldPath(
+                    controls.input(
+                      t('story.progressTarget'),
+                      String(progress.target),
+                      (value) => {
+                        progress.target = Number(value)
+                      },
+                      'number',
+                    ),
+                    ...objectivePath,
+                    'progress',
+                    'target',
+                  ),
+                )
+              }
+
+              row.append(
+                controls.button(
+                  t('specialist.moveObjective'),
+                  () => {
+                    stage.objectives.splice(
+                      objectiveIndex - 1,
+                      0,
+                      ...stage.objectives.splice(objectiveIndex, 1),
+                    )
+                    selected[objectivesKey] = objectiveIndex - 1
+                    controls.markEdited()
+                    render()
+                  },
+                  objectiveIndex === 0,
+                ),
+                controls.button(t('story.removeObjective'), () => {
+                  stage.objectives.splice(objectiveIndex, 1)
+                  controls.markEdited()
+                  render()
+                }),
+              )
+
+              return fieldPath(row, ...objectivePath)
+            },
+            { path: [...stagePath, 'objectives'] },
+          ),
         )
-        controls.markEdited()
-        render()
-      }),
-      controls.button(
-        t('story.moveStageEarlier'),
-        () => {
-          if (index) {
-            draft.stages.splice(index, 1)
-            draft.stages.splice(index - 1, 0, stage)
+        box.append(
+          controls.button(t('story.addObjective'), () => {
+            selected[objectivesKey] = stage.objectives.length
+            stage.objectives.push(
+              questObjectiveSchema.parse({
+                id: unusedId(
+                  'objective-',
+                  draft.stages.flatMap((stage) => stage.objectives),
+                ),
+                label: 'Objective',
+                when: [
+                  { type: 'state-is', path: view.rules?.state[0]?.path ?? ['flag'], value: true },
+                ],
+              }),
+            )
             controls.markEdited()
             render()
-          }
-        },
-        index === 0,
-      ),
-      controls.button(t('story.removeStage'), () => {
-        draft.stages.splice(index, 1)
-        controls.markEdited()
-        render()
-      }),
-    )
-    stages.append(box)
-  })
+          }),
+          controls.button(
+            t('story.moveStageEarlier'),
+            () => {
+              if (index) {
+                draft.stages.splice(index, 1)
+                draft.stages.splice(index - 1, 0, stage)
+                selected.stages = index - 1
+                controls.markEdited()
+                render()
+              }
+            },
+            index === 0,
+          ),
+          controls.button(t('story.removeStage'), () => {
+            draft.stages.splice(index, 1)
+            controls.markEdited()
+            render()
+          }),
+        )
+
+        return fieldPath(box, ...stagePath)
+      },
+      { path: ['stages'] },
+    ),
+  )
   stages.append(
     controls.button(t('story.addStage'), () => {
+      selected.stages = draft.stages.length
       draft.stages.push({
-        id: `stage-${draft.stages.length + 1}`,
+        id: unusedId('stage-', draft.stages),
         label: 'Stage',
         description: '',
         objectives: [],
@@ -728,9 +930,14 @@ export function questForm(
   draft.handIns.forEach((entry, index) => {
     const row = controls.group(t('story.handIn', { number: index + 1 }))
     row.append(
-      controls.input(t('story.handInItem'), entry.item, (value) => {
-        entry.item = value
-      }),
+      fieldPath(
+        controls.input(t('story.handInItem'), entry.item, (value) => {
+          entry.item = value
+        }),
+        'handIns',
+        index,
+        'item',
+      ),
       controls.select(
         t('story.requiredOwner'),
         entry.owner,
@@ -800,12 +1007,24 @@ export function questForm(
     rewards.append(
       controls.group(
         t('form.numericReward', { number: index + 1 }),
-        controls.input(t('story.rewardId'), entry.id, (value) => {
-          entry.id = value
-        }),
-        controls.input(t('story.rewardLabel'), entry.label, (value) => {
-          entry.label = value
-        }),
+        fieldPath(
+          controls.input(t('story.rewardId'), entry.id, (value) => {
+            entry.id = value
+          }),
+          'rewards',
+          'numeric',
+          index,
+          'id',
+        ),
+        fieldPath(
+          controls.input(t('story.rewardLabel'), entry.label, (value) => {
+            entry.label = value
+          }),
+          'rewards',
+          'numeric',
+          index,
+          'label',
+        ),
         controls.translation(
           t('story.rewardLabelTranslation'),
           entry.labelKey ?? '',
@@ -824,13 +1043,19 @@ export function questForm(
             entry.field.path = JSON.parse(value)
           },
         ),
-        controls.input(
-          t('story.rewardAmount'),
-          String(entry.amount),
-          (value) => {
-            entry.amount = Number(value)
-          },
-          'number',
+        fieldPath(
+          controls.input(
+            t('story.rewardAmount'),
+            String(entry.amount),
+            (value) => {
+              entry.amount = Number(value)
+            },
+            'number',
+          ),
+          'rewards',
+          'numeric',
+          index,
+          'amount',
         ),
         controls.button(t('story.removeNumericReward'), () => {
           draft.rewards.numeric.splice(index, 1)
@@ -917,11 +1142,26 @@ export function questForm(
   )
 
   return [
-    ...storyPresentation(controls, view, draft),
-    storyConditions(controls, view, t('story.canStart'), draft.when, render),
-    storyConditions(controls, view, t('story.canTurnIn'), draft.turnInWhen, render),
     stages,
-    handIns,
-    rewards,
+    controls.fold(
+      'metadata',
+      t('specialist.metadata'),
+      false,
+      identity,
+      ...storyPresentation(controls, view, draft, []),
+    ),
+    controls.section(
+      'when',
+      fieldPath(storyConditions(controls, view, t('story.canStart'), draft.when, render), 'when'),
+    ),
+    controls.section(
+      'turnIn',
+      fieldPath(
+        storyConditions(controls, view, t('story.canTurnIn'), draft.turnInWhen, render),
+        'turnInWhen',
+      ),
+    ),
+    controls.section('handIns', fieldPath(handIns, 'handIns')),
+    controls.section('rewards', fieldPath(rewards, 'rewards')),
   ]
 }

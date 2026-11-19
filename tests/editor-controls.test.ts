@@ -1739,6 +1739,7 @@ describe('action bar editor controls', () => {
     editor.render({ ...initial, view }, true)
     click('Add leveling profile')
     edit('Profile label', 'Progression draft')
+    edit('Level table', '1')
     edit('Total XP needed', '5', 'Level 2')
     click('Add level 2 stat gain')
     edit('Amount added', '6', 'Level 2 · stat gain 1')
@@ -2631,21 +2632,21 @@ describe('editor draft workflows', () => {
     expect(second.commands).toEqual([])
   })
 
-  it('recovers a new conversation and an independently edited quest journal', async () => {
+  it('recovers a new quest and an independently edited quest journal', async () => {
     const first = await connected(bindStoryEditor)
-    first.click('Add dialogue')
-    first.edit('Name', 'Recovered conversation')
+    first.click('Add quest')
+    first.edit('Name', 'Recovered quest')
     first.edit('Journal scene', 'shop')
     first.edit('Journal label', 'Recovered journal')
     const drafts = JSON.parse(JSON.stringify(captureEditorDrafts(first.root.asElement())))
     const second = await connected(bindStoryEditor)
     expect(restoreEditorDrafts(second.root.asElement(), drafts)).toEqual([])
-    expect(second.field('Name').value).toBe('Recovered conversation')
+    expect(second.field('Name').value).toBe('Recovered quest')
     expect(second.field('Journal label').value).toBe('Recovered journal')
     expect(second.commands).toEqual([])
-    second.submit('Save dialogue')
+    second.submit('Save quest')
     await second.flush()
-    expect(second.read().dialogues?.dialogue?.label).toBe('Recovered conversation')
+    expect(second.read().quests?.quest?.label).toBe('Recovered quest')
     expect(second.editor.hasDrafts()).toBe(true)
   })
 
@@ -6664,16 +6665,16 @@ describe('editor draft workflows', () => {
     'preserves independent story and journal edits when saving %s first',
     async (first) => {
       const ui = await connected(bindStoryEditor)
-      ui.click('Add dialogue')
-      ui.edit('Name', 'Keep conversation')
+      ui.click('Add quest')
+      ui.edit('Name', 'Keep quest')
       ui.edit('Journal scene', 'shop')
       ui.edit('Journal label', 'Keep journal')
-      const firstSave = first === 'story' ? 'Save dialogue' : 'Save quest journal'
-      const secondSave = first === 'story' ? 'Save quest journal' : 'Save dialogue'
+      const firstSave = first === 'story' ? 'Save quest' : 'Save quest journal'
+      const secondSave = first === 'story' ? 'Save quest journal' : 'Save quest'
       ui.submit(firstSave)
       await ui.flush()
       expect(ui.editor.hasDrafts()).toBe(true)
-      expect(ui.field('Name').value).toBe('Keep conversation')
+      expect(ui.field('Name').value).toBe('Keep quest')
       expect(ui.field('Journal label').value).toBe('Keep journal')
       ui.submit(secondSave)
       await ui.flush()
@@ -6706,12 +6707,15 @@ describe('editor draft workflows', () => {
 
   it('retains a failed journal draft until its own retry succeeds', async () => {
     const ui = await connected(bindStoryEditor)
+    ui.click('Add quest')
+    ui.submit('Save quest')
+    await ui.flush()
     ui.edit('Journal scene', 'shop')
     ui.edit('Journal label', 'Retry journal')
     ui.rejectNext()
     ui.submit('Save quest journal')
     await ui.flush()
-    const failed = ui.commands[0]!
+    const failed = ui.commands.at(-1)!
 
     if (failed.type !== 'scene.upsertComponent') throw new Error('Expected journal save')
     await ui.controller.save({ ...failed, sceneId: 'other' })
@@ -6920,12 +6924,14 @@ describe('editor draft workflows', () => {
 
   it('discards both story and journal drafts when explicitly reloading the project', async () => {
     const ui = await connected(bindStoryEditor)
-    ui.click('Add dialogue')
+    ui.click('Add quest')
     ui.edit('Journal scene', 'shop')
     ui.edit('Journal label', 'Discard journal')
     expect(ui.editor.hasDrafts()).toBe(true)
     await ui.controller.load('demo')
     expect(ui.editor.hasDrafts()).toBe(false)
+    ui.click('Add quest')
+    ui.edit('Journal scene', 'shop')
     expect(ui.field('Journal label').value).toBe('Quests')
   })
 })
@@ -7040,6 +7046,161 @@ describe('scene inspector registry', () => {
 
     return { revision: 'inspector', documents }
   }
+
+  it('recovers the reordered quest stage and saves the edited objective with the complete quest', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+    const editor = bindStoryEditor(ui.root.asElement(), (command) => ui.commands.push(command))
+    editor.render({ ...ui.initial, view }, true)
+    editor.openDefinition('quest:harbour-survey')
+    ui.edit('Ordered stages', '1')
+    expect(editor.hasDrafts()).toBe(false)
+    expect(ui.field('Objective ID').value).toBe('return')
+    ui.edit('Objective ID', 'return-home')
+    ui.click('Move stage earlier')
+    expect(ui.field('Stage ID').value).toBe('report')
+    const saved = captureEditorDrafts(ui.root.asElement())
+    ui.click('Discard story draft')
+    expect(restoreEditorDrafts(ui.root.asElement(), saved)).toEqual([])
+    expect(ui.field('Stage ID').value).toBe('report')
+    ui.edit('Ordered stages', '1')
+    expect(ui.field('Objective ID').value).toBe('harbour')
+    ui.submit('Save quest')
+    expect(ui.commands[0]).toMatchObject({
+      type: 'game.upsertQuest',
+      quest: {
+        stages: [
+          { id: 'report', objectives: [{ id: 'return-home' }] },
+          { id: 'explore', objectives: [{ id: 'harbour' }] },
+        ],
+      },
+    })
+  })
+
+  it('opens the selected choice translation and keeps the node and choice through a refresh', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+    const open = vi.fn()
+
+    const editor = bindStoryEditor(
+      ui.root.asElement(),
+      vi.fn(),
+      editorLocalization().t,
+      undefined,
+      open,
+    )
+
+    editor.render({ ...ui.initial, view }, true)
+    editor.openDefinition('dialogue:curator')
+    expect(ui.root.textContent).not.toContain('Quest journal placement')
+    ui.edit('Choices', '1')
+
+    const edit = ui.root
+      .all()
+      .find(
+        (control) => control.attributes.get('aria-label') === 'Edit translation for Choice wording',
+      )
+
+    edit!.dispatchEvent(new Event('click'))
+    expect(open).toHaveBeenCalledWith('dialogue.curator.report')
+    editor.render({ ...ui.initial, view: { ...view }, preserveDrafts: true }, false)
+    expect(ui.field('Choice ID').value).toBe('report')
+    expect(editor.hasDrafts()).toBe(false)
+  })
+
+  it('keeps the encounter draft and running round when switching between Combat views', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+    const editor = bindCombatEditor(ui.root.asElement(), vi.fn(), editorLocalization().t, vi.fn())
+    editor.render({ ...ui.initial, view }, true)
+    editor.navigate(undefined, 'training')
+    ui.edit('Encounter seed', '2468')
+    ui.click('Simulation')
+    expect(ui.field('Simulation seed').value).toBe('2468')
+    ui.click('Start/reset simulation')
+    ui.click('Combat encounter')
+    expect(ui.field('Encounter seed').value).toBe('2468')
+    ui.click('Simulation')
+    expect(ui.root.textContent).toContain('Round 1')
+    expect(editor.hasDrafts()).toBe(true)
+    expect(editor.navigate(undefined, 'advanced-training')).toBe(false)
+  })
+
+  it('selects an invalid level on Save and preserves the other thresholds', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+
+    const editor = bindLevelingEditor(
+      ui.root.asElement(),
+      (command) => ui.commands.push(command),
+      editorLocalization().t,
+      vi.fn(),
+    )
+
+    editor.render({ ...ui.initial, view }, true)
+    const profile = Object.values(view.leveling!)[0]!
+    ui.edit('Level table', '2')
+    ui.edit('Total XP needed', '0')
+    ui.edit('Level table', '0')
+    ui.submit('Save leveling profile')
+    expect(ui.field('Level table').value).toBe('2')
+    expect(ui.commands).toEqual([])
+    ui.edit('Total XP needed', '42')
+    ui.submit('Save leveling profile')
+    expect(ui.commands[0]).toMatchObject({
+      type: 'game.upsertLeveling',
+      profile: { levels: [profile.levels[0], profile.levels[1], { ...profile.levels[2], xp: 42 }] },
+    })
+    ui.edit('Level table', '0')
+    editor.render(
+      {
+        ...ui.initial,
+        view,
+        preserveDrafts: true,
+        error: 'Invalid stat gain',
+        validationIssues: [
+          {
+            file: 'leveling/' + profile.id + '.json',
+            code: 'invalid_binding',
+            path: ['levels', 2, 'gains', 0, 'field'],
+            message: 'Invalid stat gain',
+          },
+        ],
+      },
+      false,
+    )
+    expect(ui.field('Level table').value).toBe('2')
+    expect(editor.hasDrafts()).toBe(true)
+  })
+
+  it('preserves first-match branch order and the selected branch across recovery', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+    const editor = bindRulesPanel(ui.root.asElement(), (command) => ui.commands.push(command))
+    editor.render({ ...ui.initial, view }, true)
+    editor.navigate('museum-puzzle')
+
+    const [action, branches] = Object.entries(view.ruleFiles!['museum-puzzle']!.actions).find(
+      ([, entries]) => entries.length > 1,
+    )!
+
+    ui.edit('Action', action)
+    ui.edit('Branches in evaluation order', '1')
+    expect(editor.hasDrafts()).toBe(false)
+    ui.click('Move up')
+    ui.edit('View', 'state')
+    const saved = captureEditorDrafts(ui.root.asElement())
+    ui.click('Discard rule draft')
+    expect(restoreEditorDrafts(ui.root.asElement(), saved)).toEqual([])
+    expect(ui.field('View').value).toBe('state')
+    ui.edit('View', 'actions')
+    expect(ui.field('Branches in evaluation order').value).toBe('0')
+    ui.submit('Save rules')
+    expect(ui.commands[0]).toMatchObject({
+      type: 'game.updateRules',
+      rules: { actions: { [action]: [branches[1], branches[0], ...branches.slice(2)] } },
+    })
+  })
 
   it.each(['status-panel', 'shop'] as const)(
     'opens the same %s from its specialist and saves only the selected component',

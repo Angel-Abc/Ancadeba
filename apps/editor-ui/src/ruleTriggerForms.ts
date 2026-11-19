@@ -51,6 +51,7 @@ function buttonTriggers(
   view: ProjectView,
   save: (command: EditorCommand) => void,
   onRecovery?: (read: () => RecoveredComponent) => void,
+  onDiscard?: () => void,
 ): HTMLElement {
   const { t } = owner
   const buttons = owner.group(t('rules.sceneButtons'))
@@ -201,6 +202,7 @@ function buttonTriggers(
         t('rules.saveButton'),
         saveStatus(form.ownerDocument, t, () => dirty),
         () => save({ type: 'scene.upsertRuleButton', sceneId: scene.id, component: readButton() }),
+        onDiscard && controls.button(t('rules.discardTrigger'), onDiscard),
       )
       formArea.replaceChildren(form)
     }
@@ -373,7 +375,13 @@ export function ruleTriggerForms(
 
     switch (section) {
       case 'buttons':
-        return buttonTriggers(scoped, view, save, (read) => options.recovery?.(section, read))
+        return buttonTriggers(
+          scoped,
+          view,
+          save,
+          (read) => options.recovery?.(section, read),
+          () => options.discarded?.(section),
+        )
       case 'inspection':
         return inspectionTriggers(scoped, view, save, () => options.discarded?.(section))
       case 'actions':

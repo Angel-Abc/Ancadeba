@@ -1164,21 +1164,6 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   white-space: normal;
 }
 
-.level-table {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0.5rem 0;
-  padding: 0;
-  list-style: none;
-}
-
-.level-table li {
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--ed-border);
-  border-radius: 0.375rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .action-bar-slot-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1620,7 +1605,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     flex-wrap: wrap;
   }
 
-  /* The rail becomes a pinned strip, so sections stay one tap away while the page scrolls. */
+  /* Keep the section picker visible while the narrow workbench scrolls. */
   .section-rail {
     position: sticky;
     top: 0;
@@ -1635,7 +1620,20 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   }
 
   .section-rail button {
-    width: 4.5rem;
+    display: none;
+  }
+
+  .section-rail .compact-section-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding-inline: 0.25rem;
+  }
+
+  .compact-section-picker select {
+    flex: 1;
+    min-width: 0;
   }
 
   .project-sidebar {
@@ -1667,9 +1665,9 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     overflow: visible;
   }
 
-  /* In the stacked layout the workbench scrolls underneath the horizontal section rail. */
+  /* Leave room for the pinned section picker in the stacked workbench. */
   .editor-pane-body .save-bar {
-    top: 4rem;
+    top: 2.65rem;
   }
 
   .preview-splitter {
@@ -2253,7 +2251,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   min-width: 0;
   max-width: 100%;
 }
-#component-editor .inspector-localized {
+:is(#component-editor, #story-editor) .inspector-localized {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -2261,26 +2259,28 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   padding-bottom: 0.25rem;
   overflow-wrap: anywhere;
 }
-#component-editor .inspector-localized > :is(p, div, details) {
+:is(#component-editor, #story-editor) .inspector-localized > :is(p, div, details) {
   grid-column: 1 / -1;
 }
-#component-editor .inspector-localized > button {
+:is(#component-editor, #story-editor) .inspector-localized > button {
   margin: 0;
   font-size: 0.8rem;
 }
-#component-editor .inspector-translated-value {
+:is(#component-editor, #story-editor) .inspector-translated-value {
   white-space: pre-wrap;
   margin: 0.3rem 0;
   font-size: 1rem;
 }
-#component-editor .inspector-localized > .fold {
+:is(#component-editor, #story-editor) .inspector-localized > .fold {
   border: 0;
   padding: 0;
   margin: 0.25rem 0;
   background: transparent;
 }
-#component-editor .translation-preview {
-  white-space: normal;
+:is(#component-editor, #story-editor, #leveling-editor, #rules-panel, #combat-editor)
+  .translation-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 #component-editor .scene-graphic-preview {
   min-height: 6rem;
@@ -2345,4 +2345,60 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     white-space: normal;
     overflow-wrap: anywhere;
   }
+}
+
+.compact-section-picker,
+.entry-outline {
+  display: none;
+}
+
+.specialist-entries {
+  container-type: inline-size;
+  min-width: 0;
+}
+.specialist-entries select,
+.specialist-entries input {
+  min-width: 0;
+  max-width: 100%;
+}
+.entry-fields {
+  min-width: 0;
+}
+.entry-layout {
+  display: grid;
+  align-items: start;
+  gap: 0.5rem;
+}
+@container (min-width: 48rem) {
+  .entry-layout {
+    grid-template-columns: minmax(10rem, 26%) minmax(0, 1fr);
+  }
+  :is(#story-editor, #rules-panel, #leveling-editor) .entry-layout > .entry-picker {
+    display: none;
+  }
+  .entry-outline {
+    display: grid;
+    align-content: start;
+    gap: 0.15rem;
+    max-height: 50vh;
+    overflow: auto;
+  }
+  .entry-outline button {
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+}
+.entry-outline button[aria-pressed='true'],
+.specialist-views button[aria-pressed='true'] {
+  background: var(--ed-selected);
+  border-color: var(--ed-accent);
+}
+
+:is(#rules-panel, #leveling-editor, #combat-editor) :is(form, fieldset) > .specialist-key-field {
+  flex: 1 1 16rem;
+  align-self: start;
+  min-width: 0;
+}
+.specialist-key-field input {
+  width: 100%;
 }

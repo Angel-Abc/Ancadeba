@@ -154,7 +154,7 @@ export function ruleFormControls(
     value: string,
     choices: readonly TranslationChoice[],
     update: (value: string) => void,
-  ) => {
+  ): HTMLElement => {
     const control = create('input')
     const preview = create('small')
     const texts = new Map(choices)

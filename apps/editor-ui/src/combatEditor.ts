@@ -1,3 +1,6 @@
+import { combatFile } from '@ancadeba/schemas'
+import { linkedTranslationFields } from './inspectorTranslations.js'
+import { focusIssue } from './specialistEntries.js'
 import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -28,6 +31,7 @@ export function bindCombatEditor(
   t: Translate = editorLocalization().t,
   openComponent?: OpenSceneComponent,
   openLibrary?: (id: string) => void,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -36,9 +40,18 @@ export function bindCombatEditor(
   const fields = document.createElement('fieldset')
   const libraryRoot = document.createElement('section')
   const simulationRoot = document.createElement('fieldset')
-  root.replaceChildren(error, fields, simulationRoot, libraryRoot)
+  const navigation = document.createElement('div')
+  navigation.className = 'specialist-views'
+  navigation.setAttribute('role', 'group')
+  const pageIds = ['encounter', 'simulation', 'libraries'] as const
+
+  type Page = (typeof pageIds)[number]
+
+  let page: Page = 'encounter'
+  let libraryFile = false
+  root.replaceChildren(error, navigation, fields, simulationRoot, libraryRoot)
   const simulation = bindCombatSimulationPanel(simulationRoot, t, (command) => submit(command))
-  const libraryEditor = bindCombatLibraryEditor(libraryRoot, save, t)
+  const libraryEditor = bindCombatLibraryEditor(libraryRoot, save, t, openKey)
   let view: ProjectView | undefined
   let path: string | undefined
   let fileKey: string | undefined
@@ -56,14 +69,65 @@ export function bindCombatEditor(
 
   const languageChanged = languageWatcher(t)
 
-  const controls = ruleFormControls(
-    document,
-    () => {
-      dirty = true
-      simulation.invalidateResults()
-    },
-    t,
+  const controls = linkedTranslationFields(
+    ruleFormControls(
+      document,
+      () => {
+        dirty = true
+        simulation.invalidateResults()
+      },
+      t,
+    ),
+    openKey,
   )
+
+  const pageLabels = {
+    encounter: 'combat.encounter',
+    simulation: 'specialist.simulation',
+    libraries: 'specialist.libraries',
+  }
+
+  function selectPage(id: Page) {
+    if (id === page) return true
+
+    if (
+      (id === 'libraries' && (dirty || simulation.hasDrafts())) ||
+      (page === 'libraries' && libraryEditor.hasDrafts())
+    ) {
+      error.textContent = t('combat.saveFirstTargets')
+
+      return false
+    }
+
+    page = id
+
+    if (page === 'simulation') simulation.render(view, draft)
+    error.textContent = ''
+    showPage()
+
+    return true
+  }
+
+  const pages = pageIds.map((id) => {
+    const button = controls.button('', () => selectPage(id))
+    navigation.append(button)
+
+    return { id, button }
+  })
+
+  function showPage() {
+    navigation.hidden = libraryFile
+    navigation.setAttribute('aria-label', t('specialist.view'))
+    fields.hidden = page !== 'encounter'
+    simulationRoot.hidden = page !== 'simulation'
+    libraryRoot.hidden = page !== 'libraries'
+
+    for (const { id, button } of pages) {
+      button.hidden = (id === 'libraries' && Boolean(fileKey)) || (id === 'simulation' && !draft)
+      button.textContent = t(pageLabels[id])
+      button.setAttribute('aria-pressed', String(id === page))
+    }
+  }
 
   const reset = () => {
     const scene = view?.scenes.find((scene) => scene.id === sceneId)
@@ -135,6 +199,9 @@ export function bindCombatEditor(
       ? ''
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
 
+    if (!parsed.success && command.type === 'game.upsertCombat')
+      focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
+
     if (parsed.success) {
       if (parsed.data.type === 'game.upsertCombat') encounterId = parsed.data.encounter.id
 
@@ -152,6 +219,8 @@ export function bindCombatEditor(
   }
 
   function render() {
+    if (!draft && page === 'simulation') page = 'encounter'
+    showPage()
     fields.replaceChildren()
     simulation.render(view, draft)
 
@@ -356,7 +425,10 @@ export function bindCombatEditor(
           view,
           draft,
           render,
-          (library) => (openLibrary ? openLibrary(library) : libraryEditor.navigate(library)),
+          (library) => {
+            if (openLibrary) openLibrary(library)
+            else if (selectPage('libraries')) libraryEditor.navigate(library)
+          },
           (command) => {
             if (dirty) {
               error.textContent = t('combat.saveFirstCopy')
@@ -456,6 +528,7 @@ export function bindCombatEditor(
     'combat',
     z.object({
       definitionOnly: z.boolean().optional(),
+      page: z.enum(['encounter', 'simulation', 'libraries']).optional(),
       sceneId: z.string(),
       encounterId: z.string(),
       draft: combatSourceSchema.optional(),
@@ -466,7 +539,7 @@ export function bindCombatEditor(
       encounterDirty: z.boolean().default(true),
     }),
     () =>
-      dirty || simulation.hasDrafts()
+      dirty || simulation.hasDrafts() || libraryEditor.hasDrafts()
         ? {
             sceneId,
             encounterId,
@@ -477,6 +550,7 @@ export function bindCombatEditor(
             enemyHealth,
             definitionOnly,
             encounterDirty: dirty,
+            page,
           }
         : undefined,
     (saved) => {
@@ -488,6 +562,7 @@ export function bindCombatEditor(
       creating = saved.creating
       playerHealth = saved.playerHealth
       enemyHealth = saved.enemyHealth
+      page = saved.page ?? 'encounter'
       dirty = saved.encounterDirty
       render()
     },
@@ -508,11 +583,22 @@ export function bindCombatEditor(
         (nextEncounter === undefined || nextEncounter === encounterId)) ||
       (!dirty && !simulation.hasDrafts()),
     navigate,
+    showEncounter() {
+      page = 'encounter'
+      showPage()
+    },
     rememberSelection() {
       const scene = sceneId
       const encounter = encounterId
 
-      return () => navigate(scene, encounter)
+      const previous = page
+
+      return () => {
+        if (navigate(scene, encounter)) {
+          page = previous
+          showPage()
+        }
+      }
     },
     canOpenFile(key: string, library: boolean) {
       if (key === fileKey) return true
@@ -522,9 +608,9 @@ export function bindCombatEditor(
     openFile(key: string, library?: string) {
       if (key === fileKey) return
       fileKey = key
-      fields.hidden = Boolean(library)
-      simulationRoot.hidden = Boolean(library)
-      libraryRoot.hidden = Boolean(key && !library)
+      libraryFile = Boolean(library)
+      page = libraryFile ? 'libraries' : 'encounter'
+      showPage()
 
       if (library) libraryEditor.navigate(library)
     },
@@ -552,11 +638,19 @@ export function bindCombatEditor(
       const saved =
         submitted && !busy && !state.error && replaceFields && submitted === state.lastCommand
 
+      const issue =
+        !busy &&
+        state.error &&
+        submitted === 'game.upsertCombat' &&
+        state.validationIssues?.find((issue) => issue.file === combatFile(encounterId))
+
       if (!busy) submitted = undefined
       const resetFields = projectChanged || (replaceFields && !state.preserveDrafts)
 
       if (resetFields) {
         fileKey = undefined
+        libraryFile = false
+        page = 'encounter'
         simulation.reset()
         sceneId = view?.scenes.find((scene) => scene.type === 'game')?.id ?? ''
         encounterId = ''
@@ -565,6 +659,12 @@ export function bindCombatEditor(
       if (resetFields || saved || (changed && !dirty)) reset()
       else if (changed || translated) render()
       fields.disabled = busy || !view?.game || Boolean(view.diagnostics.length)
+
+      if (issue) {
+        error.textContent = issue.message
+        focusIssue(fields, issue.path)
+      }
+
       simulationRoot.disabled = fields.disabled
     },
   }

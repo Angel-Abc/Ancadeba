@@ -1,7 +1,42 @@
 import type { RuleFormControls } from './ruleFormControls.js'
 
+/** Offer the same exact-key navigation from specialist controls that already show a key and preview. */
+export function linkedTranslationFields(
+  controls: RuleFormControls,
+  openKey?: (key: string) => void,
+): RuleFormControls {
+  if (!openKey) return controls
+
+  return {
+    ...controls,
+    translation(...args) {
+      const field = controls.translation(...args)
+      const input = field.querySelector('input')!
+
+      const link = controls.button(controls.t('inspector.editTranslation'), () =>
+        openKey(input.value),
+      )
+
+      link.setAttribute('aria-label', controls.t('inspector.editField', { field: args[0] }))
+
+      const update = () => {
+        link.hidden = !input.value
+        link.setAttribute('data-inspector-link', 'translation/' + input.value + '/' + args[0])
+      }
+
+      const box = controls.create('div')
+      box.className = 'specialist-key-field'
+      box.append(field, link)
+      input.addEventListener('input', update)
+      update()
+
+      return box
+    },
+  }
+}
+
 /** Pairs a scene's literal field with its adjacent catalog-key control while keeping one draft. */
-export function inspectorTranslations(controls: RuleFormControls, openKey: (key: string) => void) {
+export function inspectorTranslations(controls: RuleFormControls, openKey?: (key: string) => void) {
   const translations = new WeakMap<HTMLElement, { title: string; texts: Map<string, string> }>()
 
   const labels = new WeakMap<HTMLElement, string>()
@@ -69,8 +104,7 @@ export function inspectorTranslations(controls: RuleFormControls, openKey: (key:
       const value = create('p')
       value.className = 'inspector-translated-value'
       caption.textContent = literal ? (labels.get(literal) ?? literal.textContent) : data.title
-      const edit = controls.button(t('inspector.editTranslation'), () => openKey(input.value))
-      edit.setAttribute('data-inspector-link', 'translation/' + input.value + '/' + data.title)
+      const edit = controls.button(t('inspector.editTranslation'), () => openKey?.(input.value))
       edit.setAttribute(
         'aria-label',
         t('inspector.editField', { field: caption.textContent ?? data.title }),
@@ -83,7 +117,7 @@ export function inspectorTranslations(controls: RuleFormControls, openKey: (key:
 
       const fold = controls.fold(
         'translation-' + data.title,
-        t('inspector.translation'),
+        t(literal ? 'inspector.translation' : 'form.translationKey'),
         false,
         child,
         fallback,
@@ -91,6 +125,7 @@ export function inspectorTranslations(controls: RuleFormControls, openKey: (key:
 
       const show = () => {
         const key = input.value
+        edit.setAttribute('data-inspector-link', 'translation/' + key + '/' + data.title)
         const keyed = Boolean(key)
         caption.hidden = !keyed
         value.hidden = !keyed
@@ -98,7 +133,7 @@ export function inspectorTranslations(controls: RuleFormControls, openKey: (key:
           ? data.texts.get(key) ||
             t(data.texts.has(key) ? 'metadata.emptyTranslation' : 'form.unknownKey')
           : ''
-        edit.hidden = !keyed
+        edit.hidden = !keyed || !openKey
 
         if (literal) {
           if (keyed) fallback.replaceChildren(literal)

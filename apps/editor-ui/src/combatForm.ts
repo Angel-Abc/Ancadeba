@@ -1,3 +1,4 @@
+import { fieldPath } from './specialistEntries.js'
 import { combatDamageDefensesForm } from './combatDamageForm.js'
 import { combatRestrictionsForm } from './combatRestrictionsForm.js'
 import { combatItemUseForm } from './combatItemUseForm.js'
@@ -123,123 +124,146 @@ export function combatForm(
     ),
   ]
 
-  const actorForm = (actor: CombatActorSource, title: string, ...actions: HTMLElement[]) =>
-    group(
-      title,
-      input(t('metadata.id'), actor.id, (value) => {
-        actor.id = value.trim()
-      }),
-      ...presentation('', actor),
-      select(t('form.portrait'), actor.portrait ?? '', art, (value) => {
-        actor.portrait = value || undefined
-      }),
-      select(
-        t('combat.statOwner'),
-        actor.equipmentOwner ?? '',
-        [
-          '',
-          ...Object.entries(view.inventory?.owners ?? {})
-            .filter(([, owner]) => owner.combatStats)
-            .map(([id]) => id),
-        ],
-        (value) => {
-          actor.equipmentOwner = value || undefined
-          const stats = view.inventory?.owners[value]?.combatStats
+  const actorForm = (actor: CombatActorSource, title: string, ...actions: HTMLElement[]) => {
+    const path = actor === draft.player ? ['player'] : ['enemies', draft.enemies.indexOf(actor)]
 
-          if (stats) {
-            actor.health = structuredClone(stats.health)
-            actor.maximumHealth = structuredClone(stats.maximumHealth)
-          }
-
-          render()
-        },
-      ),
-      select(t('combat.healthField'), JSON.stringify(actor.health), fields, (value) => {
-        actor.health = combatHealthSchema.parse(JSON.parse(value))
-      }),
-      select(
-        t('combat.maxHealthSource'),
-        typeof actor.maximumHealth === 'number' ? 'fixed' : 'binding',
-        ['fixed', 'binding'],
-        (value) => {
-          actor.maximumHealth = value === 'fixed' ? 40 : { ...actor.health }
-          render()
-        },
-      ),
-      typeof actor.maximumHealth === 'number'
-        ? number(t('form.maxHealth'), actor.maximumHealth, (value) => {
-            actor.maximumHealth = value
-          })
-        : select(t('form.maxHealthField'), JSON.stringify(actor.maximumHealth), fields, (value) => {
-            actor.maximumHealth = gameBindingSchema.parse(JSON.parse(value))
+    return fieldPath(
+      group(
+        title,
+        fieldPath(
+          input(t('metadata.id'), actor.id, (value) => {
+            actor.id = value.trim()
           }),
-      combatDamageDefensesForm(controls, actor, render),
-      combatRestrictionsForm(controls, actor),
-      number('AP', actor.ap, (value) => {
-        actor.ap = value
-      }),
-      input(t('combat.availableMoves'), actor.moves.join(', '), (value) => {
-        actor.moves = value
-          .split(',')
-          .map((id) => id.trim())
-          .filter(Boolean)
-      }),
-      ...(actor === draft.player
-        ? [
-            select(
-              t('form.levelingProfile'),
-              actor.leveling ?? '',
-              ['', ...Object.keys(view.leveling ?? {})],
-              (value) => {
-                actor.leveling = value || undefined
+          ...path,
+          'id',
+        ),
+        ...presentation('', actor),
+        select(t('form.portrait'), actor.portrait ?? '', art, (value) => {
+          actor.portrait = value || undefined
+        }),
+        select(
+          t('combat.statOwner'),
+          actor.equipmentOwner ?? '',
+          [
+            '',
+            ...Object.entries(view.inventory?.owners ?? {})
+              .filter(([, owner]) => owner.combatStats)
+              .map(([id]) => id),
+          ],
+          (value) => {
+            actor.equipmentOwner = value || undefined
+            const stats = view.inventory?.owners[value]?.combatStats
 
-                if (!value) actor.moveLevels = undefined
-                render()
+            if (stats) {
+              actor.health = structuredClone(stats.health)
+              actor.maximumHealth = structuredClone(stats.maximumHealth)
+            }
+
+            render()
+          },
+        ),
+        select(t('combat.healthField'), JSON.stringify(actor.health), fields, (value) => {
+          actor.health = combatHealthSchema.parse(JSON.parse(value))
+        }),
+        select(
+          t('combat.maxHealthSource'),
+          typeof actor.maximumHealth === 'number' ? 'fixed' : 'binding',
+          ['fixed', 'binding'],
+          (value) => {
+            actor.maximumHealth = value === 'fixed' ? 40 : { ...actor.health }
+            render()
+          },
+        ),
+        typeof actor.maximumHealth === 'number'
+          ? fieldPath(
+              number(t('form.maxHealth'), actor.maximumHealth, (value) => {
+                actor.maximumHealth = value
+              }),
+              ...path,
+              'maximumHealth',
+            )
+          : select(
+              t('form.maxHealthField'),
+              JSON.stringify(actor.maximumHealth),
+              fields,
+              (value) => {
+                actor.maximumHealth = gameBindingSchema.parse(JSON.parse(value))
               },
             ),
-            ...(actor.leveling
-              ? [
-                  ...new Set([
-                    ...actor.moves,
-                    ...combatEquipmentMoveReferences(view.inventory, actor.equipmentOwner).map(
-                      (reference) => reference.id,
-                    ),
-                  ]),
-                ].map((move) =>
-                  number(
-                    t('combat.moveMinLevel', { move }),
-                    actor.moveLevels?.[move] ?? 1,
-                    (value) => {
-                      actor.moveLevels = { ...actor.moveLevels, [move]: value }
-                    },
-                  ),
-                )
-              : []),
-          ]
-        : [
-            input(t('combat.rotation'), actor.rotation.join(', '), (value) => {
-              actor.rotation = value
-                .split(',')
-                .map((id) => id.trim())
-                .filter(Boolean)
-            }),
-            fold(
-              `enemy-ai:${actor.id}`,
-              t('combat.aiProfiles.encounter'),
-              false,
-              combatEnemyProfileForm(
-                controls,
-                view,
-                draft,
-                actor,
-                combatDraftMechanics(draft, view),
-                Object.keys(availableStatuses),
-                render,
+        combatDamageDefensesForm(controls, actor, render),
+        combatRestrictionsForm(controls, actor),
+        fieldPath(
+          number('AP', actor.ap, (value) => {
+            actor.ap = value
+          }),
+          ...path,
+          'ap',
+        ),
+        input(t('combat.availableMoves'), actor.moves.join(', '), (value) => {
+          actor.moves = value
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean)
+        }),
+        ...(actor === draft.player
+          ? [
+              select(
+                t('form.levelingProfile'),
+                actor.leveling ?? '',
+                ['', ...Object.keys(view.leveling ?? {})],
+                (value) => {
+                  actor.leveling = value || undefined
+
+                  if (!value) actor.moveLevels = undefined
+                  render()
+                },
               ),
-            ),
-          ]),
-      ...actions,
+              ...(actor.leveling
+                ? [
+                    ...new Set([
+                      ...actor.moves,
+                      ...combatEquipmentMoveReferences(view.inventory, actor.equipmentOwner).map(
+                        (reference) => reference.id,
+                      ),
+                    ]),
+                  ].map((move) =>
+                    number(
+                      t('combat.moveMinLevel', { move }),
+                      actor.moveLevels?.[move] ?? 1,
+                      (value) => {
+                        actor.moveLevels = { ...actor.moveLevels, [move]: value }
+                      },
+                    ),
+                  )
+                : []),
+            ]
+          : [
+              input(t('combat.rotation'), actor.rotation.join(', '), (value) => {
+                actor.rotation = value
+                  .split(',')
+                  .map((id) => id.trim())
+                  .filter(Boolean)
+              }),
+              fold(
+                `enemy-ai:${actor.id}`,
+                t('combat.aiProfiles.encounter'),
+                false,
+                combatEnemyProfileForm(
+                  controls,
+                  view,
+                  draft,
+                  actor,
+                  combatDraftMechanics(draft, view),
+                  Object.keys(availableStatuses),
+                  render,
+                ),
+              ),
+            ]),
+        ...actions,
+      ),
+      ...path,
     )
+  }
 
   const identity = input(t('combat.encounterId'), draft.id, (value) => {
     if (creating) draft.id = value.trim()
@@ -257,17 +281,26 @@ export function combatForm(
       'settings',
       group(
         t('combat.sections.settings'),
-        identity,
+        fieldPath(identity, 'id'),
         ...presentation(t('form.encounter'), draft),
-        number(t('combat.seed'), draft.seed, (value) => {
-          draft.seed = value
-        }),
-        number(t('combat.roundCost'), draft.roundTimeMs, (value) => {
-          draft.roundTimeMs = value
-        }),
-        number(t('combat.logCapacity'), draft.logCapacity, (value) => {
-          draft.logCapacity = value
-        }),
+        fieldPath(
+          number(t('combat.seed'), draft.seed, (value) => {
+            draft.seed = value
+          }),
+          'seed',
+        ),
+        fieldPath(
+          number(t('combat.roundCost'), draft.roundTimeMs, (value) => {
+            draft.roundTimeMs = value
+          }),
+          'roundTimeMs',
+        ),
+        fieldPath(
+          number(t('combat.logCapacity'), draft.logCapacity, (value) => {
+            draft.logCapacity = value
+          }),
+          'logCapacity',
+        ),
         select(
           t('combat.allowEscape'),
           String(draft.allowEscape),
@@ -282,7 +315,7 @@ export function combatForm(
       ),
       true,
     ),
-    section('item-use', combatItemUseForm(controls, view, draft, render)),
+    fieldPath(section('item-use', combatItemUseForm(controls, view, draft, render)), 'itemUse'),
     section(
       'player',
       actorForm(draft.player, t('form.player')),
@@ -369,10 +402,17 @@ export function combatForm(
       ),
     ),
   )
-  result.push(section('rewards', combatRewardsForm(controls, view, draft, render)))
-  result.push(section('statuses', combatStatusesForm(controls, view, draft, render)))
   result.push(
-    section('ruleset', combatRulesetForm(controls, view, draft, render, availableStatuses)),
+    fieldPath(section('rewards', combatRewardsForm(controls, view, draft, render)), 'rewards'),
+  )
+  result.push(
+    fieldPath(section('statuses', combatStatusesForm(controls, view, draft, render)), 'statuses'),
+  )
+  result.push(
+    fieldPath(
+      section('ruleset', combatRulesetForm(controls, view, draft, render, availableStatuses)),
+      'mechanics',
+    ),
   )
   result.push(
     fold(

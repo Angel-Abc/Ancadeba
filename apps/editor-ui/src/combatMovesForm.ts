@@ -1,3 +1,4 @@
+import { fieldPath } from './specialistEntries.js'
 import { combatRequirementsForm } from './combatRequirementsForm.js'
 import { combatScalingForm } from './combatScalingForm.js'
 import type { CombatSource } from '@ancadeba/schemas'
@@ -95,9 +96,14 @@ export function combatMovesForm(
             },
             render,
           ),
-          number(t('combat.apCost'), move.apCost, (value) => {
-            move.apCost = value
-          }),
+          fieldPath(
+            number(t('combat.apCost'), move.apCost, (value) => {
+              move.apCost = value
+            }),
+            'moves',
+            id,
+            'apCost',
+          ),
           combatScalingForm(
             controls,
             t('combat.scaling.apCost'),
@@ -109,9 +115,14 @@ export function combatMovesForm(
             Object.keys(draft.mechanics?.resources ?? {}),
             Object.keys(availableStatuses ?? {}),
           ),
-          number(t('combat.cooldown'), move.cooldown ?? 0, (value) => {
-            move.cooldown = value || undefined
-          }),
+          fieldPath(
+            number(t('combat.cooldown'), move.cooldown ?? 0, (value) => {
+              move.cooldown = value || undefined
+            }),
+            'moves',
+            id,
+            'cooldown',
+          ),
           group(
             t('combat.mechanics.costs'),
             ...Object.entries(move.resourceCosts ?? {}).map(([id, amount]) => {

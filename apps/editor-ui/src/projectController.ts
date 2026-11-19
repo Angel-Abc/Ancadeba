@@ -1,4 +1,5 @@
 import type {
+  Diagnostic,
   CreateProjectRequest,
   DuplicateProjectRequest,
   EditorCommand,
@@ -17,6 +18,7 @@ export interface ProjectEditorState {
   view?: ProjectView
   busy: boolean
   error: string
+  validationIssues?: readonly Diagnostic[] | undefined
   conflict: boolean
   changedElsewhere: boolean
   lastCommand: EditorCommand['type'] | null
@@ -448,6 +450,7 @@ export class ProjectEditorController {
     this.state = {
       ...this.state,
       busy: true,
+      validationIssues: undefined,
       error: '',
       historyChange: undefined,
       projectChange: undefined,
@@ -479,6 +482,7 @@ export class ProjectEditorController {
 
     this.state = {
       ...this.state,
+      validationIssues: error instanceof EditorClientError ? error.diagnostics : undefined,
       error: `${error instanceof Error ? error.message : String(error)}${details ? `\n${details}` : ''}`,
       conflict: error instanceof EditorClientError && error.code === 'revision_conflict',
     }

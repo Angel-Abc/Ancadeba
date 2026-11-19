@@ -35,6 +35,21 @@ export function bindSectionRail(
   const document = container.ownerDocument
   const abort = new AbortController()
 
+  const picker = document.createElement('select')
+  const compact = document.createElement('label')
+  compact.className = 'compact-section-picker'
+  const caption = document.createElement('span')
+  compact.append(caption, picker)
+  let current = ''
+  picker.addEventListener(
+    'change',
+    () => {
+      onSelect(picker.value)
+      picker.value = current
+    },
+    { signal: abort.signal },
+  )
+
   const entries = sections.map((section) => {
     const button = document.createElement('button')
     button.type = 'button'
@@ -54,20 +69,29 @@ export function bindSectionRail(
     button.append(icon, label)
     button.addEventListener('click', () => onSelect(section.id), { signal: abort.signal })
 
-    return { section, button, label }
+    const option = document.createElement('option')
+    option.value = section.id
+    picker.append(option)
+
+    return { section, button, label, option }
   })
 
-  container.replaceChildren(...entries.map(({ button }) => button))
+  container.replaceChildren(compact, ...entries.map(({ button }) => button))
 
   return {
     render(activeSection: string | undefined) {
       container.hidden = activeSection === undefined
 
-      for (const { section, button, label } of entries) {
+      current = activeSection ?? ''
+      caption.textContent = t('specialist.section')
+      picker.value = current
+
+      for (const { section, button, label, option } of entries) {
         const name = t(section.labelKey)
         const shortKey = `rail.${section.id}`
         const short = t(shortKey)
         label.textContent = short === shortKey ? name : short
+        option.textContent = name
         button.title = name
         button.setAttribute('aria-label', name)
         button.setAttribute('aria-current', String(section.id === activeSection))
