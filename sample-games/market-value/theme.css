@@ -7,3 +7,65 @@
 .ancadeba-button {
   --ge-scene-text-padding: 0.25em;
 }
+
+.ancadeba-scene[data-scene-id='start'] {
+  --ge-scene-background: #082b2e;
+  --ge-scene-color: #fff1d0;
+  --ge-scene-gap: 0;
+  --ge-scene-padding: 0;
+  grid-template-rows: minmax(0, 1fr) repeat(3, min(3.2rem, 7cqh)) repeat(
+      6,
+      min(2rem, 5.6cqh)
+    ) 0 minmax(0, 1.2fr);
+}
+
+[data-scene-id='start'] .ancadeba-text--heading {
+  align-self: center;
+  overflow: visible;
+  padding: 0;
+  color: #fff0cf;
+  font:
+    600 min(8cqw, 13cqh, 7rem)/1.2 Georgia,
+    'Times New Roman',
+    serif;
+  letter-spacing: -0.045em;
+  text-shadow: 0 0.04em 0.12em #072425;
+}
+
+[data-scene-id='start'] .ancadeba-button {
+  width: 100%;
+  max-width: 19rem;
+  margin-block: min(0.35rem, 0.8cqh);
+  padding: 0 0.8em;
+  border: 1px solid #b6b08a;
+  border-radius: 0.2rem;
+  color: #fff1d0;
+  background: #082d30ed;
+  font:
+    600 clamp(0.9rem, min(2.4cqw, 3.6cqh), 1.25rem)/1.15 system-ui,
+    sans-serif;
+}
+
+[data-scene-id='start'] .ancadeba-button[data-component-id='play'] {
+  color: #162c2c;
+  background: #f3d398;
+  border-color: #ffe5b6;
+}
+
+[data-scene-id='start'] .ancadeba-button:is(:hover, :focus-visible) {
+  background: #ffebc1;
+  color: #132e2e;
+  outline: 2px solid #fff3d2;
+  outline-offset: 2px;
+}
+
+@container ge-scene (max-width: 38rem) {
+  [data-scene-id='start'] .ancadeba-text--heading {
+    grid-column: 2 / span 14;
+    font-size: min(13cqw, 14cqh);
+  }
+
+  [data-scene-id='start'] .ancadeba-button {
+    grid-column: 2 / span 10;
+  }
+}

@@ -8,11 +8,6 @@
       "image": "coast-terrain",
       "tileWidth": 24,
       "tileHeight": 24
-    },
-    "beach-finds": {
-      "image": "beach-finds",
-      "tileWidth": 24,
-      "tileHeight": 24
     }
   },
   "terrain": {
@@ -224,22 +219,6 @@
         "tileset": "coast",
         "column": 7,
         "row": 2
-      },
-      "walkable": true
-    },
-    "washed-up-driftwood": {
-      "tile": {
-        "tileset": "beach-finds",
-        "column": 0,
-        "row": 0
-      },
-      "walkable": true
-    },
-    "washed-up-rope": {
-      "tile": {
-        "tileset": "beach-finds",
-        "column": 1,
-        "row": 0
       },
       "walkable": true
     }
@@ -981,46 +960,6 @@
           null,
           null
         ]
-      ]
-    }
-  ],
-  "objects": [
-    {
-      "id": "driftwood",
-      "label": "Pick up driftwood",
-      "x": 7,
-      "y": 8,
-      "terrain": "washed-up-driftwood",
-      "action": "pick-up-driftwood",
-      "blocking": false,
-      "states": [
-        {
-          "id": "collected",
-          "when": {
-            "path": ["beach-pickups", "driftwood"],
-            "value": true
-          },
-          "visible": false
-        }
-      ]
-    },
-    {
-      "id": "rope",
-      "label": "Pick up rope",
-      "x": 6,
-      "y": 10,
-      "terrain": "washed-up-rope",
-      "action": "pick-up-rope",
-      "blocking": false,
-      "states": [
-        {
-          "id": "collected",
-          "when": {
-            "path": ["beach-pickups", "rope"],
-            "value": true
-          },
-          "visible": false
-        }
       ]
     }
   ]

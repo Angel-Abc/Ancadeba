@@ -40,6 +40,21 @@
       "action": {
         "type": "resume-game"
       }
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "placement": {
+        "row": 11,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Main menu",
+      "action": {
+        "type": "main-menu",
+        "scene": "start"
+      }
     }
   ]
 }

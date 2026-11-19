@@ -27,7 +27,7 @@
     },
     "portrait-body": {
       "format": "svg",
-      "source": "assets/images/portrait-body.svg",
+      "source": "assets/images/portrait-body-b6b67b4d-b1c6-468c-95ef-d6dae0158977.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -35,13 +35,14 @@
         "height": 64
       },
       "colors": {
-        "skin": "#be886c",
-        "shadow": "#92614f"
-      }
+        "shadow": "#92614f",
+        "skin": "#be886c"
+      },
+      "palettes": {}
     },
     "portrait-hair-crop": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-crop.svg",
+      "source": "assets/images/portrait-hair-crop-20f0b64b-5eb1-4b78-aca7-f9f1e8ccb3e8.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -51,11 +52,12 @@
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
-      }
+      },
+      "palettes": {}
     },
     "portrait-hair-waves": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-waves.svg",
+      "source": "assets/images/portrait-hair-waves-275ef373-0e80-4fe6-b198-bf63a76c4854.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -65,11 +67,12 @@
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
-      }
+      },
+      "palettes": {}
     },
     "portrait-hair-tied": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-tied.svg",
+      "source": "assets/images/portrait-hair-tied-9be5ab4f-306c-4450-bb74-c2e3aece6115.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -79,7 +82,80 @@
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
-      }
+      },
+      "palettes": {}
+    },
+    "shoreline-at-dawn": {
+      "format": "webp",
+      "source": "assets/images/shoreline-at-dawn-1d24a6cb-f93c-4fa3-887b-d22d2bb5c0c1.webp",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "colors": {},
+      "palettes": {}
+    },
+    "portrait-face-man": {
+      "format": "svg",
+      "source": "assets/images/portrait-face-man-64f19f56-1b05-4cb7-a18b-8ab17f76225e.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "shadow": "#92614f",
+        "skin": "#be886c"
+      },
+      "palettes": {}
+    },
+    "portrait-face-nonbinary": {
+      "format": "svg",
+      "source": "assets/images/portrait-face-nonbinary-665ee62c-1df5-41b0-8dc5-d73c5fd38d14.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "shadow": "#92614f",
+        "skin": "#be886c"
+      },
+      "palettes": {}
+    },
+    "portrait-face-undisclosed": {
+      "format": "svg",
+      "source": "assets/images/portrait-face-undisclosed-30e5cf8c-cb1b-4313-a657-cf5e2318f378.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "shadow": "#92614f",
+        "skin": "#be886c"
+      },
+      "palettes": {}
+    },
+    "portrait-face-woman": {
+      "format": "svg",
+      "source": "assets/images/portrait-face-woman-511f4603-9799-4a23-a8d3-2ab363a452be.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "colors": {
+        "shadow": "#92614f",
+        "skin": "#be886c"
+      },
+      "palettes": {}
     }
   },
   "parts": {
@@ -250,6 +326,214 @@
           }
         }
       ]
+    },
+    "woman": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "pieces": [
+        {
+          "id": "face",
+          "image": "portrait-face-woman",
+          "layer": "face",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ],
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {
+        "light": {
+          "skin": "#ecc0a5",
+          "shadow": "#ba8476"
+        },
+        "warm": {
+          "skin": "#be886c",
+          "shadow": "#92614f"
+        },
+        "olive": {
+          "skin": "#a98458",
+          "shadow": "#775839"
+        },
+        "brown": {
+          "skin": "#91604a",
+          "shadow": "#684134"
+        },
+        "deep": {
+          "skin": "#694535",
+          "shadow": "#472e26"
+        }
+      }
+    },
+    "man": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "pieces": [
+        {
+          "id": "face",
+          "image": "portrait-face-man",
+          "layer": "face",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ],
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {
+        "light": {
+          "skin": "#ecc0a5",
+          "shadow": "#ba8476"
+        },
+        "warm": {
+          "skin": "#be886c",
+          "shadow": "#92614f"
+        },
+        "olive": {
+          "skin": "#a98458",
+          "shadow": "#775839"
+        },
+        "brown": {
+          "skin": "#91604a",
+          "shadow": "#684134"
+        },
+        "deep": {
+          "skin": "#694535",
+          "shadow": "#472e26"
+        }
+      }
+    },
+    "nonbinary": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "pieces": [
+        {
+          "id": "face",
+          "image": "portrait-face-nonbinary",
+          "layer": "face",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ],
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {
+        "light": {
+          "skin": "#ecc0a5",
+          "shadow": "#ba8476"
+        },
+        "warm": {
+          "skin": "#be886c",
+          "shadow": "#92614f"
+        },
+        "olive": {
+          "skin": "#a98458",
+          "shadow": "#775839"
+        },
+        "brown": {
+          "skin": "#91604a",
+          "shadow": "#684134"
+        },
+        "deep": {
+          "skin": "#694535",
+          "shadow": "#472e26"
+        }
+      }
+    },
+    "undisclosed": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "pieces": [
+        {
+          "id": "face",
+          "image": "portrait-face-undisclosed",
+          "layer": "face",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ],
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {
+        "light": {
+          "skin": "#ecc0a5",
+          "shadow": "#ba8476"
+        },
+        "warm": {
+          "skin": "#be886c",
+          "shadow": "#92614f"
+        },
+        "olive": {
+          "skin": "#a98458",
+          "shadow": "#775839"
+        },
+        "brown": {
+          "skin": "#91604a",
+          "shadow": "#684134"
+        },
+        "deep": {
+          "skin": "#694535",
+          "shadow": "#472e26"
+        }
+      }
     }
   },
   "compositions": {
@@ -260,7 +544,7 @@
         "width": 64,
         "height": 64
       },
-      "layers": ["body", "hair"],
+      "layers": ["body", "face", "hair"],
       "anchors": {
         "origin": {
           "x": 0,
@@ -271,6 +555,10 @@
         "body": {
           "parts": ["body"],
           "default": "body"
+        },
+        "face": {
+          "parts": ["woman", "man", "nonbinary", "undisclosed"],
+          "default": "undisclosed"
         },
         "hair": {
           "parts": ["crop", "waves", "tied"],
