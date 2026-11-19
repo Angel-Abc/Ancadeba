@@ -1,8 +1,9 @@
-import { saveStatus } from './formSaveStatus.js'
+import { refreshSaveStatuses, saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft, registerFormDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import {
   assetCatalogSchema,
+  assetIdSchema,
   graphicAppearanceSchema,
   graphicComponentSchema,
   imageAssetSchema,
@@ -27,6 +28,10 @@ import { bindGraphicDefinitionsEditor } from './graphicDefinitionsEditor.js'
 import { bindSceneGraphicEditor, type SceneGraphicPreviewFactory } from './sceneGraphicEditor.js'
 import { startingGameBindings } from './textBindingChoices.js'
 
+const paletteDraftSchema = z.object({ name: z.string(), colors: z.record(z.string(), z.string()) })
+
+type PaletteDraft = z.infer<typeof paletteDraftSchema>
+
 export interface AssetPanelActions {
   save(command: EditorCommand): Promise<void>
   importAsset(id: string, format: ImageAsset['format'], file: File): Promise<void>
@@ -45,8 +50,19 @@ export function bindAssetsPanel(
   const panel = root.querySelector<HTMLElement>('#assets-panel')
   const dirty = new Set<string>()
 
+  let imageView: 'colors' | 'file' = 'colors'
+  let target = ''
+  const drafts = new Map<string, PaletteDraft>()
+  let paletteOwner = ''
+
   let submission:
-    | { form: string; type: EditorCommand['type']; path: string; selection: string }
+    | {
+        form: string
+        type: EditorCommand['type']
+        path: string
+        selection: string
+        palette?: { target: string; next: string } | undefined
+      }
     | undefined
 
   let controlLanguage = t('assets.defaults')
@@ -74,13 +90,18 @@ export function bindAssetsPanel(
     <p id="asset-intro" class="help" data-i18n="assets.help"></p>
     <div id="asset-gallery" class="asset-gallery"></div>
     <div id="asset-empty" class="asset-empty" hidden><p id="asset-empty-text"></p><button type="button" id="asset-empty-action"></button></div>
+    <div id="asset-image-views" class="specialist-views" hidden>
+      <button type="button" id="asset-show-colors" data-i18n="assets.colors"></button>
+      <button type="button" id="asset-show-file" data-i18n="assets.imageFile"></button>
+    </div>
     <form id="asset-image">
       <div class="save-bar" data-save-actions>
         <button type="submit" data-i18n="assets.saveImage"></button>
         <button type="button" data-discard data-i18n="form.discardChanges"></button>
       </div>
+      <div id="asset-file-preview" class="asset-preview" hidden></div>
       <h4 id="asset-image-heading" data-i18n="assets.import"></h4>
-      <label for="asset-image-id" data-i18n="metadata.id"></label><input id="asset-image-id" required pattern="[a-zA-Z0-9_-]+" />
+      <label for="asset-image-id" data-i18n="metadata.id"></label><input id="asset-image-id" required pattern="[a-zA-Z0-9_\\-]+" />
       <label for="asset-format" data-i18n="assets.format"></label><select id="asset-format"><option>svg</option><option>png</option><option>jpeg</option><option>webp</option></select>
       <label for="asset-file" data-i18n="assets.file"></label><input id="asset-file" type="file" accept=".svg,.png,.jpg,.jpeg,.webp" />
       <label for="asset-source" data-i18n="assets.source"></label><input id="asset-source" placeholder="assets/images/tunic.svg" />
@@ -88,26 +109,31 @@ export function bindAssetsPanel(
     </form>
     <div id="asset-workshop">
     <label for="asset-select" data-i18n="assets.visual"></label><select id="asset-select"></select>
-    <div id="asset-preview" class="asset-preview"></div><div id="asset-preview-controls" class="asset-preview-controls"></div>
-    <p class="help" data-i18n="assets.temporary"></p>
     <form id="asset-palettes">
       <div class="save-bar" data-save-actions>
-        <button type="button" id="asset-save-defaults" data-i18n="assets.saveDefaults"></button>
-        <button type="submit" data-i18n="assets.savePreset"></button>
+        <button type="submit" id="asset-save-palette"></button>
         <button type="button" data-discard data-i18n="form.discardChanges"></button>
       </div>
-      <h4 data-i18n="assets.colors"></h4><div id="asset-color-fields"></div>
-      <label for="asset-preset-name" data-i18n="assets.presetName"></label><input id="asset-preset-name" pattern="[a-zA-Z0-9_-]+" />
-      <button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button>
+      <div class="image-colors-layout">
+        <div id="asset-preview" class="asset-preview"></div>
+        <div class="image-color-editor">
+          <label for="asset-preset" data-i18n="assets.colorTarget"></label><select id="asset-preset" data-draft-navigation></select>
+          <div><button type="button" id="asset-add-preset" data-i18n="assets.addPreset"></button>
+          <button type="button" id="asset-remove-preset" data-i18n="assets.removePreset"></button></div>
+          <label id="asset-name-label" for="asset-preset-name" data-i18n="assets.presetName"></label><input id="asset-preset-name" pattern="[a-zA-Z0-9_\\-]+" />
+          <div id="asset-color-fields"></div>
+        </div>
+      </div>
+      <div id="asset-preview-controls" class="asset-preview-controls"></div>
     </form>
     </div>
-    <details><summary data-i18n="assets.definitions"></summary><form id="asset-definition">
+    <details><summary data-i18n="assets.imageDefinition"></summary><form id="asset-definition">
       <div class="save-bar" data-save-actions>
         <button type="submit" data-i18n="assets.saveDefinition"></button>
         <button type="button" data-discard data-i18n="form.discardChanges"></button>
       </div>
       <label for="asset-kind" data-i18n="assets.kind"></label><select id="asset-kind"><option value="images" data-i18n="assets.image"></option><option value="parts" data-i18n="assets.part"></option><option value="compositions" data-i18n="assets.composition"></option></select>
-      <label for="asset-definition-id" data-i18n="metadata.id"></label><input id="asset-definition-id" required pattern="[a-zA-Z0-9_-]+" />
+      <label for="asset-definition-id" data-i18n="metadata.id"></label><input id="asset-definition-id" required pattern="[a-zA-Z0-9_\\-]+" />
       <label for="asset-json" data-i18n="assets.definitionJson"></label><textarea id="asset-json" rows="12" spellcheck="false"></textarea>
       <button id="asset-remove" type="button" data-i18n="assets.remove"></button>
     </form></details>
@@ -171,11 +197,13 @@ export function bindAssetsPanel(
     form: string,
     type: EditorCommand['type'],
     operation: () => Promise<void>,
+    palette?: { target: string; next: string },
   ) => {
     if (!state?.view || state.busy || abort.signal.aborted) return
 
     const pending = {
       form,
+      palette,
       type,
       path: state.path,
       selection:
@@ -275,31 +303,90 @@ export function bindAssetsPanel(
 
   const updatePreview = () => preview?.setAppearance(appearance)
 
+  const paletteCaption = (key: string) => {
+    const caption = key.startsWith('@')
+      ? drafts.get(key)?.name || t('assets.newPreset')
+      : key || t('assets.defaults')
+
+    return caption + (drafts.has(key) ? ' *' : '')
+  }
+
+  const syncPaletteDirty = () => {
+    if (drafts.size) dirty.add('asset-palettes')
+    else dirty.delete('asset-palettes')
+    const picker = find<HTMLSelectElement>('asset-preset')
+    const current = picker.selectedOptions?.[0]
+
+    if (current && current.value === target) current.textContent = paletteCaption(target)
+    find<HTMLSelectElement>('asset-select').disabled =
+      Boolean(state?.busy) || dirty.has('asset-definition') || drafts.size > 0
+    refreshSaveStatuses(panel)
+  }
+
+  const editPalette = () => {
+    let draft = drafts.get(target)
+
+    if (!draft) {
+      draft = { name: target, colors: {} }
+      drafts.set(target, draft)
+    }
+
+    return draft
+  }
+
+  const showImageView = () => {
+    const image = catalog().images[selected]
+    const existing = navigationKey.startsWith('asset:') && Boolean(image)
+    const hasColors = existing && Object.keys(image!.colors).length > 0
+    const colors = hasColors && imageView === 'colors'
+    find('asset-image-views').hidden = !hasColors
+    find('asset-image').hidden = !navigationKey.startsWith('import:') && (!existing || colors)
+    find('asset-workshop').hidden = !existing || !colors
+    const filePreview = find('asset-file-preview')
+    filePreview.hidden = !existing || colors
+
+    if (preview) {
+      const container = colors ? find('asset-preview') : filePreview
+
+      if (!container.contains?.(preview.element)) container.replaceChildren(preview.element)
+    }
+
+    find('asset-show-colors').setAttribute('aria-pressed', String(colors))
+    find('asset-show-file').setAttribute('aria-pressed', String(!colors))
+  }
+
   const renderColors = () => {
     const container = find('asset-color-fields')
     container.replaceChildren()
     const asset = paletteAsset()
-    find('asset-palettes').hidden = !asset || !Object.keys(asset.colors).length
+    showImageView()
 
     if (!asset) return
-    const preset = document.createElement('select')
-    preset.setAttribute('aria-label', t('assets.presetName'))
-    preset.append(
-      option('', t('assets.defaults')),
-      ...Object.keys(asset.palettes).map((id) => option(id)),
-    )
-    preset.value = appearance.palette ?? ''
-    preset.addEventListener('change', () => {
-      appearance = graphicAppearanceSchema.parse({
-        ...appearance,
-        palette: preset.value || undefined,
-        colors: {},
-      })
-      set('asset-preset-name', preset.value)
-      renderColors()
-      updatePreview()
+
+    if (selected !== paletteOwner) {
+      paletteOwner = selected
+      target = ''
+      drafts.clear()
+      syncPaletteDirty()
+    }
+
+    if (target && !Object.hasOwn(asset.palettes, target) && !drafts.has(target)) target = ''
+    const current = drafts.get(target)
+    const names = [...new Set([...Object.keys(asset.palettes), ...drafts.keys()])].filter(Boolean)
+    const picker = find<HTMLSelectElement>('asset-preset')
+    picker.replaceChildren(...['', ...names].map((key) => option(key, paletteCaption(key))))
+    picker.value = target
+    set('asset-preset-name', current?.name ?? target)
+    find('asset-preset-name').hidden = find('asset-name-label').hidden = !target
+    find('asset-remove-preset').hidden = !Object.hasOwn(asset.palettes, target)
+    find('asset-save-palette').textContent = t(target ? 'assets.savePreset' : 'assets.saveDefaults')
+    appearance = graphicAppearanceSchema.parse({
+      ...appearance,
+      palette: Object.hasOwn(asset.palettes, target) ? target : undefined,
+      colors: { ...current?.colors },
     })
-    container.append(preset)
+    updatePreview()
+    refreshSaveStatuses(panel)
 
     for (const [slot, fallback] of Object.entries(asset.colors)) {
       const label = document.createElement('label')
@@ -311,7 +398,8 @@ export function bindAssetsPanel(
         appearance.colors[slot] ?? asset.palettes[appearance.palette ?? '']?.[slot] ?? fallback
       input.addEventListener('input', () => {
         appearance.colors[slot] = input.value
-        dirty.add('asset-palettes')
+        editPalette().colors[slot] = input.value
+        syncPaletteDirty()
         updatePreview()
       })
       label.append(input)
@@ -420,38 +508,72 @@ export function bindAssetsPanel(
     const asset = paletteAsset()
 
     if (!asset) return
-    const colors: Record<string, string> = {}
-
-    for (const input of panel.querySelectorAll<HTMLInputElement>(
-      '#asset-color-fields input[type=color]',
-    ))
-      colors[input.dataset.slot!] = input.value
+    const changes = drafts.get(target)?.colors
+    const colors = { ...(mode === 'defaults' ? asset.colors : asset.palettes[target]), ...changes }
     const palettes = { ...asset.palettes }
 
-    if (mode !== 'defaults') {
-      const name = value('asset-preset-name')
+    const name = value('asset-preset-name')
 
-      if (!name) throw new Error(t('assets.requirePreset'))
+    if (mode === 'remove') delete palettes[target]
 
-      if (mode === 'remove') delete palettes[name]
-      else palettes[name] = colors
+    if (mode === 'preset') {
+      if (
+        !assetIdSchema.safeParse(name).success ||
+        (name !== target && Object.hasOwn(palettes, name))
+      ) {
+        find('asset-preset-name').focus?.()
+        throw new Error(t('assets.invalidPreset'))
+      }
+
+      if (target && name !== target) delete palettes[target]
+      palettes[name] = colors
     }
 
     const next = { ...asset, colors: mode === 'defaults' ? colors : asset.colors, palettes }
 
-    if (Object.hasOwn(catalog().images, selected))
-      await save('asset-palettes', {
-        type: 'assets.upsertImage',
-        id: selected,
-        image: imageAssetSchema.parse(next),
-      })
-    else
-      await save('asset-palettes', {
-        type: 'assets.upsertPart',
-        id: selected,
-        part: partSchema.parse(next),
-      })
+    const command: EditorCommand = Object.hasOwn(catalog().images, selected)
+      ? { type: 'assets.upsertImage', id: selected, image: imageAssetSchema.parse(next) }
+      : { type: 'assets.upsertPart', id: selected, part: partSchema.parse(next) }
+
+    await submit('asset-palettes', command.type, () => actions.save(command), {
+      target,
+      next: mode === 'preset' ? name : '',
+    })
   }
+
+  on('asset-show-colors', 'click', () => {
+    imageView = 'colors'
+    showImageView()
+  })
+  on('asset-show-file', 'click', () => {
+    imageView = 'file'
+    showImageView()
+  })
+  find('asset-preset').addEventListener('change', () => {
+    target = value('asset-preset')
+    renderColors()
+  })
+  on('asset-add-preset', 'click', () => {
+    const colors = Object.fromEntries(
+      [...find('asset-color-fields').querySelectorAll<HTMLInputElement>('input')].map((input) => [
+        input.dataset.slot!,
+        input.value,
+      ]),
+    )
+
+    let index = 1
+
+    while (drafts.has('@' + index)) index++
+    target = '@' + index
+    drafts.set(target, { name: '', colors })
+    syncPaletteDirty()
+    renderColors()
+    find('asset-preset-name').focus?.()
+  })
+  find('asset-preset-name').addEventListener('input', () => {
+    editPalette().name = value('asset-preset-name')
+    syncPaletteDirty()
+  })
 
   on('asset-empty-action', 'click', () => {
     const target = find('asset-empty-action').dataset.target
@@ -551,15 +673,18 @@ export function bindAssetsPanel(
   on('asset-palettes', 'submit', (event) => {
     event.preventDefault()
 
-    return savePalette('preset')
+    return savePalette(target ? 'preset' : 'defaults')
   })
-  on('asset-save-defaults', 'click', () => savePalette('defaults'))
   on('asset-remove-preset', 'click', () => savePalette('remove'))
 
   for (const id of ['asset-image', 'asset-palettes', 'asset-definition']) {
     find(id)
       .querySelector?.('[data-save-actions]')
-      ?.append(saveStatus(document, t, () => dirty.has(id)))
+      ?.append(
+        saveStatus(document, t, () =>
+          id === 'asset-palettes' ? drafts.has(target) : dirty.has(id),
+        ),
+      )
     find(id)
       .querySelector?.('[data-discard]')
       ?.addEventListener(
@@ -569,8 +694,8 @@ export function bindAssetsPanel(
           find<HTMLFormElement>(id).reset()
 
           if (id === 'asset-palettes') {
-            appearance = graphicAppearanceSchema.parse({ ...appearance, colors: {} })
-            set('asset-preset-name', appearance.palette ?? '')
+            drafts.delete(target)
+            syncPaletteDirty()
             renderColors()
             updatePreview()
           } else if (id === 'asset-definition') {
@@ -598,12 +723,12 @@ export function bindAssetsPanel(
         },
         { signal: abort.signal },
       )
-    on(id, 'input', (event) => {
-      if (id === 'asset-palettes' && event.target instanceof HTMLSelectElement) return
+
+    if (id === 'asset-palettes') continue
+    on(id, 'input', () => {
       dirty.add(id)
 
-      if (id === 'asset-definition' || id === 'asset-palettes')
-        find<HTMLSelectElement>('asset-select').disabled = true
+      if (id === 'asset-definition') find<HTMLSelectElement>('asset-select').disabled = true
     })
   }
 
@@ -624,15 +749,17 @@ export function bindAssetsPanel(
       browsingKind: z.string(),
       appearance: graphicAppearanceSchema,
       dirty: z.array(z.string()),
+      imageView: z.enum(['colors', 'file']).optional(),
     }),
     () =>
       dirty.size
-        ? { selected, navigationKey, browsingKind, appearance, dirty: [...dirty] }
+        ? { selected, navigationKey, browsingKind, imageView, appearance, dirty: [...dirty] }
         : undefined,
     (saved) => {
       selected = saved.selected
       navigationKey = saved.navigationKey
       browsingKind = saved.browsingKind
+      imageView = saved.imageView ?? 'colors'
       appearance = saved.appearance
       dirty.clear()
 
@@ -642,7 +769,46 @@ export function bindAssetsPanel(
     },
   )
 
-  for (const id of ['asset-image', 'asset-palettes', 'asset-definition'])
+  registerEditorDraft(
+    find('asset-palettes'),
+    'asset-palettes',
+    z.union([
+      z.object({ target: z.string(), entries: z.array(z.tuple([z.string(), paletteDraftSchema])) }),
+      z.array(z.object({ value: z.string(), checked: z.boolean() })),
+    ]),
+    () => (drafts.size ? { target, entries: [...drafts] } : undefined),
+    (saved) => {
+      drafts.clear()
+      paletteOwner = selected
+
+      if (Array.isArray(saved)) {
+        // Older forms stored the picker, slot colors and preset name in display order.
+        target = saved[0]?.value ?? ''
+        const name = saved.at(-1)?.value ?? target
+
+        if (!target && name) target = '@1'
+        drafts.set(target, {
+          name,
+          colors: Object.fromEntries(
+            Object.keys(paletteAsset()?.colors ?? {}).map((slot, i) => [
+              slot,
+              saved[i + 1]?.value ?? '',
+            ]),
+          ),
+        })
+      } else {
+        target = saved.target
+
+        for (const [key, draft] of saved.entries) drafts.set(key, draft)
+      }
+
+      syncPaletteDirty()
+      renderColors()
+    },
+    'image-presets-v2',
+  )
+
+  for (const id of ['asset-image', 'asset-definition'])
     registerFormDraft(find(id), id, () => dirty.has(id))
 
   return {
@@ -653,6 +819,8 @@ export function bindAssetsPanel(
       const nextKey = `${kind}:${sceneId ?? ''}:${id ?? ''}`
       const changing = nextKey !== navigationKey
       navigationKey = nextKey
+
+      if (changing) imageView = 'colors'
       const graphic = kind === 'component' || kind === 'new-graphic'
       const structured = kind === 'new-asset' || (kind === 'asset' && id && !catalog().images[id])
       find('graphic-definitions-editor').hidden = !structured
@@ -695,6 +863,8 @@ export function bindAssetsPanel(
         appearance = graphicAppearanceSchema.parse({})
         fillSelection(false)
       }
+
+      showImageView()
 
       if (changing && kind === 'import' && !dirty.has('asset-image'))
         find<HTMLFormElement>('asset-image').reset()
@@ -741,10 +911,18 @@ export function bindAssetsPanel(
       if (replace) {
         if (!next.preserveDrafts) {
           dirty.clear()
+          drafts.clear()
+          target = ''
           set('asset-file', '')
           submission = undefined
         } else if (saved) {
           dirty.delete(saved.form)
+
+          if (saved.palette) {
+            drafts.delete(saved.palette.target)
+            target = saved.palette.next
+            syncPaletteDirty()
+          }
 
           if (saved.form === 'asset-image') set('asset-file', '')
           submission = undefined
@@ -777,7 +955,11 @@ export function bindAssetsPanel(
       const entries: [string, string][] = visuals.map((id) => [id, id])
       selectOptions('asset-select', entries)
 
-      if (requestedSelection && visuals.includes(requestedSelection))
+      if (
+        requestedSelection &&
+        (!drafts.size || requestedSelection === paletteOwner) &&
+        visuals.includes(requestedSelection)
+      )
         set('asset-select', requestedSelection)
       selected = value('asset-select')
 

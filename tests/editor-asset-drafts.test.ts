@@ -9,7 +9,7 @@ import {
 } from '@ancadeba/editor-core'
 import { bindAssetsPanel } from '../apps/editor-ui/src/assetsPanel.js'
 import { EditorClientError } from '../apps/editor-ui/src/editorClient.js'
-import { captureEditorDrafts } from '../apps/editor-ui/src/editorDraftState.js'
+import { captureEditorDrafts, restoreEditorDrafts } from '../apps/editor-ui/src/editorDraftState.js'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
 import {
   ProjectEditorController,
@@ -360,6 +360,7 @@ describe('asset draft save ownership', () => {
 
   it('retains failed palette edits through unrelated asset saves and clears them on a successful retry', async () => {
     const ui = await setup()
+    await ui.submit('asset-add-preset', 'click')
     await ui.edit('asset-preset-name', 'new-preset', 'asset-palettes')
     const color = ui.find('asset-color-fields').querySelector('input[type=color]')!
     color.value = '#aabbcc'
@@ -379,12 +380,51 @@ describe('asset draft save ownership', () => {
   it('preserves an unsaved image while a different form saves the same asset command type', async () => {
     const ui = await setup()
     const file = await ui.upload()
+    await ui.submit('asset-add-preset', 'click')
     await ui.edit('asset-preset-name', 'saved-preset', 'asset-palettes')
     await ui.submit('asset-palettes')
     expect(ui.read().assets?.images.cloth?.palettes['saved-preset']).toBeDefined()
     expect(ui.find('asset-file').files).toEqual([file])
     expect(ui.drafts()).toHaveProperty('asset-image')
     expect(ui.drafts()).not.toHaveProperty('asset-palettes')
+  })
+
+  it('recovers two preset drafts and saves only the selected colors against the latest image', async () => {
+    const ui = await setup()
+
+    const definition = {
+      ...image,
+      palettes: { royal: { fabric: '#123499' }, ember: { fabric: '#ab3456' } },
+    }
+
+    const loadImage = (target: typeof ui) =>
+      target.controller.save({ type: 'assets.upsertImage', id: 'cloth', image: definition })
+
+    const select = (target: typeof ui, key: string) => {
+      target.find('asset-preset').value = key
+      target.find('asset-preset').dispatchEvent(new Event('change'))
+    }
+
+    await loadImage(ui)
+    select(ui, 'royal')
+    await ui.edit('asset-preset-name', 'royal-review', 'asset-palettes')
+    select(ui, 'ember')
+    const color = ui.find('asset-color-fields').querySelector('input[type=color]')!
+    color.value = '#ff2244'
+    color.dispatchEvent(new Event('input'))
+    const copy = await setup()
+    await loadImage(copy)
+    const stored = JSON.parse(JSON.stringify(ui.drafts()))
+    expect(restoreEditorDrafts(copy.root.asElement(), stored)).toEqual([])
+    expect(copy.find('asset-preset').value).toBe('ember')
+    await copy.submit('asset-palettes')
+    expect(copy.read().assets?.images.cloth).toMatchObject({
+      colors: image.colors,
+      palettes: { royal: definition.palettes.royal, ember: { fabric: '#ff2244' } },
+    })
+    select(copy, 'royal')
+    expect(copy.find('asset-preset-name').value).toBe('royal-review')
+    expect(copy.drafts()).toHaveProperty('asset-palettes')
   })
 
   it.each(['game', 'other-project'])(

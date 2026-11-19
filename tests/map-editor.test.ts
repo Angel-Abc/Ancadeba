@@ -714,7 +714,7 @@ describe('visual map editor', () => {
       expect(recovered.control('Object state ID').value).toBe('')
       recovered.edit('Object state ID', 'restored')
       recovered.button('Add object state').dispatchEvent(new Event('click'))
-      recovered.button('Move object state down').dispatchEvent(new Event('click'))
+      recovered.button('Move object state up').dispatchEvent(new Event('click'))
       expect(recovered.control('Object state ID').value).toBe('state')
       recovered.button('Remove object state').dispatchEvent(new Event('click'))
       expect(recovered.control('Object state ID').value).toBe('restored')

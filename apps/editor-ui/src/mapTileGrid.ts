@@ -534,7 +534,22 @@ export function mapTileGrid(
 
   return {
     element,
-    focus: () => cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true }),
+    focus: (point?: TilePoint) => {
+      if (
+        point &&
+        point.x >= 0 &&
+        point.x < draft.data.width &&
+        point.y >= 0 &&
+        point.y < draft.data.height
+      ) {
+        if (!cells.has(key(point.x, point.y))) changeView(() => camera.centerOn(point.x, point.y))
+        cells.get(key(point.x, point.y))?.focus({ preventScroll: true })
+
+        return
+      }
+
+      cells.get(key(focused.x, focused.y))?.focus({ preventScroll: true })
+    },
     refresh: (overview = true) => {
       indexTriggers()
 

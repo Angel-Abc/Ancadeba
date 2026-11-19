@@ -114,7 +114,8 @@ export function bindMapEditor(
   let tileTools: ReturnType<typeof mapSelectionTools> | undefined
   let entryEditor: ReturnType<typeof mapEntryTriggerEditor> | undefined
   const entryState: MapEntryTriggerEditorState = { selected: -1 }
-  const objectState: MapObjectEditorState = { selected: -1 }
+  const objectState: MapObjectEditorState = { selected: -1, overrides: {} }
+  let placementDetails = false
   let objectEditor: ReturnType<typeof mapObjectEditor> | undefined
   const capture = () => ({ map: draft.data, id })
   const history = new MapDraftHistory(capture())
@@ -203,8 +204,6 @@ export function bindMapEditor(
 
   const reset = () => {
     finishStroke()
-    entryState.selected = -1
-    objectState.selected = -1
 
     if (!creating && !view?.maps?.[selected]) {
       selected = view?.game?.maps?.[0] ?? ''
@@ -325,6 +324,9 @@ export function bindMapEditor(
       return false
     }
 
+    placementDetails = false
+    entryState.selected = objectState.selected = -1
+    objectState.overrides = {}
     selected = next
     creating = nextCreating
     brush = ''
@@ -345,6 +347,42 @@ export function bindMapEditor(
     if (!restored) return
     const pendingWidth = width !== String(draft.data.width)
     const pendingHeight = height !== String(draft.data.height)
+
+    const restoreEntry = (
+      previous: readonly { id: string }[] = [],
+      next: readonly { id: string }[] = [],
+      index = 0,
+    ) => {
+      if (previous.length < next.length) {
+        const added = next.findIndex((entry) => !previous.some((other) => other.id === entry.id))
+
+        if (added >= 0) return added
+      }
+
+      const matched = next.findIndex((entry) => entry.id === previous[index]?.id)
+
+      return matched >= 0 ? matched : Math.min(index, next.length - 1)
+    }
+
+    const previousObject = draft.data.objects?.[objectState.selected]
+    objectState.selected = restoreEntry(
+      draft.data.objects,
+      restored.state.map.objects,
+      objectState.selected,
+    )
+    entryState.selected = restoreEntry(
+      draft.data.entryTriggers,
+      restored.state.map.entryTriggers,
+      entryState.selected,
+    )
+    const nextObject = restored.state.map.objects?.[objectState.selected]
+
+    if (nextObject && previousObject?.id === nextObject.id)
+      objectState.overrides[nextObject.id] = restoreEntry(
+        previousObject.states,
+        nextObject.states,
+        objectState.overrides[nextObject.id],
+      )
     draft = new MapDraft(restored.state.map)
     id = restored.state.id
 
@@ -364,7 +402,10 @@ export function bindMapEditor(
     render()
     notifyHistory()
 
-    if (activeTab === 'paint' || activeTab === 'objects') board?.focus()
+    if (activeTab === 'objects' && placementDetails) {
+      if (placementTool === 'object') objectEditor?.focusSelected()
+      else entryEditor?.focusSelected()
+    } else if (activeTab === 'paint' || activeTab === 'objects') board?.focus()
     else tabs?.focus()
   }
 
@@ -385,9 +426,11 @@ export function bindMapEditor(
 
     if (!view?.game) return
 
-    if (!draft.data.entryTriggers?.[entryState.selected]) entryState.selected = -1
+    if (!draft.data.entryTriggers?.[entryState.selected])
+      entryState.selected = draft.data.entryTriggers?.length ? 0 : -1
 
-    if (!draft.data.objects?.[objectState.selected]) objectState.selected = -1
+    if (!draft.data.objects?.[objectState.selected])
+      objectState.selected = draft.data.objects?.length ? 0 : -1
 
     if (!Object.hasOwn(draft.data.terrain, terrainState.selected))
       terrainState.selected = Object.keys(draft.data.terrain)[0] ?? ''
@@ -545,6 +588,7 @@ export function bindMapEditor(
       let opened = index >= 0
 
       if (index >= 0) {
+        placementDetails = true
         entryState.selected = index
         error.textContent = ''
         render()
@@ -559,6 +603,7 @@ export function bindMapEditor(
 
         change(() => {
           entryState.selected = draft.addEntryTrigger(point, action)
+          placementDetails = true
           opened = true
         })
       }
@@ -577,6 +622,7 @@ export function bindMapEditor(
       let opened = index >= 0
 
       if (index >= 0) {
+        placementDetails = true
         objectState.selected = index
         error.textContent = ''
         render()
@@ -597,6 +643,7 @@ export function bindMapEditor(
 
         change(() => {
           objectState.selected = draft.addObject(point, action, brush, t('maps.objectDefaultLabel'))
+          placementDetails = true
           opened = true
         })
       }
@@ -624,6 +671,7 @@ export function bindMapEditor(
       select: (tool) => {
         if (busy || confirming) return
         finishStroke()
+        placementDetails = false
         placementTool = tool
         switchTab('objects')
         board?.focus()
@@ -810,12 +858,61 @@ export function bindMapEditor(
     paintCanvas.append(instructions, editTerrain, fill, tileTools.element)
     paintWorkspace.append(paintCanvas, layers)
     pages.paint.append(paintWorkspace)
-    pages.terrain.append(terrain.element, tilesetEditor.element)
+    pages.terrain.append(terrain.element, tilesetEditor.element, terrain.settings, terrain.manage)
     const placementWorkspace = document.createElement('div')
     placementWorkspace.className = 'map-placement-workspace'
     const placementCanvas = document.createElement('div')
     placementCanvas.className = 'map-placement-canvas'
-    placementCanvas.append(placement.element)
+    placementWorkspace.dataset.details = String(placementDetails)
+    const editingObjects = placementTool === 'object'
+    const entries = editingObjects ? (draft.data.objects ?? []) : (draft.data.entryTriggers ?? [])
+    const current = editingObjects ? objectState : entryState
+
+    const caption = (entry: (typeof entries)[number]) => {
+      const label =
+        ('label' in entry && typeof entry.label === 'string' ? entry.label : entry.action) ||
+        entry.id
+
+      return `${label} (${entry.x}, ${entry.y})`
+    }
+
+    const entryPicker = controls.select(
+      t(editingObjects ? 'maps.objectPicker' : 'maps.triggerPicker'),
+      String(current.selected),
+      entries.map((entry, index) => [String(index), caption(entry)] as const),
+      (value) => {
+        current.selected = Number(value)
+        placementDetails = true
+        render()
+
+        if (editingObjects) objectEditor?.focusSelected()
+        else entryEditor?.focusSelected()
+      },
+      false,
+    )
+
+    const pickerControl = entryPicker.querySelector('select')!
+    entryPicker.hidden = !entries.length
+
+    const back = controls.button(t('maps.backToMap'), () => {
+      placementDetails = false
+      render()
+      board?.focus(entries[current.selected])
+    })
+
+    const detailsButton = controls.button(t('maps.placementDetails'), () => {
+      placementDetails = true
+      render()
+
+      if (editingObjects) objectEditor?.focusSelected()
+      else entryEditor?.focusSelected()
+    })
+
+    back.className = detailsButton.className = 'map-compact-switch'
+    const tools = document.createElement('div')
+    tools.className = 'map-placement-header'
+    tools.append(placement.element, entryPicker, placementDetails ? back : detailsButton)
+    placementWorkspace.append(tools)
 
     if (activeTab === 'objects') placementCanvas.append(board.element)
     const properties = document.createElement('div')
@@ -823,6 +920,16 @@ export function bindMapEditor(
     entryEditor.element.hidden = placementTool !== 'trigger'
     objectEditor.element.hidden = placementTool !== 'object'
     properties.append(objectEditor.element, entryEditor.element)
+
+    const updateCaption = () => {
+      const entry = entries[current.selected]
+      const option = pickerControl.options?.[current.selected]
+
+      if (entry && option) option.textContent = caption(entry)
+    }
+
+    properties.addEventListener('input', updateCaption)
+    properties.addEventListener('change', updateCaption)
     placementWorkspace.append(placementCanvas, properties)
     pages.objects.append(placementWorkspace)
     pages.settings.append(name, dimensions, help)
@@ -869,6 +976,8 @@ export function bindMapEditor(
       terrainState: z.object({ selected: z.string(), newId: z.string() }),
       activeTab: z.enum(mapEditorTabIds),
       placementTool: z.enum(['object', 'trigger']),
+      placementDetails: z.boolean().optional(),
+      overrides: z.record(z.string(), z.number()).optional(),
       entrySelection: z.number().int().min(-1).optional(),
       objectSelection: z.number().int().min(-1).optional(),
       mapTool: z.enum(['paint', 'select', 'paste']).optional(),
@@ -893,6 +1002,8 @@ export function bindMapEditor(
             terrainState,
             activeTab,
             placementTool,
+            placementDetails,
+            overrides: objectState.overrides,
             entrySelection: entryState.selected,
             objectSelection: objectState.selected,
             mapTool: selection.tool,
@@ -911,6 +1022,8 @@ export function bindMapEditor(
       terrainState = saved.terrainState
       activeTab = saved.activeTab
       placementTool = saved.placementTool
+      placementDetails = saved.placementDetails ?? false
+      objectState.overrides = saved.overrides ?? {}
       entryState.selected = saved.entrySelection ?? -1
 
       objectState.selected = saved.objectSelection ?? -1
@@ -924,6 +1037,7 @@ export function bindMapEditor(
       render()
       notifyHistory()
     },
+    'map-placement-v2',
   )
 
   return {
@@ -992,6 +1106,9 @@ export function bindMapEditor(
           terrainState = { selected: '', newId: '' }
           activeTab = 'paint'
           placementTool = 'object'
+          placementDetails = false
+          entryState.selected = objectState.selected = -1
+          objectState.overrides = {}
           gridViewport = mapGridViewport()
           selection = new MapTileSelection()
         }

@@ -2507,3 +2507,92 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     overflow: auto;
   }
 }
+
+#assets-panel #asset-palettes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+#assets-panel #asset-image[hidden],
+#assets-panel #asset-workshop[hidden],
+#assets-panel #asset-image-views[hidden],
+#assets-panel .image-color-editor [hidden] {
+  display: none;
+}
+.image-colors-layout {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(6rem, 30%) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+.image-colors-layout .asset-preview {
+  height: clamp(6rem, 19vh, 12rem);
+  margin: 0;
+}
+.image-color-editor {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+#assets-panel .image-color-editor label {
+  margin: 0;
+}
+.image-color-editor input,
+.image-color-editor select {
+  min-width: 0;
+  max-width: 100%;
+}
+.map-placement-header,
+.map-placement-properties .specialist-entries {
+  grid-column: 1/-1;
+}
+.map-placement-header {
+  display: grid;
+  gap: 0.35rem;
+  align-items: end;
+}
+.map-placement-header button {
+  justify-self: start;
+}
+.map-placement-properties fieldset {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+}
+.map-placement-properties fieldset > :is(fieldset, p) {
+  grid-column: 1/-1;
+}
+.map-tileset-grid {
+  max-width: 100%;
+  overflow: auto;
+}
+.map-tilesets > .fold {
+  grid-column: 1/-1;
+}
+.map-compact-switch {
+  display: none;
+}
+@container (max-width:47.999rem) {
+  .map-compact-switch {
+    display: inline-block;
+  }
+  .map-placement-workspace[data-details='true'] .map-placement-canvas,
+  .map-placement-workspace[data-details='false'] .map-placement-properties,
+  .map-placement-workspace[data-details='true'] .map-placement-tools .help {
+    display: none;
+  }
+}
+@container (min-width:48rem) {
+  .map-placement-workspace {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+  :is(#action-bar-panel, .map-editor-form) .entry-layout > .entry-picker {
+    display: none;
+  }
+}
+
+#asset-file-preview {
+  grid-column: 1/-1;
+  height: clamp(6rem, 18vh, 12rem);
+  margin: 0;
+}
+#asset-file-preview[hidden] {
+  display: none;
+}

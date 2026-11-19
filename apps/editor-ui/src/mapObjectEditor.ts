@@ -6,6 +6,7 @@ import { mapObjectStatesEditor } from './mapObjectStatesEditor.js'
 
 export interface MapObjectEditorState {
   selected: number
+  overrides: Record<string, number>
 }
 
 export function mapObjectEditor(
@@ -20,31 +21,27 @@ export function mapObjectEditor(
   fields: GameRulesDefinition['state'],
 ) {
   const element = controls.group(t('maps.objects'))
-  const help = controls.create('p')
-  help.className = 'help'
-  help.textContent = t('maps.objectHelp')
-  element.append(help)
-  const rows: HTMLElement[] = []
-
-  const highlight = () => {
-    rows.forEach((row, index) =>
-      row.classList.toggle('map-entry-trigger-selected', state.selected === index),
-    )
-    repaint()
-  }
-
   const objects = draft.data.objects ?? []
+  const object = objects[state.selected]
+  let selectedRow: HTMLElement | undefined
 
-  for (const [index, object] of objects.entries()) {
+  if (object) {
     const row = controls.group(
       object.id,
       controls.input(t('maps.objectId'), object.id, (value) => {
+        const previous = object.id
         object.id = value.trim()
-        highlight()
+
+        if (previous !== object.id && Object.hasOwn(state.overrides, previous)) {
+          state.overrides[object.id] = state.overrides[previous]!
+          delete state.overrides[previous]
+        }
+
+        repaint()
       }),
       controls.input(t('maps.objectLabel'), object.label, (value) => {
         object.label = value
-        highlight()
+        repaint()
       }),
       ...(['x', 'y'] as const).map((key) =>
         controls.input(
@@ -52,7 +49,7 @@ export function mapObjectEditor(
           String(object[key]),
           (value) => {
             object[key] = Number(value)
-            highlight()
+            repaint()
           },
           'number',
         ),
@@ -63,12 +60,12 @@ export function mapObjectEditor(
         Object.keys(draft.data.terrain),
         (value) => {
           object.terrain = value
-          highlight()
+          repaint()
         },
       ),
       controls.select(t('maps.objectAction'), object.action, actions, (value) => {
         object.action = value
-        highlight()
+        repaint()
       }),
       controls.select(
         t('maps.objectBlocking'),
@@ -79,7 +76,7 @@ export function mapObjectEditor(
         ],
         (value) => {
           object.blocking = value === 'yes'
-          highlight()
+          repaint()
         },
       ),
       controls.select(
@@ -91,13 +88,13 @@ export function mapObjectEditor(
         ],
         (value) => {
           object.visible = value === 'yes'
-          highlight()
+          repaint()
         },
       ),
       controls.button(t('maps.removeObject'), () =>
         change(() => {
           draft.data.objects = objects.filter((entry) => entry !== object)
-          state.selected = -1
+          state.selected = Math.min(state.selected, objects.length - 2)
         }),
       ),
       mapObjectStatesEditor(
@@ -106,19 +103,13 @@ export function mapObjectEditor(
         fields,
         controls,
         change,
-        highlight,
+        repaint,
+        state.overrides,
       ),
     )
 
-    rows.push(row)
+    selectedRow = row
     row.classList.add('map-entry-trigger-row')
-    row.classList.toggle('map-entry-trigger-selected', index === state.selected)
-
-    for (const field of [...row.querySelectorAll('input'), ...row.querySelectorAll('select')])
-      field.addEventListener('focus', () => {
-        state.selected = index
-        highlight()
-      })
 
     for (const field of row.querySelectorAll('input'))
       if (field.type === 'number') {
@@ -166,6 +157,6 @@ export function mapObjectEditor(
 
   return {
     element,
-    focusSelected: () => rows[state.selected]?.querySelector<HTMLInputElement>('input')?.focus(),
+    focusSelected: () => selectedRow?.querySelector<HTMLInputElement>('input')?.focus(),
   }
 }

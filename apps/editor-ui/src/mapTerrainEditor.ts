@@ -41,12 +41,14 @@ export function mapTerrainEditor(
       false,
     ),
   )
+  const settings = controls.fold('terrain-settings', t('maps.terrainProperties'), false)
+  const manage = controls.fold('terrain-manage', t('maps.manageTerrain'), false)
   const definition = draft.data.terrain[state.selected]
 
   if (!definition) legend.textContent = t('maps.terrain')
 
   if (definition) {
-    terrain.append(
+    settings.append(
       controls.select(
         t('maps.baseColor'),
         definition.color ? 'yes' : 'no',
@@ -61,7 +63,7 @@ export function mapTerrainEditor(
           }),
       ),
     )
-    terrain.append(
+    settings.append(
       controls.input(
         t('maps.color'),
         definition.color ?? '#608c4f',
@@ -93,7 +95,7 @@ export function mapTerrainEditor(
       ),
     )
 
-    const colorInput = terrain.querySelector('input')!
+    const colorInput = settings.querySelector('input')!
     colorInput.disabled = definition.color === undefined
 
     const tileField = controls.select(
@@ -123,7 +125,7 @@ export function mapTerrainEditor(
     )
 
     let replacement = alternatives[0] ?? ''
-    terrain.append(
+    manage.append(
       controls.select(
         t('maps.replacement'),
         replacement,
@@ -146,7 +148,7 @@ export function mapTerrainEditor(
     )
   }
 
-  terrain.append(
+  manage.append(
     controls.input(t('maps.newTerrain'), state.newId, (value) => {
       state.newId = value.trim()
     }),
@@ -161,6 +163,8 @@ export function mapTerrainEditor(
 
   return {
     element: terrain,
+    settings,
+    manage,
     refresh: () => {
       if (tileChoice) tileChoice.value = draft.data.terrain[state.selected]?.tile?.tileset ?? ''
     },

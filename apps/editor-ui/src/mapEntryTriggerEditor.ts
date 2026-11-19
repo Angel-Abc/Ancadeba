@@ -18,33 +18,23 @@ export function mapEntryTriggerEditor(
 ) {
   const map = draft.data
   const element = controls.group(t('maps.entryTriggers'))
-  const help = controls.create('p')
-  help.className = 'help'
-  help.textContent = t('maps.entryHelp')
-  element.append(help)
   const triggers = map.entryTriggers ?? []
-  const rows: HTMLElement[] = []
+  const trigger = triggers[state.selected]
+  let selectedRow: HTMLElement | undefined
 
-  const highlight = () => {
-    rows.forEach((row, index) =>
-      row.classList.toggle('map-entry-trigger-selected', index === state.selected),
-    )
-    repaint()
-  }
-
-  for (const [index, trigger] of triggers.entries()) {
+  if (trigger) {
     const row = controls.group(
       trigger.id,
       controls.input(t('maps.entryId'), trigger.id, (value) => {
         trigger.id = value.trim()
-        highlight()
+        repaint()
       }),
       controls.input(
         t('maps.entryX'),
         String(trigger.x),
         (value) => {
           trigger.x = Number(value)
-          highlight()
+          repaint()
         },
         'number',
       ),
@@ -53,31 +43,24 @@ export function mapEntryTriggerEditor(
         String(trigger.y),
         (value) => {
           trigger.y = Number(value)
-          highlight()
+          repaint()
         },
         'number',
       ),
       controls.select(t('maps.entryAction'), trigger.action, actions, (value) => {
         trigger.action = value
-        highlight()
+        repaint()
       }),
       controls.button(t('maps.removeEntryTrigger'), () =>
         change(() => {
           map.entryTriggers = triggers.filter((entry) => entry !== trigger)
-          state.selected = -1
+          state.selected = Math.min(state.selected, triggers.length - 2)
         }),
       ),
     )
 
-    rows.push(row)
+    selectedRow = row
     row.classList.add('map-entry-trigger-row')
-    row.classList.toggle('map-entry-trigger-selected', state.selected === index)
-
-    for (const field of [...row.querySelectorAll('input'), ...row.querySelectorAll('select')])
-      field.addEventListener('focus', () => {
-        state.selected = index
-        highlight()
-      })
 
     for (const input of row.querySelectorAll('input')) {
       if (input.type !== 'number') continue
@@ -124,6 +107,6 @@ export function mapEntryTriggerEditor(
 
   return {
     element,
-    focusSelected: () => rows[state.selected]?.querySelector<HTMLInputElement>('input')?.focus(),
+    focusSelected: () => selectedRow?.querySelector<HTMLInputElement>('input')?.focus(),
   }
 }

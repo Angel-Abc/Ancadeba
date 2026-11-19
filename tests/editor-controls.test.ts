@@ -5790,11 +5790,15 @@ describe('editor draft workflows', () => {
 
   it('retains pending input contexts through validation, rerenders and unrelated saves', async () => {
     const ui = await connected(bindActionBarPanel)
+    ui.click('Game input bindings')
+    ui.click('Input contexts')
     ui.edit('New context ID', 'combat')
     ui.submit('Save input bindings')
     expect(ui.commands).toHaveLength(0)
     expect(ui.root.textContent).toContain('Add or clear the pending input context')
+    ui.click('Virtual keys')
     ui.edit('Virtual keys (comma-separated)', 'primary, secondary, extra')
+    ui.click('Input contexts')
     expect(ui.field('New context ID').value).toBe('combat')
     await ui.controller.save({
       type: 'game.updateMetadata',

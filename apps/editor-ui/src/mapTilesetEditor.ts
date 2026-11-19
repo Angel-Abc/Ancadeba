@@ -57,7 +57,7 @@ export function mapTilesetEditor(
   const help = document.createElement('p')
   help.className = 'help'
   help.textContent = t(images.length ? 'maps.tilesetHelp' : 'maps.importHelp')
-  element.append(help)
+
   const preview = document.createElement('div')
   preview.className = 'map-tileset-picker'
 
@@ -164,11 +164,13 @@ export function mapTilesetEditor(
       }
     }
 
-    preview.append(pages, grid, selection)
+    preview.append(selection, pages, grid)
   }
 
+  const settings = controls.fold('tileset-settings', t('maps.tilesetSettings'), !sheet)
+
   if (sheet) {
-    element.append(
+    settings.append(
       controls.select(t('maps.tilesetImage'), sheet.image, images, (value) => {
         sheet.image = value
         update()
@@ -195,10 +197,10 @@ export function mapTilesetEditor(
       const input = field.querySelector('input')!
       input.min = key === 'margin' || key === 'spacing' ? '0' : '1'
       input.step = '1'
-      element.append(field)
+      settings.append(field)
     }
 
-    element.append(
+    settings.append(
       controls.button(t('maps.removeTileset'), () => {
         if (Object.values(map.terrain).some((value) => value.tile?.tileset === state.selected)) {
           report(new Error(t('maps.tilesetInUse')))
@@ -213,7 +215,7 @@ export function mapTilesetEditor(
     )
   }
 
-  element.append(
+  settings.append(
     controls.input(t('maps.newTilesetId'), state.newId, (id) => {
       state.newId = id.trim()
     }),
@@ -253,7 +255,7 @@ export function mapTilesetEditor(
       images.length === 0,
     ),
   )
-  element.append(preview)
+  element.append(preview, help, settings)
   refresh()
 
   return { element, refresh }

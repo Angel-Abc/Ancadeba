@@ -1,5 +1,6 @@
 import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
+import { rememberEntryFocus } from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -16,6 +17,7 @@ import {
   inputDefinitionForm,
   readInputDraft,
   type InputDraft,
+  type InputSelection,
 } from './inputDefinitionForm.js'
 import { sceneChoices } from './choiceLabels.js'
 
@@ -54,6 +56,7 @@ export function bindActionBarPanel(
   let selectedSlot = '1'
   let barDraft: ActionBarComponentDefinition | undefined
   let inputDraft: InputDraft | undefined
+  let inputSelection: InputSelection = { view: 'keyboard', context: '', entries: {} }
   let inputId = 'controls'
   let barDirty = false
   let inputDirty = false
@@ -237,6 +240,7 @@ export function bindActionBarPanel(
   }
 
   function renderInput() {
+    const restoreFocus = rememberEntryFocus(inputFields)
     inputFields.replaceChildren()
 
     if (!view?.game) return
@@ -255,6 +259,18 @@ export function bindActionBarPanel(
 
     const form = document.createElement('form')
 
+    const editor = inputDefinitionForm(
+      inputControls,
+      inputDraft,
+      inputSelection,
+      () => {
+        inputDirty = true
+      },
+      (message) => {
+        error.textContent = message
+      },
+    )
+
     const location = document.createElement('p')
     location.textContent = t('controls.inputFile', { id: view.game.input ?? inputId })
     const help = document.createElement('p')
@@ -269,8 +285,7 @@ export function bindActionBarPanel(
         saveStatus(document, t, () => inputDirty),
         inputControls.button(t('controls.discardInput'), resetInput),
       ),
-      location,
-      help,
+
       ...(!view.game.input
         ? [
             inputControls.input(t('controls.inputFileId'), inputId, (value) => {
@@ -278,16 +293,9 @@ export function bindActionBarPanel(
             }),
           ]
         : []),
-      ...inputDefinitionForm(
-        inputControls,
-        inputDraft,
-        () => {
-          inputDirty = true
-        },
-        (message) => {
-          error.textContent = message
-        },
-      ),
+      editor.element,
+      location,
+      help,
     )
     form.addEventListener('submit', (event) => {
       event.preventDefault()
@@ -297,10 +305,12 @@ export function bindActionBarPanel(
       try {
         submit({ type: 'game.updateInput', inputId, input: readInputDraft(inputDraft, t) })
       } catch (failure) {
+        editor.reveal(failure)
         error.textContent = failure instanceof Error ? failure.message : String(failure)
       }
     })
     inputFields.append(form)
+    restoreFocus?.()
   }
 
   registerEditorDraft(
@@ -313,6 +323,14 @@ export function bindActionBarPanel(
       barDirty: z.boolean(),
       inputDirty: z.boolean(),
       inputId: z.string(),
+      inputSelection: z
+        .object({
+          view: z.enum(['keyboard', 'contexts', 'keys']),
+          context: z.string(),
+          entries: z.record(z.string(), z.number()),
+        })
+        .optional(),
+      showInput: z.boolean().optional(),
       inputDraft: z
         .object({
           virtualKeys: z.string(),
@@ -325,7 +343,17 @@ export function bindActionBarPanel(
     }),
     () =>
       barDirty || inputDirty
-        ? { sceneId, selectedSlot, barDraft, barDirty, inputDirty, inputId, inputDraft }
+        ? {
+            sceneId,
+            selectedSlot,
+            barDraft,
+            barDirty,
+            inputDirty,
+            inputId,
+            inputDraft,
+            inputSelection,
+            showInput: !inputFields.hidden,
+          }
         : undefined,
     (saved) => {
       sceneId = saved.sceneId
@@ -335,10 +363,13 @@ export function bindActionBarPanel(
       inputDirty = saved.inputDirty
       inputId = saved.inputId
       inputDraft = saved.inputDraft
+
+      if (saved.inputSelection) inputSelection = saved.inputSelection
+      showInputs(saved.showInput ?? saved.inputDirty)
       renderBar()
       renderInput()
     },
-    'specialist-inspectors-v2',
+    'input-bindings-v3',
   )
 
   return {
@@ -364,6 +395,7 @@ export function bindActionBarPanel(
       const inputSaved = replaceFields && state.lastCommand === 'game.updateInput'
 
       if (reset) {
+        inputSelection = { view: 'keyboard', context: '', entries: {} }
         sceneId = view?.scenes.find(({ type }) => type === 'game')?.id ?? ''
         selectedSlot = '1'
       }
