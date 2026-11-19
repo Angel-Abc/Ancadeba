@@ -85,7 +85,10 @@ export function inspectorTranslations(controls: RuleFormControls, openKey?: (key
       const data = translations.get(child)
 
       if (!data) {
-        if (['fieldset', 'div', 'details', 'form'].includes(child.tagName.toLowerCase()))
+        if (
+          child.className !== 'inspector-localized' &&
+          ['fieldset', 'div', 'details', 'form'].includes(child.tagName.toLowerCase())
+        )
           arrange(child)
         result.push(child)
         continue

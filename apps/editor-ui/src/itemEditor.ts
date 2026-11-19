@@ -39,6 +39,7 @@ export function bindItemEditor(
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
   openComponent?: OpenSceneComponent,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -49,7 +50,7 @@ export function bindItemEditor(
   const navigation = document.createElement('div')
   navigation.className = 'editor-mode-controls'
   root.replaceChildren(navigation, error, inventoryRoot, fields)
-  const inventoryEditor = bindInventoryEditor(inventoryRoot, save, t)
+  const inventoryEditor = bindInventoryEditor(inventoryRoot, save, t, openKey)
   let definitions = true
   let view: ProjectView | undefined
   let path: string | undefined

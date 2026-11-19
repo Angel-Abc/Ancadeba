@@ -355,12 +355,13 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
     activate: ({ node }) => {
       stylesheet!.navigate(node.id, node.kind === 'new-stylesheet')
     },
+    refresh: () => {},
     reconcile(node, state, replace) {
       if (node.section !== 'stylesheet' || stylesheet?.hasDrafts()) return node
 
       const file =
         replace && state.lastCommand === 'game.upsertStylesheet'
-          ? state.view?.game?.stylesheet
+          ? stylesheet?.selectedFile()
           : undefined
 
       if (file)

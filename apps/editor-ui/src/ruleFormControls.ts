@@ -120,6 +120,8 @@ export function ruleFormControls(
     edit = true,
   ) => {
     const control = create('select')
+
+    if (!edit) control.setAttribute('data-draft-navigation', '')
     const options: (T | readonly [T, string])[] = [...choices]
 
     if (!options.some((choice) => (typeof choice === 'string' ? choice : choice[0]) === value))

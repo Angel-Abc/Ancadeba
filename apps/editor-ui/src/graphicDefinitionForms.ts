@@ -1,3 +1,4 @@
+import { fieldPath, type EntrySelections } from './specialistEntries.js'
 import type { Translate } from '@ancadeba/utilities'
 import { assetIdSchema, type GraphicPart, type GraphicComposition } from '@ancadeba/schemas'
 import type { RuleFormControls } from './ruleFormControls.js'
@@ -13,6 +14,7 @@ export interface GraphicDefinitionPending {
 
 export interface GraphicDefinitionControls {
   controls: RuleFormControls
+  entries: EntrySelections
   pending: GraphicDefinitionPending
   change: (operation: () => void) => void
   edited: () => void
@@ -33,14 +35,18 @@ export function boundsForm(
   return controls.group(
     t('definitions.previewBounds'),
     ...(['x', 'y', 'width', 'height'] as const).map((key) =>
-      controls.input(
-        t('definitions.bounds', { key }),
-        String(definition.bounds[key]),
-        (value) => {
-          definition.bounds[key] = Number(value)
-          edited()
-        },
-        'number',
+      fieldPath(
+        controls.input(
+          t('definitions.bounds', { key }),
+          String(definition.bounds[key]),
+          (value) => {
+            definition.bounds[key] = Number(value)
+            edited()
+          },
+          'number',
+        ),
+        'bounds',
+        key,
       ),
     ),
   )
@@ -54,24 +60,31 @@ export function moveDefinitionEntry<T>(entries: T[], index: number, offset: numb
   entries.splice(target, 0, entry!)
 }
 
-export function partColorsForm(context: GraphicDefinitionControls, part: GraphicPart): HTMLElement {
+export function partColorsForm(
+  context: GraphicDefinitionControls,
+  part: GraphicPart,
+): HTMLElement[] {
   const { controls, pending, change, edited } = context
   const { group, input, select, button, t } = controls
   const colors = Object.keys(part.colors)
 
-  return group(
+  const colorFields = group(
     t('definitions.partColors'),
     ...colors.map((id) =>
       group(
         t('form.color', { id }),
-        input(
-          t('definitions.defaultColor'),
-          part.colors[id]!,
-          (value) => {
-            part.colors[id] = value
-            edited()
-          },
-          'color',
+        fieldPath(
+          input(
+            t('definitions.defaultColor'),
+            part.colors[id]!,
+            (value) => {
+              part.colors[id] = value
+              edited()
+            },
+            'color',
+          ),
+          'colors',
+          id,
         ),
         button(t('definitions.removeColor', { id }), () =>
           change(() => {
@@ -86,9 +99,13 @@ export function partColorsForm(context: GraphicDefinitionControls, part: Graphic
         ),
       ),
     ),
-    input(t('definitions.newColorId'), pending.color, (value) => {
-      pending.color = value.trim()
-    }),
+    fieldPath(
+      input(t('definitions.newColorId'), pending.color, (value) => {
+        pending.color = value.trim()
+      }),
+      'pending',
+      'color',
+    ),
     button(t('definitions.addColor'), () =>
       change(() => {
         requireDefinitionId(pending.color, colors, t)
@@ -96,6 +113,10 @@ export function partColorsForm(context: GraphicDefinitionControls, part: Graphic
         pending.color = ''
       }),
     ),
+  )
+
+  const paletteFields = group(
+    t('definitions.palettes'),
     ...Object.entries(part.palettes).map(([id, palette]) =>
       group(
         t('definitions.palette', { id }),
@@ -116,14 +137,19 @@ export function partColorsForm(context: GraphicDefinitionControls, part: Graphic
           ),
           ...(Object.hasOwn(palette, color)
             ? [
-                input(
-                  t('definitions.colorOf', { color }),
-                  palette[color]!,
-                  (value) => {
-                    palette[color] = value
-                    edited()
-                  },
-                  'color',
+                fieldPath(
+                  input(
+                    t('definitions.colorOf', { color }),
+                    palette[color]!,
+                    (value) => {
+                      palette[color] = value
+                      edited()
+                    },
+                    'color',
+                  ),
+                  'palettes',
+                  id,
+                  color,
                 ),
               ]
             : []),
@@ -135,9 +161,13 @@ export function partColorsForm(context: GraphicDefinitionControls, part: Graphic
         ),
       ),
     ),
-    input(t('definitions.newPaletteId'), pending.palette, (value) => {
-      pending.palette = value.trim()
-    }),
+    fieldPath(
+      input(t('definitions.newPaletteId'), pending.palette, (value) => {
+        pending.palette = value.trim()
+      }),
+      'pending',
+      'palette',
+    ),
     button(t('definitions.addPalette'), () =>
       change(() => {
         requireDefinitionId(pending.palette, Object.keys(part.palettes), t)
@@ -146,4 +176,9 @@ export function partColorsForm(context: GraphicDefinitionControls, part: Graphic
       }),
     ),
   )
+
+  return [
+    controls.section('colors', fieldPath(colorFields, 'colors')),
+    controls.section('palettes', fieldPath(paletteFields, 'palettes')),
+  ]
 }

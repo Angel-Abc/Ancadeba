@@ -1,3 +1,4 @@
+import { entryEditor, fieldPath, type EntrySelections } from './specialistEntries.js'
 import type { ProjectView } from '@ancadeba/editor-core'
 import {
   assetIdSchema,
@@ -35,6 +36,8 @@ export function inventoryDefinitionForms(
   slot: InventorySlotDraft,
   change: (operation: () => void) => void,
   render: () => void,
+  entries: EntrySelections,
+  arrange: (root: HTMLElement) => void,
 ): HTMLElement[] {
   const { input, select, button, group, t } = controls
   const merged = view.inventory ?? draft
@@ -53,21 +56,27 @@ export function inventoryDefinitionForms(
       select(t('items.canContain'), String(type.container), yesNoChoices(t), (value) => {
         type.container = value === 'true'
       }),
-      select(
-        t('items.icon'),
-        type.icon ?? '',
-        ['', ...Object.keys(view.assets?.images ?? {}), ...Object.keys(view.assets?.parts ?? {})],
-        (value) => {
-          type.icon = value || undefined
-        },
+      fieldPath(
+        select(
+          t('items.icon'),
+          type.icon ?? '',
+          ['', ...Object.keys(view.assets?.images ?? {}), ...Object.keys(view.assets?.parts ?? {})],
+          (value) => {
+            type.icon = value || undefined
+          },
+        ),
+        'icon',
       ),
-      select(
-        t('items.equippedPart'),
-        type.wornPart ?? '',
-        ['', ...Object.keys(view.assets?.parts ?? {})],
-        (value) => {
-          type.wornPart = value || undefined
-        },
+      fieldPath(
+        select(
+          t('items.equippedPart'),
+          type.wornPart ?? '',
+          ['', ...Object.keys(view.assets?.parts ?? {})],
+          (value) => {
+            type.wornPart = value || undefined
+          },
+        ),
+        'wornPart',
       ),
       ...slots.map((id) =>
         select(
@@ -88,18 +97,23 @@ export function inventoryDefinitionForms(
 
     return [
       ...itemPresentationForm(controls, view, type, render),
-      equipment,
-      itemUseForm(controls, view, type, render),
+      controls.section('equipment', fieldPath(equipment, 'equipmentSlots')),
+      controls.section('use', fieldPath(itemUseForm(controls, view, type, render), 'use')),
     ]
   }
 
   const owner = draft.owners[selected.id]
 
   if (selected.kind === 'owners' && owner) {
+    const ids = Object.keys(owner.equipmentSlots)
+
     const fields: HTMLElement[] = [
-      input(t('items.ownerName'), owner.label, (value) => {
-        owner.label = value
-      }),
+      fieldPath(
+        input(t('items.ownerName'), owner.label, (value) => {
+          owner.label = value
+        }),
+        'label',
+      ),
       controls.translation(
         t('form.nameTranslation'),
         owner.labelKey ?? '',
@@ -108,51 +122,89 @@ export function inventoryDefinitionForms(
           owner.labelKey = value || undefined
         },
       ),
-      ...Object.entries(owner.equipmentSlots).map(([id, label]) =>
-        group(
-          t('items.equipmentSlot', { id }),
-          input(t('items.equipmentSlotName'), label, (value) => {
-            owner.equipmentSlots[id] = value
+      controls.fold(
+        'slots',
+        t('items.equipmentSlots'),
+        false,
+        entryEditor(
+          controls,
+          entries,
+          'ownerSlots',
+          t('items.equipmentSlots'),
+          ids,
+          (id) =>
+            (owner.equipmentSlotKeys?.[id] && view.translations?.[owner.equipmentSlotKeys[id]!]) ||
+            owner.equipmentSlots[id] ||
+            id,
+          (id) => {
+            const box = group(
+              t('items.equipmentSlot', { id }),
+              fieldPath(
+                input(t('items.equipmentSlotName'), owner.equipmentSlots[id]!, (value) => {
+                  owner.equipmentSlots[id] = value
+                }),
+                'equipmentSlots',
+                id,
+              ),
+              controls.translation(
+                t('form.nameTranslation'),
+                owner.equipmentSlotKeys?.[id] ?? '',
+                translationChoices(view),
+                (value) => {
+                  owner.equipmentSlotKeys ??= {}
+
+                  if (value) owner.equipmentSlotKeys[id] = value
+                  else delete owner.equipmentSlotKeys[id]
+                },
+              ),
+              button(t('items.removeEquipmentSlot'), () =>
+                change(() => {
+                  delete owner.equipmentSlots[id]
+
+                  if (owner.equipmentSlotKeys) delete owner.equipmentSlotKeys[id]
+                }),
+              ),
+            )
+
+            arrange(box)
+
+            return box
+          },
+          { path: ['equipmentSlots'], ids },
+        ),
+        fieldPath(
+          input(t('form.newSlotId'), slot.id, (value) => {
+            slot.id = value.trim()
           }),
-          controls.translation(
-            t('form.nameTranslation'),
-            owner.equipmentSlotKeys?.[id] ?? '',
-            translationChoices(view),
-            (value) => {
-              owner.equipmentSlotKeys ??= {}
-
-              if (value) owner.equipmentSlotKeys[id] = value
-              else delete owner.equipmentSlotKeys[id]
-            },
-          ),
-          button(t('items.removeEquipmentSlot'), () =>
-            change(() => {
-              delete owner.equipmentSlots[id]
-
-              if (owner.equipmentSlotKeys) delete owner.equipmentSlotKeys[id]
-            }),
-          ),
+          'newSlotId',
+        ),
+        fieldPath(
+          input(t('items.newSlotName'), slot.label, (value) => {
+            slot.label = value
+          }),
+          'newSlotName',
+        ),
+        button(t('items.addEquipmentSlot'), () =>
+          change(() => {
+            if (
+              !assetIdSchema.safeParse(slot.id).success ||
+              !slot.label.trim() ||
+              Object.hasOwn(owner.equipmentSlots, slot.id)
+            )
+              throw new Error(t('items.invalidSlot'))
+            entries.ownerSlots = ids.length
+            owner.equipmentSlots[slot.id] = slot.label.trim()
+            slot.id = ''
+            slot.label = ''
+          }),
         ),
       ),
-      input(t('form.newSlotId'), slot.id, (value) => {
-        slot.id = value.trim()
-      }),
-      input(t('items.newSlotName'), slot.label, (value) => {
-        slot.label = value
-      }),
-      button(t('items.addEquipmentSlot'), () =>
-        change(() => {
-          if (
-            !assetIdSchema.safeParse(slot.id).success ||
-            !slot.label.trim() ||
-            Object.hasOwn(owner.equipmentSlots, slot.id)
-          )
-            throw new Error(t('items.invalidSlot'))
-          owner.equipmentSlots[slot.id] = slot.label.trim()
-          slot.id = ''
-          slot.label = ''
-        }),
-      ),
+    ]
+
+    const stats = controls.fold(
+      'stats',
+      t('items.ownerStats'),
+      false,
       select(
         t('items.ownerStats'),
         owner.combatStats ? 'enabled' : 'disabled',
@@ -170,14 +222,14 @@ export function inventoryDefinitionForms(
           render()
         },
       ),
-    ]
+    )
 
     if (owner.combatStats)
-      fields.push(...combatStatsForm(controls, view, owner.combatStats, render))
+      stats.append(...combatStatsForm(controls, view, owner.combatStats, render))
     else if (!view.rules?.state.some((field) => typeof field.value === 'number'))
-      fields.push(group(t('items.statSetup'), t('items.healthFirst')))
+      stats.append(group(t('items.statSetup'), t('items.healthFirst')))
 
-    return fields
+    return [...fields, fieldPath(stats, 'combatStats')]
   }
 
   const item = draft.items[selected.id]
@@ -197,59 +249,78 @@ export function inventoryDefinitionForms(
     .map(([id]) => id)
 
   const fields: HTMLElement[] = [
-    select(
-      t('items.startingType'),
-      item.itemType,
-      Object.entries(merged.itemTypes).map(([id, type]) => [id, type.label || id] as const),
-      (value) => {
-        item.itemType = value
-        render()
-      },
+    fieldPath(
+      select(
+        t('items.startingType'),
+        item.itemType,
+        Object.entries(merged.itemTypes).map(([id, type]) => [id, type.label || id] as const),
+        (value) => {
+          item.itemType = value
+          render()
+        },
+      ),
+      'itemType',
     ),
-    select(
-      t('items.startingPlacement'),
-      placement.type,
-      [
-        ['carried', t('items.carried')],
-        ['equipped', t('items.equipped')],
-        ['inside', t('items.inContainer')],
-      ],
-      (value) => {
-        item.placement =
-          value === 'inside'
-            ? { type: 'inside', container: containers[0] ?? '' }
-            : value === 'equipped'
-              ? { type: 'equipped', owner: ownerId, slot: slots[0] ?? '' }
-              : { type: 'carried', owner: ownerId }
-        render()
-      },
+    fieldPath(
+      select(
+        t('items.startingPlacement'),
+        placement.type,
+        [
+          ['carried', t('items.carried')],
+          ['equipped', t('items.equipped')],
+          ['inside', t('items.inContainer')],
+        ],
+        (value) => {
+          item.placement =
+            value === 'inside'
+              ? { type: 'inside', container: containers[0] ?? '' }
+              : value === 'equipped'
+                ? { type: 'equipped', owner: ownerId, slot: slots[0] ?? '' }
+                : { type: 'carried', owner: ownerId }
+          render()
+        },
+      ),
+      'placement',
+      'type',
     ),
   ]
 
   if (placement.type === 'inside')
     fields.push(
-      select(t('items.startingContainer'), placement.container, containers, (value) => {
-        placement.container = value
-      }),
+      fieldPath(
+        select(t('items.startingContainer'), placement.container, containers, (value) => {
+          placement.container = value
+        }),
+        'placement',
+        'container',
+      ),
     )
   else {
     fields.push(
-      select(
-        t('items.startingOwner'),
-        placement.owner,
-        Object.entries(merged.owners).map(([id, owner]) => [id, owner.label] as const),
-        (value) => {
-          placement.owner = value
-          render()
-        },
+      fieldPath(
+        select(
+          t('items.startingOwner'),
+          placement.owner,
+          Object.entries(merged.owners).map(([id, owner]) => [id, owner.label] as const),
+          (value) => {
+            placement.owner = value
+            render()
+          },
+        ),
+        'placement',
+        'owner',
       ),
     )
 
     if (placement.type === 'equipped')
       fields.push(
-        select(t('items.startingSlot'), placement.slot, slots, (value) => {
-          placement.slot = value
-        }),
+        fieldPath(
+          select(t('items.startingSlot'), placement.slot, slots, (value) => {
+            placement.slot = value
+          }),
+          'placement',
+          'slot',
+        ),
       )
   }
 
@@ -258,35 +329,43 @@ export function inventoryDefinitionForms(
   const part = itemType?.wornPart && view.assets?.parts[itemType.wornPart]
   const defaults = { ...(icon ? icon.colors : {}), ...(part ? part.colors : {}) }
   const names = [...new Set([...Object.keys(defaults), ...Object.keys(item.colors)])]
-  fields.push(
-    group(
-      t('items.startingColors'),
-      ...names.flatMap((name) => [
-        select(
-          t('items.overrideColor', { name }),
-          String(Object.hasOwn(item.colors, name)),
-          yesNoChoices(t),
-          (value) => {
-            if (value === 'true') item.colors[name] = defaults[name] ?? '#ffffff'
-            else delete item.colors[name]
-            render()
-          },
-        ),
-        ...(Object.hasOwn(item.colors, name)
-          ? [
-              input(
-                t('form.color', { id: name }),
-                item.colors[name]!,
+
+  if (names.length)
+    fields.push(
+      controls.section(
+        'colors',
+        fieldPath(
+          group(
+            t('items.startingColors'),
+            ...names.flatMap((name) => [
+              select(
+                t('items.overrideColor', { name }),
+                String(Object.hasOwn(item.colors, name)),
+                yesNoChoices(t),
                 (value) => {
-                  item.colors[name] = value
+                  if (value === 'true') item.colors[name] = defaults[name] ?? '#ffffff'
+                  else delete item.colors[name]
+                  render()
                 },
-                'color',
               ),
-            ]
-          : []),
-      ]),
-    ),
-  )
+              ...(Object.hasOwn(item.colors, name)
+                ? [
+                    input(
+                      t('form.color', { id: name }),
+                      item.colors[name]!,
+                      (value) => {
+                        item.colors[name] = value
+                      },
+                      'color',
+                    ),
+                  ]
+                : []),
+            ]),
+          ),
+          'colors',
+        ),
+      ),
+    )
 
   return fields
 }

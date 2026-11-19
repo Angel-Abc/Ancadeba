@@ -1290,7 +1290,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 
 .graphic-definitions-layout {
   display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(18rem, 1.5fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   gap: 1rem;
   align-items: start;
 }
@@ -1370,13 +1370,15 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   stroke-width: 0.6;
 }
 
-@media (max-width: 1100px) {
+@container editing-pane (max-width: 35rem) {
   .graphic-definitions-layout {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .graphic-definitions-layout > section {
     position: static;
+  }
+  .definition-preview {
+    height: clamp(6rem, 18vh, 10rem);
   }
 }
 
@@ -2251,7 +2253,8 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   min-width: 0;
   max-width: 100%;
 }
-:is(#component-editor, #story-editor) .inspector-localized {
+:is(#component-editor, #story-editor, #editor-character-profile, #item-editor)
+  .inspector-localized {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -2259,19 +2262,26 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   padding-bottom: 0.25rem;
   overflow-wrap: anywhere;
 }
-:is(#component-editor, #story-editor) .inspector-localized > :is(p, div, details) {
+:is(#component-editor, #story-editor, #editor-character-profile, #item-editor)
+  .inspector-localized
+  > :is(p, div, details) {
   grid-column: 1 / -1;
 }
-:is(#component-editor, #story-editor) .inspector-localized > button {
+:is(#component-editor, #story-editor, #editor-character-profile, #item-editor)
+  .inspector-localized
+  > button {
   margin: 0;
   font-size: 0.8rem;
 }
-:is(#component-editor, #story-editor) .inspector-translated-value {
+:is(#component-editor, #story-editor, #editor-character-profile, #item-editor)
+  .inspector-translated-value {
   white-space: pre-wrap;
   margin: 0.3rem 0;
   font-size: 1rem;
 }
-:is(#component-editor, #story-editor) .inspector-localized > .fold {
+:is(#component-editor, #story-editor, #editor-character-profile, #item-editor)
+  .inspector-localized
+  > .fold {
   border: 0;
   padding: 0;
   margin: 0.25rem 0;
@@ -2373,7 +2383,9 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   .entry-layout {
     grid-template-columns: minmax(10rem, 26%) minmax(0, 1fr);
   }
-  :is(#story-editor, #rules-panel, #leveling-editor) .entry-layout > .entry-picker {
+  :is(#story-editor, #rules-panel, #leveling-editor, #editor-fields, #assets-panel, #item-editor)
+    .entry-layout
+    > .entry-picker {
     display: none;
   }
   .entry-outline {
@@ -2401,4 +2413,97 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 .specialist-key-field input {
   width: 100%;
+}
+
+#project-general,
+#project-property-views {
+  grid-column: 1 / -1;
+}
+#project-general:not([hidden]) {
+  display: grid;
+  grid-template-columns: subgrid;
+  gap: 0.6rem 1rem;
+}
+#project-general > .help {
+  grid-column: 1 / -1;
+}
+#editor-character-profile[hidden],
+#project-general[hidden] {
+  display: none;
+}
+#project-property-views,
+.stylesheet-assignment,
+.entry-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.stylesheet-assignment {
+  flex-basis: 100%;
+}
+.stylesheet-assignment p {
+  margin: 0;
+}
+:is(#editor-character-profile, .graphic-definitions-layout, .inventory-entry-fields)
+  :is(fieldset, .entry-fields, label, .inspector-localized) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#editor-character-profile :is(fieldset, label),
+.graphic-definitions-layout :is(fieldset, label),
+.inventory-entry-fields {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+#editor-character-profile button,
+.graphic-definitions-layout button {
+  justify-self: start;
+}
+.graphic-definitions-layout > div {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.graphic-definitions-layout .allowed-parts {
+  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+}
+.graphic-definitions-layout .allowed-parts label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.graphic-definitions-layout .allowed-parts input {
+  width: auto;
+}
+.inventory-entry-fields .inspector-localized input,
+#editor-character-profile .inspector-localized input {
+  width: 100%;
+}
+@container (min-width:48rem) {
+  .entry-layout:has(> .entry-actions) > .entry-actions {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .entry-layout:has(> .entry-actions) > .entry-fields {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+@container editing-pane (min-width:48rem) {
+  :is(#editor-character-profile, #item-editor, #assets-panel) .entry-layout {
+    grid-template-columns: minmax(7rem, 24%) minmax(0, 1fr);
+  }
+  :is(#editor-character-profile, #item-editor, #assets-panel) .entry-layout > .entry-picker {
+    display: none;
+  }
+  :is(#editor-character-profile, #item-editor, #assets-panel) .entry-outline {
+    display: grid;
+    align-content: start;
+    gap: 0.15rem;
+    max-height: 50vh;
+    overflow: auto;
+  }
 }

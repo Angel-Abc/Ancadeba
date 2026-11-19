@@ -1,3 +1,5 @@
+import { focusIssue, rememberEntryFocus, type EntrySelections } from './specialistEntries.js'
+import { scopedFolds } from './ruleFormControls.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -40,6 +42,7 @@ export function bindGraphicDefinitionsEditor(
   let catalog = assetCatalogSchema.parse({ 'schema-version': '1.0.0' })
   let kind: DefinitionKind = 'parts'
   let selected = ''
+  let selections: Record<string, EntrySelections> = {}
   let newId = ''
   let palette = ''
   let dirty = false
@@ -143,6 +146,7 @@ export function bindGraphicDefinitionsEditor(
   }
 
   function render() {
+    const restoreFocus = rememberEntryFocus(fields)
     fields.replaceChildren()
 
     if (!view?.game) return
@@ -224,7 +228,6 @@ export function bindGraphicDefinitionsEditor(
         saveStatus(document, t, () => dirty),
         button(t('definitions.discard'), reset),
       ),
-      help,
       type,
       picker,
       newDefinition,
@@ -255,7 +258,16 @@ export function bindGraphicDefinitionsEditor(
         ),
       )
     const definitions = document.createElement('div')
-    const context = { controls, pending, change, edited }
+    const scope = kind + '/' + selected
+
+    const context = {
+      controls: scopedFolds(controls, scope),
+      entries: (selections[scope] ??= {}),
+      pending,
+      change,
+      edited,
+    }
+
     const composition = kind === 'compositions' ? catalog.compositions[selected] : undefined
 
     if (part) definitions.append(...partDefinitionForm(context, catalog, part))
@@ -275,7 +287,7 @@ export function bindGraphicDefinitionsEditor(
         ),
       )
     layout.append(visual, definitions)
-    form.append(layout)
+    form.append(layout, help)
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
@@ -283,6 +295,10 @@ export function bindGraphicDefinitionsEditor(
 
       if (newId || hasPending()) {
         error.textContent = t('definitions.pendingSave')
+        const key = Object.entries(pending).find(([, value]) => value)?.[0]
+
+        if (newId) newDefinition.querySelector('input')?.focus()
+        else if (key) focusIssue(fields, key === 'piece' ? ['pieces'] : ['pending', key])
 
         return
       }
@@ -296,12 +312,24 @@ export function bindGraphicDefinitionsEditor(
       const assets = assetCatalogSchema.safeParse(catalog)
 
       if (!parsed.success || !assets.success) {
-        error.textContent = [
+        const issues = [
           ...(!parsed.success ? parsed.error.issues : []),
           ...(!assets.success ? assets.error.issues : []),
         ]
+
+        error.textContent = issues
           .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
           .join('\n')
+        const [collection, id, ...path] = issues[0]?.path ?? []
+
+        if (
+          (collection === 'parts' || collection === 'compositions') &&
+          typeof id === 'string' &&
+          Object.hasOwn(catalog[collection], id)
+        ) {
+          if (kind !== collection || id !== selected) switchEntry(collection, id)
+          focusIssue(fields, path)
+        }
 
         return
       }
@@ -313,6 +341,7 @@ export function bindGraphicDefinitionsEditor(
     fields.append(form)
     fields.disabled = busy || Boolean(view.diagnostics.length)
     updatePreview()
+    restoreFocus?.()
   }
 
   registerEditorDraft(
@@ -320,6 +349,7 @@ export function bindGraphicDefinitionsEditor(
     'graphic-definitions',
     z.object({
       catalog: assetCatalogSchema,
+      selections: z.record(z.string(), z.record(z.string(), z.number())).optional(),
       kind: z.enum(['parts', 'compositions']),
       selected: z.string(),
       newId: z.string(),
@@ -333,8 +363,9 @@ export function bindGraphicDefinitionsEditor(
         palette: z.string(),
       }),
     }),
-    () => (dirty ? { catalog, kind, selected, newId, palette, pending } : undefined),
+    () => (dirty ? { catalog, kind, selected, newId, palette, pending, selections } : undefined),
     (saved) => {
+      selections = saved.selections ?? {}
       catalog = saved.catalog
       kind = saved.kind
       selected = saved.selected
@@ -344,6 +375,7 @@ export function bindGraphicDefinitionsEditor(
       dirty = true
       render()
     },
+    'selected-entry',
   )
 
   return {
@@ -376,7 +408,10 @@ export function bindGraphicDefinitionsEditor(
 
       if (!busy) submitted = undefined
 
-      if (projectChanged) selected = ''
+      if (projectChanged) {
+        selected = ''
+        selections = {}
+      }
 
       if (
         projectChanged ||

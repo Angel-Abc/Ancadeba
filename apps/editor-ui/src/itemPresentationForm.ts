@@ -1,3 +1,4 @@
+import { fieldPath } from './specialistEntries.js'
 import type { ProjectView } from '@ancadeba/editor-core'
 import {
   combatStatNames,
@@ -24,57 +25,101 @@ export function itemPresentationForm(
     ...Object.keys(view.assets?.compositions ?? {}),
   ]
 
-  const fields: HTMLElement[] = [
+  const combat = controls.fold(
+    'combat',
+    t('tree.combat'),
+    false,
     equipmentCombatForm(controls, view, draft, render),
-    select(
-      t('items.equipmentEffects'),
-      draft.combatBonuses ? 'enabled' : 'disabled',
-      onOffChoices(t),
-      (value) => {
-        draft.combatBonuses = value === 'enabled' ? combatBonusesSchema.parse({}) : undefined
-        render()
-      },
+    fieldPath(
+      select(
+        t('items.equipmentEffects'),
+        draft.combatBonuses ? 'enabled' : 'disabled',
+        onOffChoices(t),
+        (value) => {
+          draft.combatBonuses = value === 'enabled' ? combatBonusesSchema.parse({}) : undefined
+          render()
+        },
+      ),
+      'combatBonuses',
     ),
     ...(draft.combatBonuses
       ? combatStatNames.map((stat) =>
-          input(
-            t('items.statBonus', { stat }),
-            String(draft.combatBonuses![stat]),
-            (value) => {
-              draft.combatBonuses![stat] = Number(value)
-            },
-            'number',
+          fieldPath(
+            input(
+              t('items.statBonus', { stat }),
+              String(draft.combatBonuses![stat]),
+              (value) => {
+                draft.combatBonuses![stat] = Number(value)
+              },
+              'number',
+            ),
+            'combatBonuses',
+            stat,
           ),
         )
       : []),
-    input(t('items.itemName'), draft.label, (value) => {
-      draft.label = value
-    }),
-    translation(t('form.nameTranslation'), draft.labelKey ?? '', keys, (value) => {
-      draft.labelKey = value || undefined
-    }),
-    input(t('metadata.description'), draft.description, (value) => {
-      draft.description = value
-    }),
-    translation(t('form.descriptionTranslation'), draft.descriptionKey ?? '', keys, (value) => {
-      draft.descriptionKey = value || undefined
-    }),
-    select(t('items.largeArtwork'), draft.artwork ?? '', art, (value) => {
-      draft.artwork = value || undefined
-    }),
+  )
+
+  const fields: HTMLElement[] = [
+    fieldPath(
+      input(t('items.itemName'), draft.label, (value) => {
+        draft.label = value
+      }),
+      'label',
+    ),
+    fieldPath(
+      translation(t('form.nameTranslation'), draft.labelKey ?? '', keys, (value) => {
+        draft.labelKey = value || undefined
+      }),
+      'labelKey',
+    ),
+    fieldPath(
+      input(t('metadata.description'), draft.description, (value) => {
+        draft.description = value
+      }),
+      'description',
+    ),
+    fieldPath(
+      translation(t('form.descriptionTranslation'), draft.descriptionKey ?? '', keys, (value) => {
+        draft.descriptionKey = value || undefined
+      }),
+      'descriptionKey',
+    ),
+    controls.fold(
+      'artwork',
+      t('items.largeArtwork'),
+      false,
+      fieldPath(
+        select(t('items.largeArtwork'), draft.artwork ?? '', art, (value) => {
+          draft.artwork = value || undefined
+        }),
+        'artwork',
+      ),
+    ),
   ]
 
+  const properties = controls.fold('properties', t('items.properties'), false)
   draft.properties.forEach((property, index) => {
     const type = typeof property.value === 'object' ? 'binding' : typeof property.value
 
     const box = group(
       t('items.property', { number: index + 1 }),
-      input(t('items.propertyId'), property.id, (value) => {
-        property.id = value.trim()
-      }),
-      input(t('items.propertyLabel'), property.label, (value) => {
-        property.label = value
-      }),
+      fieldPath(
+        input(t('items.propertyId'), property.id, (value) => {
+          property.id = value.trim()
+        }),
+        'properties',
+        index,
+        'id',
+      ),
+      fieldPath(
+        input(t('items.propertyLabel'), property.label, (value) => {
+          property.label = value
+        }),
+        'properties',
+        index,
+        'label',
+      ),
       translation(t('items.propertyLabelTranslation'), property.labelKey ?? '', keys, (value) => {
         property.labelKey = value || undefined
       }),
@@ -123,13 +168,18 @@ export function itemPresentationForm(
       )
     } else
       box.append(
-        input(
-          t('items.propertyValue'),
-          String(property.value),
-          (value) => {
-            property.value = type === 'number' ? Number(value) : value
-          },
-          type === 'number' ? 'number' : 'text',
+        fieldPath(
+          input(
+            t('items.propertyValue'),
+            String(property.value),
+            (value) => {
+              property.value = type === 'number' ? Number(value) : value
+            },
+            type === 'number' ? 'number' : 'text',
+          ),
+          'properties',
+          index,
+          'value',
         ),
       )
 
@@ -158,9 +208,9 @@ export function itemPresentationForm(
         render()
       }),
     )
-    fields.push(box)
+    properties.append(fieldPath(box, 'properties', index))
   })
-  fields.push(
+  properties.append(
     button(t('items.addProperty'), () => {
       let id = 'property'
       let number = 1
@@ -172,5 +222,5 @@ export function itemPresentationForm(
     }),
   )
 
-  return fields
+  return [...fields, fieldPath(properties, 'properties'), fieldPath(combat, 'combat')]
 }

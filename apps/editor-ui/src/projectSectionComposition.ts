@@ -64,9 +64,14 @@ export function createProjectSections({
 }: SectionComposition): ProjectSectionDefinition[] {
   const { fetcher } = dependencies
 
-  const forms = bindProjectForms(root, t, (command) => {
-    void controller.save(command)
-  })
+  const forms = bindProjectForms(
+    root,
+    t,
+    (command) => {
+      void controller.save(command)
+    },
+    openTranslation,
+  )
 
   const treeElement = root.querySelector<HTMLElement>('#project-tree')
   let assetsPanel: ReturnType<typeof bindAssetsPanel> | undefined
@@ -375,6 +380,7 @@ export function createProjectSections({
       },
       t,
       openSceneComponent,
+      openTranslation,
     )
 
   const returnButton = root.querySelector<HTMLButtonElement>('#inspector-return')
@@ -527,8 +533,7 @@ export function createProjectSections({
 
           if (!visit(destination)) return
 
-          if (kind === 'character-profile')
-            root.querySelector<HTMLSelectElement>('#editor-character-profile select')?.focus()
+          if (kind === 'character-profile') forms.openProfile()
 
           if (kind === 'localization') localizationEditor?.openKey(id)
 

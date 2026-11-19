@@ -6,6 +6,14 @@ import {
 } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
+import {
+  entryEditor,
+  fieldPath,
+  focusIssue,
+  rememberEntryFocus,
+  type EntrySelections,
+} from './specialistEntries.js'
+import { inspectorTranslations } from './inspectorTranslations.js'
 import { graphicAppearanceForm } from './graphicAppearanceForm.js'
 import { ruleFormControls, statePath, translationChoices } from './ruleFormControls.js'
 
@@ -14,8 +22,12 @@ export function bindCharacterProfileForm(
   document: Document,
   t: Translate,
   edited: () => void,
+  openKey?: (key: string) => void,
 ) {
-  const controls = ruleFormControls(document, edited, t)
+  const localized = inspectorTranslations(ruleFormControls(document, edited, t), openKey)
+  const controls = localized.controls
+  let entries: EntrySelections = {}
+  const appearanceEntry = { graphicSlot: '', graphicColor: '' }
   const { button, group, input, select, translation } = controls
   let view: ProjectView | undefined
   let draft: CharacterProfileDefinition | null = null
@@ -27,6 +39,7 @@ export function bindCharacterProfileForm(
   }
 
   function render() {
+    const restoreFocus = rememberEntryFocus(root)
     const profile = draft
     root.replaceChildren(
       select(
@@ -49,6 +62,7 @@ export function bindCharacterProfileForm(
     )
 
     if (!profile || !view) return
+    const current = view
     const catalog = view.assets
 
     const visuals = catalog
@@ -62,120 +76,254 @@ export function bindCharacterProfileForm(
     const keys = translationChoices(view, t('metadata.literalText'))
     const paths = (view.rules?.state ?? []).filter((field) => ruleStateType(field) === 'string')
 
-    root.append(
-      select(t('form.portrait'), profile.portrait.visual, ['', ...visuals], (next) =>
-        change(() => {
-          profile.portrait.visual = next
-          profile.portrait.appearance = graphicAppearanceSchema.parse({})
-        }),
+    const name = (
+      entry: { id: string; label: string; labelKey?: string | undefined },
+      fallback: string,
+    ) =>
+      (entry.labelKey && current.translations?.[entry.labelKey]) ||
+      entry.label ||
+      entry.id ||
+      fallback
+
+    const wording = (
+      entry: (typeof profile.fields)[number]['options'][number],
+      kind: 'field' | 'option',
+      path: (string | number)[],
+    ) => {
+      const box = controls.create('div')
+      box.append(
+        fieldPath(
+          input(
+            t(kind === 'field' ? 'character.fieldLabel' : 'character.optionLabel'),
+            entry.label,
+            (value) => {
+              entry.label = value
+            },
+          ),
+          ...path,
+          'label',
+        ),
+        fieldPath(
+          translation(
+            t(kind === 'field' ? 'character.fieldTranslation' : 'character.optionTranslation'),
+            entry.labelKey ?? '',
+            keys,
+            (value) => {
+              entry.labelKey = value || undefined
+            },
+          ),
+          ...path,
+          'labelKey',
+        ),
+      )
+      localized.arrange(box)
+
+      return box
+    }
+
+    const addField = () =>
+      fieldPath(
+        button(t('rules.addField'), () =>
+          change(() => {
+            entries.fields = profile.fields.length
+            profile.fields.push({
+              id: '',
+              label: '',
+              path: [],
+              options: [{ id: '', label: '' }],
+              default: '',
+            })
+          }),
+        ),
+        'fields',
+      )
+
+    const fields = entryEditor(
+      controls,
+      entries,
+      'fields',
+      t('character.fieldPicker'),
+      profile.fields,
+      (field, index) => name(field, t('rules.field', { number: index + 1 })),
+      (field, index) => {
+        const path = ['fields', index]
+        const optionsKey = 'options-' + index
+
+        const addOption = () =>
+          fieldPath(
+            button(t('character.addOption'), () =>
+              change(() => {
+                entries[optionsKey] = field.options.length
+                field.options.push({ id: '', label: '' })
+              }),
+            ),
+            ...path,
+            'options',
+          )
+
+        const options = entryEditor(
+          controls,
+          entries,
+          optionsKey,
+          t('character.optionPicker'),
+          field.options,
+          (option, i) => name(option, t('character.option', { number: i + 1 })),
+          (option, i) => {
+            const optionPath = [...path, 'options', i]
+
+            return group(
+              name(option, t('character.option', { number: i + 1 })),
+              wording(option, 'option', optionPath),
+              fieldPath(
+                input(t('character.optionId'), option.id, (value) => {
+                  if (field.default === option.id) field.default = value.trim()
+                  option.id = value.trim()
+                }),
+                ...optionPath,
+                'id',
+              ),
+            )
+          },
+          {
+            path: [...path, 'options'],
+            actions: (option, i) => {
+              const group = controls.create('div')
+              group.append(
+                addOption(),
+                fieldPath(
+                  button(
+                    t(
+                      field.default === option.id
+                        ? 'character.defaultOption'
+                        : 'character.makeDefault',
+                    ),
+                    () =>
+                      change(() => {
+                        field.default = option.id
+                      }),
+                    field.default === option.id,
+                  ),
+                  ...path,
+                  'default',
+                ),
+                button(t('character.removeOption'), () =>
+                  change(() => {
+                    field.options.splice(i, 1)
+
+                    if (field.default === option.id) field.default = field.options[0]?.id ?? ''
+                  }),
+                ),
+              )
+
+              return group
+            },
+          },
+        )
+
+        return group(
+          name(field, t('rules.field', { number: index + 1 })),
+          wording(field, 'field', path),
+          fieldPath(
+            input(t('character.fieldId'), field.id, (value) => {
+              field.id = value.trim()
+            }),
+            ...path,
+            'id',
+          ),
+          fieldPath(
+            select(
+              t('form.stateField'),
+              statePath(field.path),
+              ['', ...paths.map(({ path }) => statePath(path))],
+              (value) => {
+                field.path = paths.find(({ path }) => statePath(path) === value)?.path.slice() ?? []
+              },
+            ),
+            ...path,
+            'path',
+          ),
+          field.options.length ? options : addOption(),
+        )
+      },
+      {
+        path: ['fields'],
+        actions: (field, index) => {
+          const optionsKey = 'options-' + index
+
+          const move = (offset: number) =>
+            change(() => {
+              const next = index + offset
+              const option = entries[optionsKey] ?? 0
+              entries[optionsKey] = entries['options-' + next] ?? 0
+              entries['options-' + next] = option
+              profile.fields.splice(index, 1)
+              profile.fields.splice(next, 0, field)
+              entries.fields = next
+            })
+
+          const actions = controls.create('div')
+          actions.append(
+            addField(),
+            button(t('rules.moveUp'), () => move(-1), index === 0),
+            button(t('rules.moveDown'), () => move(1), index === profile.fields.length - 1),
+            button(t('rules.removeField'), () =>
+              change(() => {
+                profile.fields.splice(index, 1)
+
+                for (let i = index; i < profile.fields.length; i++)
+                  entries['options-' + i] = entries['options-' + (i + 1)] ?? 0
+                delete entries['options-' + profile.fields.length]
+              }),
+            ),
+          )
+
+          return actions
+        },
+      },
+    )
+
+    root.append(profile.fields.length ? fields : addField())
+
+    const portrait = fieldPath(
+      controls.fold(
+        'portrait',
+        t('form.portrait'),
+        false,
+        fieldPath(
+          select(t('form.portrait'), profile.portrait.visual, ['', ...visuals], (next) =>
+            change(() => {
+              profile.portrait.visual = next
+              profile.portrait.appearance = graphicAppearanceSchema.parse({})
+            }),
+          ),
+          'portrait',
+          'visual',
+        ),
       ),
+      'portrait',
     )
 
     if (catalog && visuals.includes(profile.portrait.visual))
-      root.append(
-        graphicAppearanceForm(
-          controls,
-          view,
-          catalog,
-          profile.portrait.visual,
-          profile.portrait.appearance,
-          true,
-          change,
-          edited,
-        ),
-      )
-
-    for (const [index, field] of profile.fields.entries()) {
-      const move = (offset: number) =>
-        change(() => {
-          profile.fields.splice(index, 1)
-          profile.fields.splice(index + offset, 0, field)
-        })
-
-      const section = group(
-        t('rules.field', { number: index + 1 }),
-        input(t('component.id'), field.id, (value) => {
-          field.id = value.trim()
-        }),
-        input(t('form.label'), field.label, (value) => {
-          field.label = value
-        }),
-        translation(t('status.titleTranslation'), field.labelKey ?? '', keys, (value) => {
-          field.labelKey = value || undefined
-        }),
-        select(
-          t('form.stateField'),
-          statePath(field.path),
-          ['', ...paths.map(({ path }) => statePath(path))],
-          (value) => {
-            field.path = paths.find(({ path }) => statePath(path) === value)?.path.slice() ?? []
-          },
-        ),
-      )
-
-      for (const [optionIndex, option] of field.options.entries()) {
-        section.append(
-          group(
-            t('character.option', { number: optionIndex + 1 }),
-            input(t('component.id'), option.id, (value) => {
-              if (field.default === option.id) field.default = value.trim()
-              option.id = value.trim()
-            }),
-            input(t('form.label'), option.label, (value) => {
-              option.label = value
-            }),
-            translation(t('status.titleTranslation'), option.labelKey ?? '', keys, (value) => {
-              option.labelKey = value || undefined
-            }),
-            button(
-              t(field.default === option.id ? 'character.defaultOption' : 'character.makeDefault'),
-              () =>
-                change(() => {
-                  field.default = option.id
-                }),
-              field.default === option.id,
-            ),
-            button(t('character.removeOption'), () =>
-              change(() => {
-                field.options.splice(optionIndex, 1)
-
-                if (field.default === option.id) field.default = field.options[0]?.id ?? ''
-              }),
-            ),
+      portrait.append(
+        fieldPath(
+          graphicAppearanceForm(
+            controls,
+            current,
+            catalog,
+            profile.portrait.visual,
+            profile.portrait.appearance,
+            true,
+            change,
+            edited,
+            appearanceEntry,
+            render,
           ),
-        )
-      }
-
-      section.append(
-        button(t('character.addOption'), () =>
-          change(() => {
-            field.options.push({ id: '', label: '' })
-          }),
-        ),
-        button(t('rules.moveUp'), () => move(-1), index === 0),
-        button(t('rules.moveDown'), () => move(1), index === profile.fields.length - 1),
-        button(t('rules.removeField'), () =>
-          change(() => {
-            profile.fields.splice(index, 1)
-          }),
+          'portrait',
+          'appearance',
         ),
       )
-      root.append(section)
-    }
-
-    root.append(
-      button(t('rules.addField'), () =>
-        change(() => {
-          profile.fields.push({
-            id: '',
-            label: '',
-            path: [],
-            options: [{ id: '', label: '' }],
-            default: '',
-          })
-        }),
-      ),
-    )
+    root.append(portrait)
+    restoreFocus?.()
   }
 
   return {
@@ -186,7 +334,16 @@ export function bindCharacterProfileForm(
       render()
     },
     snapshot: () => JSON.stringify(draft),
-    restore(saved: string) {
+    entries: () => entries,
+    appearanceEntry,
+    clearSelection: () => {
+      entries = {}
+      appearanceEntry.graphicSlot = ''
+      appearanceEntry.graphicColor = ''
+    },
+    focusIssue: (path: PropertyKey[]) => focusIssue(root, path),
+    restore(saved: string, selection?: EntrySelections) {
+      entries = selection ?? {}
       draft = JSON.parse(saved)
       render()
     },

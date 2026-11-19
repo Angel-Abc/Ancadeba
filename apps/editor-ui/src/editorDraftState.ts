@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { revealControl } from './specialistEntries.js'
 
 interface DraftParticipant {
   name: string
@@ -24,6 +25,7 @@ const fieldSchema = z.object({
 const snapshotSchema = z.object({
   model: z.unknown(),
   fieldLayout: z.string().optional(),
+  focus: z.number().int().nonnegative().optional(),
   fields: z.array(fieldSchema),
 })
 
@@ -103,17 +105,28 @@ export function registerEditorDraft<T extends z.ZodType>(
 ): void {
   // SAFETY: structuralSchema preserves output types, optionality and discriminants, relaxing only value checks.
   const structure = structuralSchema(schema) as z.ZodType<z.output<T>>
+
+  const focusable = () =>
+    Array.from(root.querySelectorAll?.<HTMLElement>('input,select,textarea,button,summary') ?? [])
+
   root.setAttribute('data-editor-draft', name)
   participants.set(root, {
     name,
     capture: () => {
       const model = capture()
+      const active = root.ownerDocument?.activeElement
+
+      const focus =
+        model !== undefined && fieldLayout && active && root.contains?.(active)
+          ? focusable().findIndex((field) => field === active)
+          : -1
 
       return model === undefined
         ? undefined
         : {
             model,
             fieldLayout,
+            ...(focus >= 0 && { focus }),
             fields: draftFields(root).map((field, index) => ({
               index,
               tag: field.tagName,
@@ -128,7 +141,11 @@ export function registerEditorDraft<T extends z.ZodType>(
       restore(structure.parse(saved.model))
 
       // Pending identifiers and partially typed numeric text can live outside the main model.
-      if (saved.fieldLayout === fieldLayout) restoreFields(root, saved.fields)
+      if (saved.fieldLayout === fieldLayout) {
+        restoreFields(root, saved.fields)
+
+        if (saved.focus !== undefined) revealControl(focusable()[saved.focus])
+      }
     },
   })
 }

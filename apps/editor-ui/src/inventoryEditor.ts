@@ -1,3 +1,12 @@
+import {
+  entryEditor,
+  rememberEntryFocus,
+  focusIssue,
+  fieldPath,
+  type EntrySelections,
+} from './specialistEntries.js'
+import { inspectorTranslations } from './inspectorTranslations.js'
+import { scopedFolds } from './ruleFormControls.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
@@ -25,6 +34,7 @@ export function bindInventoryEditor(
   root: HTMLElement,
   save: (command: EditorCommand) => void,
   t: Translate = editorLocalization().t,
+  openKey?: (key: string) => void,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -45,6 +55,8 @@ export function bindInventoryEditor(
   })
 
   let selected: InventoryEntrySelection = { kind: 'itemTypes', id: '' }
+  const files = new Map<string, InventoryEntrySelection>()
+  let subentries: Record<string, EntrySelections> = {}
   let newId = ''
   const slot = { id: '', label: '' }
   let dirty = false
@@ -111,7 +123,15 @@ export function bindInventoryEditor(
         id = `items-${suffix++}`
     }
 
-    if (!Object.hasOwn(draft[selected.kind], selected.id)) selected.id = ''
+    if (!Object.hasOwn(draft[selected.kind], selected.id)) {
+      if (!Object.keys(draft[selected.kind]).length && !files.has(selectedFile))
+        selected.kind =
+          (['itemTypes', 'owners', 'items'] as const).find(
+            (kind) => Object.keys(draft[kind]).length,
+          ) ?? selected.kind
+      selected.id = Object.keys(draft[selected.kind])[0] ?? ''
+    }
+
     newId = ''
     slot.id = ''
     slot.label = ''
@@ -129,8 +149,9 @@ export function bindInventoryEditor(
       return false
     }
 
+    files.set(selectedFile, { ...selected })
     selectedFile = file
-    selected = { kind: 'itemTypes', id: '' }
+    selected = files.get(file) ?? { kind: 'itemTypes', id: '' }
     reset()
 
     return true
@@ -144,6 +165,7 @@ export function bindInventoryEditor(
   }
 
   function render() {
+    const restoreFocus = rememberEntryFocus(fields)
     fields.replaceChildren()
 
     if (!view?.game) return
@@ -195,7 +217,7 @@ export function bindInventoryEditor(
           return
         }
 
-        selected = { kind: value, id: '' }
+        selected = { kind: value, id: Object.keys(draft[value])[0] ?? '' }
         render()
       },
       false,
@@ -213,32 +235,14 @@ export function bindInventoryEditor(
       }
 
       const definition = draft[selected.kind][entryId]
-      const name = definition ? displayLabel(current, entryId, definition) : entryId
+
+      const name =
+        (definition?.labelKey && current.translations?.[definition.labelKey]) ||
+        definition?.label ||
+        entryId
 
       return name === entryId ? entryId : `${name} (${entryId})`
     }
-
-    const entry = controls.select(
-      t('items.entry'),
-      selected.id,
-      [
-        ['', t('items.chooseEntry')],
-        ...Object.keys(draft[selected.kind]).map((id) => [id, entryLabel(id)] as const),
-      ],
-      (value) => {
-        if (value === selected.id) return
-
-        if (!canSwitchEntry()) {
-          entry.querySelector('select')!.value = selected.id
-
-          return
-        }
-
-        selected.id = value
-        render()
-      },
-      false,
-    )
 
     form.append(
       saveBar(
@@ -248,18 +252,17 @@ export function bindInventoryEditor(
         controls.button(t('items.discardInventory'), reset),
       ),
       picker,
-      name,
-      help,
       kind,
-      entry,
     )
 
-    // Creating an entry comes after the selected entry, so the picker sits next to its form.
     const adding = controls.group(
       t(`items.new.${selected.kind}`),
-      controls.input(t('items.newEntryId'), newId, (value) => {
-        newId = value.trim()
-      }),
+      fieldPath(
+        controls.input(t('items.newEntryId'), newId, (value) => {
+          newId = value.trim()
+        }),
+        'newId',
+      ),
       controls.button(
         t(`items.add.${selected.kind}`),
         () =>
@@ -295,33 +298,91 @@ export function bindInventoryEditor(
       ),
     )
 
-    if (selected.id && Object.hasOwn(draft[selected.kind], selected.id)) {
-      const selectedId = controls.input(t('items.selectedEntryId'), selected.id, () => {})
-      selectedId.querySelector('input')!.readOnly = true
-      form.append(
-        selectedId,
-        ...inventoryDefinitionForms(
-          controls,
-          { ...current, inventory: merged },
-          draft,
-          selected,
-          slot,
-          change,
-          render,
-        ),
-        controls.button(t(`items.remove.${selected.kind}`), () =>
-          change(() => {
-            const entries = draft[selected.kind]
-            Reflect.deleteProperty(entries, selected.id)
-            selected.id = ''
-            slot.id = ''
-            slot.label = ''
-          }),
-        ),
+    const ids = Object.keys(draft[selected.kind])
+
+    if (ids.length) {
+      const selectedIndex = Math.max(0, ids.indexOf(selected.id))
+
+      const collection = entryEditor(
+        controls,
+        { entry: selectedIndex },
+        'entry',
+        t('items.entry'),
+        ids,
+        entryLabel,
+        (entryId) => {
+          selected.id = entryId
+          const scope = JSON.stringify([selectedFile, selected.kind, entryId])
+          const local = inspectorTranslations(scopedFolds(controls, scope), openKey)
+          const body = controls.create('div')
+          body.className = 'inventory-entry-fields'
+          body.append(
+            ...inventoryDefinitionForms(
+              local.controls,
+              { ...current, inventory: merged },
+              draft,
+              selected,
+              slot,
+              change,
+              render,
+              (subentries[scope] ??= {}),
+              local.arrange,
+            ),
+          )
+          local.arrange(body)
+
+          return body
+        },
+        {
+          values: ids,
+          canSelect: canSwitchEntry,
+          actions: () => {
+            const actions = controls.create('div')
+            actions.append(
+              controls.fold('add-' + selected.kind, t(`items.add.${selected.kind}`), false, adding),
+              controls.button(t(`items.remove.${selected.kind}`), () =>
+                change(() => {
+                  const index = ids.indexOf(selected.id)
+                  delete draft[selected.kind][selected.id]
+                  selected.id = ids[index + 1] ?? ids[index - 1] ?? ''
+                  slot.id = ''
+                  slot.label = ''
+                }),
+              ),
+            )
+
+            return actions
+          },
+        },
       )
+
+      form.append(collection)
+    } else form.append(adding)
+
+    if (selectedFile)
+      form.append(controls.fold('file', t('items.inventoryFile'), false, name, help))
+    else form.append(name, help)
+
+    const invalid = (issuePath: readonly PropertyKey[]) => {
+      const [kind, id, ...path] = issuePath[0] === 'inventory' ? issuePath.slice(1) : issuePath
+
+      if (
+        (kind === 'itemTypes' || kind === 'owners' || kind === 'items') &&
+        typeof id === 'string' &&
+        Object.hasOwn(draft[kind], id)
+      ) {
+        if (selected.kind !== kind || selected.id !== id) {
+          selected = { kind, id }
+          render()
+        }
+
+        focusIssue(
+          fields,
+          path.length === 1 && path[0] === 'placement' ? ['placement', 'type'] : path,
+        )
+      } else if (kind === 'inventoryId') name.querySelector('input')?.focus()
     }
 
-    form.append(adding)
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
@@ -329,6 +390,7 @@ export function bindInventoryEditor(
 
       if (newId || slot.id || slot.label) {
         error.textContent = t('items.pendingSave')
+        focusIssue(fields, [newId ? 'newId' : slot.id ? 'newSlotId' : 'newSlotName'])
 
         return
       }
@@ -341,6 +403,7 @@ export function bindInventoryEditor(
       })
 
       if (!parsed.success) {
+        invalid(parsed.error.issues[0]!.path)
         error.textContent = parsed.error.issues
           .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
           .join('\n')
@@ -352,6 +415,7 @@ export function bindInventoryEditor(
       const issues = [...merged.issues, ...inventoryIssues(merged.inventory, current.assets)]
 
       if (issues.length) {
+        invalid((issues.find((issue) => issue.path.includes(selected.id)) ?? issues[0]!).path)
         error.textContent = issues
           .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
           .join('\n')
@@ -365,6 +429,7 @@ export function bindInventoryEditor(
       save(parsed.data)
     })
     fields.append(form)
+    restoreFocus?.()
     fields.disabled = busy || Boolean(view.diagnostics.length)
   }
 
@@ -373,14 +438,16 @@ export function bindInventoryEditor(
     'inventory',
     z.object({
       selectedFile: z.string(),
+      subentries: z.record(z.string(), z.record(z.string(), z.number())).optional(),
       id: z.string(),
       draft: inventorySchema,
       selected: z.object({ kind: z.enum(['itemTypes', 'owners', 'items']), id: z.string() }),
       newId: z.string(),
       slot: z.object({ id: z.string(), label: z.string() }),
     }),
-    () => (dirty ? { selectedFile, id, draft, selected, newId, slot } : undefined),
+    () => (dirty ? { selectedFile, id, draft, selected, newId, slot, subentries } : undefined),
     (saved) => {
+      subentries = saved.subentries ?? {}
       selectedFile = saved.selectedFile
       id = saved.id
       draft = saved.draft
@@ -390,6 +457,7 @@ export function bindInventoryEditor(
       dirty = true
       render()
     },
+    'selected-entry',
   )
 
   return {
@@ -412,6 +480,8 @@ export function bindInventoryEditor(
       if (!busy) submitted = undefined
 
       if (projectChanged) {
+        files.clear()
+        subentries = {}
         selectedFile = view?.game?.inventory?.[0] ?? ''
         selected = { kind: 'itemTypes', id: '' }
       }

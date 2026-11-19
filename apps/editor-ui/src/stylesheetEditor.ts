@@ -32,6 +32,7 @@ export function bindStylesheetEditor(
   let view: ProjectView | undefined
   let path: string | undefined
   let file = ''
+  let previousFile = ''
   let css = ''
   let creating = false
   let dirty = false
@@ -51,10 +52,10 @@ export function bindStylesheetEditor(
         !['missing_file', 'invalid_stylesheet'].includes(diagnostic.code),
     )
 
-  const reset = (preferAssigned = false) => {
+  const reset = () => {
     const stylesheets = view?.stylesheets ?? {}
 
-    if (preferAssigned || !file || !Object.hasOwn(stylesheets, file))
+    if (!file || !Object.hasOwn(stylesheets, file))
       file = view?.game?.stylesheet ?? Object.keys(stylesheets)[0] ?? 'custom.css'
     creating = !Object.hasOwn(stylesheets, file)
     css = stylesheets[file] ?? starterCss
@@ -71,6 +72,7 @@ export function bindStylesheetEditor(
       return false
     }
 
+    if (!creating) previousFile = file
     let suffix = 2
     file = 'custom.css'
 
@@ -182,23 +184,11 @@ export function bindStylesheetEditor(
     form.className = 'stylesheet-editor-form'
     const saveButton = create('button')
     saveButton.type = 'submit'
-    saveButton.textContent = t(
-      view.game.stylesheet === file ? 'stylesheets.save' : 'stylesheets.saveAssign',
-    )
-    form.append(
-      saveBar(
-        document,
-        saveButton,
-        saveStatus(document, t, () => dirty),
-        button(t('stylesheets.discard'), () => reset(true)),
-      ),
+    saveButton.textContent = t('stylesheets.save')
+    const assignment = create('div')
+    assignment.className = 'stylesheet-assignment'
+    assignment.append(
       active,
-      help,
-      picker,
-      button(t('stylesheets.new'), beginNew),
-      identity,
-      label,
-      button(t('stylesheets.check'), check),
       button(
         t('stylesheets.assign'),
         () => {
@@ -225,6 +215,24 @@ export function bindStylesheetEditor(
         },
         !view.game.stylesheet,
       ),
+    )
+    form.append(
+      saveBar(
+        document,
+        saveButton,
+        saveStatus(document, t, () => dirty),
+        button(t('stylesheets.discard'), () => {
+          if (creating) file = previousFile
+          reset()
+        }),
+      ),
+      assignment,
+      picker,
+      button(t('stylesheets.new'), beginNew),
+      identity,
+      label,
+      button(t('stylesheets.check'), check),
+      help,
       feedback,
     )
     form.addEventListener('submit', (event) => {
@@ -243,7 +251,7 @@ export function bindStylesheetEditor(
         return
       }
 
-      submit({ type: 'game.upsertStylesheet', file, css, createOnly: creating, assign: true })
+      submit({ type: 'game.upsertStylesheet', file, css, createOnly: creating, assign: false })
     })
     fields.append(form)
     fields.disabled = busy || !allowed()
@@ -252,9 +260,15 @@ export function bindStylesheetEditor(
   registerEditorDraft(
     root,
     'stylesheet',
-    z.object({ file: z.string(), css: z.string(), creating: z.boolean() }),
-    () => (dirty ? { file, css, creating } : undefined),
+    z.object({
+      file: z.string(),
+      previousFile: z.string().optional(),
+      css: z.string(),
+      creating: z.boolean(),
+    }),
+    () => (dirty ? { file, previousFile, css, creating } : undefined),
     (saved) => {
+      previousFile = saved.previousFile ?? ''
       file = saved.file
       css = saved.css
       creating = saved.creating
@@ -264,6 +278,7 @@ export function bindStylesheetEditor(
   )
 
   return {
+    selectedFile: () => (creating ? undefined : file),
     hasDrafts: () => dirty,
     canNavigate: (next?: string, create = false) =>
       create ? creating || !dirty : !next || next === file || !dirty,
@@ -303,7 +318,10 @@ export function bindStylesheetEditor(
 
       if (!busy) submitted = undefined
 
-      if (projectChanged) file = ''
+      if (projectChanged) {
+        file = ''
+        previousFile = ''
+      }
 
       if (projectChanged || saved || (replace && !state.preserveDrafts) || (changed && !dirty))
         reset()

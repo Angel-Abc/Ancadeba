@@ -8,12 +8,14 @@ import { registerEditorDraft } from './editorDraftState.js'
 import { bindMetadataTranslations } from './metadataTranslations.js'
 import { saveStatus } from './formSaveStatus.js'
 import { sceneTitle } from './projectTree.js'
+import { languageWatcher } from './ruleFormControls.js'
 import { bindCharacterProfileForm } from './characterProfileForm.js'
 
 export function bindProjectForms(
   root: HTMLElement,
   t: Translate,
   save: (command: EditorCommand) => void,
+  openKey?: (key: string) => void,
 ) {
   const find = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!
   const metadata = find<HTMLFormElement>('editor-metadata')
@@ -26,9 +28,50 @@ export function bindProjectForms(
   const dirtyForms = new Set<string>()
   const profileRoot = root.querySelector<HTMLElement>('#editor-character-profile')
 
+  const languageChanged = languageWatcher(t)
+
   const profile =
     profileRoot &&
-    bindCharacterProfileForm(profileRoot, root.ownerDocument, t, () => dirtyForms.add(metadata.id))
+    bindCharacterProfileForm(
+      profileRoot,
+      root.ownerDocument,
+      t,
+      () => dirtyForms.add(metadata.id),
+      openKey,
+    )
+
+  let profileVisible = false
+  const general = root.querySelector<HTMLElement>('#project-general')
+  const viewButtons = metadata.querySelectorAll?.<HTMLElement>('[data-project-view]') ?? []
+
+  const showProfile = (visible: boolean) => {
+    profileVisible = visible
+
+    if (!general || !profileRoot) return
+    general.hidden = visible
+    profileRoot.hidden = !visible
+
+    for (const control of viewButtons)
+      control.setAttribute(
+        'aria-pressed',
+        String((control.dataset.projectView === 'profile') === visible),
+      )
+  }
+
+  if (general) {
+    for (const control of viewButtons)
+      control.addEventListener('click', () =>
+        showProfile(control.dataset.projectView === 'profile'),
+      )
+    metadata.addEventListener(
+      'invalid',
+      (event) => {
+        if (!(event.target instanceof Node)) return
+        showProfile(!general.contains(event.target))
+      },
+      true,
+    )
+  }
 
   let view: ProjectView | undefined
   let busy = false
@@ -142,6 +185,9 @@ export function bindProjectForms(
       dirty: z.array(z.string()),
       scene: z.string(),
       profile: z.string().optional(),
+      profileVisible: z.boolean().optional(),
+      appearanceEntry: z.object({ graphicSlot: z.string(), graphicColor: z.string() }).optional(),
+      profileEntries: z.record(z.string(), z.number()).optional(),
     }),
     () =>
       dirtyForms.size
@@ -150,6 +196,9 @@ export function bindProjectForms(
             dirty: [...dirtyForms],
             scene: scenes.value,
             profile: profile?.snapshot(),
+            profileVisible,
+            appearanceEntry: profile?.appearanceEntry,
+            profileEntries: profile?.entries(),
           }
         : undefined,
     (saved) => {
@@ -159,11 +208,16 @@ export function bindProjectForms(
         if ([metadata.id, sceneMetadata.id, layout.id, create.id].includes(id)) dirtyForms.add(id)
       scenes.value = saved.scene
 
-      if (saved.profile) profile?.restore(saved.profile)
+      if (profile && saved.appearanceEntry)
+        Object.assign(profile.appearanceEntry, saved.appearanceEntry)
+
+      if (saved.profile) profile?.restore(saved.profile, saved.profileEntries)
+      showProfile(saved.profileVisible ?? false)
 
       for (const id of formFields) if (Object.hasOwn(saved.fields, id)) set(id, saved.fields[id]!)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
     },
+    'profile-entries',
   )
 
   for (const form of [metadata, sceneMetadata, layout, create]) {
@@ -181,7 +235,13 @@ export function bindProjectForms(
         scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
         error.hidden = true
       })
-    on(form, 'input', () => {
+    on(form, 'input', (event) => {
+      if (
+        typeof Element !== 'undefined' &&
+        event.target instanceof Element &&
+        event.target.closest('.entry-picker, [data-draft-navigation]')
+      )
+        return
       dirtyForms.add(form.id)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
     })
@@ -203,6 +263,8 @@ export function bindProjectForms(
     const issue = projectTranslations.validate()
 
     if (issue) {
+      showProfile(false)
+      metadata.querySelector?.<HTMLElement>('[aria-invalid="true"]')?.focus()
       error.textContent = issue
       error.hidden = false
 
@@ -212,6 +274,8 @@ export function bindProjectForms(
     const characterProfile = profile?.read()
 
     if (characterProfile && !characterProfile.success) {
+      showProfile(true)
+      profile?.focusIssue(characterProfile.error.issues[0]!.path)
       error.textContent = characterProfile.error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join('\n')
@@ -291,6 +355,10 @@ export function bindProjectForms(
   })
 
   return {
+    openProfile() {
+      showProfile(true)
+      profileRoot?.querySelector<HTMLElement>('.entry-picker select,select')?.focus()
+    },
     setVisible(visible: boolean) {
       if (!visible) find('editor-fields').hidden = true
     },
@@ -310,13 +378,19 @@ export function bindProjectForms(
       fillScene()
     },
     refreshTranslations() {
+      if (languageChanged() && view) profile?.render(view, false)
       projectTranslations.render(view, view?.game ?? undefined, false)
       const scene = view?.scenes.find((scene) => scene.id === scenes.value)
 
       if (scene) sceneTranslations.render(view, scene, false)
     },
     refresh(state: ProjectEditorState) {
-      if (view && !state.view) dirtyForms.clear()
+      if (view && !state.view) {
+        dirtyForms.clear()
+        showProfile(false)
+        profile?.clearSelection()
+      }
+
       view = state.view
       busy = state.busy
       this.refreshTranslations()

@@ -1,3 +1,4 @@
+import { bindCharacterProfileForm } from '../apps/editor-ui/src/characterProfileForm.js'
 import { bindStoryEditor } from '../apps/editor-ui/src/storyEditor.js'
 import { readFile, readdir } from 'node:fs/promises'
 import { captureEditorDrafts, restoreEditorDrafts } from '../apps/editor-ui/src/editorDraftState.js'
@@ -19,6 +20,7 @@ import {
   inputSchema,
   inventorySchema,
   combatLibrarySchema,
+  characterProfileSchema,
   sceneComponentSchema,
   textComponentSchema,
   questSchema,
@@ -377,6 +379,7 @@ function ruleWorkspace() {
     t: translate,
     sections: [{ id: 'rules', labelKey: 'rules.heading', nodes: () => [] }],
     forms: {
+      openProfile: noop,
       setVisible: noop,
       activate: noop,
       selectedScene: () => '',
@@ -541,10 +544,18 @@ function panel(withInput = true) {
 
   controls.render(initial, true)
 
+  // Older test fixtures also mount inactive editors. Resolve a duplicate label in the active editor.
+  const activeFirst = (nodes: Control[]) => {
+    const visible = (node: Control): boolean =>
+      !node.hidden && (!node.parent || visible(node.parent))
+
+    return [...nodes].sort((left, right) => Number(visible(right)) - Number(visible(left)))
+  }
+
   const button = (title: string) => {
-    const control = root
-      .all()
-      .find((node) => node.tagName === 'button' && node.textContent === title)
+    const control = activeFirst(root.all()).find(
+      (node) => node.tagName === 'button' && node.textContent === title,
+    )
 
     if (!control) throw new Error(`Missing button: ${title}`)
 
@@ -554,16 +565,16 @@ function panel(withInput = true) {
   // Grouped fields drop their group's prefix, so a legend can narrow the search.
   const field = (title: string, group?: string) => {
     const scope = group
-      ? root
-          .all()
-          .find(
-            (node) =>
-              node.tagName === 'fieldset' &&
-              node.children.some((child) => child.tagName === 'legend' && child.ownText === group),
-          )
+      ? activeFirst(root.all()).find(
+          (node) =>
+            node.tagName === 'fieldset' &&
+            node.children.some((child) => child.tagName === 'legend' && child.ownText === group),
+        )
       : root
 
-    const label = scope?.all().find((node) => node.tagName === 'label' && node.ownText === title)
+    const label = activeFirst(scope?.all() ?? []).find(
+      (node) => node.tagName === 'label' && node.ownText === title,
+    )
 
     if (!label) throw new Error(`Missing field: ${group ? `${group} › ` : ''}${title}`)
 
@@ -3261,12 +3272,19 @@ describe('editor draft workflows', () => {
     expect(ui.field('Stylesheet path').readOnly).toBe(true)
     ui.click('New stylesheet')
     ui.edit('Stylesheet path', 'THEME.css')
-    ui.submit('Save and assign stylesheet')
+    ui.submit('Save stylesheet')
     expect(ui.commands).toHaveLength(0)
     expect(ui.root.textContent).toContain('already exists')
     ui.edit('Stylesheet path', 'styles/custom.css')
     ui.edit('CSS source', '/* My theme */\n.ancadeba-scene { color: purple; }\n')
-    ui.submit('Save and assign stylesheet')
+    ui.submit('Save stylesheet')
+    await ui.flush()
+    expect(ui.read().game?.stylesheet).toBe('theme.css')
+    expect(ui.field('Saved stylesheet').value).toBe('styles/custom.css')
+    ui.edit('CSS source', 'unsaved')
+    ui.click('Discard stylesheet draft')
+    expect(ui.field('CSS source').value).toContain('purple')
+    ui.click('Use in game')
     await ui.flush()
     expect(ui.read().game?.stylesheet).toBe('styles/custom.css')
     expect(ui.read().stylesheets?.['styles/custom.css']).toContain('purple')
@@ -3276,7 +3294,7 @@ describe('editor draft workflows', () => {
     expect(ui.read().game?.stylesheet).toBeUndefined()
     expect(ui.read().stylesheets?.['styles/custom.css']).toContain('purple')
     ui.edit('Saved stylesheet', 'theme.css')
-    ui.click('Assign saved stylesheet')
+    ui.click('Use in game')
     await ui.flush()
     expect(ui.read().game?.stylesheet).toBe('theme.css')
     expect(ui.read().stylesheets?.['styles/blue.css']).toContain('blue')
@@ -3323,16 +3341,16 @@ describe('editor draft workflows', () => {
 
     ui.edit('CSS source', '@font-face { font-family: Bad; src: url(font.woff); }')
     ui.click('Check scoped CSS')
-    ui.submit('Save and assign stylesheet')
+    ui.submit('Save stylesheet')
     expect(ui.root.textContent).toContain('Unsupported global CSS rule')
     expect(ui.commands).toHaveLength(0)
     expect(ui.field('CSS source').value).toContain('@font-face')
     ui.edit('CSS source', '')
     ui.edit('Stylesheet path', '../outside.css')
-    ui.submit('Save and assign stylesheet')
+    ui.submit('Save stylesheet')
     expect(ui.commands).toHaveLength(0)
     ui.edit('Stylesheet path', 'styles/blank.css')
-    ui.submit('Save and assign stylesheet')
+    ui.submit('Save stylesheet')
     await ui.flush()
     expect(validate).toHaveBeenCalledWith('')
     expect(ui.read().stylesheets?.['styles/blank.css']).toBe('')
@@ -4904,6 +4922,7 @@ describe('editor draft workflows', () => {
   it('edits equipment passive grants and detects shared passive regressions in saved scenarios', async () => {
     const source = await simulationProject()
     const item = await connected(bindItemEditor, source)
+    item.click('Item views and advanced settings')
     item.edit('Item editing target', 'item:tidal-charm')
     item.edit('Shared passive to grant', 'environments/current-reserve')
     item.click('Grant shared passive')
@@ -5025,6 +5044,7 @@ describe('editor draft workflows', () => {
 
   it('edits equipment defenses, restrictions, exhaustion modifiers and shared grants without raw JSON', async () => {
     const ui = await connected(bindItemEditor, await simulationProject())
+    ui.click('Item views and advanced settings')
     ui.edit('Item editing target', 'item:diving-suit')
     ui.edit('Resistance (%)', '40', 'Damage type: water')
     ui.edit('Modified resource ID', 'exhaustion')
@@ -6128,6 +6148,7 @@ describe('editor draft workflows', () => {
     expect(ui.read().assets!.parts.cloak!.palettes).toEqual({})
     await ui.controller.load('demo')
     expect(ui.field('Graphic definition').value).toBe('cloak')
+    ui.edit('Image pieces', '1')
     expect(ui.field('Piece layer', 'Piece rear').value).toBe('back')
   })
 
@@ -6726,6 +6747,79 @@ describe('editor draft workflows', () => {
     ui.submit('Save quest journal')
     await ui.flush()
     expect(ui.editor.hasDrafts()).toBe(false)
+  })
+
+  it('recovers the selected profile field and its default option after reordering', () => {
+    const ui = panel()
+    const view = inspectProject(project())
+    view.game!.characterProfile = characterProfileSchema.parse({
+      fields: ['gender', 'hair'].map((id) => ({
+        id,
+        label: id,
+        path: ['character', id],
+        default: 'first',
+        options: [
+          { id: 'first', label: 'First' },
+          { id: 'second', label: 'Second' },
+        ],
+      })),
+      portrait: { visual: 'portrait' },
+    })
+
+    const bind = () =>
+      bindCharacterProfileForm(
+        ui.root.asElement(),
+        ui.root.ownerDocument.asDocument(),
+        editorLocalization().t,
+        () => {},
+      )
+
+    const profile = bind()
+    profile.render(view, true)
+    ui.edit('Field option', '1')
+    ui.edit('Option label', 'Second wording')
+    ui.click('Use as default')
+    ui.click('Move down')
+    const restored = bind()
+    restored.render(view, true)
+    restored.restore(profile.snapshot(), structuredClone(profile.entries()))
+    expect(ui.field('Field ID').value).toBe('gender')
+    expect(ui.field('Option label').value).toBe('Second wording')
+    expect(restored.read().data?.fields.map(({ id, default: choice }) => [id, choice])).toEqual([
+      ['hair', 'first'],
+      ['gender', 'second'],
+    ])
+  })
+
+  it('keeps both inventory edits and the selected entry through draft recovery', async () => {
+    const original = applyCommand(project(), {
+      type: 'game.upsertInventory',
+      inventoryId: 'pack',
+      inventory: inventorySchema.parse({
+        'schema-version': '1.0.0',
+        itemTypes: { wood: { label: 'Driftwood' }, rope: { label: 'Rope' } },
+        owners: {},
+        items: {},
+      }),
+    }).project
+
+    const start = await connected(bindInventoryEditor, original)
+    expect(start.field('Inventory entry').value).toBe('wood')
+    start.edit('Item name', 'Dry driftwood')
+    start.edit('Inventory entry', 'rope')
+    start.edit('Description', 'Coiled rope')
+    const restored = await connected(bindInventoryEditor, original)
+    expect(
+      restoreEditorDrafts(restored.root.asElement(), captureEditorDrafts(start.root.asElement())),
+    ).toEqual([])
+    expect(restored.field('Inventory entry').value).toBe('rope')
+    expect(restored.field('Description').value).toBe('Coiled rope')
+    restored.submit('Save inventory')
+    await restored.flush()
+    expect(restored.read().inventory?.itemTypes).toMatchObject({
+      wood: { label: 'Dry driftwood' },
+      rope: { description: 'Coiled rope' },
+    })
   })
 
   it('creates types, owners, slots and starting placements together from an empty project', async () => {
