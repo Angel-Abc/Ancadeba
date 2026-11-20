@@ -106,18 +106,20 @@ export function shopForm(
     )
   const scene = view.scenes.find((scene) => scene.id === sceneId)
   result.push(
-    select(
-      t('shops.feedbackTarget'),
-      shop.feedbackTarget ?? '',
-      [
-        '',
-        ...(scene?.components
-          .filter((component) => component.type === 'text')
-          .map((component) => component.id) ?? []),
-      ],
-      (value) => {
-        shop.feedbackTarget = value || undefined
-      },
+    controls.row(
+      select(
+        t('shops.feedbackTarget'),
+        shop.feedbackTarget ?? '',
+        [
+          '',
+          ...(scene?.components
+            .filter((component) => component.type === 'text')
+            .map((component) => component.id) ?? []),
+        ],
+        (value) => {
+          shop.feedbackTarget = value || undefined
+        },
+      ),
     ),
   )
 
@@ -225,7 +227,7 @@ export function shopForm(
       const type =
         value === undefined ? 'disabled' : typeof value === 'object' ? 'binding' : 'fixed'
 
-      box.append(
+      const price = controls.row(
         select(
           t('shops.priceSource', { operation: humanizeCode(operation) }),
           type,
@@ -241,7 +243,7 @@ export function shopForm(
       )
 
       if (typeof value === 'number')
-        box.append(
+        price.append(
           input(
             t('shops.amountOf', { operation: humanizeCode(operation) }),
             String(value),
@@ -252,7 +254,7 @@ export function shopForm(
           ),
         )
       else if (value)
-        box.append(
+        price.append(
           select(
             t('shops.priceBinding', { operation: humanizeCode(operation) }),
             JSON.stringify(value),
@@ -262,6 +264,7 @@ export function shopForm(
             },
           ),
         )
+      box.append(price)
     }
 
     box.append(

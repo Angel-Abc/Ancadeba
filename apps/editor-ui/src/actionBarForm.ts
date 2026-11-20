@@ -112,74 +112,77 @@ export function actionBarForm(
       ) ?? []
 
   const detail = group(t('form.slot', { id: selectedSlot }))
-  detail.append(
-    select(
-      t('controls.actionType'),
-      slot?.action.type ?? '',
-      [
-        ['', t('controls.emptySlot')],
-        ['request-action', t('controls.requestAction')],
-        ['enter-scene', t('controls.enterScene')],
-        ['new-game', t('controls.newGame')],
-        ['inventory-action', t('controls.selectedItem')],
-        ['item-use', t('controls.useSelectedItem')],
-        ['nearby-action', t('controls.selectedTarget')],
-        ['move-map', t('controls.moveOnMap')],
-        ['interact-map', t('maps.interact')],
-        ['equipment-action', t('controls.equipmentCommand')],
-        ['shop-action', t('controls.shopCommand')],
-        ['combat-action', t('controls.combatCommand')],
-        ['dialogue-action', t('controls.dialogueCommand')],
-        ['quest-action', t('controls.questCommand')],
-      ],
-      (type) =>
-        change(() => {
-          if (!type) {
-            delete draft.slots[selectedSlot]
 
-            return
-          }
+  const actionType = select(
+    t('controls.actionType'),
+    slot?.action.type ?? '',
+    [
+      ['', t('controls.emptySlot')],
+      ['request-action', t('controls.requestAction')],
+      ['enter-scene', t('controls.enterScene')],
+      ['new-game', t('controls.newGame')],
+      ['inventory-action', t('controls.selectedItem')],
+      ['item-use', t('controls.useSelectedItem')],
+      ['nearby-action', t('controls.selectedTarget')],
+      ['move-map', t('controls.moveOnMap')],
+      ['interact-map', t('maps.interact')],
+      ['equipment-action', t('controls.equipmentCommand')],
+      ['shop-action', t('controls.shopCommand')],
+      ['combat-action', t('controls.combatCommand')],
+      ['dialogue-action', t('controls.dialogueCommand')],
+      ['quest-action', t('controls.questCommand')],
+    ],
+    (type) =>
+      change(() => {
+        if (!type) {
+          delete draft.slots[selectedSlot]
 
-          draft.slots[selectedSlot] = {
-            ...(slot ?? { label: '' }),
-            action:
-              type === 'dialogue-action'
-                ? { type, nearby: nearbyPanels[0]?.id ?? '', command: { type: 'start' } }
-                : type === 'quest-action'
-                  ? { type, quest: Object.keys(view.quests ?? {})[0] ?? '', operation: 'start' }
-                  : type === 'item-use'
-                    ? { type, inventory: inventoryPanels[0]?.id ?? '', combat: combats[0]?.id }
-                    : type === 'combat-action'
-                      ? { type, combat: combats[0]?.id ?? '', command: { type: 'end-turn' } }
-                      : type === 'shop-action'
-                        ? { type, shop: shops[0]?.id ?? '', operation: 'buy' }
-                        : type === 'equipment-action'
-                          ? { type, equipment: equipmentViews[0]?.id ?? '', operation: 'equip' }
-                          : type === 'interact-map'
-                            ? { type, mapView: mapViews[0]?.id ?? '' }
-                            : type === 'move-map'
-                              ? { type, mapView: mapViews[0]?.id ?? '', direction: 'north' }
-                              : type === 'nearby-action'
-                                ? { type, nearby: nearbyPanels[0]?.id ?? '', action: 'talk' }
-                                : type === 'inventory-action'
-                                  ? {
-                                      type,
-                                      inventory: inventoryPanels[0]?.id ?? '',
-                                      action: 'inspect',
-                                    }
-                                  : type === 'request-action'
-                                    ? { type, action: actions[0] ?? '' }
-                                    : {
-                                        type: type === 'new-game' ? 'new-game' : 'enter-scene',
-                                        scene: gameScenes[0] ?? '',
-                                      },
-          }
-        }),
-    ),
+          return
+        }
+
+        draft.slots[selectedSlot] = {
+          ...(slot ?? { label: '' }),
+          action:
+            type === 'dialogue-action'
+              ? { type, nearby: nearbyPanels[0]?.id ?? '', command: { type: 'start' } }
+              : type === 'quest-action'
+                ? { type, quest: Object.keys(view.quests ?? {})[0] ?? '', operation: 'start' }
+                : type === 'item-use'
+                  ? { type, inventory: inventoryPanels[0]?.id ?? '', combat: combats[0]?.id }
+                  : type === 'combat-action'
+                    ? { type, combat: combats[0]?.id ?? '', command: { type: 'end-turn' } }
+                    : type === 'shop-action'
+                      ? { type, shop: shops[0]?.id ?? '', operation: 'buy' }
+                      : type === 'equipment-action'
+                        ? { type, equipment: equipmentViews[0]?.id ?? '', operation: 'equip' }
+                        : type === 'interact-map'
+                          ? { type, mapView: mapViews[0]?.id ?? '' }
+                          : type === 'move-map'
+                            ? { type, mapView: mapViews[0]?.id ?? '', direction: 'north' }
+                            : type === 'nearby-action'
+                              ? { type, nearby: nearbyPanels[0]?.id ?? '', action: 'talk' }
+                              : type === 'inventory-action'
+                                ? {
+                                    type,
+                                    inventory: inventoryPanels[0]?.id ?? '',
+                                    action: 'inspect',
+                                  }
+                                : type === 'request-action'
+                                  ? { type, action: actions[0] ?? '' }
+                                  : {
+                                      type: type === 'new-game' ? 'new-game' : 'enter-scene',
+                                      scene: gameScenes[0] ?? '',
+                                    },
+        }
+      }),
   )
 
+  detail.append(inspector ? controls.row(actionType) : actionType)
+
+  const presentation: HTMLElement[] = []
+
   if (slot) {
-    detail.append(
+    presentation.push(
       input(t('controls.slotLabel'), slot.label, (value) => {
         slot.label = value
       }),
@@ -192,9 +195,11 @@ export function actionBarForm(
           else delete slot.labelKey
         },
       ),
+      ...actionDescriptionFields(controls, view, slot),
     )
     const action = slot.action
-    detail.append(...actionDescriptionFields(controls, view, slot))
+
+    if (!inspector) detail.append(...presentation)
 
     if (action.type === 'dialogue-action') {
       detail.append(
@@ -491,7 +496,7 @@ export function actionBarForm(
           : []),
       )
 
-    detail.append(
+    const inputBinding = controls.row(
       select(
         t('controls.inputContext'),
         slot.inputBinding?.context ?? '',
@@ -508,9 +513,11 @@ export function actionBarForm(
       ),
     )
 
+    detail.append(inputBinding)
+
     if (slot.inputBinding) {
       const binding = slot.inputBinding
-      detail.append(
+      inputBinding.append(
         select(
           t('controls.virtualInput'),
           binding.input,
@@ -530,7 +537,11 @@ export function actionBarForm(
   }
 
   if (inspector)
-    return [select(t('inspector.slot'), selectedSlot, slots, selectSlot, false), detail]
+    return [
+      select(t('inspector.slot'), selectedSlot, slots, selectSlot, false),
+      ...presentation,
+      detail,
+    ]
 
   const placement = group(
     t('controls.barPlacement'),

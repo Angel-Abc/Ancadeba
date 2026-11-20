@@ -114,43 +114,37 @@ export function statusPanelForm(
     current: StatusValueDefinition,
     numeric: boolean,
     update: (value: StatusValueDefinition) => void,
-  ): HTMLElement[] => {
+  ) => {
     const value = typeof current === 'object' ? JSON.stringify(current) : ''
 
-    const result = [
-      select(
-        t('status.sourceOf', { title }),
-        value,
-        [['', t('form.constant')], ...bindings(numeric ? 'number' : 'value')],
-        (next) =>
-          edit(() => update(next ? gameBindingSchema.parse(JSON.parse(next)) : numeric ? 0 : '')),
-      ),
-    ]
+    const picker = select(
+      t('status.sourceOf', { title }),
+      value,
+      [['', t('form.constant')], ...bindings(numeric ? 'number' : 'value')],
+      (next) =>
+        edit(() => update(next ? gameBindingSchema.parse(JSON.parse(next)) : numeric ? 0 : '')),
+    )
 
-    if (typeof current !== 'object') {
-      if (!numeric)
-        result.push(
-          select(
-            t('status.constantType', { title }),
-            typeof current === 'number' ? 'number' : 'text',
-            ['text', 'number'],
-            (next) => edit(() => update(next === 'number' ? 0 : '')),
-          ),
-        )
-      result.push(
-        input(
-          title,
-          String(current),
-          (next) =>
-            update(
-              numeric || typeof current === 'number' ? (next === '' ? NaN : Number(next)) : next,
-            ),
-          numeric || typeof current === 'number' ? 'number' : 'text',
-        ),
-      )
-    }
+    if (typeof current === 'object') return controls.row(picker)
 
-    return result
+    const constant = input(
+      title,
+      String(current),
+      (next) =>
+        update(numeric || typeof current === 'number' ? (next === '' ? NaN : Number(next)) : next),
+      numeric || typeof current === 'number' ? 'number' : 'text',
+    )
+
+    if (numeric) return controls.row(picker, constant)
+
+    const type = select(
+      t('status.constantType', { title }),
+      typeof current === 'number' ? 'number' : 'text',
+      ['text', 'number'],
+      (next) => edit(() => update(next === 'number' ? 0 : '')),
+    )
+
+    return controls.row(picker, controls.row(type, constant))
   }
 
   const nextId = (prefix: string, entries: { id: string }[]) => {
@@ -238,12 +232,12 @@ export function statusPanelForm(
           row.visibleWhen = value ? gameBindingSchema.parse(JSON.parse(value)) : undefined
         },
       ),
-      ...source(t('status.valueOf', { title }), row.value, row.type === 'bar', (value) => {
+      source(t('status.valueOf', { title }), row.value, row.type === 'bar', (value) => {
         if (row.type === 'value' || typeof value !== 'string') row.value = value
       }),
       ...(row.type === 'bar'
         ? [
-            ...source(t('status.maximumOf', { title }), row.maximum, true, (value) => {
+            source(t('status.maximumOf', { title }), row.maximum, true, (value) => {
               if (typeof value !== 'string') row.maximum = value
             }),
             input(t('status.colorOf', { title }), row.color ?? '', (value) => {
@@ -251,20 +245,22 @@ export function statusPanelForm(
             }),
           ]
         : []),
-      button(
-        t('status.moveRowUp', { number: index + 1 }),
-        () => edit(() => reorder(draft.rows, index, -1)),
-        index === 0,
-      ),
-      button(
-        t('status.moveRowDown', { number: index + 1 }),
-        () => edit(() => reorder(draft.rows, index, 1)),
-        index === draft.rows.length - 1,
-      ),
-      button(t('status.removeRow', { number: index + 1 }), () =>
-        edit(() => {
-          draft.rows.splice(index, 1)
-        }),
+      controls.row(
+        button(
+          t('status.moveRowUp', { number: index + 1 }),
+          () => edit(() => reorder(draft.rows, index, -1)),
+          index === 0,
+        ),
+        button(
+          t('status.moveRowDown', { number: index + 1 }),
+          () => edit(() => reorder(draft.rows, index, 1)),
+          index === draft.rows.length - 1,
+        ),
+        button(t('status.removeRow', { number: index + 1 }), () =>
+          edit(() => {
+            draft.rows.splice(index, 1)
+          }),
+        ),
       ),
     )
   })
@@ -273,30 +269,32 @@ export function statusPanelForm(
     t('status.rows'),
     ...(rowsPicker ? [rowsPicker] : []),
     ...rows,
-    button(t('status.addValue'), () =>
-      edit(() => {
-        draft.rows.push({
-          id: nextId('value', draft.rows),
-          type: 'value',
-          label: 'Value',
-          value: '',
-        })
+    controls.row(
+      button(t('status.addValue'), () =>
+        edit(() => {
+          draft.rows.push({
+            id: nextId('value', draft.rows),
+            type: 'value',
+            label: 'Value',
+            value: '',
+          })
 
-        if (selection) selection.row = draft.rows.at(-1)!.id
-      }),
-    ),
-    button(t('status.addBar'), () =>
-      edit(() => {
-        draft.rows.push({
-          id: nextId('bar', draft.rows),
-          type: 'bar',
-          label: 'Resource',
-          value: 0,
-          maximum: 100,
-        })
+          if (selection) selection.row = draft.rows.at(-1)!.id
+        }),
+      ),
+      button(t('status.addBar'), () =>
+        edit(() => {
+          draft.rows.push({
+            id: nextId('bar', draft.rows),
+            type: 'bar',
+            label: 'Resource',
+            value: 0,
+            maximum: 100,
+          })
 
-        if (selection) selection.row = draft.rows.at(-1)!.id
-      }),
+          if (selection) selection.row = draft.rows.at(-1)!.id
+        }),
+      ),
     ),
   )
 
@@ -364,20 +362,22 @@ export function statusPanelForm(
           effect.visibleWhen = value ? gameBindingSchema.parse(JSON.parse(value)) : undefined
         },
       ),
-      button(
-        t('status.moveEffectUp', { number: index + 1 }),
-        () => edit(() => reorder(draft.effects, index, -1)),
-        index === 0,
-      ),
-      button(
-        t('status.moveEffectDown', { number: index + 1 }),
-        () => edit(() => reorder(draft.effects, index, 1)),
-        index === draft.effects.length - 1,
-      ),
-      button(t('status.removeEffect', { number: index + 1 }), () =>
-        edit(() => {
-          draft.effects.splice(index, 1)
-        }),
+      controls.row(
+        button(
+          t('status.moveEffectUp', { number: index + 1 }),
+          () => edit(() => reorder(draft.effects, index, -1)),
+          index === 0,
+        ),
+        button(
+          t('status.moveEffectDown', { number: index + 1 }),
+          () => edit(() => reorder(draft.effects, index, 1)),
+          index === draft.effects.length - 1,
+        ),
+        button(t('status.removeEffect', { number: index + 1 }), () =>
+          edit(() => {
+            draft.effects.splice(index, 1)
+          }),
+        ),
       ),
     )
   })

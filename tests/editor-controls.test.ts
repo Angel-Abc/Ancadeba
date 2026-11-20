@@ -1511,6 +1511,35 @@ describe('adding scene components', () => {
     expect(commands).toEqual([])
     expect(root.textContent).toContain('Player spawn is outside')
   })
+
+  it('keeps viewport origin and dimensions together in layout and saves the matching axes', () => {
+    const { edit, root, submit, commands } = addingComponentPanel()
+    edit('Component type', 'map-view')
+    const layout = root.all().find((node) => node.attributes.get('data-section') === 'layout')!
+    expect(
+      layout
+        .all()
+        .filter((node) => node.tagName === 'label')
+        .map((node) => node.ownText),
+    ).toEqual([
+      'Row',
+      'Column',
+      'Row span',
+      'Column span',
+      'Top row',
+      'Left column',
+      'Rows',
+      'Columns',
+    ])
+    edit('Columns', '2', 'Visible area')
+    edit('Left column', '1', 'Visible area')
+    edit('Rows', '1', 'Visible area')
+    edit('Top row', '0', 'Visible area')
+    submit('Create component')
+    expect(commands).toMatchObject([
+      { component: { viewport: { x: 1, y: 0, columns: 2, rows: 1 } } },
+    ])
+  })
 })
 
 describe('nearby component editing', () => {

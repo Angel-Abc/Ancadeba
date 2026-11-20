@@ -2273,24 +2273,45 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   font-weight: 600;
   padding: 0.35rem 0;
 }
-#component-editor .inspector-fields {
+.form-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+}
+.form-field-row > label {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+#component-editor :is(.inspector-fields, .inspector-fields fieldset, .form-field-row) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem 1rem;
   align-items: start;
+}
+#component-editor .component-form > .fold > .inspector-fields {
   margin-block: 0.5rem;
 }
-#component-editor .inspector-fields > label {
+#component-editor .inspector-fields fieldset {
+  margin: 0;
+}
+#component-editor :is(.inspector-fields, .inspector-fields fieldset, .form-field-row) > label {
   align-self: end;
   margin: 0;
 }
-#component-editor .inspector-fields > button {
+#component-editor :is(.inspector-fields, .inspector-fields fieldset, .form-field-row) > button {
   place-self: end start;
   max-inline-size: 100%;
   margin: 0;
   overflow-wrap: anywhere;
 }
-#component-editor .inspector-fields > :is(fieldset, details, div, p, .help),
+#component-editor .form-field-row:has(> button:first-child) {
+  display: flex;
+  gap: 0.5rem;
+}
+#component-editor
+  :is(.inspector-fields, .inspector-fields fieldset, .form-field-row)
+  > :is(fieldset, details, div, p, output, strong, .help),
 #component-editor label:has(textarea) {
   grid-column: 1 / -1;
 }
@@ -2380,7 +2401,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   margin-block: 1rem;
 }
 @container (max-width: 32rem) {
-  #component-editor .inspector-fields {
+  #component-editor :is(.inspector-fields, .inspector-fields fieldset, .form-field-row) {
     grid-template-columns: minmax(0, 1fr);
   }
 }

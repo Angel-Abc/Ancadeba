@@ -101,8 +101,8 @@ export function nearbyFields(
         },
       ),
     )
-    const behavior = fields.fold('nearby-behavior', t('inspector.behavior'), false)
-    form.append(behavior)
+    const behavior = fields.row()
+    form.append(fields.fold('nearby-behavior', t('inspector.behavior'), false, behavior))
     behavior.append(
       select(
         t('nearby.dialogue'),
@@ -158,25 +158,27 @@ export function nearbyFields(
         ),
       )
     behavior.append(
-      input(t('nearby.newActionId'), state.newAction, (value) => {
-        state.newAction = value.trim()
-      }),
-      button(t('nearby.addAction'), () => {
-        if (
-          !gameIdSchema.safeParse(state.newAction).success ||
-          Object.hasOwn(entry.actions, state.newAction)
-        ) {
-          error.textContent = t('nearby.uniqueActionId')
+      fields.row(
+        input(t('nearby.newActionId'), state.newAction, (value) => {
+          state.newAction = value.trim()
+        }),
+        button(t('nearby.addAction'), () => {
+          if (
+            !gameIdSchema.safeParse(state.newAction).success ||
+            Object.hasOwn(entry.actions, state.newAction)
+          ) {
+            error.textContent = t('nearby.uniqueActionId')
 
-          return
-        }
+            return
+          }
 
-        entry.actions = { ...entry.actions, [state.newAction]: { action: actionIds[0] ?? '' } }
-        state.action = state.newAction
-        state.newAction = ''
-        controls.markEdited()
-        render()
-      }),
+          entry.actions = { ...entry.actions, [state.newAction]: { action: actionIds[0] ?? '' } }
+          state.action = state.newAction
+          state.newAction = ''
+          controls.markEdited()
+          render()
+        }),
+      ),
     )
   }
 
@@ -184,33 +186,35 @@ export function nearbyFields(
     'nearby-targets',
     t('inspector.manageTargets'),
     false,
-    input(t('nearby.newTargetId'), state.newTarget, (value) => {
-      state.newTarget = value.trim()
-    }),
-    button(t('nearby.addTarget'), () => {
-      if (
-        !gameIdSchema.safeParse(state.newTarget).success ||
-        Object.hasOwn(draft.entries, state.newTarget)
-      ) {
-        error.textContent = t('nearby.uniqueTargetId')
+    fields.row(
+      input(t('nearby.newTargetId'), state.newTarget, (value) => {
+        state.newTarget = value.trim()
+      }),
+      button(t('nearby.addTarget'), () => {
+        if (
+          !gameIdSchema.safeParse(state.newTarget).success ||
+          Object.hasOwn(draft.entries, state.newTarget)
+        ) {
+          error.textContent = t('nearby.uniqueTargetId')
 
-        return
-      }
+          return
+        }
 
-      draft.entries = {
-        ...draft.entries,
-        [state.newTarget]: {
-          kind: 'object',
-          label: state.newTarget,
-          description: '',
-          actions: {},
-        },
-      }
-      state.selected = state.newTarget
-      state.newTarget = ''
-      controls.markEdited()
-      render()
-    }),
+        draft.entries = {
+          ...draft.entries,
+          [state.newTarget]: {
+            kind: 'object',
+            label: state.newTarget,
+            description: '',
+            actions: {},
+          },
+        }
+        state.selected = state.newTarget
+        state.newTarget = ''
+        controls.markEdited()
+        render()
+      }),
+    ),
   )
 
   if (entry)

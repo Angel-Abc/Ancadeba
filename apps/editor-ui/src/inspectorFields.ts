@@ -101,6 +101,7 @@ export function inspectorFields(context: FieldContext) {
             draft.labelKey = value || undefined
           },
         ),
+        link('character-profile', 'character-profile', 'inspector.openCharacterProfile'),
         ...statusPanelForm(controls, view, draft, render, true, selection),
       )
     } else {
@@ -113,15 +114,9 @@ export function inspectorFields(context: FieldContext) {
         context.bindingPending,
         selection,
         { main, behavior, layout },
-        (id) => link('asset', id, 'inspector.openAsset'),
-        (id) => link('maps', id, 'inspector.openMap'),
+        link,
       )
     }
-
-    if (draft.type === 'form') main.push(link('form-library', draft.form, 'forms.open'))
-
-    if (draft.type === 'character-sheet')
-      main.push(link('character-profile', 'character-profile', 'inspector.openCharacterProfile'))
   } else
     switch (draft.type) {
       case 'nearby':
@@ -162,14 +157,12 @@ export function inspectorFields(context: FieldContext) {
           selection,
         )
 
-        if (draft.type === 'inventory') main.push(...fields.splice(0, 2))
-        else {
-          behavior.push(fields.shift()!)
-          main.push(...fields.splice(0, 3))
-          main.push(link('component', draft.inventory, 'inspector.openInventory'))
-        }
+        main.push(...fields.main)
 
-        behavior.push(...fields)
+        if (draft.type !== 'inventory')
+          main.push(link('component', draft.inventory, 'inspector.openInventory'))
+        behavior.push(...fields.behavior)
+        layout.push(...fields.layout)
         break
       }
 
@@ -316,8 +309,17 @@ export function inspectorFields(context: FieldContext) {
             }),
           ),
           link('asset', draft.visual, 'inspector.openAsset'),
-          preview,
-          status,
+          controls.input(t('graphic.alt'), draft.alt, (value) => {
+            draft.alt = value
+          }),
+          controls.translation(
+            t('graphic.altTranslation'),
+            draft.altKey ?? '',
+            translationChoices(view),
+            (value) => {
+              draft.altKey = value || undefined
+            },
+          ),
           select(
             t('graphic.previewValues'),
             selection.startingValues ? 'starting' : 'static',
@@ -331,17 +333,8 @@ export function inspectorFields(context: FieldContext) {
             },
             false,
           ),
-          controls.input(t('graphic.alt'), draft.alt, (value) => {
-            draft.alt = value
-          }),
-          controls.translation(
-            t('graphic.altTranslation'),
-            draft.altKey ?? '',
-            translationChoices(view),
-            (value) => {
-              draft.altKey = value || undefined
-            },
-          ),
+          preview,
+          status,
         )
         refresh()
 

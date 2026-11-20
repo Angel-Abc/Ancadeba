@@ -20,8 +20,7 @@ export function basicComponentFields(
   bindingPending: TextBindingPending,
   selection: { binding: string },
   sections: { main: HTMLElement[]; behavior: HTMLElement[]; layout: HTMLElement[] },
-  openAsset: (id: string) => HTMLElement,
-  openMap: (id: string) => HTMLElement,
+  link: (kind: 'asset' | 'maps' | 'form-library', id: string, key: string) => HTMLElement,
 ) {
   const { main, behavior, layout } = sections
   const { input, select, translation, create, t } = controls
@@ -43,7 +42,7 @@ export function basicComponentFields(
       select(t('assets.image'), draft.image, images, (value) => {
         draft.image = value
       }),
-      openAsset(draft.image),
+      link('asset', draft.image, 'inspector.openAsset'),
     )
 
     return layout.push(
@@ -218,9 +217,7 @@ export function basicComponentFields(
           render()
         },
       ),
-    )
-
-    return behavior.push(
+      link('form-library', draft.form, 'forms.open'),
       input(t('forms.submitLabel'), draft.submitLabel, (v) => {
         draft.submitLabel = v
       }),
@@ -243,6 +240,9 @@ export function basicComponentFields(
           draft.cancelLabelKey = v || undefined
         },
       ),
+    )
+
+    return behavior.push(
       select(
         t('forms.action'),
         draft.action ?? '',
@@ -251,24 +251,26 @@ export function basicComponentFields(
           draft.action = v || undefined
         },
       ),
-      select(
-        t('character.continueScene'),
-        draft.continueScene ?? '',
-        [
-          ...(origin?.type === 'game' ? [['', t('forms.stay')] as const] : []),
-          ...sceneChoices(destinations, 'game'),
-        ],
-        (value) => {
-          draft.continueScene = value || undefined
-        },
-      ),
-      select(
-        t('character.backScene'),
-        draft.backScene ?? '',
-        [['', t('form.none')], ...sceneChoices(destinations, origin?.type)],
-        (value) => {
-          draft.backScene = value || undefined
-        },
+      controls.row(
+        select(
+          t('character.continueScene'),
+          draft.continueScene ?? '',
+          [
+            ...(origin?.type === 'game' ? [['', t('forms.stay')] as const] : []),
+            ...sceneChoices(destinations, 'game'),
+          ],
+          (value) => {
+            draft.continueScene = value || undefined
+          },
+        ),
+        select(
+          t('character.backScene'),
+          draft.backScene ?? '',
+          [['', t('form.none')], ...sceneChoices(destinations, origin?.type)],
+          (value) => {
+            draft.backScene = value || undefined
+          },
+        ),
       ),
     )
   }
@@ -323,7 +325,7 @@ export function basicComponentFields(
       ),
       ...(draft.location
         ? [
-            ...(['x', 'y'] as const).map((axis) =>
+            ...(['y', 'x'] as const).map((axis) =>
               input(
                 axis === 'x' ? t('component.playerColumn') : t('component.playerRow'),
                 String(draft.location!.position[axis]),
@@ -361,7 +363,30 @@ export function basicComponentFields(
 
         render()
       }),
-      openMap(draft.map),
+      link('maps', draft.map, 'inspector.openMap'),
+    )
+
+    layout.push(
+      controls.group(
+        t('component.visibleArea'),
+        ...(
+          [
+            ['y', t('component.topRow')],
+            ['x', t('component.leftColumn')],
+            ['rows', t('grid.rows')],
+            ['columns', t('grid.columns')],
+          ] as const
+        ).map(([key, title]) =>
+          input(
+            title,
+            String(viewport[key]),
+            (value) => {
+              viewport[key] = Number(value)
+            },
+            'number',
+          ),
+        ),
+      ),
     )
 
     return behavior.push(
@@ -375,26 +400,6 @@ export function basicComponentFields(
         (value) => {
           draft.interactive = value === 'true' ? undefined : false
         },
-      ),
-      controls.group(
-        t('component.visibleArea'),
-        ...(
-          [
-            ['columns', t('grid.columns')],
-            ['rows', t('grid.rows')],
-            ['x', t('component.leftColumn')],
-            ['y', t('component.topRow')],
-          ] as const
-        ).map(([key, title]) =>
-          input(
-            title,
-            String(viewport[key]),
-            (value) => {
-              viewport[key] = Number(value)
-            },
-            'number',
-          ),
-        ),
       ),
       controls.group(
         t('component.playerMarker'),
@@ -411,16 +416,20 @@ export function basicComponentFields(
           },
         ),
         ...(draft.playerSpawn
-          ? (['x', 'y'] as const).map((key) =>
-              input(
-                key === 'x' ? t('component.playerColumn') : t('component.playerRow'),
-                String(draft.playerSpawn![key]),
-                (value) => {
-                  draft.playerSpawn![key] = Number(value)
-                },
-                'number',
+          ? [
+              controls.row(
+                ...(['y', 'x'] as const).map((key) =>
+                  input(
+                    key === 'x' ? t('component.playerColumn') : t('component.playerRow'),
+                    String(draft.playerSpawn![key]),
+                    (value) => {
+                      draft.playerSpawn![key] = Number(value)
+                    },
+                    'number',
+                  ),
+                ),
               ),
-            )
+            ]
           : []),
       ),
     )
@@ -480,34 +489,36 @@ export function basicComponentFields(
 
   main.push(...actionDescriptionFields(controls, view, draft))
   behavior.push(
-    select(
-      t('form.action'),
-      action?.type ?? '',
-      [
-        ['', t('component.noAction')],
-        ['new-game', t('component.startNewGame')],
-        ['enter-scene', t('component.goToScene')],
-        ['request-action', t('component.runAction')],
-        ['move-map', t('component.moveOnMap')],
-        ['interact-map', t('maps.interact')],
-        ['save-game', t('component.saveProgress')],
-        ['load-game', t('component.loadProgress')],
-        ...(
-          [
-            'load-autosave',
-            'delete-save',
-            'export-save',
-            'import-save',
-            'open-menu',
-            'resume-game',
-            'main-menu',
-          ] as const
-        ).map((type) => [type, t(`saving.${type}`)] as const),
-      ],
-      (value) => {
-        draft.action = defaults(value)
-        render()
-      },
+    controls.row(
+      select(
+        t('form.action'),
+        action?.type ?? '',
+        [
+          ['', t('component.noAction')],
+          ['new-game', t('component.startNewGame')],
+          ['enter-scene', t('component.goToScene')],
+          ['request-action', t('component.runAction')],
+          ['move-map', t('component.moveOnMap')],
+          ['interact-map', t('maps.interact')],
+          ['save-game', t('component.saveProgress')],
+          ['load-game', t('component.loadProgress')],
+          ...(
+            [
+              'load-autosave',
+              'delete-save',
+              'export-save',
+              'import-save',
+              'open-menu',
+              'resume-game',
+              'main-menu',
+            ] as const
+          ).map((type) => [type, t(`saving.${type}`)] as const),
+        ],
+        (value) => {
+          draft.action = defaults(value)
+          render()
+        },
+      ),
     ),
     ...(action?.type === 'new-game' ||
     action?.type === 'enter-scene' ||

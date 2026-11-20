@@ -362,8 +362,19 @@ export function bindItemEditor(
     const source = scene?.components.find((entry) => entry.id === target.slice(5))
 
     if (component && scene) {
+      const fields = itemViewFields(
+        controls,
+        view,
+        scene,
+        component,
+        creating,
+        render,
+        hiddenPreviews,
+      )
+
       form.append(
-        ...itemViewFields(controls, view, scene, component, creating, render, hiddenPreviews),
+        ...fields.main,
+        ...fields.behavior,
         ...placementFields(t).map(([key, label]) =>
           controls.input(
             label,
@@ -374,6 +385,7 @@ export function bindItemEditor(
             'number',
           ),
         ),
+        ...fields.layout,
       )
     }
 
@@ -470,7 +482,7 @@ export function bindItemEditor(
       dirty = !definitions
       render()
     },
-    'specialist-inspectors-v2',
+    'item-editor-v3',
   )
 
   return {

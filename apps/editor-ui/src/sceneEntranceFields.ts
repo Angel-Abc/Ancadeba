@@ -56,9 +56,8 @@ export function sceneEntranceFields(
 
   if (action.position) {
     const position = action.position
-    const coordinates = ['x', 'y'] as const
 
-    for (const coordinate of coordinates) {
+    const coordinates = (['x', 'y'] as const).map((coordinate) => {
       const field = input(
         t(coordinate === 'x' ? 'entrance.x' : 'entrance.y'),
         String(position[coordinate]),
@@ -71,8 +70,11 @@ export function sceneEntranceFields(
       const control = field.querySelector('input')!
       control.min = '0'
       control.step = '1'
-      fields.push(field)
-    }
+
+      return field
+    })
+
+    fields.push(controls.row(...coordinates))
 
     const help = create('p')
     help.className = 'help'

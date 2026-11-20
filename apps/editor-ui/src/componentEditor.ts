@@ -233,10 +233,11 @@ export function bindComponentEditor(
           reset(true)
         }
       })
-      form.append(label)
+      const identity = controls.row(label)
+      form.append(identity)
 
       if (model)
-        form.append(
+        identity.append(
           controls.input(t('component.id'), model.id, (id) => {
             model.id = id.trim()
           }),
@@ -411,7 +412,7 @@ export function bindComponentEditor(
       dirty = true
       render()
     },
-    'specialist-inspectors-v2',
+    'component-inspector-v3',
   )
 
   const same = (id?: string, component?: string, add = false) =>

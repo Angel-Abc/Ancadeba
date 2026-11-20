@@ -226,7 +226,7 @@ export function graphicAppearanceForm(
           edited()
         })
 
-        colorBox.append(swatch, hex)
+        colorBox.append(controls.row(swatch, hex))
       }
 
       if (gameScene)

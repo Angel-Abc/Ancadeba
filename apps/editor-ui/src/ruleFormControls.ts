@@ -221,6 +221,14 @@ export function ruleFormControls(
     return box
   }
 
+  const row = (...fields: HTMLElement[]) => {
+    const wrapper = create('div')
+    wrapper.className = 'form-field-row'
+    wrapper.append(...fields)
+
+    return wrapper
+  }
+
   return {
     create,
     input,
@@ -228,6 +236,7 @@ export function ruleFormControls(
     translation,
     button,
     group,
+    row,
     ...foldControls(document, folds),
     document,
     markEdited: onEdit,

@@ -21,26 +21,16 @@ export function itemViewFields(
   selection?: { inventoryOwner: string },
 ) {
   const { t } = controls
-  const result: HTMLElement[] = []
+  const main: HTMLElement[] = []
+  const behavior: HTMLElement[] = []
+  const layout: HTMLElement[] = []
 
   const identity = controls.input(t('items.viewId'), draft.id, (value) => {
     if (creating) draft.id = value.trim()
   })
 
   identity.querySelector('input')!.readOnly = !creating
-  result.push(
-    ...(draft.type !== 'inventory'
-      ? [
-          controls.select(
-            t('items.showStats'),
-            String(draft.showCombatStats ?? false),
-            yesNoChoices(t),
-            (value) => {
-              draft.showCombatStats = value === 'true'
-            },
-          ),
-        ]
-      : []),
+  main.push(
     ...(includeIdentity ? [identity] : []),
     controls.input(t('items.viewLabel'), draft.label, (value) => {
       draft.label = value
@@ -53,23 +43,49 @@ export function itemViewFields(
         draft.labelKey = value || undefined
       },
     ),
-    ...(draft.type !== 'inventory'
-      ? [
-          controls.select(
-            t('items.sourceInventory'),
-            draft.inventory,
-            scene.components.filter((entry) => entry.type === 'inventory').map((entry) => entry.id),
-            (value) => {
-              draft.inventory = value
-              render()
-            },
-          ),
-        ]
-      : []),
   )
 
+  if (draft.type !== 'inventory') {
+    behavior.push(
+      controls.select(
+        t('items.showStats'),
+        String(draft.showCombatStats ?? false),
+        yesNoChoices(t),
+        (value) => {
+          draft.showCombatStats = value === 'true'
+        },
+      ),
+    )
+
+    if (draft.type === 'item-details')
+      main.push(
+        controls.input(t('items.emptyText'), draft.emptyText, (value) => {
+          draft.emptyText = value
+        }),
+        controls.translation(
+          t('items.emptyTextTranslation'),
+          draft.emptyTextKey ?? '',
+          translationChoices(view),
+          (value) => {
+            draft.emptyTextKey = value || undefined
+          },
+        ),
+      )
+    main.push(
+      controls.select(
+        t('items.sourceInventory'),
+        draft.inventory,
+        scene.components.filter((entry) => entry.type === 'inventory').map((entry) => entry.id),
+        (value) => {
+          draft.inventory = value
+          render()
+        },
+      ),
+    )
+  }
+
   if (draft.type === 'item-details')
-    result.push(
+    behavior.push(
       controls.select(
         t('items.comparisonEquipment'),
         draft.equipment ?? '',
@@ -83,17 +99,6 @@ export function itemViewFields(
           draft.equipment = value || undefined
         },
       ),
-      controls.input(t('items.emptyText'), draft.emptyText, (value) => {
-        draft.emptyText = value
-      }),
-      controls.translation(
-        t('items.emptyTextTranslation'),
-        draft.emptyTextKey ?? '',
-        translationChoices(view),
-        (value) => {
-          draft.emptyTextKey = value || undefined
-        },
-      ),
     )
   else if (draft.type === 'inventory') {
     const owners = Object.entries(view.inventory?.owners ?? {})
@@ -101,7 +106,7 @@ export function itemViewFields(
     if (selection && owners.length) {
       if (!owners.some(([id]) => id === selection.inventoryOwner))
         selection.inventoryOwner = owners[0]![0]
-      result.push(
+      behavior.push(
         controls.select(
           t('inspector.inventoryOwner'),
           selection.inventoryOwner,
@@ -115,7 +120,7 @@ export function itemViewFields(
       )
     }
 
-    result.push(
+    behavior.push(
       ...owners
         .filter(([id]) => !selection || selection.inventoryOwner === id)
         .map(([id, owner]) =>
@@ -161,17 +166,32 @@ export function itemViewFields(
       (entry) => entry.id === draft.inventory && entry.type === 'inventory',
     )
 
-    result.push(
-      controls.select(
-        t('items.equipmentOwner'),
-        draft.owner,
-        inventory?.type === 'inventory' ? inventory.owners : [],
-        (value) => {
-          draft.owner = value
-          draft.order = []
-          render()
-        },
+    behavior.push(
+      controls.row(
+        controls.select(
+          t('items.equipmentOwner'),
+          draft.owner,
+          inventory?.type === 'inventory' ? inventory.owners : [],
+          (value) => {
+            draft.owner = value
+            draft.order = []
+            render()
+          },
+        ),
+        controls.select(
+          t('items.equipmentChanges'),
+          String(draft.readOnly),
+          [
+            ['false', t('items.allowChanges')],
+            ['true', t('items.readOnly')],
+          ],
+          (value) => {
+            draft.readOnly = value === 'true'
+          },
+        ),
       ),
+    )
+    layout.push(
       controls.input(
         t('items.gridColumns'),
         String(draft.columns),
@@ -179,17 +199,6 @@ export function itemViewFields(
           draft.columns = Number(value)
         },
         'number',
-      ),
-      controls.select(
-        t('items.equipmentChanges'),
-        String(draft.readOnly),
-        [
-          ['false', t('items.allowChanges')],
-          ['true', t('items.readOnly')],
-        ],
-        (value) => {
-          draft.readOnly = value === 'true'
-        },
       ),
       controls.input(t('items.slotOrder'), draft.order.join(', '), (value) => {
         draft.order = value
@@ -200,5 +209,5 @@ export function itemViewFields(
     )
   }
 
-  return result
+  return { main, behavior, layout }
 }
