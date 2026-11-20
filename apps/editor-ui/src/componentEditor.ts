@@ -274,7 +274,6 @@ export function bindComponentEditor(
         [
           'layout',
           [
-            ...sections.layout,
             ...placementFields(t).map(([key, label]) =>
               controls.input(
                 label,
@@ -285,6 +284,7 @@ export function bindComponentEditor(
                 'number',
               ),
             ),
+            ...sections.layout,
           ],
         ],
       ] as const) {
