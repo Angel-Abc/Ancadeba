@@ -69,6 +69,36 @@ function createLifecycle(data = content()) {
 }
 
 describe('game and scene lifetimes', () => {
+  it.each([false, true])(
+    'retains the form when its destination fails to initialize, active game %s',
+    (inGame) => {
+      const { lifecycle, factories } = createLifecycle()
+      const previous = inGame ? lifecycle.startGame() : undefined
+      const origin = lifecycle.enterScene(inGame ? 'inventory' : 'settings')
+      const commit = vi.fn()
+      factories.createSceneState.mockImplementationOnce(() => {
+        throw new Error('Destination unavailable')
+      })
+      expect(() =>
+        lifecycle.applyGameChange(() => ({
+          destination: { type: 'enter-scene', scene: 'standard' },
+          commit,
+        })),
+      ).toThrow('Destination unavailable')
+      expect(commit).not.toHaveBeenCalled()
+      expect(lifecycle.activeScene).toBe(origin)
+      expect(lifecycle.currentGame).toBe(previous)
+      expect(factories.disposeGameState).toHaveBeenCalledTimes(inGame ? 0 : 1)
+      lifecycle.applyGameChange(() => ({
+        destination: { type: 'enter-scene', scene: 'standard' },
+        commit,
+      }))
+      expect(commit).toHaveBeenCalledTimes(1)
+      expect(lifecycle.activeScene?.data.id).toBe('standard')
+      lifecycle.dispose()
+    },
+  )
+
   it('retains scene-local state through menus and releases both scenes on disposal', () => {
     const { lifecycle, factories } = createLifecycle()
     lifecycle.startGame()

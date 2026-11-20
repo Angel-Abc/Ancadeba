@@ -23,7 +23,7 @@ export const componentGroups = {
   'action-bar': 'interaction',
   'action-info': 'interaction',
   nearby: 'interaction',
-  'character-creator': 'character',
+  form: 'interaction',
   'character-sheet': 'character',
   'character-progression': 'character',
   'status-panel': 'character',
@@ -103,8 +103,10 @@ export function componentUnavailable(
       return Object.keys(view.leveling ?? {}).length ? undefined : 'inspector.profileFirst'
     case 'character-sheet':
       return view.game?.characterProfile ? undefined : 'inspector.characterProfileFirst'
-    case 'character-creator':
-      if (!view.game?.characterProfile) return 'inspector.characterProfileFirst'
+    case 'form':
+      if (!view.game?.forms?.length) return 'forms.createFirst'
+
+      if (scene.type === 'game') return undefined
 
       return view.scenes.some((entry) => entry.id !== scene.id && entry.type === 'game')
         ? undefined

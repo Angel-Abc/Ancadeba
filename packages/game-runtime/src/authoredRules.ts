@@ -199,21 +199,21 @@ export class AuthoredPlaythrough {
       )
   }
 
-  applyCharacterProfile(selections: ReadonlyMap<string, string>): boolean {
-    const profile = this.data.characterProfile
+  prepareFormWrites(
+    writes: readonly { path: string[]; value: RuleValue }[],
+    logs: readonly { text: RuleText }[],
+  ) {
+    const resolved = writes.map((write) => ({ path: write.path, value: this.resolve(write.value) }))
+    const entries = logs.map((entry) => this.resolve(entry.text))
 
-    if (!profile || selections.size !== profile.fields.length) return false
+    return {
+      values: new Map(resolved.map((write) => [JSON.stringify(write.path), write.value])),
+      commit: (time: number) => {
+        for (const write of resolved) set(this.state, write.path, write.value)
 
-    const writes = profile.fields.map((field) => ({
-      path: field.path,
-      option: field.options.find(({ id }) => id === selections.get(field.id)),
-    }))
-
-    if (writes.some(({ option }) => !option)) return false
-
-    for (const { path, option } of writes) set(this.state, path, option!.id)
-
-    return true
+        if (entries.length) this.append(entries, time)
+      },
+    }
   }
 
   private resolve(value: RuleText): string

@@ -1,4 +1,5 @@
 import { bindCharacterProfileForm } from '../apps/editor-ui/src/characterProfileForm.js'
+import { bindFormLibrary } from '../apps/editor-ui/src/formLibrary.js'
 import { bindStoryEditor } from '../apps/editor-ui/src/storyEditor.js'
 import { readFile, readdir } from 'node:fs/promises'
 import { captureEditorDrafts, restoreEditorDrafts } from '../apps/editor-ui/src/editorDraftState.js'
@@ -267,6 +268,13 @@ class Control extends EventTarget {
   readonly children: Control[] = []
   readonly attributes = new Map<string, string>()
   parent?: Control
+  name = ''
+  remove() {
+    const parent = this.parent
+
+    if (parent) parent.children.splice(parent.children.indexOf(this), 1)
+    delete this.parent
+  }
   ownText = ''
   value = ''
   id = ''
@@ -7235,6 +7243,38 @@ describe('scene inspector registry', () => {
     return { revision: 'inspector', documents }
   }
 
+  it('authors a form and keeps player preview edits out of the saved definition', async () => {
+    const ui = panel()
+    const source = await sample('graphics')
+
+    const editor = bindFormLibrary(
+      ui.root.asElement(),
+      (command) => ui.commands.push(command),
+      editorLocalization().t,
+      vi.fn(),
+    )
+
+    editor.render({ ...ui.initial, view: inspectProject(source) }, true)
+    ui.click('New blank form')
+    ui.click('Add row')
+    ui.click('Add element')
+    ui.edit('State field', '["outfit"]')
+    ui.edit('Default answer', 'Designer')
+    const preview = ui.root.all().find((node) => node.name === '["outfit"]')!
+    preview.value = 'Player'
+    preview.dispatchEvent(new Event('input'))
+    ui.click('Save form')
+    const saved = applyCommand(source, ui.commands[0]!)
+    const reopened = inspectProject(saved.project)
+    expect(reopened.forms?.form?.rows[0]?.[0]?.[0]).toMatchObject({
+      type: 'text',
+      default: 'Designer',
+    })
+    editor.render({ ...ui.initial, lastCommand: 'game.upsertForm', view: reopened }, true)
+    expect(editor.hasDrafts()).toBe(false)
+    editor.dispose()
+  })
+
   it('recovers the reordered quest stage and saves the edited objective with the complete quest', async () => {
     const ui = panel()
     const view = inspectProject(await sample('basic'))
@@ -7610,9 +7650,11 @@ describe('scene inspector registry', () => {
     'creates, restores, discards and saves %s through its scene selection',
     async (type) => {
       const source = await sample(
-        ['graphic', 'background-image', 'character-creator', 'character-sheet'].includes(type)
-          ? 'graphics'
-          : 'basic',
+        type === 'form'
+          ? 'market-value'
+          : ['graphic', 'background-image', 'character-sheet'].includes(type)
+            ? 'graphics'
+            : 'basic',
       )
 
       const view = inspectProject(source)

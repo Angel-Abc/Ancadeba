@@ -42,6 +42,7 @@ export const gameSchema = z
     'initial-scene': gameIdSchema.optional(),
     stylesheet: stylesheetPathSchema.optional(),
     assets: gameIdSchema.optional(),
+    forms: z.array(gameIdSchema).refine(uniqueFileIds, 'Form IDs must be unique').optional(),
     characterProfile: characterProfileSchema.optional(),
     inventory: z
       .array(gameIdSchema)

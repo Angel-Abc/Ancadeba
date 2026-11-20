@@ -204,17 +204,62 @@ export function basicComponentFields(
       ),
     )
 
-  if (draft.type === 'character-creator') {
+  if (draft.type === 'form') {
     const destinations = { ...view, scenes: view.scenes.filter((entry) => entry.id !== sceneId) }
     const origin = view.scenes.find((entry) => entry.id === sceneId)
 
+    main.push(
+      select(
+        t('forms.heading'),
+        draft.form,
+        Object.values(view.forms ?? {}).map((form) => [form.id, form.label] as const),
+        (value) => {
+          draft.form = value
+          render()
+        },
+      ),
+    )
+
     return behavior.push(
+      input(t('forms.submitLabel'), draft.submitLabel, (v) => {
+        draft.submitLabel = v
+      }),
+      translation(
+        t('forms.submitKey'),
+        draft.submitLabelKey ?? '',
+        translationChoices(view),
+        (v) => {
+          draft.submitLabelKey = v || undefined
+        },
+      ),
+      input(t('forms.cancelLabel'), draft.cancelLabel, (v) => {
+        draft.cancelLabel = v
+      }),
+      translation(
+        t('forms.cancelKey'),
+        draft.cancelLabelKey ?? '',
+        translationChoices(view),
+        (v) => {
+          draft.cancelLabelKey = v || undefined
+        },
+      ),
+      select(
+        t('forms.action'),
+        draft.action ?? '',
+        ['', ...Object.keys(view.rules?.actions ?? {})],
+        (v) => {
+          draft.action = v || undefined
+        },
+      ),
       select(
         t('character.continueScene'),
-        draft.continueScene,
-        sceneChoices(destinations, 'game'),
+        draft.continueScene ?? '',
+        [
+          ...(origin?.type === 'game' ? [['', t('forms.stay')] as const] : []),
+          ...sceneChoices(destinations, 'game'),
+        ],
         (value) => {
-          draft.continueScene = value
+          draft.continueScene = value || undefined
         },
       ),
       select(

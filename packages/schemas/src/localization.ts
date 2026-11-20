@@ -163,6 +163,18 @@ export function localizeDefinitions(
                                 : {
                                     ...component,
                                     label: text(component.labelKey, component.label, true),
+                                    ...(component.type === 'form' && {
+                                      submitLabel: text(
+                                        component.submitLabelKey,
+                                        component.submitLabel,
+                                        true,
+                                      ),
+                                      cancelLabel: text(
+                                        component.cancelLabelKey,
+                                        component.cancelLabel,
+                                        true,
+                                      ),
+                                    }),
                                   },
           ),
         }),
@@ -238,7 +250,10 @@ export function assertGameLanguages(
                             ? component.altKey !== undefined
                             : component.type === 'text'
                               ? component.textKey !== undefined
-                              : component.labelKey !== undefined,
+                              : component.labelKey !== undefined ||
+                                (component.type === 'form' &&
+                                  (component.submitLabelKey !== undefined ||
+                                    component.cancelLabelKey !== undefined)),
         ),
     )
 

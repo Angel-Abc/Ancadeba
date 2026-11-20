@@ -15,7 +15,7 @@ import type { IGameInventorySelection } from './inventoryContext.js'
 import type { IGameEquipment } from './equipment.js'
 import type { IGameTrading } from './trading.js'
 import type { IGameCombat } from './combat.js'
-import type { SceneEntrance } from '@ancadeba/schemas'
+import type { SceneEntrance, SceneTransition } from '@ancadeba/schemas'
 import { canEnterScene } from './sceneNavigation.js'
 import { runtimeText } from './runtimeText.js'
 
@@ -99,6 +99,11 @@ export interface GameLifecycleFactories<TGameState, TSceneState> {
   readonly disposeSceneState?: (state: TSceneState) => void
 }
 
+interface PreparedGameChange {
+  readonly destination?: SceneTransition | undefined
+  commit(): void
+}
+
 export interface IGameLifecycle<TGameState = unknown, TSceneState = unknown> {
   readonly suspendedScene?: SceneInstance<TGameState, TSceneState> | undefined
   openMenu?(id: string): void
@@ -120,6 +125,8 @@ export interface IGameLifecycle<TGameState = unknown, TSceneState = unknown> {
     prepare: (game: GameInstance<TGameState>) => void,
     restore: (game: GameInstance<TGameState>) => void,
   ): void
+  /** Stage the destination and changes before publishing a new or existing playthrough. */
+  applyGameChange?(prepare: (game: GameInstance<TGameState>) => PreparedGameChange): void
   enterScene(id: string, entrance?: SceneEntrance): SceneInstance<TGameState, TSceneState>
   leaveScene(): void
   endGame(): void
@@ -493,39 +500,95 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
         return this.scene.context
       }
 
-      const instance = new OwnedInstance(
-        data,
-        this.factories.createSceneState(data),
-        this.factories.disposeSceneState,
-      )
+      return this.activateScene(this.createScene(data, game), arrival)
+    })
+  }
 
-      const scope =
-        data.type === 'game'
-          ? { type: 'game' as const, game: game! }
-          : { type: 'stand-alone' as const }
+  private createScene(data: SceneData, game: GameInstance<TGameState> | undefined) {
+    const instance = new OwnedInstance(
+      data,
+      this.factories.createSceneState(data),
+      this.factories.disposeSceneState,
+    )
 
-      const context: SceneInstance<TGameState, TSceneState> = Object.freeze({
-        ...scope,
-        data,
-        get state() {
-          return instance.state
-        },
-        get disposed() {
-          return instance.disposed
-        },
-      })
+    const scope =
+      data.type === 'game'
+        ? { type: 'game' as const, game: game! }
+        : { type: 'stand-alone' as const }
 
-      const previous = this.scene
-      this.releaseMenu()
-      this.scene = { instance, context }
+    const context: SceneInstance<TGameState, TSceneState> = Object.freeze({
+      ...scope,
+      data,
+      get state() {
+        return instance.state
+      },
+      get disposed() {
+        return instance.disposed
+      },
+    })
+
+    return { instance, context }
+  }
+
+  private activateScene(next: NonNullable<typeof this.scene>, arrival?: SceneEntrance) {
+    const previous = this.scene
+    this.releaseMenu()
+    this.scene = next
+
+    try {
+      if (arrival) this.game!.mapMovement!.place(next.context, arrival.mapView, arrival.position)
+    } finally {
+      if (previous !== next) release(previous?.instance)
+    }
+
+    return next.context
+  }
+
+  applyGameChange(prepare: (game: GameInstance<TGameState>) => PreparedGameChange): void {
+    this.transition(() => {
+      const starting = !this.game
+      const game = this.game ?? this.createGame()
+      let next: typeof this.scene
 
       try {
-        if (arrival) game!.mapMovement!.place(context, arrival.mapView, arrival.position)
-      } finally {
-        release(previous?.instance)
-      }
+        const change = prepare(game)
+        const destination = change.destination
 
-      return context
+        if (destination) {
+          const data = this.data.scenes.get(destination.scene)
+
+          if (data?.type !== 'game') throw new Error('A submission requires a game scene')
+
+          if (destination.position && !game.mapMovement)
+            throw new Error('Map movement is unavailable')
+          next = this.scene?.context.data.id === data.id ? this.scene : this.createScene(data, game)
+        } else if (starting) throw new Error('Choose an opening scene')
+        change.commit()
+
+        if (starting) {
+          this.game = game
+
+          try {
+            game.start()
+          } catch (error) {
+            this.game = undefined
+            throw error
+          }
+        }
+
+        if (next)
+          this.activateScene(
+            next,
+            destination?.position && destination.mapView
+              ? { mapView: destination.mapView, position: destination.position }
+              : undefined,
+          )
+      } finally {
+        release(
+          next !== this.scene ? next?.instance : undefined,
+          starting && this.game !== game ? game : undefined,
+        )
+      }
     })
   }
 

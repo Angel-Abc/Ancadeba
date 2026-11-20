@@ -583,13 +583,19 @@ export const statusPanelComponentSchema = z
 
 export type StatusPanelComponentDefinition = z.infer<typeof statusPanelComponentSchema>
 
-export const characterCreatorComponentSchema = z.object({
+export const formComponentSchema = z.object({
   id: gameIdSchema,
-  type: z.literal('character-creator'),
+  type: z.literal('form'),
+  form: gameIdSchema,
+  submitLabel: z.string().trim().min(1).default('Submit'),
+  submitLabelKey: translationKeySchema.optional(),
+  cancelLabel: z.string().trim().min(1).default('Cancel'),
+  cancelLabelKey: translationKeySchema.optional(),
+  action: gameIdSchema.optional(),
   placement: gridPlacementSchema,
-  label: z.string().trim().min(1).default('Create character'),
+  label: z.string().trim().min(1).default('Form'),
   labelKey: translationKeySchema.optional(),
-  continueScene: gameIdSchema,
+  continueScene: gameIdSchema.optional(),
   backScene: gameIdSchema.optional(),
 })
 
@@ -644,7 +650,7 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   actionInfoComponentSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
-  characterCreatorComponentSchema,
+  formComponentSchema,
   characterSheetComponentSchema,
   itemDetailsComponentSchema,
   equipmentComponentSchema,

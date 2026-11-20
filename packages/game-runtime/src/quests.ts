@@ -47,6 +47,11 @@ export interface QuestRequest {
   readonly origin: ActionOrigin
 }
 
+interface ProposedFormState {
+  readonly answers: ReadonlyMap<string, BindingValue>
+  readonly pendingStart: () => boolean
+}
+
 export interface PreparedStory {
   readonly values: ReadonlyMap<string, BindingValue>
   isCurrent(): boolean
@@ -69,7 +74,11 @@ export interface IGameQuests {
     capture?: StoryCapture,
     origin?: ActionOrigin,
   ): void
-  prepareEffects(scene: SceneInstance, effects: readonly StoryEffect[]): PreparedStory | undefined
+  prepareEffects(
+    scene: SceneInstance,
+    effects: readonly StoryEffect[],
+    proposal?: ProposedFormState,
+  ): PreparedStory | undefined
   text(id: string): string
   subscribeChanges(listener: () => void): () => void
 }
@@ -410,10 +419,23 @@ export class GameQuests implements IGameQuests {
     return translation?.messages[value.textKey] ?? translation?.fallback[value.textKey] ?? ''
   }
 
-  prepareEffects(scene: SceneInstance, effects: readonly StoryEffect[]): PreparedStory | undefined {
-    if (!this.validScene(scene)) return
+  prepareEffects(
+    scene: SceneInstance,
+    effects: readonly StoryEffect[],
+    proposal?: ProposedFormState,
+  ): PreparedStory | undefined {
+    const currentScene = () =>
+      this.validScene(scene) ||
+      (scene.type === 'stand-alone' &&
+        !scene.disposed &&
+        !this.game.disposed &&
+        !this.disposed &&
+        !this.lifecycle.currentGame &&
+        proposal?.pendingStart() === true)
+
+    if (!currentScene()) return
     const records = new Map(this.records)
-    const values = new Map<string, BindingValue>()
+    const values = new Map(proposal?.answers)
     const items = new Map(this.game.inventory?.snapshot.map((item) => [item.id, item]))
     const paths = new Map<string, readonly string[]>()
     const originals = new Map<string, BindingValue | undefined>()
@@ -545,13 +567,13 @@ export class GameQuests implements IGameQuests {
     }
 
     const numeric = [...values].flatMap(([key, value]) =>
-      typeof value === 'number' && !stats.has(key)
+      paths.has(key) && typeof value === 'number' && !stats.has(key)
         ? [{ path: paths.get(key)!, expected: Number(originals.get(key)), value }]
         : [],
     )
 
     const scalars: StoryStateWrite[] = [...values].flatMap(([key, value]) =>
-      typeof value !== 'number' || stats.has(key)
+      paths.has(key) && (typeof value !== 'number' || stats.has(key))
         ? [{ path: paths.get(key)!, expected: originals.get(key), value }]
         : [],
     )
@@ -581,7 +603,7 @@ export class GameQuests implements IGameQuests {
 
     const current = () =>
       !committed &&
-      this.validScene(scene) &&
+      currentScene() &&
       this.capture(scene).signature === signature &&
       (state?.isCurrent() ?? true) &&
       (scalar?.isCurrent() ?? true) &&

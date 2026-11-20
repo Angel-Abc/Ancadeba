@@ -158,6 +158,29 @@ export class ActionProcessor implements IGameActions {
     this.progressionState.restore(snapshot)
   }
 
+  /** Publish a staged form action once its effects and destination have committed. */
+  prepareFormAction(action: string, cost: number) {
+    this.progressionState.synchronize()
+    const prepared = this.progressionState.prepare(false, cost)
+    const request: ActionRequest = { id: ++this.nextRequestId, action, origin: { type: 'direct' } }
+
+    return {
+      ...prepared,
+      notify: () => {
+        prepared.notify()
+        this.messages.publish(
+          'action.applied',
+          Object.freeze({
+            request,
+            outcome: { status: 'applied' as const, worldTimeCostMs: cost },
+            progression: prepared.progression,
+            ...this.turnFields,
+          }),
+        )
+      },
+    }
+  }
+
   /** Movement and encounter transactions advance the game counter independently of actor turns. */
   prepareProgression(worldTimeCostMs: number) {
     this.progressionState.synchronize()

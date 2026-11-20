@@ -1,4 +1,6 @@
 import {
+  formSchema,
+  formFile,
   dialogueSchema,
   dialogueFile,
   questSchema,
@@ -127,6 +129,8 @@ export function inspectProject(project: ProjectSnapshot): ProjectView {
           stylesheetPathSchema.safeParse(entry[0]).success && typeof entry[1] === 'string',
       ),
     ),
+    forms: parsedFiles(game.data?.forms, formFile, (value) => formSchema.safeParse(value).data),
+
     dialogues: parsedFiles(
       game.data?.dialogues,
       dialogueFile,

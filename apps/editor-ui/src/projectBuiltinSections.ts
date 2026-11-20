@@ -41,6 +41,7 @@ interface BuiltinEditors {
   localizationEditor: ReturnType<typeof bindLocalizationEditor> | undefined
   stylesheetEditor: ReturnType<typeof bindStylesheetEditor> | undefined
   componentEditor: ReturnType<typeof bindComponentEditor> | undefined
+  formLibrary?: ReturnType<typeof import('./formLibrary.js').bindFormLibrary> | undefined
   storyEditor: ReturnType<typeof bindStoryEditor> | undefined
   mapEditor: ReturnType<typeof bindMapEditor> | undefined
   repairEditor: ReturnType<typeof bindProjectRepair> | undefined
@@ -421,6 +422,15 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
       ? (node.parentId === 'dialogues' ? 'dialogue:' : 'quest:') + node.id
       : ''
 
+  add('form-library', 'form-library', editors.formLibrary, {
+    refresh: () => {},
+    setVisible: (visible) => editors.formLibrary!.setVisible(visible),
+    canNavigate: ({ node }) =>
+      editors.formLibrary!.canNavigate(node.section === 'form-library' ? node.id : undefined),
+    activate: ({ node }) => {
+      if (node.id) editors.formLibrary!.open(node.id)
+    },
+  })
   add('story', 'story-editor', editors.storyEditor, {
     canNavigate: (selection) =>
       target(selection) !== 'story' ||

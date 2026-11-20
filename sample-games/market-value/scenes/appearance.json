@@ -1,0 +1,20 @@
+{
+  "schema-version": "1.0.0",
+  "id": "appearance",
+  "title": "Edit appearance",
+  "type": "game",
+  "screen": { "type": "grid", "grid": { "rows": 12, "columns": 16 } },
+  "components": [
+    {
+      "id": "creator",
+      "type": "form",
+      "form": "appearance",
+      "label": "Edit appearance",
+      "submitLabel": "Apply",
+      "cancelLabel": "Cancel",
+      "placement": { "row": 1, "column": 2, "rowSpan": 12, "columnSpan": 14 },
+      "continueScene": "adventure",
+      "backScene": "adventure"
+    }
+  ]
+}

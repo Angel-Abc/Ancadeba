@@ -15,6 +15,7 @@ import { ProjectEditorController } from './projectController.js'
 import type { Translate } from '@ancadeba/utilities'
 import { bindAssetsPanel } from './assetsPanel.js'
 import { bindRulesPanel } from './rulesPanel.js'
+import { bindFormLibrary } from './formLibrary.js'
 import { bindStoryEditor } from './storyEditor.js'
 import { bindActionBarPanel } from './actionBarPanel.js'
 import { bindStatusPanelEditor } from './statusPanelEditor.js'
@@ -78,6 +79,19 @@ export function createProjectSections({
   const treeElement = root.querySelector<HTMLElement>('#project-tree')
   let assetsPanel: ReturnType<typeof bindAssetsPanel> | undefined
   const rulesElement = treeElement && root.querySelector<HTMLElement>('#rules-panel')
+  const libraryElement = treeElement && root.querySelector<HTMLElement>('#form-library')
+
+  const formLibrary = libraryElement
+    ? bindFormLibrary(
+        libraryElement,
+        (command) => {
+          void controller.save(command)
+        },
+        t,
+        dependencies.createGraphics,
+      )
+    : undefined
+
   const storyElement = treeElement && root.querySelector<HTMLElement>('#story-editor')
   let storyEditor: ReturnType<typeof bindStoryEditor> | undefined
   const mapElement = treeElement && root.querySelector<HTMLElement>('#map-editor')
@@ -112,6 +126,22 @@ export function createProjectSections({
   const sections = [
     ...projectTreeSections,
     ...(mapElement ? [{ id: 'maps', labelKey: 'maps.heading', nodes: mapFileNodes }] : []),
+    ...(formLibrary
+      ? [
+          {
+            id: 'form-library',
+            labelKey: 'forms.heading',
+            nodes: (view: ProjectView): ProjectTreeNode[] =>
+              Object.values(view.forms ?? {}).map((form) => ({
+                key: 'form:' + form.id,
+                section: 'form-library',
+                kind: 'form',
+                id: form.id,
+                label: form.label,
+              })),
+          },
+        ]
+      : []),
     ...(storyElement ? [{ id: 'story', labelKey: 'story.heading', nodes: () => [] }] : []),
     ...(rulesElement ? [{ id: 'rules', labelKey: 'rules.heading', nodes: ruleFileNodes }] : []),
     ...(actionBarElement
@@ -537,15 +567,17 @@ export function createProjectSections({
           const sceneId = origin.parentId
 
           const destination =
-            kind === 'character-profile'
-              ? 'game'
-              : kind === 'asset'
-                ? 'asset:' + id
-                : kind === 'maps'
-                  ? 'map:' + id
-                  : kind === 'component'
-                    ? 'component:' + sceneId + ':' + id
-                    : kind
+            kind === 'form-library'
+              ? 'form:' + id
+              : kind === 'character-profile'
+                ? 'game'
+                : kind === 'asset'
+                  ? 'asset:' + id
+                  : kind === 'maps'
+                    ? 'map:' + id
+                    : kind === 'component'
+                      ? 'component:' + sceneId + ':' + id
+                      : kind
 
           if (!visit(destination)) return
 
@@ -614,6 +646,7 @@ export function createProjectSections({
     stylesheetEditor,
     componentEditor,
     storyEditor,
+    formLibrary,
     mapEditor,
     repairEditor,
     sceneControls,

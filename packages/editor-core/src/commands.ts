@@ -1,4 +1,5 @@
 import {
+  formSchema,
   dialogueSchema,
   questSchema,
   questLogComponentSchema,
@@ -30,7 +31,7 @@ import {
   inventoryItemActionSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
-  characterCreatorComponentSchema,
+  formComponentSchema,
   characterSheetComponentSchema,
   characterProfileSchema,
   itemPresentationSchema,
@@ -72,7 +73,7 @@ export const basicComponentSchema = z.discriminatedUnion('type', [
   actionInfoComponentSchema,
   backgroundImageComponentSchema,
   mapViewComponentSchema,
-  characterCreatorComponentSchema,
+  formComponentSchema,
   characterSheetComponentSchema,
 ])
 
@@ -282,6 +283,8 @@ export const commandSchema = z.discriminatedUnion('type', [
     sceneId: gameIdSchema,
     componentId: gameIdSchema,
   }),
+  z.strictObject({ type: z.literal('game.upsertForm'), form: formSchema }),
+  z.strictObject({ type: z.literal('game.removeForm'), formId: gameIdSchema }),
   z.strictObject({ type: z.literal('game.upsertDialogue'), dialogue: dialogueSchema }),
   z.strictObject({ type: z.literal('game.removeDialogue'), dialogueId: gameIdSchema }),
   z.strictObject({ type: z.literal('game.upsertQuest'), quest: questSchema }),
@@ -871,6 +874,14 @@ export const capabilities = {
         scenarioId: 'survive',
       },
     },
+    {
+      type: 'game.upsertForm',
+      example: {
+        type: 'game.upsertForm',
+        form: { 'schema-version': '1.0.0', id: 'survey', label: 'Survey', rows: [] },
+      },
+    },
+    { type: 'game.removeForm', example: { type: 'game.removeForm', formId: 'survey' } },
     {
       type: 'game.upsertDialogue',
       example: {

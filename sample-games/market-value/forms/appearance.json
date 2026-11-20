@@ -1,0 +1,32 @@
+{
+  "schema-version": "1.0.0",
+  "id": "appearance",
+  "label": "Appearance",
+  "rows": [
+    [
+      [
+        {
+          "type": "portrait"
+        }
+      ],
+      [
+        {
+          "type": "profile-field",
+          "field": "gender"
+        },
+        {
+          "type": "profile-field",
+          "field": "skin-tone"
+        },
+        {
+          "type": "profile-field",
+          "field": "hairstyle"
+        },
+        {
+          "type": "profile-field",
+          "field": "hair-color"
+        }
+      ]
+    ]
+  ]
+}

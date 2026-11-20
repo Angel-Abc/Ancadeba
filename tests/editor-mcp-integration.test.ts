@@ -113,6 +113,29 @@ describe('MCP and shared editor integration', () => {
     return gameSummarySchema.parse(object(result.structuredContent).data)
   }
 
+  it('creates a form with MCP, reopens it through the editor and reads a revised definition', async () => {
+    const form = { 'schema-version': '1.0.0', id: 'survey', label: 'Survey', rows: [] }
+
+    const upsert = async (label: string) => {
+      const result = await client.callTool({
+        name: 'ancadeba_apply_command',
+        arguments: {
+          expectedRevision: (await game()).revision,
+          command: { type: 'game.upsertForm', form: { ...form, label } },
+        },
+      })
+
+      expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false)
+    }
+
+    await upsert('Survey')
+    const reopened = await repository.load('basic')
+    expect(reopened.documents['forms/survey.json']).toEqual(form)
+    expect((await game()).game?.forms).toEqual(['survey'])
+    await upsert('Questionnaire')
+    expect((await game()).forms?.survey?.label).toBe('Questionnaire')
+  })
+
   it('exports the selected starter with saved edits and exact assets, preserving revision and history', async () => {
     const created = await client.callTool({
       name: 'ancadeba_create_project',

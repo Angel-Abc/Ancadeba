@@ -1,3 +1,4 @@
+import type { FormDraft } from './formRenderer.js'
 import type {
   ButtonComponentData,
   IGameActions,
@@ -10,7 +11,7 @@ import type {
   GameData,
   GameSaveFile,
   SceneInstance,
-  ConfirmCharacter,
+  SubmitForm,
 } from '@ancadeba/game-runtime'
 import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancadeba/schemas'
 import type { IGraphicResources } from './graphicResources.js'
@@ -24,7 +25,7 @@ type SceneNavigation = Extract<
 >
 
 export interface ComponentRendererOptions {
-  readonly confirmCharacter?: ConfirmCharacter | undefined
+  readonly submitForm?: SubmitForm | undefined
   readonly confirm?: GameConfirmation | undefined
   readonly game?: GameData | undefined
   readonly downloadSave?: ((file: GameSaveFile) => void) | undefined
@@ -46,7 +47,7 @@ export interface ComponentRendererOptions {
 }
 
 export interface ComponentRenderContext extends ComponentRendererOptions {
-  readonly characterDrafts?: Map<string, Map<string, string>> | undefined
+  readonly formDrafts?: Map<string, FormDraft> | undefined
   readonly suspendedBindings?: IGameBindings | undefined
   readonly actionInfo?: ActionInfo | undefined
   readonly scene?: SceneInstance | undefined

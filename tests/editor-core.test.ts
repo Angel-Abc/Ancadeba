@@ -355,7 +355,7 @@ describe('editor core', () => {
   })
 
   it('publishes machine-readable requests and examples for every command', () => {
-    expect(capabilities.commands).toHaveLength(58)
+    expect(capabilities.commands).toHaveLength(60)
     expect(capabilities.commands.map((command) => command.type)).toEqual(
       expect.arrayContaining([
         'combat.upsertSimulationScenario',

@@ -21,7 +21,7 @@ import type { IStateTransactions } from './stateTransactions.js'
 import type { GameSaves, GameSaveStore, IGameSaves } from './gameSaves.js'
 import { bindAuthoredGameSaves } from './authoredGameSaves.js'
 import { gameplayLifecycle } from './gameplayLifecycle.js'
-import { characterConfirmation, type ConfirmCharacter } from './characterCreation.js'
+import { formSubmission, type SubmitForm } from './formSubmission.js'
 
 export type EngineState = 'stopped' | 'starting' | 'running'
 
@@ -40,7 +40,7 @@ export interface EngineRuntimeServices {
 }
 
 export interface EngineHostSession {
-  readonly confirmCharacter?: ConfirmCharacter | undefined
+  readonly submitForm?: SubmitForm | undefined
   readonly prepareMenu?: () => boolean
   readonly saves?: IGameSaves | undefined
   readonly lifecycle: IGameLifecycle
@@ -358,9 +358,14 @@ export class Engine implements IEngine {
 
       const cleanup = this.host.mount(game, {
         ...(authored &&
-          game.characterProfile && {
-            confirmCharacter: characterConfirmation(lifecycle, playthroughFor, () =>
-              session.messages.settle(),
+          game.forms?.size && {
+            submitForm: formSubmission(
+              lifecycle,
+              playthroughFor,
+              () => session.messages.settle(),
+              (instance) => session.gameRuntimes.get(instance),
+              (error) => this.logger.error('Form', 'Form notification failed', error),
+              game,
             ),
           }),
         prepareMenu: () => session.messages.settle(),

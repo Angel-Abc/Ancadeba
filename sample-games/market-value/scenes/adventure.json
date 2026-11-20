@@ -7,7 +7,7 @@
   "screen": {
     "type": "grid",
     "grid": {
-      "rows": 12,
+      "rows": 13,
       "columns": 16
     }
   },
@@ -26,6 +26,13 @@
         "variant": "body",
         "align": "start"
       }
+    },
+    {
+      "id": "edit-appearance",
+      "type": "button",
+      "label": "Edit appearance",
+      "placement": { "row": 13, "column": 11, "rowSpan": 1, "columnSpan": 5 },
+      "action": { "type": "enter-scene", "scene": "appearance" }
     },
     {
       "id": "menu",

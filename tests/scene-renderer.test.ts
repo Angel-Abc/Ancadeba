@@ -1,5 +1,9 @@
 /// <reference lib="dom" />
-import { readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { exportGame } from '../tooling/game-export.js'
+import { readFile, mkdtemp, rm } from 'node:fs/promises'
 import { createStarterProject } from '@ancadeba/editor-core'
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test'
 import {
@@ -83,6 +87,7 @@ class TestElement extends EventTarget {
   tabIndex = -1
   title = ''
   value = ''
+  checked = false
   name = ''
   disabled = false
   get unavailable(): boolean {
@@ -568,6 +573,241 @@ describe('character creation and stat discovery', () => {
 
     return form
   }
+
+  it('plays the exported Market Value creator and appearance editor using the same form', async () => {
+    const folder = await mkdtemp(join(tmpdir(), 'ancadeba-form-export-'))
+    onTestFinished(() => rm(folder, { recursive: true, force: true }))
+    const output = join(folder, 'published')
+    await exportGame({
+      gameDirectory: fileURLToPath(new URL('../sample-games/market-value', import.meta.url)),
+      outputDirectory: output,
+    })
+    const target = new TestDocument().createElement('main')
+
+    const source: IResourceSource = {
+      readText: (path) => readFile(join(output, 'game', path), 'utf8'),
+      readBytes: (path) => readFile(join(output, 'game', path)),
+    }
+
+    const engine = new Engine(
+      new GameLoader(new JsonResourceLoader(source, logger)),
+      new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      timing,
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    click(target, 'New game')
+    choose(target, 'hairstyle', 'waves')
+    confirm(target)
+    click(target, 'Edit appearance')
+    expect(target.find((node) => node.name === 'hairstyle')?.value).toBe('waves')
+    choose(target, 'hairstyle', 'tied')
+    click(target, 'Cancel')
+    click(target, 'Edit appearance')
+    expect(target.find((node) => node.name === 'hairstyle')?.value).toBe('waves')
+    choose(target, 'hairstyle', 'tied')
+    confirm(target)
+    click(target, 'Game menu (Escape)')
+    click(target, 'Character')
+    expect(target.textContent).toContain('Tied back')
+  })
+
+  it.each([false, true])(
+    'submits four ordinary inputs atomically through localization and rejection, with quest effects %s',
+    async (withQuest) => {
+      const target = new TestDocument().createElement('main')
+
+      const placement = {
+        id: 'survey',
+        type: 'form',
+        form: 'survey',
+        label: 'Survey',
+        submitLabelKey: 'send',
+        action: 'qualify',
+        placement: { row: 1, column: 1 },
+      }
+
+      const scene = (id: string, type: string, components: unknown[]) => ({
+        'schema-version': '1.0.0',
+        id,
+        type,
+        title: id,
+        screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
+        components,
+      })
+
+      const documents = {
+        'game.json': {
+          'schema-version': '1.0.0',
+          id: 'test',
+          title: 'Survey',
+          version: '1',
+          'initial-scene': 'start',
+          scenes: ['start', 'play', 'unused'],
+          forms: ['survey'],
+          quests: ['welcome'],
+          rules: ['main'],
+          languages: { default: 'en', available: ['en', 'nl'] },
+        },
+        'languages/en/messages.json': { name: 'Your name', send: 'Submit answers' },
+        'languages/nl/messages.json': { name: 'Je naam', send: 'Versturen' },
+        'scenes/start.json': scene('start', 'stand-alone', [
+          { ...placement, continueScene: withQuest ? 'play' : 'unused' },
+        ]),
+        'scenes/play.json': scene('play', 'game', [placement]),
+        'scenes/unused.json': scene('unused', 'game', []),
+        'quests/welcome.json': {
+          'schema-version': '1.0.0',
+          id: 'welcome',
+          label: 'Welcome',
+          when: [{ type: 'state-is', path: ['name'], value: 'Player' }],
+          stages: [
+            {
+              id: 'survey',
+              label: 'Survey',
+              objectives: [
+                {
+                  id: 'ready',
+                  label: 'Ready',
+                  when: [{ type: 'state-is', path: ['ready'], value: true }],
+                },
+              ],
+            },
+          ],
+        },
+        'forms/survey.json': {
+          'schema-version': '1.0.0',
+          id: 'survey',
+          label: 'Survey',
+          rows: [
+            [
+              [
+                { type: 'text', label: 'Name', labelKey: 'name', path: ['name'], default: '' },
+                {
+                  type: 'choice',
+                  label: 'Route',
+                  path: ['route'],
+                  options: [
+                    { id: 'short', label: 'Short' },
+                    { id: 'long', label: 'Long' },
+                  ],
+                  default: 'short',
+                },
+              ],
+              [
+                { type: 'number', label: 'Pace', path: ['pace'], default: 2 },
+                { type: 'checkbox', label: 'Ready', path: ['ready'], default: false },
+              ],
+            ],
+          ],
+        },
+        'rules/main.json': {
+          state: [
+            { path: ['name'], value: 'Initial' },
+            { path: ['route'], value: 'short' },
+            { path: ['pace'], type: 'number' },
+            { path: ['ready'], value: false },
+          ],
+          actions: {
+            qualify: [
+              {
+                when: [
+                  { type: 'state-is', path: ['ready'], value: true },
+                  { type: 'scene-is', scene: 'start' },
+                ],
+                effects: withQuest
+                  ? [{ type: 'start-quest', quest: 'welcome' }]
+                  : [{ type: 'enter-scene', scene: 'play' }],
+              },
+              {
+                when: [{ type: 'state-is', path: ['ready'], value: true }],
+                effects: [
+                  ...(withQuest ? [{ type: 'complete-quest', quest: 'welcome' }] : []),
+                  { type: 'append-log', text: 'Survey saved' },
+                ],
+              },
+            ],
+          },
+          log: { path: ['log'], capacity: 5, initial: [] },
+        },
+      }
+
+      const source: IResourceSource = {
+        readText: (path) =>
+          Promise.resolve(
+            JSON.stringify(Object.entries(documents).find(([file]) => file === path)?.[1]),
+          ),
+        readBytes: async () => new Uint8Array(),
+      }
+
+      const engine = new Engine(
+        new GameLoader(new JsonResourceLoader(source, logger)),
+        new DomEngineHost(target.asElement()),
+        logger,
+        () => new MessageBus<EngineMessages>(),
+        timing,
+      )
+
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      const control = (id: string) => target.find((node) => node.name === JSON.stringify([id]))!
+
+      const change = (id: string, value: string | boolean) => {
+        const input = control(id)
+
+        if (typeof value === 'boolean') input.checked = value
+        else input.value = value
+        input.dispatchEvent(
+          new Event(typeof value === 'boolean' || input.tagName === 'SELECT' ? 'change' : 'input'),
+        )
+      }
+
+      change('name', 'Player')
+      change('route', 'long')
+      change('pace', '3.5')
+      confirm(target)
+      expect(engine.lifecycle!.currentGame).toBeUndefined()
+      expect(target.textContent).toContain('Select Ready to continue')
+      engine.game!.localization!.select('nl')
+      expect(control('name').value).toBe('Player')
+      expect(target.textContent).toContain('Je naam')
+      expect(target.textContent).toContain('Versturen')
+      change('ready', true)
+
+      if (withQuest) {
+        change('name', 'Guest')
+        confirm(target)
+        expect(engine.lifecycle!.currentGame).toBeUndefined()
+        expect(control('name').value).toBe('Guest')
+        change('name', 'Player')
+      }
+
+      confirm(target)
+      expect(engine.lifecycle!.activeScene?.data.id).toBe('play')
+
+      const binding = (id: string) =>
+        engine.lifecycle!.currentGame!.bindings!.read({ source: 'game.state', path: [id] })
+
+      expect(binding('pace')).toEqual({ status: 'resolved', value: 3.5 })
+      expect(control('route').value).toBe('long')
+      change('ready', false)
+      change('name', 'Replacement')
+      confirm(target)
+      expect(binding('name')).toEqual({ status: 'resolved', value: 'Player' })
+      expect(binding('ready')).toEqual({ status: 'resolved', value: true })
+      change('ready', true)
+      confirm(target)
+      confirm(target)
+      expect(binding('name')).toEqual({ status: 'resolved', value: 'Replacement' })
+      expect(binding('log')).toEqual({ status: 'resolved', value: 'Survey saved' })
+
+      if (withQuest)
+        expect(engine.lifecycle!.currentGame!.quests!.snapshot('welcome')?.status).toBe('completed')
+    },
+  )
 
   it.each([true, false])(
     'creates and restores the character, including in preview mode %s',

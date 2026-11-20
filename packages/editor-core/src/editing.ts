@@ -1,6 +1,6 @@
 import { editStory } from './storyEditing.js'
 import { editLeveling } from './levelingEditing.js'
-import { gameSchema, sceneSchema } from '@ancadeba/schemas'
+import { formFile, gameSchema, sceneSchema } from '@ancadeba/schemas'
 import { commandSchema, type EditorCommand } from './commands.js'
 import { EditorError, object, type CommandResult, type ProjectSnapshot } from './project.js'
 import { validateProject } from './validation.js'
@@ -70,6 +70,31 @@ export function applyCommand(project: ProjectSnapshot, input: EditorCommand): Co
   } else if (command.type === 'game.updateLocalization') {
     structure = editLocalization(documents, game, command)
     changedFiles.push(...structure.changedFiles)
+  } else if (command.type === 'game.upsertForm' || command.type === 'game.removeForm') {
+    const id = command.type === 'game.upsertForm' ? command.form.id : command.formId
+    const file = formFile(id)
+    const ids = game.forms ?? []
+
+    if (command.type === 'game.removeForm') {
+      if (!ids.includes(id)) throw new EditorError(404, 'form_not_found', 'Form does not exist')
+      delete documents[file]
+      documents['game.json'] = {
+        ...object(documents['game.json']),
+        forms: ids.filter((entry) => entry !== id),
+      }
+      structure = { removedFiles: [file], changedFiles: [file, 'game.json'] }
+    } else {
+      if (!ids.includes(id) && Object.hasOwn(documents, file))
+        throw new EditorError(409, 'form_exists', 'Form already exists')
+      documents[file] = command.form
+
+      if (!ids.includes(id)) {
+        documents['game.json'] = { ...object(documents['game.json']), forms: [...ids, id] }
+        structure = { createdFiles: [file], changedFiles: [file, 'game.json'] }
+      }
+    }
+
+    changedFiles.push(...(structure?.changedFiles ?? [file]))
   } else if (command.type === 'game.upsertInventory') {
     structure = editInventory(documents, game, command)
     changedFiles.push(...structure.changedFiles)

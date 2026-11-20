@@ -44,6 +44,7 @@ export type Specialist =
   | 'localization'
   | 'maps'
   | 'component'
+  | 'form-library'
   | 'character-profile'
 
 export type OpenSpecialist = (kind: Specialist, id: string) => void
@@ -117,7 +118,9 @@ export function inspectorFields(context: FieldContext) {
       )
     }
 
-    if (draft.type === 'character-sheet' || draft.type === 'character-creator')
+    if (draft.type === 'form') main.push(link('form-library', draft.form, 'forms.open'))
+
+    if (draft.type === 'character-sheet')
       main.push(link('character-profile', 'character-profile', 'inspector.openCharacterProfile'))
   } else
     switch (draft.type) {

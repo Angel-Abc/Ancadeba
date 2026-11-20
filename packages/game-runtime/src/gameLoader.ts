@@ -1,4 +1,6 @@
 import {
+  formFile,
+  formSchema,
   dialogueFile,
   questFile,
   dialogueSchema,
@@ -125,6 +127,14 @@ export class GameLoader implements IGameLoader {
       ),
     )
 
+    const forms = new Map(
+      await Promise.all(
+        (definition.forms ?? []).map(
+          async (id) => [id, await this.resources.load(formFile(id), formSchema)] as const,
+        ),
+      ),
+    )
+
     const dialogues = new Map(
       await Promise.all(
         (definition.dialogues ?? []).map(
@@ -164,6 +174,9 @@ export class GameLoader implements IGameLoader {
         ]),
         [...dialogues].map(([id, value]) => [id, gameplaySaveDefinition(dialogueSchema, value)]),
         [...quests].map(([id, value]) => [id, gameplaySaveDefinition(questSchema, value)]),
+        ...(forms.size
+          ? [[...forms].map(([id, form]) => [id, gameplaySaveDefinition(formSchema, form)])]
+          : []),
         styling,
       ]
 
@@ -209,6 +222,7 @@ export class GameLoader implements IGameLoader {
         libraries,
         dialogues,
         quests,
+        forms,
       )
 
       return {
@@ -261,6 +275,7 @@ export class GameLoader implements IGameLoader {
           libraries,
           dialogues,
           quests,
+          forms,
         ),
         ...styling,
         language: tag,
@@ -289,6 +304,9 @@ export class GameLoader implements IGameLoader {
       },
       get scenes() {
         return localization.current.scenes
+      },
+      get forms() {
+        return variants.get(localization.current.language)?.forms
       },
       get dialogues() {
         return variants.get(localization.current.language)?.dialogues

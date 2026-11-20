@@ -47,6 +47,9 @@ import type { TextTemplate } from './textBindings.js'
 import {
   assertGameLanguages,
   assertBackgroundImageReference,
+  type FormDefinition,
+  formIssues,
+  localizeForm,
   characterProfileIssues,
   assertGraphicReference,
   validateInventorySources,
@@ -101,7 +104,7 @@ export type SceneComponentData =
           | 'save-status'
           | 'save-point'
           | 'action-info'
-          | 'character-creator'
+          | 'form'
           | 'character-sheet'
       }
     >
@@ -158,6 +161,7 @@ export interface GameData {
   readonly saveCompatibility?: string
   /** Earlier fingerprint that included decorative scene backgrounds. */
   readonly legacySaveCompatibility?: string
+  readonly forms?: ReadonlyMap<string, FormDefinition> | undefined
   readonly dialogues?: ReadonlyMap<string, DialogueDefinition> | undefined
   readonly quests?: ReadonlyMap<string, QuestDefinition> | undefined
   readonly leveling?: ReadonlyMap<string, LevelingProfile> | undefined
@@ -199,6 +203,7 @@ export function assembleGameData(
   combatLibraries: ReadonlyMap<string, CombatLibrary> = new Map(),
   dialogueDefinitions: ReadonlyMap<string, DialogueDefinition> = new Map(),
   questDefinitions: ReadonlyMap<string, QuestDefinition> = new Map(),
+  formDefinitions: ReadonlyMap<string, FormDefinition> = new Map(),
 ): GameData {
   assertGameLanguages(definition, sceneDefinitions)
 
@@ -240,10 +245,11 @@ export function assembleGameData(
     ruleTranslation?.fallback,
   )
 
-  const validated = sources.length ? validation : undefined
+  const validated = sources.length || definition.forms?.length ? validation : undefined
 
   const issue =
     validation.issues[0] ??
+    formIssues(definition, formDefinitions, sceneDefinitions, validation.rules, assets)[0] ??
     characterProfileIssues(definition, sceneDefinitions, validation.rules, assets)[0]
 
   if (issue) throw new Error(`${issue.file} (${issue.path.join('.')}): ${issue.message}`)
@@ -717,6 +723,11 @@ export function assembleGameData(
   }
 
   return {
+    ...(formDefinitions.size && {
+      forms: new Map(
+        [...formDefinitions].map(([id, form]) => [id, localizeForm(form, ruleTranslation)]),
+      ),
+    }),
     ...(dialogues.size ? { dialogues } : {}),
     ...(quests.size ? { quests } : {}),
     ...(leveling.size && { leveling }),

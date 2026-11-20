@@ -66,3 +66,5 @@ export * from './browserGameSaveStore.js'
 export * from './mapTileAppearance.js'
 
 export * from './mapCellAppearance.js'
+
+export { renderForm } from './formRenderer.js'

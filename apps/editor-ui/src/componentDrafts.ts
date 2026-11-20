@@ -12,7 +12,7 @@ export const creatableComponentTypes = [
   'background-image',
   'language-select',
   'quest-log',
-  'character-creator',
+  'form',
   'character-sheet',
 ] as const
 
@@ -83,14 +83,19 @@ export function createComponentDraft(
 
   if (type === 'language-select') return { id, type, label: 'Language', placement }
 
-  if (type === 'character-creator')
+  if (type === 'form')
     return {
       id,
       type,
-      label: 'Create character',
+      label: view.forms?.[view.game?.forms?.[0] ?? '']?.label ?? 'Form',
+      form: view.game?.forms?.[0] ?? '',
+      submitLabel: 'Submit',
+      cancelLabel: 'Cancel',
       placement,
       continueScene:
-        view.scenes.find((entry) => entry.id !== sceneId && entry.type === 'game')?.id ?? '',
+        scene.type === 'stand-alone'
+          ? view.scenes.find((entry) => entry.type === 'game')?.id
+          : undefined,
     }
 
   if (type === 'character-sheet') return { id, type, label: 'Character', placement, rows: [] }

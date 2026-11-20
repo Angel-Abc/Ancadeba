@@ -216,4 +216,4 @@ export * from './savePoints.js'
 
 export * from './combatCollaborators.js'
 
-export type { ConfirmCharacter } from './characterCreation.js'
+export type { SubmitForm } from './formSubmission.js'

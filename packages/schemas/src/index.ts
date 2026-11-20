@@ -106,6 +106,8 @@ export * from './runtimeText.js'
 
 export * from './saveCompatibility.js'
 
+export * from './forms.js'
+
 export * from './characterProfile.js'
 
 export * from './characterProfileValidation.js'

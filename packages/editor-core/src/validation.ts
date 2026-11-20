@@ -1,4 +1,8 @@
 import {
+  formFile,
+  formSchema,
+  formIssues,
+  localizeForm,
   dialogueSchema,
   dialogueFile,
   questSchema,
@@ -142,6 +146,14 @@ export function validateProject(
       const result = check(levelingFile(id), levelingProfileSchema)
 
       return result.success ? [[id, result.data] as const] : []
+    }),
+  )
+
+  const forms = new Map(
+    (game.data.forms ?? []).flatMap((id) => {
+      const form = check(formFile(id), formSchema).data
+
+      return form ? [[id, form] as const] : []
     }),
   )
 
@@ -357,6 +369,7 @@ export function validateProject(
     if (fallback && scenes.size === game.data.scenes.length) {
       for (const [language, messages] of catalogs) {
         try {
+          for (const form of forms.values()) localizeForm(form, { fallback, messages })
           localizeDefinitions(game.data, scenes, { fallback, messages })
 
           if (inventory) localizeInventory(inventory, { fallback, messages })
@@ -391,6 +404,9 @@ export function validateProject(
 
   const validatedRules = validateRuleSources(sources, scenes, maps, inventory, defaultMessages)
   const mergedRules = validatedRules.rules
+
+  for (const issue of formIssues(game.data, forms, scenes, mergedRules, assets?.data))
+    diagnostics.push({ code: 'invalid_form', ...issue })
 
   for (const issue of characterProfileIssues(game.data, scenes, mergedRules, assets?.data))
     diagnostics.push({ ...issue, code: 'invalid_character_profile' })
@@ -520,6 +536,8 @@ export function validateProject(
     if (inventory && !game.data.languages) localizeInventory(inventory)
 
     if (!game.data.languages) {
+      for (const form of forms.values()) localizeForm(form)
+
       for (const combat of combats.values()) localizeCombat(combat)
 
       for (const profile of leveling.values()) localizeLeveling(profile)

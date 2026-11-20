@@ -52,23 +52,8 @@ export function characterProfileIssues(
     for (const [index, component] of scene.components.entries()) {
       const path = ['components', index]
 
-      if (component.type === 'character-creator' || component.type === 'character-sheet') {
-        if (!profile) add(file, path, 'Define the game character profile first')
-
-        if (component.type === 'character-creator') {
-          if (
-            scenes.get(component.continueScene)?.type !== 'game' ||
-            component.continueScene === id
-          )
-            add(file, [...path, 'continueScene'], 'Choose another game scene to continue to')
-
-          if (
-            component.backScene &&
-            (scenes.get(component.backScene)?.type !== scene.type || component.backScene === id)
-          )
-            add(file, [...path, 'backScene'], 'Choose another scene of the same type to go back to')
-        }
-      }
+      if (component.type === 'character-sheet' && !profile)
+        add(file, path, 'Define the game character profile first')
 
       if (component.type === 'status-panel' || component.type === 'character-sheet') {
         for (const [rowIndex, row] of component.rows.entries()) {

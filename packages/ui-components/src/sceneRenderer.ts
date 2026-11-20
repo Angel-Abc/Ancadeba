@@ -1,3 +1,4 @@
+import type { FormDraft } from './formRenderer.js'
 import type { IGameLifecycle, SceneInstance } from '@ancadeba/game-runtime'
 import { ComponentRenderer } from './componentRenderer.js'
 import { ActionInfo } from './actionInfo.js'
@@ -14,7 +15,7 @@ export interface SceneRendererOptions extends ComponentRendererOptions {
 
 /** Renders only the active scene. Geometry comes from data; appearance comes from CSS. */
 export class SceneRenderer {
-  private readonly characterDrafts = new WeakMap<SceneInstance, Map<string, Map<string, string>>>()
+  private readonly formDrafts = new WeakMap<SceneInstance, Map<string, FormDraft>>()
   private scene: RenderedComponent | undefined
   private unsubscribe: (() => void) | undefined
   private unsubscribeLanguage: (() => void) | undefined
@@ -129,11 +130,11 @@ export class SceneRenderer {
       },
     }
 
-    let drafts = this.characterDrafts.get(scene)
+    let drafts = this.formDrafts.get(scene)
 
-    if (!drafts && data.components.some(({ type }) => type === 'character-creator')) {
+    if (!drafts && data.components.some(({ type }) => type === 'form')) {
       drafts = new Map()
-      this.characterDrafts.set(scene, drafts)
+      this.formDrafts.set(scene, drafts)
     }
 
     const suspended = this.lifecycle.suspendedScene
@@ -142,7 +143,7 @@ export class SceneRenderer {
       ...this.options,
       document,
       scene,
-      characterDrafts: drafts,
+      formDrafts: drafts,
       suspendedBindings: suspended?.type === 'game' ? suspended.game.bindings : undefined,
       actionInfo: data.components.some((component) => component.type === 'action-info')
         ? new ActionInfo()

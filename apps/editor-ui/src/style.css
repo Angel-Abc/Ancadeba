@@ -870,6 +870,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor,
     #assets-panel
@@ -888,6 +889,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor,
     #assets-panel
@@ -904,6 +906,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor,
     #assets-panel
@@ -921,6 +924,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -941,6 +945,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -959,6 +964,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -976,6 +982,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -994,6 +1001,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -1011,6 +1019,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -1032,6 +1041,7 @@ label[for='graphic-existing'] {
     #shop-editor,
     #combat-editor,
     #component-editor,
+    #form-library,
     #story-editor,
     #leveling-editor
   )
@@ -2410,6 +2420,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   }
   :is(
       #combat-editor,
+      #form-library,
       #story-editor,
       #rules-panel,
       #leveling-editor,
