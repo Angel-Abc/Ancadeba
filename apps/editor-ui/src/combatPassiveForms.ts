@@ -1,3 +1,4 @@
+import { selectedEntries } from './specialistEntries.js'
 import {
   combatPassiveSchema,
   bindingAliasSchema,
@@ -81,6 +82,7 @@ export function combatPassivesForm(
   view: ProjectView,
   library: CombatLibrary,
   render: () => void,
+  selectedId?: string,
 ): HTMLElement {
   const { group, input, button, translation, t, create } = controls
   const text = (key: string) => t(`combat.passives.${key}`)
@@ -91,7 +93,7 @@ export function combatPassivesForm(
   return group(
     text('heading'),
     help,
-    ...Object.entries(library.passives ?? {}).map(([id, passive]) => {
+    ...selectedEntries(library.passives, selectedId).map(([id, passive]) => {
       const mechanics = {
         resources: {},
         phases: {},

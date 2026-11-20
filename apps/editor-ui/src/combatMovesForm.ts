@@ -1,4 +1,4 @@
-import { fieldPath } from './specialistEntries.js'
+import { fieldPath, selectedEntries } from './specialistEntries.js'
 import { combatRequirementsForm } from './combatRequirementsForm.js'
 import { combatScalingForm } from './combatScalingForm.js'
 import type { CombatSource } from '@ancadeba/schemas'
@@ -11,9 +11,17 @@ export function combatMovesForm(
   view: ProjectView,
   draft: Pick<CombatSource, 'moves' | 'statuses' | 'mechanics'>,
   render: () => void,
-  onAdd?: (id: string) => void,
-  availableStatuses = draft.statuses,
-  actors: readonly { id: string; label: string }[] = [],
+  {
+    onAdd,
+    availableStatuses = draft.statuses,
+    actors = [],
+    selectedId,
+  }: {
+    onAdd?: (id: string) => void
+    availableStatuses?: CombatSource['statuses']
+    actors?: readonly { id: string; label: string }[]
+    selectedId?: string
+  } = {},
 ): HTMLElement[] {
   const { input, select, button, group, fold, translation, t } = controls
   const keys = translationChoices(view)
@@ -62,12 +70,12 @@ export function combatMovesForm(
     ),
   ]
 
-  for (const [id, move] of Object.entries(draft.moves))
+  for (const [id, move] of selectedEntries(draft.moves, selectedId))
     result.push(
       fold(
         `move:${id}`,
         summary(id, move),
-        false,
+        selectedId !== undefined,
         group(
           t('combat.moveTitle', { id }),
           ...presentation('', move),

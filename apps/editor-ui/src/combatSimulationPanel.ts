@@ -37,6 +37,7 @@ interface StartingConditions {
 
 function createScenarioDraftState(): CombatScenarioDraftState {
   return {
+    entries: {},
     encounter: '',
     selected: '',
     dirty: false,
@@ -65,6 +66,7 @@ export function bindCombatSimulationPanel(
   let base: CombatSimulationSetup | undefined
   let config: StartingConditions | undefined
   let simulation: CombatSimulation | undefined
+  let mode: 'interactive' | 'scenarios' = 'interactive'
   let selectedMove = ''
   let selectedItem = ''
   let selectedTarget = ''
@@ -290,7 +292,24 @@ export function bindCombatSimulationPanel(
     const alert = create('p')
     alert.setAttribute('role', 'alert')
     alert.textContent = error
-    root.append(heading, help, alert)
+    const views = create('div')
+    views.className = 'specialist-views'
+    views.setAttribute('role', 'group')
+    views.setAttribute('aria-label', text('heading'))
+
+    for (const id of ['interactive', 'scenarios'] as const) {
+      const tab = button(text(id), () => {
+        mode = id
+        render()
+        root.querySelector<HTMLButtonElement>('[data-simulation-mode="' + id + '"]')?.focus()
+      })
+
+      tab.setAttribute('aria-pressed', String(id === mode))
+      tab.setAttribute('data-simulation-mode', id)
+      views.append(tab)
+    }
+
+    root.append(heading, views, alert)
 
     if (!definition || !base || !config) return
     const currentDefinition = definition
@@ -301,237 +320,246 @@ export function bindCombatSimulationPanel(
     const statuses = Object.keys(definition.statuses ?? {})
 
     if (!statuses.includes(statusId)) statusId = statuses[0] ?? ''
-    root.append(
-      group(
-        text('starting'),
-        numeric(text('seed'), setup.seed, (value) => {
-          setup.seed = value
-        }),
-        numeric(text('startingRound'), setup.round, (value) => {
-          setup.round = value
-        }),
-        ...actors.flatMap((actor) => {
-          const inventory = base?.equipmentContext?.inventory
-          const owner = actor.equipmentOwner
 
-          if (!inventory || !owner) return []
+    const startingSettings = controls.fold(
+      'simulation-setup',
+      text('starting'),
+      false,
+      help,
+      numeric(text('seed'), setup.seed, (value) => {
+        setup.seed = value
+      }),
+      numeric(text('startingRound'), setup.round, (value) => {
+        setup.round = value
+      }),
+      ...actors.flatMap((actor) => {
+        const inventory = base?.equipmentContext?.inventory
+        const owner = actor.equipmentOwner
 
-          return Object.keys(inventory.owners[owner]?.equipmentSlots ?? {}).map((slot) =>
-            select(
-              t('equipment.combat.simSlot', { actor: actor.id, slot }),
-              setup.loadout?.[actor.id]?.[slot] === undefined
-                ? '@inherit'
-                : (setup.loadout[actor.id]![slot] ?? ''),
-              [
-                ['@inherit', t('equipment.combat.inheritLoadout')],
-                ['', t('equipment.combat.emptySlot')],
-                ...Object.entries(inventory.items)
-                  .filter(
-                    ([, item]) =>
-                      item.placement.type !== 'inside' &&
-                      item.placement.owner === owner &&
-                      inventory.itemTypes[item.itemType]?.equipmentSlots.includes(slot),
-                  )
-                  .map(
-                    ([id, item]) => [id, inventory.itemTypes[item.itemType]?.label || id] as const,
-                  ),
-              ],
-              (value) => {
-                const loadout = (setup.loadout ??= {})
-                const slots = (loadout[actor.id] ??= {})
+        if (!inventory || !owner) return []
 
-                if (value === '@inherit') delete slots[slot]
-                else slots[slot] = value || null
-              },
-            ),
-          )
-        }),
-        ...actors.map((actor) =>
-          numeric(
-            t('combat.simulation.health', {
-              actor: actor.id,
-              maximum: base!.maximumHealth[actor.id]!,
-            }),
-            setup.health[actor.id]!,
+        return Object.keys(inventory.owners[owner]?.equipmentSlots ?? {}).map((slot) =>
+          select(
+            t('equipment.combat.simSlot', { actor: actor.id, slot }),
+            setup.loadout?.[actor.id]?.[slot] === undefined
+              ? '@inherit'
+              : (setup.loadout[actor.id]![slot] ?? ''),
+            [
+              ['@inherit', t('equipment.combat.inheritLoadout')],
+              ['', t('equipment.combat.emptySlot')],
+              ...Object.entries(inventory.items)
+                .filter(
+                  ([, item]) =>
+                    item.placement.type !== 'inside' &&
+                    item.placement.owner === owner &&
+                    inventory.itemTypes[item.itemType]?.equipmentSlots.includes(slot),
+                )
+                .map(
+                  ([id, item]) => [id, inventory.itemTypes[item.itemType]?.label || id] as const,
+                ),
+            ],
             (value) => {
-              setup.health[actor.id] = value
+              const loadout = (setup.loadout ??= {})
+              const slots = (loadout[actor.id] ??= {})
+
+              if (value === '@inherit') delete slots[slot]
+              else slots[slot] = value || null
             },
           ),
-        ),
-        ...Object.keys(setup.resources).map((id) =>
-          numeric(t('combat.simulation.resource', { id }), setup.resources[id]!, (value) => {
-            setup.resources[id] = value
+        )
+      }),
+      ...actors.map((actor) =>
+        numeric(
+          t('combat.simulation.health', {
+            actor: actor.id,
+            maximum: base!.maximumHealth[actor.id]!,
           }),
+          setup.health[actor.id]!,
+          (value) => {
+            setup.health[actor.id] = value
+          },
         ),
-        ...(Object.keys(definition.mechanics?.phases ?? {}).length
-          ? [
+      ),
+      ...Object.keys(setup.resources).map((id) =>
+        numeric(t('combat.simulation.resource', { id }), setup.resources[id]!, (value) => {
+          setup.resources[id] = value
+        }),
+      ),
+      ...(Object.keys(definition.mechanics?.phases ?? {}).length
+        ? [
+            select(
+              text('startingPhase'),
+              setup.phase,
+              Object.keys(definition.mechanics!.phases),
+              (value) => {
+                setup.phase = value
+              },
+            ),
+          ]
+        : []),
+      ...(statuses.length
+        ? [
+            group(
+              text('startingStatuses'),
               select(
-                text('startingPhase'),
-                setup.phase,
-                Object.keys(definition.mechanics!.phases),
+                text('statusActor'),
+                statusActor,
+                actors.map((actor) => actor.id),
                 (value) => {
-                  setup.phase = value
+                  statusActor = value
                 },
               ),
-            ]
-          : []),
-        ...(statuses.length
-          ? [
-              group(
-                text('startingStatuses'),
-                select(
-                  text('statusActor'),
-                  statusActor,
-                  actors.map((actor) => actor.id),
-                  (value) => {
-                    statusActor = value
-                  },
-                ),
-                select(text('status'), statusId, statuses, (value) => {
-                  statusId = value
-                  stacks = 1
-                  intensity = currentDefinition.statuses![value]?.intensity?.initial ?? 1
-                  duration = currentDefinition.statuses![value]?.duration ?? 1
-                  render()
-                }),
-                numeric(text('stacks'), stacks, (value) => {
-                  stacks = value
-                }),
-                numeric(text('intensity'), intensity, (value) => {
-                  intensity = value
-                }),
-                numeric(text('duration'), duration, (value) => {
-                  duration = value
-                }),
-                button(
-                  text('addStatus'),
-                  act(() => {
-                    const active = {
-                      id: statusId,
-                      source: statusActor,
-                      remaining: duration,
-                      stacks,
-                      intensity,
-                    }
+              select(text('status'), statusId, statuses, (value) => {
+                statusId = value
+                stacks = 1
+                intensity = currentDefinition.statuses![value]?.intensity?.initial ?? 1
+                duration = currentDefinition.statuses![value]?.duration ?? 1
+                render()
+              }),
+              numeric(text('stacks'), stacks, (value) => {
+                stacks = value
+              }),
+              numeric(text('intensity'), intensity, (value) => {
+                intensity = value
+              }),
+              numeric(text('duration'), duration, (value) => {
+                duration = value
+              }),
+              button(
+                text('addStatus'),
+                act(() => {
+                  const active = {
+                    id: statusId,
+                    source: statusActor,
+                    remaining: duration,
+                    stacks,
+                    intensity,
+                  }
 
-                    setup.statuses[statusActor] = [
-                      ...(setup.statuses[statusActor] ?? []).filter(
-                        (entry) => entry.id !== statusId,
-                      ),
-                      active,
-                    ]
-                  }),
-                ),
-                ...Object.entries(setup.statuses).flatMap(([actor, entries]) =>
-                  entries.map((entry) =>
-                    group(
-                      `${actor}: ${entry.id}`,
-                      pre(entry),
-                      button(
-                        t('combat.simulation.removeStatus', { actor, status: entry.id }),
-                        act(() => {
-                          setup.statuses[actor] = setup.statuses[actor]!.filter(
-                            (active) => active.id !== entry.id,
-                          )
-                        }),
-                      ),
+                  setup.statuses[statusActor] = [
+                    ...(setup.statuses[statusActor] ?? []).filter((entry) => entry.id !== statusId),
+                    active,
+                  ]
+                }),
+              ),
+              ...Object.entries(setup.statuses).flatMap(([actor, entries]) =>
+                entries.map((entry) =>
+                  group(
+                    `${actor}: ${entry.id}`,
+                    pre(entry),
+                    button(
+                      t('combat.simulation.removeStatus', { actor, status: entry.id }),
+                      act(() => {
+                        setup.statuses[actor] = setup.statuses[actor]!.filter(
+                          (active) => active.id !== entry.id,
+                        )
+                      }),
                     ),
                   ),
                 ),
               ),
-            ]
-          : []),
-        button(
-          text('start'),
-          act(() => {
-            prepare()
-            const starting = config!
-            simulation = new CombatSimulation(definition!, {
-              ...base!,
-              seed: starting.seed,
-              round: starting.round,
-              health: starting.health,
-              resources: starting.resources,
-              ...(starting.phase ? { phase: starting.phase } : {}),
-              statuses: starting.statuses,
-              cooldowns: starting.cooldowns,
-              loadout: starting.loadout,
-            })
-            sourceAtStart = cloneCombatRules(source!)
-            inspectIndex = -1
-          }, true),
-        ),
-      ),
+            ),
+          ]
+        : []),
     )
 
-    root.append(
-      combatScenarioForm(
-        controls,
-        view,
-        source,
-        definition,
-        scenarioState,
-        {
-          get simulation() {
-            return signature === fingerprint() ? simulation : undefined
-          },
-          starting: () => ({ ...config!, phase: config!.phase || undefined }),
-          run: (scenario) => {
-            if (signature !== fingerprint()) {
-              invalidateResults()
-              config = undefined
-              simulation = undefined
+    const start = button(
+      text('start'),
+      act(() => {
+        prepare()
+        const starting = config!
+        simulation = new CombatSimulation(definition!, {
+          ...base!,
+          seed: starting.seed,
+          round: starting.round,
+          health: starting.health,
+          resources: starting.resources,
+          ...(starting.phase ? { phase: starting.phase } : {}),
+          statuses: starting.statuses,
+          cooldowns: starting.cooldowns,
+          loadout: starting.loadout,
+        })
+        sourceAtStart = cloneCombatRules(source!)
+        inspectIndex = -1
+      }, true),
+    )
+
+    if (mode === 'scenarios') {
+      root.append(
+        combatScenarioForm(
+          controls,
+          view,
+          source,
+          definition,
+          scenarioState,
+          {
+            get simulation() {
+              return signature === fingerprint() ? simulation : undefined
+            },
+            starting: () => ({ ...config!, phase: config!.phase || undefined }),
+            run: (scenario) => {
+              if (signature !== fingerprint()) {
+                invalidateResults()
+                config = undefined
+                simulation = undefined
+                signature = fingerprint()
+              }
+
+              prepare()
+
+              return runCombatScenario(definition!, base!, scenario)
+            },
+            save,
+            load: (scenario) => {
+              mode = 'interactive'
+              prepare()
               signature = fingerprint()
-            }
-
-            prepare()
-
-            return runCombatScenario(definition!, base!, scenario)
+              const current = definition!
+              config = {
+                loadout: cloneCombatRules(scenario.setup.loadout),
+                seed: scenario.setup.seed,
+                round: scenario.setup.round,
+                health: { ...base!.health, ...scenario.setup.health },
+                resources: {
+                  ...Object.fromEntries(
+                    Object.entries(current.mechanics?.resources ?? {}).map(([id, resource]) => [
+                      id,
+                      resource.initial,
+                    ]),
+                  ),
+                  ...scenario.setup.resources,
+                },
+                phase: scenario.setup.phase ?? current.mechanics?.initialPhase ?? '',
+                statuses: cloneCombatRules(scenario.setup.statuses),
+                cooldowns: cloneCombatRules(scenario.setup.cooldowns),
+              }
+              const { phase, ...starting } = scenario.setup
+              simulation = new CombatSimulation(current, {
+                ...base!,
+                ...starting,
+                ...(phase ? { phase } : {}),
+                health: config.health,
+              })
+              sourceAtStart = cloneCombatRules(source!)
+              inspectIndex = -1
+            },
+            trace: (container, sandbox) => appendTrace(container, sandbox, source),
           },
-          save,
-          load: (scenario) => {
-            prepare()
-            signature = fingerprint()
-            const current = definition!
-            config = {
-              loadout: cloneCombatRules(scenario.setup.loadout),
-              seed: scenario.setup.seed,
-              round: scenario.setup.round,
-              health: { ...base!.health, ...scenario.setup.health },
-              resources: {
-                ...Object.fromEntries(
-                  Object.entries(current.mechanics?.resources ?? {}).map(([id, resource]) => [
-                    id,
-                    resource.initial,
-                  ]),
-                ),
-                ...scenario.setup.resources,
-              },
-              phase: scenario.setup.phase ?? current.mechanics?.initialPhase ?? '',
-              statuses: cloneCombatRules(scenario.setup.statuses),
-              cooldowns: cloneCombatRules(scenario.setup.cooldowns),
-            }
-            const { phase, ...starting } = scenario.setup
-            simulation = new CombatSimulation(current, {
-              ...base!,
-              ...starting,
-              ...(phase ? { phase } : {}),
-              health: config.health,
-            })
-            sourceAtStart = cloneCombatRules(source!)
-            inspectIndex = -1
-          },
-          inspect: (sandbox) => {
-            simulation = sandbox
-            sourceAtStart = cloneCombatRules(source!)
-            inspectIndex = -1
-          },
-        },
-        render,
-      ),
-    )
+          render,
+        ),
+      )
 
-    if (!simulation) return
+      return
+    }
+
+    root.append(start)
+
+    if (!simulation) {
+      root.append(startingSettings)
+
+      return
+    }
+
     const sandbox = simulation
     const state = sandbox.snapshot()
 
@@ -663,6 +691,15 @@ export function bindCombatSimulationPanel(
           : []),
       ),
     )
+    root.append(startingSettings)
+    appendTrace(root, sandbox, sourceAtStart)
+  }
+
+  function appendTrace(
+    container: HTMLElement,
+    sandbox: CombatSimulation,
+    reportSource?: CombatSource,
+  ) {
     const frames = sandbox.trace()
 
     const choices = frames.flatMap((frame, index) =>
@@ -684,60 +721,65 @@ export function bindCombatSimulationPanel(
           choices.at(-1)?.[0] ??
           -1,
       )
-    root.append(
-      group(
-        text('timeline'),
-        select(
-          text('filter'),
-          inspectKind,
-          [
-            ['enemy-decision', text('decisions')],
-            ['action', text('actions')],
-            ['mechanics', text('mechanics')],
-            ['all', text('all')],
-          ],
-          (value) => {
-            inspectKind = value
-            inspectIndex = -1
-            render()
-          },
-        ),
-        select(text('inspect'), String(inspectIndex), choices, (value) => {
-          inspectIndex = Number(value)
+
+    const timeline = controls.fold(
+      'simulation-trace',
+      text('timeline'),
+      false,
+      select(
+        text('filter'),
+        inspectKind,
+        [
+          ['enemy-decision', text('decisions')],
+          ['action', text('actions')],
+          ['mechanics', text('mechanics')],
+          ['all', text('all')],
+        ],
+        (value) => {
+          inspectKind = value
+          inspectIndex = -1
           render()
-        }),
+        },
       ),
+      select(text('inspect'), String(inspectIndex), choices, (value) => {
+        inspectIndex = Number(value)
+        render()
+      }),
     )
+
     const frame = frames[inspectIndex]
 
     if (frame)
-      root.append(
+      timeline.append(
         ...(frame.decision ? [decisionView(frame.decision)] : []),
         group(text('state'), pre(frame)),
       )
+    container.append(timeline)
     const preview = create('details')
     const previewTitle = create('summary')
     previewTitle.textContent = text('preview')
     preview.append(previewTitle, ...sandbox.preview().slice(0, 50).map(decisionView))
-    root.append(preview)
+    container.append(preview)
     const report = sandbox.report()
 
-    if (report.truncated) root.append(pre(text('truncated')))
+    if (report.truncated) container.append(pre(text('truncated')))
     const details = create('details')
     const title = create('summary')
     title.textContent = text('report')
     const json = create('textarea')
     json.readOnly = true
     json.setAttribute('aria-label', text('report'))
-    json.value = JSON.stringify({ ...report, source: sourceAtStart }, null, 2)
+    json.value = JSON.stringify({ ...report, source: reportSource }, null, 2)
     details.append(title, ...(report.truncated ? [pre(text('truncated'))] : []), json)
-    root.append(details)
+    container.append(details)
   }
 
   registerEditorDraft(
     root,
     'combat-scenario',
     z.object({
+      mode: z.enum(['interactive', 'scenarios']).optional(),
+      entries: z.record(z.string(), z.number()).optional(),
       encounter: z.string(),
       selected: z.string(),
       draft: combatSimulationScenarioSchema.optional(),
@@ -747,6 +789,8 @@ export function bindCombatSimulationPanel(
     () =>
       scenarioState.dirty
         ? {
+            mode,
+            entries: scenarioState.entries,
             encounter: scenarioState.encounter,
             selected: scenarioState.selected,
             draft: scenarioState.draft,
@@ -755,15 +799,23 @@ export function bindCombatSimulationPanel(
           }
         : undefined,
     (saved) => {
-      Object.assign(scenarioState, saved, { dirty: true, results: {}, error: '' })
+      mode = saved.mode ?? 'scenarios'
+      Object.assign(scenarioState, saved, {
+        entries: saved.entries ?? {},
+        dirty: true,
+        results: {},
+        error: '',
+      })
       render()
     },
+    'selected-scenario-v1',
   )
 
   return {
     hasDrafts: () => scenarioState.dirty,
     invalidateResults,
     reset() {
+      mode = 'interactive'
       scenarioState = createScenarioDraftState()
       simulation = undefined
       config = undefined

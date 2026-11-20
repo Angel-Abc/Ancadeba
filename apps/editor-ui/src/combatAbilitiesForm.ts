@@ -1,3 +1,4 @@
+import { selectedEntries } from './specialistEntries.js'
 import { combatEffectValuesForm } from './combatEffectValuesForm.js'
 import { combatPassiveGrantsForm } from './combatPassiveForms.js'
 import { combatDamageDefensesForm } from './combatDamageForm.js'
@@ -178,6 +179,7 @@ export function combatStatusesForm(
   view: ProjectView,
   draft: Pick<CombatDefinition, 'statuses'>,
   render: () => void,
+  selectedId?: string,
 ): HTMLElement {
   const { input, select, button, group, fold, translation, t } = controls
 
@@ -195,13 +197,35 @@ export function combatStatusesForm(
     return name === id ? title : `${title} · ${name}`
   }
 
-  const rows = Object.entries(draft.statuses ?? {}).map(([id, status]) =>
+  const rows = selectedEntries(draft.statuses, selectedId).map(([id, status]) =>
     fold(
       `status:${id}`,
       summary(id, status),
-      false,
+      selectedId !== undefined,
       group(
         t('combat.statusTitle', { id }),
+        input(t('form.name'), status.label, (value) => {
+          status.label = value
+        }),
+        translation(
+          t('form.nameTranslation'),
+          status.labelKey ?? '',
+          translationChoices(view),
+          (value) => {
+            status.labelKey = value || undefined
+          },
+        ),
+        input(t('metadata.description'), status.description, (value) => {
+          status.description = value
+        }),
+        translation(
+          t('form.descriptionTranslation'),
+          status.descriptionKey ?? '',
+          translationChoices(view),
+          (value) => {
+            status.descriptionKey = value || undefined
+          },
+        ),
         select(
           t('combat.statusType'),
           status.type,
@@ -226,28 +250,6 @@ export function combatStatusesForm(
         ),
         combatPassiveGrantsForm(controls, view, status, render),
         combatEffectValuesForm(controls, status, render, [], Object.keys(draft.statuses ?? {})),
-        input(t('form.name'), status.label, (value) => {
-          status.label = value
-        }),
-        translation(
-          t('form.nameTranslation'),
-          status.labelKey ?? '',
-          translationChoices(view),
-          (value) => {
-            status.labelKey = value || undefined
-          },
-        ),
-        input(t('metadata.description'), status.description, (value) => {
-          status.description = value
-        }),
-        translation(
-          t('form.descriptionTranslation'),
-          status.descriptionKey ?? '',
-          translationChoices(view),
-          (value) => {
-            status.descriptionKey = value || undefined
-          },
-        ),
         select(t('combat.icon'), status.icon ?? '', art, (value) => {
           status.icon = value || undefined
         }),

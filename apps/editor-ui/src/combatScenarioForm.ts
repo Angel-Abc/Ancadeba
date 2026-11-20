@@ -1,3 +1,5 @@
+import { entryEditor, fieldPath, focusIssue, type EntrySelections } from './specialistEntries.js'
+import { saveBar } from './ruleFormControls.js'
 import { saveStatus } from './formSaveStatus.js'
 import {
   combatScenarioAssertionsForm,
@@ -24,6 +26,7 @@ import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
 import { ruleFormControls, type RuleFormControls } from './ruleFormControls.js'
 
 export interface CombatScenarioDraftState {
+  entries: EntrySelections
   encounter: string
   selected: string
   draft?: CombatSimulationScenario | undefined
@@ -49,7 +52,7 @@ export function combatScenarioForm(
     starting: () => unknown
     run: (scenario: CombatSimulationScenario) => CombatScenarioResult
     load: (scenario: CombatSimulationScenario) => void
-    inspect: (simulation: CombatSimulation) => void
+    trace: (container: HTMLElement, simulation: CombatSimulation) => void
     save: (command: EditorCommand) => void
   },
   render: () => void,
@@ -67,7 +70,8 @@ export function combatScenarioForm(
   if (state.encounter !== source.id) {
     Object.assign(state, {
       encounter: source.id,
-      selected: '',
+      selected: Object.keys(saved)[0] ?? '',
+      entries: {},
       draft: undefined,
       dirty: false,
       creating: false,
@@ -89,7 +93,7 @@ export function combatScenarioForm(
   }
 
   if (state.deleting && !saved[state.deleting]) {
-    state.selected = ''
+    state.selected = Object.keys(saved)[0] ?? ''
     state.draft = undefined
     state.dirty = false
     state.deleting = undefined
@@ -109,6 +113,8 @@ export function combatScenarioForm(
   const local = ruleFormControls(create('div').ownerDocument, changed, t)
   const { input, select, group, button } = local
 
+  let invalidPath: readonly PropertyKey[] | undefined
+
   const act =
     (operation: () => void, edit = false) =>
     () => {
@@ -122,6 +128,9 @@ export function combatScenarioForm(
       }
 
       render()
+
+      if (invalidPath && state.resultElement?.parentElement)
+        focusIssue(state.resultElement.parentElement, invalidPath)
     }
 
   const pre = (value: unknown) => {
@@ -261,7 +270,7 @@ export function combatScenarioForm(
         entry.type === 'cooldown' ||
         entry.type === 'trigger-cooldown' ||
         entry.type === 'item-consumption'
-          ? combatScenarioAssertionsForm(controls, entry, definition, view)
+          ? combatScenarioAssertionsForm(local, entry, definition, view)
           : []),
         ...(entry.type === 'health' || entry.type === 'guard' || entry.type === 'status'
           ? [
@@ -360,16 +369,20 @@ export function combatScenarioForm(
   const picker = controls.select(
     text('select'),
     state.selected,
-    [['', text('choose')], ...Object.keys(saved)],
+    [
+      ['', text('choose')],
+      ...Object.entries(saved).map(([id, entry]) => [id, entry.label || id] as const),
+      ...(state.creating ? [[state.selected, state.draft?.label || state.selected] as const] : []),
+    ],
     (id) => {
       if (state.dirty) {
         state.error = text('saveFirst')
         picker.querySelector('select')!.value = state.selected
       } else {
         state.selected = id
+        state.entries = {}
         state.draft = id ? cloneCombatRules(saved[id]) : undefined
         state.creating = false
-        state.results = {}
         state.error = ''
       }
 
@@ -384,10 +397,8 @@ export function combatScenarioForm(
   alert.setAttribute('role', 'alert')
   alert.textContent = state.error
 
-  const fields: HTMLElement[] = [
-    picker,
+  const management: HTMLElement[] = [
     help,
-    alert,
     controls.input(text('newId'), state.newId, (value) => {
       state.newId = value.trim()
     }),
@@ -397,6 +408,7 @@ export function combatScenarioForm(
         if (state.dirty) throw new Error(text('saveFirst'))
         const id = combatReferenceSchema.shape.id.parse(unique(state.newId))
         const draft = fresh()
+        state.entries = {}
         state.selected = id
         state.draft = draft
         state.creating = true
@@ -415,15 +427,20 @@ export function combatScenarioForm(
 
   const draft = state.draft
 
-  if (draft)
-    fields.push(
+  const fields: HTMLElement[] = [picker, alert]
+
+  if (draft) {
+    const metadata = controls.fold(
+      'scenario-metadata',
+      text('settings'),
+      false,
       input(text('name'), draft.label, (value) => {
         draft.label = value
       }),
       input(text('description'), draft.description, (value) => {
         draft.description = value
       }),
-      pre(draft.setup),
+      controls.fold('scenario-setup', text('setup'), false, pre(draft.setup)),
       button(
         text('useStarting'),
         act(() => {
@@ -434,15 +451,34 @@ export function combatScenarioForm(
         text('loadStarting'),
         act(() => host.load(draft)),
       ),
-      ...draft.steps.map((step, index) =>
+    )
+
+    const steps = entryEditor(
+      local,
+      state.entries,
+      'steps',
+      text('step'),
+      draft.steps,
+      (step, index) => `${index + 1} · ${step.id}`,
+      (step, index) =>
         group(
           `${text('step')} ${index + 1}`,
-          input(text('stepId'), step.id, (value) => {
-            step.id = value.trim()
-          }),
-          numeric(text('repeat'), step.repeat, (value) => {
-            step.repeat = value
-          }),
+          fieldPath(
+            input(text('stepId'), step.id, (value) => {
+              step.id = value.trim()
+            }),
+            'steps',
+            index,
+            'id',
+          ),
+          fieldPath(
+            numeric(text('repeat'), step.repeat, (value) => {
+              step.repeat = value
+            }),
+            'steps',
+            index,
+            'repeat',
+          ),
           select(
             text('unavailable'),
             step.unavailable,
@@ -550,6 +586,8 @@ export function combatScenarioForm(
           button(
             text('stepUp'),
             act(() => {
+              state.entries.steps = Math.max(0, index - 1)
+
               if (index)
                 [draft.steps[index - 1], draft.steps[index]] = [
                   draft.steps[index]!,
@@ -565,70 +603,88 @@ export function combatScenarioForm(
             }, true),
           ),
         ),
-      ),
-      button(
-        text('addStep'),
-        act(() => {
-          let index = draft.steps.length + 1
+      { path: ['steps'] },
+    )
 
-          while (draft.steps.some((step) => step.id === `step-${index}`)) index++
-          draft.steps.push(combatScenarioStepSchema.parse({ id: `step-${index}` }))
-        }, true),
-      ),
+    const addStep = button(
+      text('addStep'),
+      act(() => {
+        let index = draft.steps.length + 1
+
+        while (draft.steps.some((step) => step.id === `step-${index}`)) index++
+        state.entries.steps = draft.steps.length
+        draft.steps.push(combatScenarioStepSchema.parse({ id: `step-${index}` }))
+      }, true),
+    )
+
+    const final = controls.fold(
+      'scenario-final',
+      text('final'),
+      false,
       group(text('final'), ...expectationForm(draft.expect, text('final'))),
       button(
         text('captureExpected'),
         act(() => {
-          const state = host.simulation?.snapshot()
+          const run = state.results[state.selected]?.simulation ?? host.simulation
+          const snapshot = run?.snapshot()
 
-          if (!state) throw new Error(text('runFirst'))
+          if (!snapshot) throw new Error(text('runFirst'))
           draft.expect = [
-            { type: 'outcome', value: state.outcome ?? 'planning' },
-            { type: 'rounds', operator: 'eq', value: host.simulation!.completedRounds },
-            ...Object.entries(state.health).map(([actor, value]) => ({
+            { type: 'outcome', value: snapshot.outcome ?? 'planning' },
+            { type: 'rounds', operator: 'eq', value: run!.completedRounds },
+            ...Object.entries(snapshot.health).map(([actor, value]) => ({
               type: 'health' as const,
               actor,
               operator: 'eq' as const,
               value,
             })),
-            ...Object.entries(state.mechanics?.resources ?? {}).map(([resource, value]) => ({
+            ...Object.entries(snapshot.mechanics?.resources ?? {}).map(([resource, value]) => ({
               type: 'resource' as const,
               resource,
               operator: 'eq' as const,
               value,
             })),
-            ...(state.mechanics?.phase
-              ? [{ type: 'phase' as const, value: state.mechanics.phase }]
+            ...(snapshot.mechanics?.phase
+              ? [{ type: 'phase' as const, value: snapshot.mechanics.phase }]
               : []),
           ]
         }, true),
       ),
-      button(
-        text('run'),
-        act(() => {
-          const result = host.run(draft)
-          state.results = { [state.selected]: result }
+    )
 
-          if (result.simulation) host.inspect(result.simulation)
-        }),
-      ),
-      button(
-        text('save'),
-        act(() => {
-          const parsed = combatSimulationScenarioSchema.parse(draft)
-          state.draft = parsed
-          state.submitted = state.selected
-          host.save({
-            type: 'combat.upsertSimulationScenario',
-            encounterId: source.id,
-            scenarioId: state.selected,
-            scenario: parsed,
-            createOnly: state.creating,
-          })
-        }),
-        !view.combatSources?.[source.id],
-      ),
-      saveStatus(results.ownerDocument, t, () => state.dirty),
+    const replay = button(
+      text('run'),
+      act(() => {
+        const result = host.run(draft)
+        state.results = { [state.selected]: result }
+      }),
+    )
+
+    const save = button(
+      text('save'),
+      act(() => {
+        const result = combatSimulationScenarioSchema.safeParse(draft)
+
+        if (!result.success) {
+          invalidPath = result.error.issues[0]?.path
+          throw result.error
+        }
+
+        const parsed = result.data
+        state.draft = parsed
+        state.submitted = state.selected
+        host.save({
+          type: 'combat.upsertSimulationScenario',
+          encounterId: source.id,
+          scenarioId: state.selected,
+          scenario: parsed,
+          createOnly: state.creating,
+        })
+      }),
+      !view.combatSources?.[source.id],
+    )
+
+    management.push(
       button(
         text('duplicate'),
         act(() => {
@@ -637,18 +693,23 @@ export function combatScenarioForm(
           state.creating = true
         }, true),
       ),
-      button(
-        text('discard'),
-        act(() => {
-          state.draft = saved[state.selected] ? cloneCombatRules(saved[state.selected]) : undefined
-          state.dirty = false
-          state.creating = false
-          state.submitted = undefined
-          state.deleting = undefined
-          state.results = {}
-          state.error = ''
-        }),
-      ),
+    )
+
+    const discard = button(
+      text('discard'),
+      act(() => {
+        if (!saved[state.selected]) state.selected = Object.keys(saved)[0] ?? ''
+        state.draft = saved[state.selected] ? cloneCombatRules(saved[state.selected]) : undefined
+        state.dirty = false
+        state.creating = false
+        state.submitted = undefined
+        state.deleting = undefined
+        state.results = {}
+        state.error = ''
+      }),
+    )
+
+    management.push(
       button(
         text('delete'),
         act(() => {
@@ -662,28 +723,68 @@ export function combatScenarioForm(
         state.creating,
       ),
     )
+    fields.push(
+      saveBar(
+        results.ownerDocument,
+        save,
+        saveStatus(results.ownerDocument, t, () => state.dirty),
+        discard,
+      ),
+      replay,
+      results,
+      steps,
+      addStep,
+      final,
+      metadata,
+    )
+  } else fields.push(results)
 
-  for (const [id, result] of Object.entries(state.results)) {
+  const allResults = Object.entries(state.results)
+  const others = create('div')
+  const hasOthers = allResults.some(([id]) => id !== state.selected)
+
+  for (const [id, result] of allResults) {
+    const selected = id === state.selected
+    const target = selected ? results : others
     const status = create('p')
     status.textContent = `${id}: ${text(result.status)}`
-    results.append(status)
+    target.append(status)
 
     if (result.error) {
       const message = create('p')
       message.textContent = result.error
-      results.append(message)
+      target.append(message)
     }
 
-    results.append(pre({ checks: result.checks, skipped: result.skipped }))
-
-    if (result.simulation)
-      results.append(
-        button(
-          t('combat.scenarios.inspectResult', { id }),
-          act(() => host.inspect(result.simulation!)),
+    if (selected) {
+      target.append(
+        controls.fold(
+          'scenario-checks:' + id,
+          text('checks'),
+          false,
+          pre({ checks: result.checks, skipped: result.skipped }),
         ),
       )
+
+      if (result.simulation) {
+        const trace = controls.fold(
+          'scenario-result:' + id,
+          t('combat.scenarios.inspectResult', { id }),
+          false,
+        )
+
+        host.trace(trace, result.simulation)
+        target.append(trace)
+      }
+    }
   }
 
-  return group(text('heading'), ...fields, results)
+  if (hasOthers)
+    results.append(controls.fold('other-scenario-results', text('otherResults'), false, others))
+
+  return group(
+    text('heading'),
+    ...fields,
+    controls.fold('scenario-management', text('manage'), !draft, ...management),
+  )
 }

@@ -156,15 +156,6 @@ export function bindRulesPanel(
       false,
     )
 
-    form.append(filePicker)
-
-    if (!ruleId)
-      form.append(
-        rulesControls.input(t('rules.newId'), newRuleId, (value) => {
-          newRuleId = value.trim()
-        }),
-      )
-
     const otherFields = Object.entries(view.ruleFiles ?? {})
       .filter(([id]) => id !== ruleId)
       .flatMap(([, rules]) => rules.state)
@@ -220,7 +211,16 @@ export function bindRulesPanel(
       false,
     )
 
-    form.append(viewPicker, ...groups)
+    form.append(filePicker, viewPicker)
+
+    if (!ruleId)
+      form.append(
+        rulesControls.input(t('rules.newId'), newRuleId, (value) => {
+          newRuleId = value.trim()
+        }),
+      )
+
+    form.append(...groups)
     form.addEventListener(
       'invalid',
       (event) => {

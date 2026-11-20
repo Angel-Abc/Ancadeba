@@ -219,9 +219,9 @@ export function bindProjectManagementPanel(
         renameToggle.setAttribute('aria-expanded', 'false')
         notice = `project.${next.projectChange.kind}`
 
-        if (next.projectChange.kind === 'deleted') {
-          trash.hidden = false
-          trashToggle.setAttribute('aria-expanded', 'true')
+        if (next.projectChange.kind === 'restored') {
+          trash.hidden = true
+          trashToggle.setAttribute('aria-expanded', 'false')
         }
 
         if (!trash.hidden) void list(true)

@@ -197,3 +197,13 @@ export function revealControl(input?: HTMLElement | null) {
     if (parent instanceof HTMLDetailsElement) parent.open = true
   input?.focus?.()
 }
+
+/** Collection controls can edit the whole record while mounting only the chosen definition. */
+export function selectedEntries<T>(
+  record: Record<string, T> | undefined,
+  id?: string,
+): [string, T][] {
+  if (id === undefined) return Object.entries(record ?? {})
+
+  return record && Object.hasOwn(record, id) ? [[id, record[id]!]] : []
+}

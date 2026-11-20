@@ -451,7 +451,7 @@ describe('project panel form reconciliation', () => {
       expect(ui.confirmDiscardDrafts).not.toHaveBeenCalled()
       expect(ui.onProjectChange).toHaveBeenCalledOnce()
       ui.setLanguage('nl')
-      expect(ui.control('project-export').textContent).toBe('Project-ZIP exporteren')
+      expect(ui.control('project-export').textContent).toBe('Bewerkbare project-ZIP exporteren')
     } finally {
       ui.dispose()
     }
@@ -512,6 +512,7 @@ describe('project panel form reconciliation', () => {
       expect(ui.control('editor-workspace').hidden).toBe(true)
       expect(ui.control('project-open-controls').hidden).toBe(false)
       expect(ui.control('editor-folder').children.map(({ value }) => value)).toContain('')
+      ui.control('project-trash-toggle').fire('click')
       await vi.waitFor(() => expect(ui.control('project-restore').disabled).toBe(false))
       ui.control('project-restore-folder').value = 'recovered'
       ui.control('project-restore').fire('click')

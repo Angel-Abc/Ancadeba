@@ -1,3 +1,4 @@
+import { selectedEntries } from './specialistEntries.js'
 import { combatRulesetReferences } from '@ancadeba/schemas'
 import { combatRulesetSchema, type CombatLibrary } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
@@ -9,6 +10,7 @@ export function combatRulesetsForm(
   view: ProjectView,
   library: CombatLibrary,
   render: () => void,
+  selectedId?: string,
 ): HTMLElement {
   const { input, group, button, fold, translation, create, t } = controls
   const text = (key: string) => t(`combat.rulesets.${key}`)
@@ -23,7 +25,7 @@ export function combatRulesetsForm(
 
   return group(
     text('heading'),
-    ...Object.entries(library.rulesets ?? {}).map(([id, ruleset]) => {
+    ...selectedEntries(library.rulesets, selectedId).map(([id, ruleset]) => {
       const usage = create('p')
 
       const encounters = Object.values(view.combatSources ?? {}).filter((source) =>
@@ -46,7 +48,7 @@ export function combatRulesetsForm(
       return fold(
         `ruleset:${id}`,
         t('combat.rulesets.title', { id }),
-        false,
+        selectedId !== undefined,
         group(
           t('combat.rulesets.title', { id }),
           usage,

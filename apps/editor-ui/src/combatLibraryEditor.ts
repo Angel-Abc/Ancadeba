@@ -1,5 +1,11 @@
 import { linkedTranslationFields } from './inspectorTranslations.js'
-import { fieldPath, focusIssue } from './specialistEntries.js'
+import {
+  entryEditor,
+  fieldPath,
+  focusIssue,
+  rememberEntryFocus,
+  type EntrySelections,
+} from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
 import { combatPassivesForm } from './combatPassiveForms.js'
 import { combatRulesetReferences } from '@ancadeba/schemas'
@@ -15,7 +21,13 @@ import {
   type CombatLibrary,
 } from '@ancadeba/schemas'
 import type { ProjectEditorState } from './projectController.js'
-import { ruleFormControls, saveBar, languageWatcher, scopedFolds } from './ruleFormControls.js'
+import {
+  ruleFormControls,
+  saveBar,
+  displayLabel,
+  languageWatcher,
+  scopedFolds,
+} from './ruleFormControls.js'
 import { combatMovesForm } from './combatMovesForm.js'
 import { combatStatusesForm } from './combatAbilitiesForm.js'
 import { combatRulesetsForm } from './combatRulesetsForm.js'
@@ -41,6 +53,24 @@ export function bindCombatLibraryEditor(
   let busy = false
   let submittedId: string | undefined
   let creating = false
+
+  const categories = ['moves', 'statuses', 'rulesets', 'aiProfiles', 'passives'] as const
+
+  type Category = (typeof categories)[number]
+
+  let category: Category = 'moves'
+  let selected: EntrySelections = {}
+
+  function reveal(path: readonly PropertyKey[]) {
+    const next = categories.find((id) => id === path[0])
+
+    if (next && next !== category) {
+      category = next
+      render()
+    }
+
+    focusIssue(fields, path)
+  }
 
   const languageChanged = languageWatcher(t)
 
@@ -79,6 +109,8 @@ export function bindCombatLibraryEditor(
     }
 
     libraryId = id
+    selected = {}
+    category = 'moves'
     reset()
     root.scrollIntoView?.({ block: 'start' })
 
@@ -106,7 +138,7 @@ export function bindCombatLibraryEditor(
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
 
     if (!parsed.success && command.type === 'game.upsertCombatLibrary')
-      focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
+      reveal(parsed.error.issues[0]!.path.slice(1))
 
     if (parsed.success) {
       submittedId =
@@ -116,6 +148,7 @@ export function bindCombatLibraryEditor(
   }
 
   function render() {
+    const restore = rememberEntryFocus(fields)
     fields.replaceChildren()
 
     if (!view?.game) return
@@ -148,6 +181,8 @@ export function bindCombatLibraryEditor(
         )
           id = `common-${number++}`
         libraryId = id
+        category = 'moves'
+        selected = {}
         draft = combatLibrarySchema.parse({ 'schema-version': '1.0.0', id })
         creating = true
         dirty = true
@@ -156,9 +191,13 @@ export function bindCombatLibraryEditor(
     )
 
     fileNavigation.setAttribute('data-file-navigation', '')
-    fields.append(fileNavigation)
 
-    if (!draft) return
+    if (!draft) {
+      fields.append(fileNavigation)
+
+      return
+    }
+
     const current = draft
     const usage = document.createElement('p')
 
@@ -198,15 +237,51 @@ export function bindCombatLibraryEditor(
       ).origins,
     }))
 
-    for (const kind of ['moves', 'statuses'] as const)
-      for (const id of Object.keys(current[kind])) {
+    const project = view
+
+    const usageOf = (kind: Category, id: string) => {
+      const matches = (ref: { library: string; id: string } | null | undefined) =>
+        ref?.library === libraryId && ref.id === id
+
+      switch (kind) {
+        case 'aiProfiles':
+          return encounters
+            .filter((source) => source.enemies.some((enemy) => matches(enemy.aiProfile)))
+            .map((source) => source.id)
+        case 'rulesets':
+          return encounters
+            .filter((source) => combatRulesetReferences(source).some(matches))
+            .map((source) => source.id)
+        case 'passives':
+          return [
+            ...Object.values(project.combat ?? {})
+              .filter((def) => Object.hasOwn(def.passiveDefinitions?.[libraryId] ?? {}, id))
+              .map((def) => def.id),
+            ...items
+              .filter(([, item]) => item.combatEffects?.passives?.some(matches))
+              .map(([item]) => item),
+          ]
+        default:
+          return [
+            ...resolved
+              .filter((entry) => entry.origins[kind][id]?.library === libraryId)
+              .map((entry) => entry.id),
+            ...(kind === 'moves'
+              ? items
+                  .filter(
+                    ([, item]) =>
+                      matches(item.use?.ability) || item.combatEffects?.grantedMoves?.some(matches),
+                  )
+                  .map(([item]) => item)
+              : []),
+          ]
+      }
+    }
+
+    for (const kind of categories)
+      for (const id of Object.keys(current[kind] ?? {})) {
         const row = document.createElement('li')
-        row.textContent = `${kind} ${id}: ${
-          resolved
-            .filter((entry) => entry.origins[kind][id]?.library === libraryId)
-            .map((entry) => entry.id)
-            .join(', ') || t('combat.unused')
-        }`
+        row.textContent = `${t(`combat.category.${kind}`)} · ${id}: ${usageOf(kind, id).join(', ') || t('combat.unused')}`
         entryUsage.append(row)
       }
 
@@ -221,6 +296,61 @@ export function bindCombatLibraryEditor(
 
     identity.querySelector('input')!.readOnly = !creating
     const entries = scopedFolds(controls, `library:${current.id}`)
+    const ids = Object.keys(current[category] ?? {})
+
+    const edited = () => {
+      const updated = Object.keys(current[category] ?? {})
+      const added = updated.find((id) => !ids.includes(id))
+
+      if (added) selected[category] = updated.indexOf(added)
+      render()
+    }
+
+    const details = (id: string) => {
+      const body = controls.create('div')
+
+      if (id && (category === 'moves' || category === 'statuses' || category === 'passives')) {
+        const note = document.createElement('p')
+        note.textContent = t('combat.entryUses', {
+          names: usageOf(category, id).join(', ') || t('combat.unused'),
+        })
+        body.append(note)
+      }
+
+      switch (category) {
+        case 'moves':
+          body.append(...combatMovesForm(entries, project, current, edited, { selectedId: id }))
+          break
+        case 'statuses':
+          body.append(combatStatusesForm(entries, project, current, edited, id))
+          break
+        case 'rulesets':
+          body.append(combatRulesetsForm(entries, project, current, edited, id))
+          break
+        case 'aiProfiles':
+          body.append(combatAIProfilesForm(entries, project, current, edited, id))
+          break
+        case 'passives':
+          body.append(combatPassivesForm(entries, project, current, edited, id))
+          break
+      }
+
+      return fieldPath(body, category, id)
+    }
+
+    const choose = controls.select(
+      t('combat.entryCategory'),
+      category,
+      categories.map((id) => [id, t(`combat.category.${id}`)] as const),
+      (value) => {
+        category = value
+        render()
+        fields.querySelector<HTMLSelectElement>('[data-library-category] select')?.focus()
+      },
+      false,
+    )
+
+    choose.setAttribute('data-library-category', '')
     form.append(
       saveBar(
         document,
@@ -228,14 +358,29 @@ export function bindCombatLibraryEditor(
         saveStatus(document, t, () => dirty),
         controls.button(t('combat.discardLibrary'), reset),
       ),
-      usage,
-      entryUsage,
-      fieldPath(identity, 'id'),
-      ...combatMovesForm(entries, view, current, render),
-      combatStatusesForm(entries, view, current, render),
-      combatRulesetsForm(entries, view, current, render),
-      combatAIProfilesForm(entries, view, current, render),
-      combatPassivesForm(controls, view, current, render),
+      fileNavigation,
+      ...(creating ? [fieldPath(identity, 'id')] : []),
+      choose,
+      ids.length
+        ? entryEditor(
+            entries,
+            selected,
+            category,
+            t(`combat.category.${category}`),
+            ids,
+            (id) => displayLabel(project, id, current[category]![id]!),
+            details,
+            { ids, values: ids, path: [category] },
+          )
+        : details(''),
+      controls.fold(
+        'library-usage',
+        t('combat.usageReport'),
+        false,
+        ...(!creating ? [identity] : []),
+        usage,
+        entryUsage,
+      ),
     )
     form.addEventListener('submit', (event) => {
       event.preventDefault()
@@ -249,6 +394,7 @@ export function bindCombatLibraryEditor(
         creating,
       ),
     )
+    restore?.()
   }
 
   registerEditorDraft(
@@ -258,15 +404,20 @@ export function bindCombatLibraryEditor(
       libraryId: z.string(),
       draft: combatLibrarySchema.optional(),
       creating: z.boolean(),
+      category: z.enum(categories).optional(),
+      selected: z.record(z.string(), z.number()).optional(),
     }),
-    () => (dirty ? { libraryId, draft, creating } : undefined),
+    () => (dirty ? { libraryId, draft, creating, category, selected } : undefined),
     (saved) => {
       libraryId = saved.libraryId
       draft = saved.draft
+      category = saved.category ?? 'moves'
+      selected = saved.selected ?? {}
       creating = saved.creating
       dirty = true
       render()
     },
+    'library-entries-v1',
   )
 
   return {
@@ -308,7 +459,7 @@ export function bindCombatLibraryEditor(
 
         if (issue) {
           error.textContent = issue.message
-          focusIssue(fields, issue.path)
+          reveal(issue.path)
         }
       }
     },

@@ -378,9 +378,11 @@ export function combatForm(
         view,
         { ...draft, mechanics: combatDraftMechanics(draft, view) },
         render,
-        (id) => draft.player.moves.push(id),
-        availableStatuses,
-        [draft.player, ...draft.enemies],
+        {
+          onAdd: (id) => draft.player.moves.push(id),
+          availableStatuses,
+          actors: [draft.player, ...draft.enemies],
+        },
       ),
     ),
   )

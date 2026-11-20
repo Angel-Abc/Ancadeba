@@ -1,3 +1,4 @@
+import { bindProjectTasks } from './projectTasks.js'
 import { createProjectSections } from './projectSectionComposition.js'
 import {
   ProjectSectionRegistry,
@@ -972,6 +973,16 @@ export function bindProjectPanel(
 
   management = bindProjectManagementPanel(root, client, controller, t, allowDiscard, confirmDelete)
   archivePanel = bindProjectArchivePanel(root, controller, t, allowDiscard)
+
+  const disposeTasks = bindProjectTasks(root, () =>
+    view
+      ? t('project.currentSource', {
+          title: gameTitle(view),
+          path: loadedPath || t('workspace.root'),
+        })
+      : '',
+  )
+
   void refreshProjects()
 
   return {
@@ -980,6 +991,7 @@ export function bindProjectPanel(
     dispose() {
       confirmation.cancel()
       management?.dispose()
+      disposeTasks?.()
       archivePanel?.dispose()
       draftRecovery?.dispose()
       registry.dispose()

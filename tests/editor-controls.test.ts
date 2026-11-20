@@ -1679,13 +1679,16 @@ describe('action bar editor controls', () => {
     const editor = bindCombatEditor(root.asElement(), (command) => commands.push(command))
     editor.render(initial, true)
     click('Add combat library')
+    edit('Category', 'statuses')
     edit('New status ID', 'poison')
     click('Add status')
+    edit('Category', 'moves')
     edit('New move ID', 'poison-strike')
     click('Add ability move')
     edit('Ability target', 'enemy', 'Move: poison-strike')
     edit('Effect type', 'apply-status', 'Effect 1')
     edit('Status', 'poison', 'Effect 1')
+    edit('Category', 'statuses')
     edit('Duration (affected turns)', '5', 'Status: poison')
     click('Add encounter')
     edit('Encounter name', 'Local encounter draft')
@@ -4457,9 +4460,51 @@ describe('editor draft workflows', () => {
     }
   }
 
+  it('recovers the selected initial state field and saves edits to two paths', async () => {
+    const source = await simulationProject()
+    const ui = await connected(bindRulesPanel, source)
+    ui.edit('View', 'state')
+    ui.edit('State field', '1')
+    ui.edit('Initial value', '88')
+    ui.edit('State field', '0')
+    ui.edit('Initial value', '79')
+    ui.edit('State field', '1')
+    const recovered = await connected(bindRulesPanel, source)
+    expect(
+      restoreEditorDrafts(recovered.root.asElement(), captureEditorDrafts(ui.root.asElement())),
+    ).toEqual([])
+    expect(recovered.field('Binding path (dot-separated)').value).toBe('eel-health')
+    expect(recovered.field('Initial value').value).toBe('88')
+    recovered.submit('Save rules')
+    await recovered.flush()
+    expect(
+      recovered
+        .read()
+        .rules?.state.slice(0, 2)
+        .map((field) => field.value),
+    ).toEqual([79, 88])
+  })
+
+  it('keeps the interactive round and selected scenario result when switching simulation views', async () => {
+    const ui = await connected(bindCombatEditor, await simulationProject())
+    ui.edit('Combat encounter', 'water')
+    ui.click('Start/reset simulation')
+    ui.click('Resolve simulation round')
+    ui.click('Saved scenarios')
+    ui.edit('Simulation scenario', 'rhythm-pressure')
+    ui.click('Replay scenario')
+    expect(ui.root.textContent).toContain('rhythm-pressure: Passed')
+    ui.click('Interactive run')
+    expect(ui.root.textContent).toContain('Round 2 · Planning')
+    ui.click('Saved scenarios')
+    expect(ui.root.textContent).toContain('rhythm-pressure: Passed')
+    expect(ui.editor.hasDrafts()).toBe(false)
+  })
+
   it('authors rich assertion types and item plans with structured scenario controls', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat encounter', 'water')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'rich-checks')
     ui.click('Capture simulation as new scenario')
     const scope = 'Final results expected result 1'
@@ -4579,6 +4624,7 @@ describe('editor draft workflows', () => {
         'assert-items-healing',
         encounter === 'water' ? 'assert-enemy-choices' : 'assert-conduit-damage',
       ]) {
+        ui.click('Saved scenarios')
         ui.edit('Simulation scenario', name)
         ui.click('Replay scenario')
         expect(ui.root.textContent).toContain(`${name}: Passed`)
@@ -4586,11 +4632,13 @@ describe('editor draft workflows', () => {
     }
 
     ui.edit('Combat encounter', 'water')
+    ui.click('Interactive run')
     ui.edit('Simulation health · player (maximum 80)', '30')
     ui.click('Start/reset simulation')
     ui.edit('Simulation item', 'brine-tonic')
     ui.click('Queue item')
     ui.click('Resolve simulation round')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'captured-tonic')
     ui.click('Capture simulation as new scenario')
     ui.click('Save simulation scenario')
@@ -4660,6 +4708,8 @@ describe('editor draft workflows', () => {
       ],
     ).toMatchObject({ terms: [{ factor: 0.03 }] })
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'passives')
+    ui.edit('Passives', 'adaptive-guard')
     edit('Passive: adaptive-guard', 'Scaling: maximum', 'Scaling factor', '3')
     ui.submit('Save combat library')
     await ui.flush()
@@ -4691,6 +4741,7 @@ describe('editor draft workflows', () => {
       ui.edit('Combat encounter', encounter)
 
       for (const name of ['dynamic-recovery', 'dynamic-periodic-shield', 'dynamic-strike']) {
+        ui.click('Saved scenarios')
         ui.edit('Simulation scenario', name)
         ui.click('Replay scenario')
         expect(ui.root.textContent).toContain(`${name}: Passed`)
@@ -4748,6 +4799,8 @@ describe('editor draft workflows', () => {
       ],
     ).toMatchObject({ priority: 30, charges: 5, perTurn: 1, cooldown: 2 })
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'passives')
+    ui.edit('Passives', 'paced-barrier')
     fields.forEach((field, index) =>
       ui.edit(field, String([-5, 6, 3, 0][index]), 'Passive: paced-barrier'),
     )
@@ -4771,6 +4824,7 @@ describe('editor draft workflows', () => {
 
     for (const encounter of ['water', 'underwater-boss']) {
       ui.edit('Combat encounter', encounter)
+      ui.click('Saved scenarios')
       ui.edit('Simulation scenario', 'trigger-limits')
       ui.click('Replay scenario')
       expect(ui.root.textContent).toContain('trigger-limits: Passed')
@@ -4801,6 +4855,8 @@ describe('editor draft workflows', () => {
   it('edits shield, redirect, lethal and healing interception effects in the shared trigger editor', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'passives')
+    ui.edit('Passives', 'air-barrier')
     ui.edit('Maximum per effect (empty = unlimited)', '6', 'Passive: air-barrier')
     ui.submit('Save combat library')
     await ui.flush()
@@ -4847,6 +4903,7 @@ describe('editor draft workflows', () => {
   it('replays interception examples and inspects shield spending and redirected damage before HP resolution', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat encounter', 'water')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'intercept-shield')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('intercept-shield: Passed')
@@ -4877,6 +4934,7 @@ describe('editor draft workflows', () => {
   it('authors reusable passive triggers and grants them from statuses with structured controls', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'passives')
     ui.edit('New passive ID', 'guard-relief')
     ui.click('Add shared passive')
     ui.edit('Event', 'turn-end', 'Passive: guard-relief')
@@ -4935,10 +4993,13 @@ describe('editor draft workflows', () => {
     expect(item.read().inventory!.itemTypes['tidal-charm']!.combatEffects!.passives).toBeUndefined()
     const ui = await connected(bindCombatEditor, source)
     ui.edit('Combat encounter', 'water')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'shared-passive-grants')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('shared-passive-grants: Passed')
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'passives')
+    ui.edit('Passives', 'current-reserve')
     ui.edit('Amount', '1', 'Passive: current-reserve')
     ui.submit('Save combat library')
     await ui.flush()
@@ -4981,6 +5042,7 @@ describe('editor draft workflows', () => {
     await ui.flush()
     expect(ui.read().combatSources!.water!.moves.jab!.requirements).toBeUndefined()
     ui.edit('Combat library', 'environments')
+    ui.edit('Moves', 'pulse')
     ui.root
       .all()
       .find(
@@ -5024,6 +5086,7 @@ describe('editor draft workflows', () => {
         .find((node) => node.tagName === 'button' && node.textContent === 'Queue simulation move')!
         .disabled,
     ).toBe(true)
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'rhythm-requirements')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('rhythm-requirements: Passed')
@@ -5081,6 +5144,7 @@ describe('editor draft workflows', () => {
     ui.edit('Simulation move', 'purge-valve')
     ui.click('Queue simulation move')
     ui.click('Resolve simulation round')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'gear-check')
     ui.click('Capture simulation as new scenario')
     ui.click('Capture expected final state')
@@ -5093,6 +5157,7 @@ describe('editor draft workflows', () => {
     expect(ui.root.textContent).toContain('gear-check: Passed')
     ui.click('Load scenario starting conditions')
     expect(ui.field('Starting equipment: player / back').value).toBe('rebreather')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'diving-gear')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('diving-gear: Passed')
@@ -5182,6 +5247,7 @@ describe('editor draft workflows', () => {
   it('replays saved boss scenarios against changed drafts, verifies failures and explicitly updates expected results', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat encounter', 'boss')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'three-seals')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('three-seals: Passed')
@@ -5298,6 +5364,7 @@ describe('editor draft workflows', () => {
     async (destinationEncounter) => {
       const ui = await scenarioProjects(destinationEncounter)
       ui.edit('Simulation seed', '777')
+      ui.click('Saved scenarios')
       ui.edit('New scenario ID', 'project-a')
       ui.click('Capture simulation as new scenario')
       ui.edit('Scenario name', 'Draft from project A')
@@ -5310,11 +5377,14 @@ describe('editor draft workflows', () => {
       expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
       ui.edit('Combat encounter', 'water')
       expect(ui.field('Combat encounter').value).toBe('water')
+      ui.click('Saved scenarios')
       expect(ui.field('New scenario ID').value).toBe('scenario')
+      ui.click('Interactive run')
       expect(ui.field('Simulation seed').value).toBe('1024')
       expect(
         ui.root.all().some((node) => node.tagName === 'label' && node.ownText === 'Scenario name'),
       ).toBe(false)
+      ui.click('Saved scenarios')
       ui.edit('New scenario ID', 'project-b')
       ui.click('Capture simulation as new scenario')
       ui.edit('Scenario name', 'Scenario from project B')
@@ -5336,13 +5406,16 @@ describe('editor draft workflows', () => {
   it('discards scenario drafts and starting conditions on a non-preserving same-project reload', async () => {
     const ui = await scenarioProjects()
     ui.edit('Simulation seed', '777')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'discard-me')
     ui.click('Capture simulation as new scenario')
     ui.edit('Scenario name', 'Discarded draft')
     await ui.controller.load('first')
     expect(ui.editor.hasDrafts()).toBe(false)
     expect(captureEditorDrafts(ui.root.asElement())).not.toHaveProperty('combat-scenario')
+    ui.click('Saved scenarios')
     expect(ui.field('New scenario ID').value).toBe('scenario')
+    ui.click('Interactive run')
     expect(ui.field('Simulation seed').value).toBe('1024')
     ui.edit('Combat encounter', 'boss')
     expect(ui.field('Combat encounter').value).toBe('boss')
@@ -5351,6 +5424,7 @@ describe('editor draft workflows', () => {
   it('preserves scenario and encounter drafts through unrelated saves and a draft-preserving reload', async () => {
     const ui = await scenarioProjects()
     ui.edit('Encounter name', 'Unsaved encounter')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'keep-me')
     ui.click('Capture simulation as new scenario')
     ui.edit('Scenario name', 'Preserved scenario')
@@ -5377,6 +5451,7 @@ describe('editor draft workflows', () => {
   it('discards a failed scenario submission independently of an encounter draft', async () => {
     const ui = await scenarioProjects()
     ui.edit('Encounter name', 'Unsaved encounter')
+    ui.click('Saved scenarios')
     ui.click('Capture simulation as new scenario')
     ui.rejectNext()
     ui.click('Save simulation scenario')
@@ -5392,6 +5467,7 @@ describe('editor draft workflows', () => {
 
   it('clears a failed deletion when a scenario draft is discarded', async () => {
     const ui = await scenarioProjects()
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'saved-scenario')
     ui.click('Capture simulation as new scenario')
     ui.click('Save simulation scenario')
@@ -5417,11 +5493,15 @@ describe('editor draft workflows', () => {
     const id = Object.keys(scenarios)[0]
 
     if (!id) throw new Error('Expected a saved scenario')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', id)
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain(`${id}: Passed`)
     await ui.controller.load('second')
-    expect(ui.field('Simulation scenario').value).toBe('')
+    ui.click('Saved scenarios')
+    expect(ui.field('Simulation scenario').value).toBe(
+      Object.keys(ui.read('second').combatSources!.water!.simulationScenarios!)[0],
+    )
     expect(ui.root.textContent).not.toContain(`${id}: Passed`)
     expect(ui.editor.hasDrafts()).toBe(false)
   })
@@ -5437,6 +5517,7 @@ describe('editor draft workflows', () => {
     ui.click('Add starting status')
     ui.click('Start/reset simulation')
     ui.click('Resolve simulation round')
+    ui.click('Saved scenarios')
     ui.edit('New scenario ID', 'water-check')
     ui.click('Capture simulation as new scenario')
     ui.click('Capture expected final state')
@@ -5452,6 +5533,7 @@ describe('editor draft workflows', () => {
     expect(ui.root.textContent).toContain('water-check: Passed')
     ui.click('Load scenario starting conditions')
     expect(ui.field('Starting resource · exhaustion').value).toBe('55')
+    ui.click('Saved scenarios')
     ui.edit('Scenario name', 'Recovered water scenario')
     const recovered = await connected(bindCombatEditor, source)
     expect(
@@ -5478,6 +5560,7 @@ describe('editor draft workflows', () => {
     ui.click('Add guard move')
     ui.edit('New move ID', 'bash')
     ui.click('Add attack move')
+    ui.edit('Category', 'aiProfiles')
     ui.edit('New AI profile ID', 'hunter')
     ui.click('Add AI profile')
     ui.click('Add AI rule')
@@ -5575,6 +5658,7 @@ describe('editor draft workflows', () => {
   it('authors shared rulesets, binds roles, preserves sparse fight overrides and inherits later library edits', async () => {
     const ui = await connected(bindCombatEditor, combatProject())
     ui.click('Add combat library')
+    ui.edit('Category', 'rulesets')
     ui.edit('New ruleset ID', 'underwater')
     ui.click('Add ruleset')
     ui.edit('Phase ID', 'calm')
@@ -5702,6 +5786,8 @@ describe('editor draft workflows', () => {
     expect(ui.read().combat!.boss!.mechanics!.victory).toBe('triggers')
     expect(ui.root.textContent).toContain('environments/underwater')
     ui.edit('Combat library', 'environments')
+    ui.edit('Category', 'rulesets')
+    ui.edit('Rulesets', 'underwater')
     ui.edit('Amount', '12', 'Ruleset: underwater')
     ui.submit('Save combat library')
     await ui.flush()
@@ -5749,6 +5835,7 @@ describe('editor draft workflows', () => {
     })
     const ui = await connected(bindCombatEditor, source)
     ui.edit('Combat encounter', 'underwater-boss')
+    ui.click('Saved scenarios')
     ui.edit('Simulation scenario', 'three-seals-underwater')
     ui.click('Replay scenario')
     expect(ui.root.textContent).toContain('three-seals-underwater: Passed')

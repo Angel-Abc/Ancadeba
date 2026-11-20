@@ -197,57 +197,98 @@ export function rulesDefinitionForm(
     }
   }
 
-  const state = group(
-    t('rules.initialState'),
-    ...rules.state.map((field, index) =>
-      group(
-        t('rules.field', { number: index + 1 }),
-        fieldPath(
-          input(t('rules.bindingPathDotted'), statePath(field.path), (next) => {
-            field.path = parseStatePath(next)
-          }),
-          'state',
-          index,
-          'path',
-        ),
-        ...('type' in field
-          ? [
-              input(
-                t('character.statInitialValue'),
-                field.value === undefined ? '' : String(field.value),
-                (value) => {
-                  field.value = value === '' ? undefined : Number(value)
-                },
-                'number',
-              ),
-            ]
-          : ruleValueControls(
-              controls,
-              t('rules.initialValue'),
-              field.value,
-              keys,
-              (next) => {
-                field.value = next
-              },
-              rerender,
-            )),
+  const stateActions = (index?: number) => {
+    const actions = create('div')
+    actions.append(
+      button(t('character.addStat'), () =>
+        change(() => {
+          entries.state = rules.state.length
+          rules.state.push({ path: [''], type: 'number' })
+        }),
+      ),
+      button(t('rules.addField'), () =>
+        change(() => {
+          entries.state = rules.state.length
+          rules.state.push({ path: [''], value: '' })
+        }),
+      ),
+    )
+
+    if (index !== undefined)
+      actions.append(
         button(t('rules.removeField'), () =>
           change(() => {
             rules.state.splice(index, 1)
           }),
         ),
-      ),
+      )
+
+    return actions
+  }
+
+  const state = group(
+    t('rules.initialState'),
+    entryEditor(
+      controls,
+      entries,
+      'state',
+      t('form.stateField'),
+      rules.state,
+      (field, index) => {
+        const path = statePath(field.path) || t('rules.field', { number: index + 1 })
+
+        const value =
+          typeof field.value === 'object'
+            ? view.translations?.[field.value.textKey] || field.value.textKey
+            : typeof field.value === 'boolean'
+              ? t(field.value ? 'form.true' : 'form.false')
+              : String(field.value ?? '')
+
+        return value ? `${path} · ${value.slice(0, 60)}` : path
+      },
+      (field, index) =>
+        group(
+          t('rules.field', { number: index + 1 }),
+          fieldPath(
+            input(t('rules.bindingPathDotted'), statePath(field.path), (next) => {
+              field.path = parseStatePath(next)
+            }),
+            'state',
+            index,
+            'path',
+          ),
+          ...('type' in field
+            ? [
+                fieldPath(
+                  input(
+                    t('character.statInitialValue'),
+                    field.value === undefined ? '' : String(field.value),
+                    (value) => {
+                      field.value = value === '' ? undefined : Number(value)
+                    },
+                    'number',
+                  ),
+                  'state',
+                  index,
+                  'value',
+                ),
+              ]
+            : ruleValueControls(
+                controls,
+                t('rules.initialValue'),
+                field.value,
+                keys,
+                (next) => {
+                  field.value = next
+                },
+                rerender,
+              ).map((control, position) =>
+                position === 1 ? fieldPath(control, 'state', index, 'value') : control,
+              )),
+        ),
+      { path: ['state'], actions: (_field, index) => stateActions(index) },
     ),
-    button(t('character.addStat'), () =>
-      change(() => {
-        rules.state.push({ path: [''], type: 'number' })
-      }),
-    ),
-    button(t('rules.addField'), () =>
-      change(() => {
-        rules.state.push({ path: [''], value: '' })
-      }),
-    ),
+    ...(!rules.state.length ? [stateActions()] : []),
   )
 
   const clock = rules.clock

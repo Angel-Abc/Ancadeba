@@ -1,3 +1,4 @@
+import { selectedEntries } from './specialistEntries.js'
 import { combatAIProfileSchema, type CombatLibrary } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import { combatEnemyAIForm } from './combatEnemyAIForm.js'
@@ -8,6 +9,7 @@ export function combatAIProfilesForm(
   view: ProjectView,
   library: CombatLibrary,
   render: () => void,
+  selectedId?: string,
 ): HTMLElement {
   const { input, group, button, translation, create, t, fold } = controls
   const text = (key: string) => t(`combat.aiProfiles.${key}`)
@@ -22,7 +24,7 @@ export function combatAIProfilesForm(
 
   return group(
     text('heading'),
-    ...Object.entries(library.aiProfiles ?? {}).map(([id, profile]) => {
+    ...selectedEntries(library.aiProfiles, selectedId).map(([id, profile]) => {
       const usage = create('p')
       usage.textContent = t('combat.aiProfiles.usage', {
         encounters:
@@ -41,7 +43,7 @@ export function combatAIProfilesForm(
       return fold(
         `ai-profile:${id}`,
         t('combat.aiProfiles.title', { id }),
-        false,
+        selectedId !== undefined,
         group(
           t('combat.aiProfiles.title', { id }),
           usage,

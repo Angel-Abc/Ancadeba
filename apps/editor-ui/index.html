@@ -13,7 +13,43 @@
           <h1 data-i18n="app.title">Ancadeba Editor</h1>
         </span>
         <div id="editor-header" class="project-bar" hidden>
-          <span id="project-title" class="project-title"></span>
+          <details id="project-actions" class="project-menu">
+            <summary id="project-title" class="project-title"></summary>
+            <div class="project-menu-items">
+              <button
+                id="project-duplicate-toggle"
+                type="button"
+                disabled
+                aria-controls="project-duplicate-controls"
+                aria-expanded="false"
+                data-i18n="project.duplicate"
+              >
+                Duplicate project
+              </button>
+              <button
+                id="project-rename-toggle"
+                type="button"
+                disabled
+                aria-controls="project-rename-controls"
+                aria-expanded="false"
+                data-i18n="project.rename"
+              >
+                Rename project
+              </button>
+              <button id="project-export" type="button" disabled data-i18n="project.export">
+                Export editable project ZIP
+              </button>
+              <button id="editor-reload" type="button" disabled hidden data-i18n="project.reload">
+                Reload latest (keep entries)
+              </button>
+              <button id="project-delete" type="button" disabled data-i18n="project.delete">
+                Delete project
+              </button>
+              <a id="project-export-download" hidden data-i18n="project.downloadArchive"
+                >Download project ZIP</a
+              >
+            </div>
+          </details>
           <button
             id="project-open-toggle"
             type="button"
@@ -136,147 +172,13 @@
                 Recover project
               </button>
               <button
-                id="project-duplicate-toggle"
+                id="project-import-toggle"
                 type="button"
-                disabled
-                aria-controls="project-duplicate-controls"
+                aria-controls="project-import-controls"
                 aria-expanded="false"
-                data-i18n="project.duplicate"
+                data-i18n="project.import"
               >
-                Duplicate project
-              </button>
-            </div>
-            <p id="project-open-feedback" class="help" role="status" hidden></p>
-          </form>
-          <form id="project-recover-controls" hidden>
-            <fieldset id="project-recover-fields">
-              <legend data-i18n="recovery.open">Recover project</legend>
-              <p class="help" id="project-recover-help" data-i18n="recovery.folderHelp">
-                Open an existing folder whose game.json is missing. Use a workspace-relative path
-                with / separators, or leave it blank for the workspace root. No files are written
-                until you save a repair.
-              </p>
-              <label for="project-recover-folder" data-i18n="recovery.folder"
-                >Existing folder</label
-              >
-              <input
-                id="project-recover-folder"
-                autocomplete="off"
-                aria-describedby="project-recover-help"
-              />
-              <div class="editor-actions">
-                <button
-                  id="project-recover-submit"
-                  type="submit"
-                  class="primary"
-                  data-i18n="recovery.inspect"
-                >
-                  Open for recovery
-                </button>
-                <button id="project-recover-cancel" type="button" data-i18n="project.cancelCreate">
-                  Cancel
-                </button>
-              </div>
-            </fieldset>
-          </form>
-          <form id="project-create-controls" hidden>
-            <fieldset id="project-create-fields">
-              <legend data-i18n="project.new">New project</legend>
-              <p class="help" data-i18n="project.createHelp">
-                Create a game with a start screen and an adventure scene.
-              </p>
-              <label for="project-new-title" data-i18n="game.title">Game title</label>
-              <input id="project-new-title" maxlength="200" required />
-              <label for="project-new-folder" data-i18n="project.newFolder">New folder name</label>
-              <input
-                id="project-new-folder"
-                pattern="[a-zA-Z0-9_\-]+"
-                maxlength="64"
-                autocomplete="off"
-                required
-                aria-describedby="project-folder-help"
-              />
-              <p id="project-folder-help" class="help" data-i18n="project.folderHelp">
-                Use letters, digits, underscores or hyphens. A new folder will be created in the
-                workspace.
-              </p>
-              <label for="project-new-description" data-i18n="metadata.description"
-                >Description</label
-              >
-              <textarea id="project-new-description"></textarea>
-              <div class="editor-actions">
-                <button
-                  id="project-create-submit"
-                  type="submit"
-                  class="primary"
-                  data-i18n="project.create"
-                >
-                  Create project
-                </button>
-                <button id="project-create-cancel" type="button" data-i18n="project.cancelCreate">
-                  Cancel
-                </button>
-              </div>
-            </fieldset>
-            <p id="project-create-error" class="error" role="alert" hidden></p>
-          </form>
-          <form id="project-duplicate-controls" hidden>
-            <fieldset id="project-duplicate-fields">
-              <legend data-i18n="project.duplicate">Duplicate project</legend>
-              <p id="project-duplicate-help" class="help" data-i18n="project.duplicateHelp">
-                Copy the open project's saved files and assets into a new folder, then open the
-                copy. The copy has its own game ID. Unsaved edits are not included.
-              </p>
-              <label for="project-copy-title" data-i18n="game.title">Game title</label>
-              <input id="project-copy-title" maxlength="200" required />
-              <label for="project-copy-folder" data-i18n="project.newFolder">New folder name</label>
-              <input
-                id="project-copy-folder"
-                pattern="[a-zA-Z0-9_\-]+"
-                maxlength="64"
-                autocomplete="off"
-                required
-                aria-describedby="project-duplicate-help"
-              />
-              <div class="editor-actions">
-                <button
-                  id="project-duplicate-submit"
-                  type="submit"
-                  class="primary"
-                  data-i18n="project.duplicate"
-                >
-                  Duplicate project
-                </button>
-                <button
-                  id="project-duplicate-cancel"
-                  type="button"
-                  data-i18n="project.cancelCreate"
-                >
-                  Cancel
-                </button>
-              </div>
-            </fieldset>
-            <p id="project-duplicate-error" class="error" role="alert" hidden></p>
-          </form>
-          <!-- Rarely used project management folds away so the tree keeps the sidebar's height. -->
-          <details id="project-actions" class="project-actions">
-            <summary data-i18n="project.actions">Project actions</summary>
-            <button id="editor-reload" type="button" disabled hidden data-i18n="project.reload">
-              Reload latest (keep entries)
-            </button>
-            <div class="preview-actions">
-              <button
-                id="project-rename-toggle"
-                type="button"
-                disabled
-                aria-controls="project-rename-controls"
-                aria-expanded="false"
-                data-i18n="project.rename"
-              >
-                Rename project
-              </button>
-              <button id="project-delete" type="button" disabled data-i18n="project.delete">
-                Delete project
+                Import project
               </button>
               <button
                 id="project-trash-toggle"
@@ -288,111 +190,24 @@
                 Deleted projects
               </button>
             </div>
-            <div class="preview-actions">
-              <button
-                id="project-import-toggle"
-                type="button"
-                aria-controls="project-import-controls"
-                aria-expanded="false"
-                data-i18n="project.import"
-              >
-                Import project
-              </button>
-              <button id="project-export" type="button" disabled data-i18n="project.export">
-                Export project ZIP
-              </button>
-            </div>
-            <form id="project-import-controls" hidden>
-              <fieldset id="project-import-fields">
-                <legend data-i18n="project.import">Import project</legend>
-                <p class="help" data-i18n="project.importHelp">
-                  Choose an editable project ZIP and an unused folder. The game ID and title are
-                  preserved.
-                </p>
-                <label for="project-import-file" data-i18n="project.archiveFile">Project ZIP</label>
-                <input
-                  id="project-import-file"
-                  type="file"
-                  accept=".zip,application/zip"
-                  required
-                />
-                <label for="project-import-folder" data-i18n="project.importFolder"
-                  >New project folder</label
-                >
-                <input
-                  id="project-import-folder"
-                  maxlength="64"
-                  pattern="[A-Za-z0-9_-]+"
-                  required
-                />
-                <div class="preview-actions">
-                  <button id="project-import-submit" type="submit" data-i18n="project.import">
-                    Import project
-                  </button>
-                  <button id="project-import-cancel" type="button" data-i18n="project.cancelCreate">
-                    Cancel
-                  </button>
-                </div>
-              </fieldset>
-            </form>
-            <p class="help" data-i18n="project.exportHelp">
-              Project ZIPs contain saved source files and assets. Use the toolbar Export for a
-              playable game. Browser progress is kept separately.
-            </p>
-            <form id="project-rename-controls" hidden>
-              <fieldset id="project-rename-fields">
-                <legend data-i18n="project.rename">Rename project</legend>
-                <p class="help" data-i18n="project.renameHelp">
-                  Change the title or folder name. The game ID and preview saves are kept.
-                </p>
-                <label for="project-rename-title" data-i18n="game.title">Game title</label>
-                <input id="project-rename-title" maxlength="200" />
-                <label for="project-rename-folder" data-i18n="project.folderName"
-                  >Folder name</label
-                >
-                <input id="project-rename-folder" maxlength="64" pattern="[A-Za-z0-9_-]+" />
-                <div class="preview-actions">
-                  <button type="submit" data-i18n="project.rename">Rename project</button>
-                  <button id="project-rename-cancel" type="button" data-i18n="project.cancelCreate">
-                    Cancel
-                  </button>
-                </div>
-              </fieldset>
-            </form>
-            <section id="project-trash-controls" hidden aria-labelledby="project-trash-heading">
-              <h3 id="project-trash-heading" data-i18n="project.trash">Deleted projects</h3>
-              <p class="help" data-i18n="project.trashHelp">
-                Deleted projects stay in workspace trash. Restore to the original folder or another
-                unused folder.
-              </p>
-              <label for="project-trash-list" data-i18n="project.trash">Deleted projects</label>
-              <select id="project-trash-list"></select>
-              <label for="project-restore-folder" data-i18n="project.restoreFolder"
-                >Restore folder</label
-              >
-              <input id="project-restore-folder" />
-              <button id="project-restore" type="button" data-i18n="project.restore">
-                Restore project
-              </button>
-            </section>
-          </details>
-          <p
-            id="project-transfer-feedback"
-            class="help"
-            role="status"
-            aria-live="polite"
-            hidden
-          ></p>
-          <a id="project-export-download" hidden data-i18n="project.downloadArchive"
-            >Download project ZIP</a
-          >
-          <p
-            id="project-management-feedback"
-            class="help"
-            role="status"
-            aria-live="polite"
-            hidden
-          ></p>
+            <p id="project-open-feedback" class="help" role="status" hidden></p>
+          </form>
+          <div id="project-notices">
+            <p
+              id="project-transfer-feedback"
+              class="help"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></p>
+            <p
+              id="project-management-feedback"
+              class="help"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></p>
+          </div>
           <div id="draft-recovery" class="draft-recovery" hidden>
             <p id="draft-recovery-message" role="status" aria-live="polite"></p>
             <div class="preview-actions">
@@ -704,6 +519,175 @@
           >Edit saved game files. Restart the preview to see changes.</span
         >
       </footer>
+      <dialog id="project-task-dialog" aria-labelledby="project-task-title">
+        <h2 id="project-task-title"></h2>
+        <p id="project-task-source"></p>
+        <form id="project-create-controls" hidden>
+          <fieldset id="project-create-fields">
+            <legend data-i18n="project.new">New project</legend>
+            <p class="help" data-i18n="project.createHelp">
+              Create a game with a start screen and an adventure scene.
+            </p>
+            <label for="project-new-title" data-i18n="game.title">Game title</label>
+            <input id="project-new-title" maxlength="200" required />
+            <label for="project-new-folder" data-i18n="project.newFolder">New folder name</label>
+            <input
+              id="project-new-folder"
+              pattern="[a-zA-Z0-9_\-]+"
+              maxlength="64"
+              autocomplete="off"
+              required
+              aria-describedby="project-folder-help"
+            />
+            <p id="project-folder-help" class="help" data-i18n="project.folderHelp">
+              Use letters, digits, underscores or hyphens. A new folder will be created in the
+              workspace.
+            </p>
+            <label for="project-new-description" data-i18n="metadata.description"
+              >Description</label
+            >
+            <textarea id="project-new-description"></textarea>
+            <div class="editor-actions">
+              <button
+                id="project-create-submit"
+                type="submit"
+                class="primary"
+                data-i18n="project.create"
+              >
+                Create project
+              </button>
+              <button id="project-create-cancel" type="button" data-i18n="project.cancelCreate">
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+          <p id="project-create-error" class="error" role="alert" hidden></p>
+        </form>
+        <form id="project-duplicate-controls" hidden>
+          <fieldset id="project-duplicate-fields">
+            <legend data-i18n="project.duplicate">Duplicate project</legend>
+            <p id="project-duplicate-help" class="help" data-i18n="project.duplicateHelp">
+              Copy the open project's saved files and assets into a new folder, then open the copy.
+              The copy has its own game ID. Unsaved edits are not included.
+            </p>
+            <label for="project-copy-title" data-i18n="game.title">Game title</label>
+            <input id="project-copy-title" maxlength="200" required />
+            <label for="project-copy-folder" data-i18n="project.newFolder">New folder name</label>
+            <input
+              id="project-copy-folder"
+              pattern="[a-zA-Z0-9_\-]+"
+              maxlength="64"
+              autocomplete="off"
+              required
+              aria-describedby="project-duplicate-help"
+            />
+            <div class="editor-actions">
+              <button
+                id="project-duplicate-submit"
+                type="submit"
+                class="primary"
+                data-i18n="project.duplicate"
+              >
+                Duplicate project
+              </button>
+              <button id="project-duplicate-cancel" type="button" data-i18n="project.cancelCreate">
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+          <p id="project-duplicate-error" class="error" role="alert" hidden></p>
+        </form>
+        <form id="project-rename-controls" hidden>
+          <fieldset id="project-rename-fields">
+            <legend data-i18n="project.rename">Rename project</legend>
+            <p class="help" data-i18n="project.renameHelp">
+              Change the title or folder name. The game ID and preview saves are kept.
+            </p>
+            <label for="project-rename-title" data-i18n="game.title">Game title</label>
+            <input id="project-rename-title" maxlength="200" />
+            <label for="project-rename-folder" data-i18n="project.folderName">Folder name</label>
+            <input id="project-rename-folder" maxlength="64" pattern="[A-Za-z0-9_\-]+" />
+            <div class="preview-actions">
+              <button type="submit" data-i18n="project.rename">Rename project</button>
+              <button id="project-rename-cancel" type="button" data-i18n="project.cancelCreate">
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+        </form>
+        <form id="project-recover-controls" hidden>
+          <fieldset id="project-recover-fields">
+            <legend data-i18n="recovery.open">Recover project</legend>
+            <p class="help" id="project-recover-help" data-i18n="recovery.folderHelp">
+              Open an existing folder whose game.json is missing. Use a workspace-relative path with
+              / separators, or leave it blank for the workspace root. No files are written until you
+              save a repair.
+            </p>
+            <label for="project-recover-folder" data-i18n="recovery.folder">Existing folder</label>
+            <input
+              id="project-recover-folder"
+              autocomplete="off"
+              aria-describedby="project-recover-help"
+            />
+            <div class="editor-actions">
+              <button
+                id="project-recover-submit"
+                type="submit"
+                class="primary"
+                data-i18n="recovery.inspect"
+              >
+                Open for recovery
+              </button>
+              <button id="project-recover-cancel" type="button" data-i18n="project.cancelCreate">
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+        </form>
+        <form id="project-import-controls" hidden>
+          <fieldset id="project-import-fields">
+            <legend data-i18n="project.import">Import project</legend>
+            <p class="help" data-i18n="project.importHelp">
+              Choose an editable project ZIP and an unused folder. The game ID and title are
+              preserved.
+            </p>
+            <label for="project-import-file" data-i18n="project.archiveFile">Project ZIP</label>
+            <input id="project-import-file" type="file" accept=".zip,application/zip" required />
+            <label for="project-import-folder" data-i18n="project.importFolder"
+              >New project folder</label
+            >
+            <input id="project-import-folder" maxlength="64" pattern="[A-Za-z0-9_\-]+" required />
+            <div class="preview-actions">
+              <button id="project-import-submit" type="submit" data-i18n="project.import">
+                Import project
+              </button>
+              <button id="project-import-cancel" type="button" data-i18n="project.cancelCreate">
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+        </form>
+        <section id="project-trash-controls" hidden aria-labelledby="project-trash-heading">
+          <h3 id="project-trash-heading" data-i18n="project.trash">Deleted projects</h3>
+          <p class="help" data-i18n="project.trashHelp">
+            Deleted projects stay in workspace trash. Restore to the original folder or another
+            unused folder.
+          </p>
+          <label for="project-trash-list" data-i18n="project.trash">Deleted projects</label>
+          <select id="project-trash-list"></select>
+          <label for="project-restore-folder" data-i18n="project.restoreFolder"
+            >Restore folder</label
+          >
+          <input id="project-restore-folder" />
+          <button id="project-restore" type="button" data-i18n="project.restore">
+            Restore project
+          </button>
+        </section>
+        <div id="project-task-notices"></div>
+        <button id="project-task-close" type="button" data-i18n="project.cancelCreate">
+          Cancel
+        </button>
+      </dialog>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
