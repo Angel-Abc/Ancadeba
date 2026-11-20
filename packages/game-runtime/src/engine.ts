@@ -314,10 +314,24 @@ export class Engine implements IEngine {
         session.releaseSaves = persistence.dispose
       }
 
-      if (game.input) {
+      const scenes = [...game.scenes.values()]
+
+      const hasInteractiveMap = scenes.some((scene) =>
+        scene.components.some(
+          (component) => component.type === 'map-view' && component.interactive !== false,
+        ),
+      )
+
+      // Even without a default Escape menu, a game can open a stand-alone scene as a paused menu.
+      const canPause =
+        scenes.some((scene) => scene.type === 'game') &&
+        scenes.some((scene) => scene.type === 'stand-alone')
+
+      if (game.input || hasInteractiveMap || canPause) {
         // A release/cancellation belongs to the same context as its original press.
         const inputOwners = new Map<string, GameActionRuntime | undefined>()
         session.input = new InputController(game.input, {
+          subscribe: (topic, handle) => session.messages.subscribe(topic, handle),
           publish(topic, payload) {
             const key = JSON.stringify([payload.context, payload.input])
             let owner: GameActionRuntime | undefined

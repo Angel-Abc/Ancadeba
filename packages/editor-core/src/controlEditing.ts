@@ -23,7 +23,10 @@ export function editControls(
 
     if (!game.input && Object.hasOwn(documents, file))
       throw new EditorError(409, 'input_exists', 'An input file already exists with that ID')
-    documents[file] = { ...object(documents[file]), ...command.input }
+    const updated = { ...object(documents[file]), ...command.input }
+
+    if (!command.input['scene-keys']) delete updated['scene-keys']
+    documents[file] = updated
 
     if (game.input) return [file]
     documents['game.json'] = { ...object(documents['game.json']), input: command.inputId }

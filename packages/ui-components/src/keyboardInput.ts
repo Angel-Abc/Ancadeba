@@ -1,5 +1,10 @@
+import type { IGameInput } from '@ancadeba/game-runtime'
+
 /** Structural contract implemented by the runtime without a browser dependency. */
 export interface KeyboardInputSink {
+  readonly bindSceneKeys?: IGameInput['bindSceneKeys']
+  readonly isSceneKey?: IGameInput['isSceneKey']
+  readonly isReservedKey?: IGameInput['isReservedKey']
   readonly context?: string
   getKeyboardCodes?(context: string, input: string): readonly string[]
   subscribeContextChanges?(listener: (context: string) => void): () => void
@@ -50,22 +55,28 @@ export function bindKeyboardInput(
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.defaultPrevented) return
+    const reserved = input.isReservedKey?.(event.code) === true
+
+    if (event.isComposing || event.ctrlKey || event.altKey || event.metaKey) return
 
     if (
-      !hasFocus(capturesKey?.(event.code) === true) ||
-      event.isComposing ||
-      event.ctrlKey ||
-      event.altKey ||
-      event.metaKey
+      !reserved &&
+      !hasFocus(capturesKey?.(event.code) === true || input.isSceneKey?.(event.code) === true)
     )
       return
 
     // Native button activation owns Enter and Space, even when a game maps those codes.
     if (
-      document.activeElement?.closest('button') &&
-      ['Enter', 'NumpadEnter', 'Space'].includes(event.code)
+      ['Enter', 'NumpadEnter', 'Space'].includes(event.code) &&
+      document.activeElement?.closest('button')
     )
       return
+
+    if (reserved) {
+      // The surface owns this shortcut even when one of its editable controls has focus.
+      event.preventDefault()
+      event.stopPropagation()
+    }
 
     if (event.repeat) {
       if (tracked.has(event.code) && input.isKeyMapped(event.code)) event.preventDefault()
@@ -85,9 +96,9 @@ export function bindKeyboardInput(
     if (input.releaseKey(event.code)) event.preventDefault()
   }
 
-  // Claimed slots run before interactive descendants such as map views.
+  // Give reserved shortcuts and claimed slots priority over descendants' keyboard handlers.
   const onCapturedKeyDown = (event: KeyboardEvent) => {
-    if (capturesKey?.(event.code)) onKeyDown(event)
+    if (input.isReservedKey?.(event.code) || capturesKey?.(event.code)) onKeyDown(event)
   }
 
   const onFocusIn = () => {

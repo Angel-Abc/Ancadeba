@@ -11,19 +11,12 @@ import type {
   RenderedComponent,
 } from './componentRendering.js'
 
-const directions = new Map([
-  ['ArrowUp', { x: 0, y: -1 }],
-  ['ArrowDown', { x: 0, y: 1 }],
-  ['ArrowLeft', { x: -1, y: 0 }],
-  ['ArrowRight', { x: 1, y: 0 }],
-])
-
-const movementDirections = new Map<string, MapDirection>([
-  ['ArrowUp', 'north'],
-  ['ArrowRight', 'east'],
-  ['ArrowDown', 'south'],
-  ['ArrowLeft', 'west'],
-])
+const offsets = {
+  north: { x: 0, y: -1 },
+  south: { x: 0, y: 1 },
+  west: { x: -1, y: 0 },
+  east: { x: 1, y: 0 },
+}
 
 function clampCoordinate(value: number, maximum: number): number {
   return Math.min(maximum, Math.max(0, value))
@@ -191,27 +184,14 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
         })
       : undefined
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.isComposing ||
-        event.ctrlKey ||
-        event.altKey ||
-        event.metaKey
-      )
-        return
-      const direction = directions.get(event.key)
-
-      if (!direction) return
-      event.preventDefault()
-
+    const moveMap = (heading: MapDirection) => {
       if (sharedMovement) {
-        const direction = movementDirections.get(event.key)
-
-        if (direction) movement.move(scene, component.id, direction)
+        movement.move(scene, component.id, heading)
 
         return
       }
+
+      const direction = offsets[heading]
 
       if (playerPosition) {
         if (cancelStep) return
@@ -240,10 +220,9 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
       } else panTo(x + direction.x, y + direction.y)
     }
 
-    if (component.interactive !== false) root.addEventListener('keydown', onKeyDown)
-
     return {
       element: root,
+      moveMap: component.interactive !== false ? moveMap : undefined,
       dispose() {
         active = false
 
@@ -253,7 +232,6 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
         cancelStep?.()
         unsubscribeMovement?.()
         unsubscribeObjects?.()
-        root.removeEventListener('keydown', onKeyDown)
         root.remove()
       },
     }

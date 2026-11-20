@@ -2,6 +2,7 @@ import type { FormDraft } from './formRenderer.js'
 import type { IGameLifecycle, SceneInstance } from '@ancadeba/game-runtime'
 import { ComponentRenderer } from './componentRenderer.js'
 import { ActionInfo } from './actionInfo.js'
+import { bindSceneInput } from './sceneInput.js'
 import type {
   ComponentRenderContext,
   ComponentRendererOptions,
@@ -11,6 +12,8 @@ import type {
 
 export interface SceneRendererOptions extends ComponentRendererOptions {
   readonly onActionBarFocusLost?: () => void
+  readonly keyboardSurface?: HTMLElement
+  readonly menuShortcutFor?: (scene: SceneInstance) => (() => void) | undefined
 }
 
 /** Renders only the active scene. Geometry comes from data; appearance comes from CSS. */
@@ -81,7 +84,9 @@ export class SceneRenderer {
 
       const active = this.target.ownerDocument.activeElement
 
-      if (
+      if (next?.hasMapInput && (!active || active === this.target.ownerDocument.body))
+        this.options.keyboardSurface?.focus({ preventScroll: true })
+      else if (
         focusedButton &&
         (!active || active === focused || active === this.target.ownerDocument.body)
       )
@@ -92,7 +97,7 @@ export class SceneRenderer {
     }
   }
 
-  private createScene(scene: SceneInstance): RenderedComponent {
+  private createScene(scene: SceneInstance) {
     const data = this.options.localization?.current.scenes.get(scene.data.id) ?? scene.data
     const document = this.target.ownerDocument
     const root = document.createElement('section')
@@ -105,6 +110,7 @@ export class SceneRenderer {
     root.style.setProperty('--ge-scene-grid-columns', String(columns))
 
     const components: RenderedComponent[] = []
+    let unbindInput: (() => void) | undefined
     let active = true
 
     const rendered: RenderedComponent = {
@@ -112,6 +118,7 @@ export class SceneRenderer {
       dispose() {
         if (!active) return
         active = false
+        unbindInput?.()
         const errors: unknown[] = []
 
         try {
@@ -178,7 +185,16 @@ export class SceneRenderer {
         root.append(element)
       }
 
-      return rendered
+      const maps = components.filter((component) => component.moveMap)
+      unbindInput = bindSceneInput(
+        this.options.input,
+        maps,
+        this.options.keyboardSurface ?? this.target,
+        this.options.menuShortcutFor?.(scene),
+        (this.options.game ?? this.lifecycle.currentGame?.data)?.input?.sceneKeys,
+      )
+
+      return { ...rendered, hasMapInput: maps.length > 0 && Boolean(unbindInput) }
     } catch (error) {
       rendered.dispose()
       throw error

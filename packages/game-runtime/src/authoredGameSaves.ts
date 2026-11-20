@@ -80,7 +80,7 @@ export function bindAuthoredGameSaves({
         contentVersion: game.saveCompatibility ?? game.version,
         scene: lastScene,
         language: game.language,
-        inputContext: input()?.context,
+        inputContext: game.input ? input()?.context : undefined,
         ...(playthrough?.save() ?? { state: [], log: [] }),
         inventory: Object.fromEntries(
           (instance.inventory?.snapshot ?? []).map(({ id, ...item }) => [id, item]),

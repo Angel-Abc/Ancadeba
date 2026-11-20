@@ -134,6 +134,7 @@ export interface MapViewComponentData extends Omit<MapViewComponentDefinition, '
 }
 
 export interface InputData {
+  readonly sceneKeys?: Readonly<NonNullable<InputDefinition['scene-keys']>>
   readonly virtualKeys: readonly string[]
   readonly keyboard: Readonly<Record<string, string>>
   readonly contexts: Readonly<Record<string, Readonly<Record<string, string>>>>
@@ -598,7 +599,7 @@ export function assembleGameData(
   }
 
   if (definition['menu-scene'] && scenes.get(definition['menu-scene'])?.type !== 'stand-alone')
-    throw new Error('The Escape menu must be a stand-alone scene')
+    throw new Error('The game menu must be a stand-alone scene')
 
   for (const scene of scenes.values())
     for (const component of scene.components) {
@@ -762,6 +763,9 @@ export function assembleGameData(
     ...(inputDefinition
       ? {
           input: {
+            ...(inputDefinition['scene-keys'] && {
+              sceneKeys: { ...inputDefinition['scene-keys'] },
+            }),
             virtualKeys: [...inputDefinition['virtual-keys']],
             keyboard: { ...inputDefinition.keyboard },
             contexts: Object.fromEntries(

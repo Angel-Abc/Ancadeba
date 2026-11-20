@@ -518,7 +518,7 @@ arrow keys mapped to the same directional inputs.
 The per-playthrough `mapMovement` service shares each map view's position between
 the map view, buttons, and keyboard. A movement button disables when the destination
 is blocked or outside the map, and all directions disable while a step is pending.
-Terrain delays use the injected scheduler, matching focused-map arrow movement.
+Terrain delays use the injected scheduler for both buttons and keyboard movement.
 Each completed step adds one progression turn, including zero-delay terrain, and
 charges its destination terrain's `movementCostMs` under the world's time policy.
 Action-driven time adds that cost; elapsed time counts only elapsed host time;
@@ -1388,8 +1388,10 @@ may not have reached storage yet. Autosave failures have separate feedback and k
 the previous checkpoint intact. Autosave uses the same validation and compatibility
 checks as manual saves.
 
-Set **Escape menu scene** in game properties to a stand-alone scene. Escape opens
-it from gameplay and returns from it or its submenus. The gameplay scene instance,
+Set **Game menu scene** in game properties to a stand-alone scene. The menu key
+(Escape by default) queues a `menu.toggle` virtual input to open it from gameplay
+or resume from the menu or any of its submenus.
+An open confirmation dialog takes Escape first. The gameplay scene instance,
 scene-local selections, map movement, pending action delays, and elapsed gameplay
 clock are retained while paused. Menus remain interactive. Use `open-menu` to open
 a menu from a button, `resume-game` to return, and `enter-scene` to navigate between
@@ -2006,8 +2008,8 @@ contain at least one mapping. Multiple physical keys may share a virtual key,
 and multiple virtual keys may share a virtual input.
 
 `GameLoader` assembles a copied `GameData.input` without the file schema version.
-Each running engine session creates its own `InputController`; `engine.input`
-is available only while running and only when the game defines input. The host
+Games with an input definition, an interactive map, or support for paused menus get a session-owned
+`InputController`. It is available through `engine.input` while the game runs. The host
 receives it earlier through `mount(game, { input })` to attach browser listeners.
 `InputData`, `IGameInput`, `VirtualInput`, and `EngineHostSession` are exported
 from game-runtime. Browser adapters remain in ui-components.
@@ -2038,9 +2040,21 @@ cancels active inputs and clears held state. Engine stop silently disposes the
 controller before host cleanup, and retained references become inert.
 
 The standalone game and editor preview use the same `bindKeyboardInput` adapter.
-Their game surfaces are focusable without stealing focus. Focus the surface to
-play; input in editor fields, editable game controls, or outside the game surface
-is ignored. Losing focus, entering an editable control, hiding the document, or
+When an interactive map appears and the document has no focused control, the
+game surface takes focus. Movement keys work throughout that surface, including on
+game buttons. A movement key queues a directional `input.virtual` event such as `map.east`. Its handler
+moves the focused interactive map, or the first interactive map in scene order
+when focus is elsewhere in the game. Editable controls keep their native keys.
+
+Set project-wide shortcuts in **Game input bindings → Movement and menu**.
+The input file stores overrides in `"scene-keys"`, for example
+`"scene-keys": { "map.north": "KeyW", "menu.toggle": "KeyM" }`.
+Omitted directions use their arrow keys and the menu defaults to Escape.
+A remapped key takes priority over other keyboard mappings while its map or menu
+control is available. Existing authored bindings on the default arrow keys keep
+their priority. These controls work in scenes without an action bar.
+
+Losing focus, entering an editable control, hiding the document, or
 blurring the window resets held input. Native keyboard repeat, composition, and
 Ctrl/Alt/Meta shortcuts are ignored. Shift does not change physical bindings.
 Releases of tracked keys are processed even when modifiers change. Only accepted

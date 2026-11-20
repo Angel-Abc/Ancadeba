@@ -4,7 +4,7 @@ import { rememberEntryFocus } from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
-import { actionBarComponentSchema } from '@ancadeba/schemas'
+import { actionBarComponentSchema, sceneControlSchema } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
@@ -325,7 +325,7 @@ export function bindActionBarPanel(
       inputId: z.string(),
       inputSelection: z
         .object({
-          view: z.enum(['keyboard', 'contexts', 'keys']),
+          view: z.enum(['keyboard', 'contexts', 'keys', 'scene']),
           context: z.string(),
           entries: z.record(z.string(), z.number()),
         })
@@ -334,6 +334,7 @@ export function bindActionBarPanel(
       inputDraft: z
         .object({
           virtualKeys: z.string(),
+          sceneKeys: z.partialRecord(sceneControlSchema, z.string()).default({}),
           keyboard: z.array(z.object({ code: z.string(), key: z.string() })),
           contexts: z.record(z.string(), z.array(z.object({ key: z.string(), input: z.string() }))),
           initialContext: z.string(),

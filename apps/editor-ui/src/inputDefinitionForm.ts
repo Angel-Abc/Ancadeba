@@ -1,11 +1,18 @@
 import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
-import { gameIdSchema, inputSchema, type InputDefinition } from '@ancadeba/schemas'
+import {
+  defaultSceneKeys,
+  gameIdSchema,
+  inputSchema,
+  sceneControlSchema,
+  type InputDefinition,
+  type SceneControl,
+} from '@ancadeba/schemas'
 import type { RuleFormControls } from './ruleFormControls.js'
 import { entryEditor, type EntrySelections } from './specialistEntries.js'
 
 export interface InputSelection {
-  view: 'keyboard' | 'contexts' | 'keys'
+  view: 'keyboard' | 'contexts' | 'keys' | 'scene'
   context: string
   entries: EntrySelections
 }
@@ -21,6 +28,7 @@ class BindingError extends Error {
 }
 
 export interface InputDraft {
+  sceneKeys: Partial<Record<SceneControl, string>>
   virtualKeys: string
   keyboard: { code: string; key: string }[]
   contexts: Record<string, { key: string; input: string }[]>
@@ -30,6 +38,7 @@ export interface InputDraft {
 
 export function createInputDraft(input: InputDefinition): InputDraft {
   return {
+    sceneKeys: { ...input['scene-keys'] },
     virtualKeys: input['virtual-keys'].join(', '),
     keyboard: Object.entries(input.keyboard).map(([code, key]) => ({ code, key })),
     contexts: Object.fromEntries(
@@ -90,6 +99,7 @@ export function readInputDraft(
       ]),
     ),
     'initial-context': draft.initialContext,
+    ...(Object.keys(draft.sceneKeys).length && { 'scene-keys': draft.sceneKeys }),
   }
 
   const parsed = inputSchema.safeParse(input)
@@ -150,6 +160,7 @@ export function inputDefinitionForm(
 
   const views = [
     ['keyboard', 'controls.keyboardMappings'],
+    ['scene', 'controls.movementMenu'],
     ['contexts', 'controls.inputContexts'],
     ['keys', 'controls.virtualKeysView'],
   ] as const
@@ -169,6 +180,40 @@ export function inputDefinitionForm(
     )
     body.replaceChildren()
     focusFields = {}
+
+    if (selection.view === 'scene') {
+      const help = create('p')
+      help.textContent = t('controls.sceneKeyHelp')
+      body.append(help)
+
+      for (const control of sceneControlSchema.options) {
+        const defaultCode = defaultSceneKeys[control]
+
+        const row = input(
+          t(`controls.${control}`),
+          draft.sceneKeys[control] ?? defaultCode,
+          (value) => {
+            const code = value.trim()
+
+            if (!code || code === defaultCode) delete draft.sceneKeys[control]
+            else draft.sceneKeys[control] = code
+          },
+        )
+
+        row.querySelector('input')!.placeholder = defaultCode
+        body.append(field(control, row))
+      }
+
+      body.append(
+        button(t('controls.restoreSceneKeys'), () =>
+          update(() => {
+            draft.sceneKeys = {}
+          }),
+        ),
+      )
+
+      return
+    }
 
     if (selection.view === 'keys') {
       body.append(
@@ -354,7 +399,10 @@ export function inputDefinitionForm(
       const [scope, id, key] = failure.path.map(String)
       let target = 'keys'
 
-      if (scope === 'keyboard') {
+      if (scope === 'scene-keys') {
+        selection.view = 'scene'
+        target = id ?? 'map.north'
+      } else if (scope === 'keyboard') {
         selection.view = 'keyboard'
         const index = selection.entries.keyboard ?? 0
 

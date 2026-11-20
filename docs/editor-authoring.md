@@ -1338,7 +1338,16 @@ The panel updates descriptions and runtime reasons as availability changes;
 an override is useful for explaining custom enable conditions. Restart the
 preview after saving these settings.
 
-Choose **Move on map** as a slot's action type to expose directional movement.
+To set the game's movement and menu shortcuts, open **Action bar & input → Game
+input bindings → Movement and menu**. If the game has no input configuration,
+choose **Create input configuration** first. The arrow keys move north, east,
+south, and west. Escape opens the game menu and resumes play. Enter physical
+key codes such as `KeyW` for north or `KeyM` for the menu, choose **Save input
+bindings**, and restart the preview. Each custom key takes priority while its
+control is available. Clear a field to restore one default, or choose **Restore
+default keys** to reset all five. These shortcuts work without an action bar.
+
+To add clickable movement buttons, choose **Move on map** as a slot's action type.
 Select **Target map view** from the interactive maps in that scene and choose
 **Direction** (`north`, `east`, `south`, or `west`). The map must have a player
 spawn and must not set `interactive: false`. Save those map settings in the
@@ -1467,10 +1476,10 @@ full-content fingerprints are incompatible and have no upgrade path. See the REA
 for the compatibility boundary.
 The component editor offers `save-game`, `load-game`, `load-autosave`, `delete-save`,
 `import-save`, and `export-save` button actions without a scene target.
-Choose a stand-alone **Escape menu scene** in game properties. `open-menu` pauses
+Choose a stand-alone **Game menu scene** in game properties. `open-menu` pauses
 gameplay and retains its scene, `resume-game` returns to it, and `main-menu` ends
 the playthrough before entering its target. Ordinary navigation between stand-alone
-menu scenes stays paused; Escape resumes gameplay from any of these submenus.
+menu scenes stays paused. The menu key (Escape by default) resumes gameplay from any submenu.
 Save policy checks use the retained gameplay scene and position.
 The Basic Game's main-menu Load Game button is enabled when a slot exists.
 See [Save and load](../README.md#save-and-load) for saved systems, storage behavior,

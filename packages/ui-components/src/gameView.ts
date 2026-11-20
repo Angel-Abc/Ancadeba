@@ -2,6 +2,7 @@ import type {
   GameData,
   IGameLifecycle,
   SceneData,
+  SceneInstance,
   IGameSaves,
   GameSaveFile,
   SubmitForm,
@@ -56,6 +57,7 @@ export function mountGameView(
   viewport.className = 'ancadeba-scene-viewport'
   const cleanups: (() => void)[] = []
   let disposed = false
+  let sceneRevision = 0
 
   const confirmations = new GameConfirmationDialog(
     root,
@@ -117,10 +119,10 @@ export function mountGameView(
     session.lifecycle.enterScene(scene.id, entrance)
   }
 
-  const openMenu = (id: string) => {
+  const openMenu = (id: string, stillCurrent?: () => boolean) => {
     session.input?.reset()
 
-    if (session.prepareMenu?.() === false) return
+    if (session.prepareMenu?.() === false || stillCurrent?.() === false) return
     session.lifecycle.openMenu?.(id)
     root.focus()
   }
@@ -131,36 +133,35 @@ export function mountGameView(
     root.focus()
   }
 
-  const onMenuKey = (event: KeyboardEvent) => {
-    if (
-      event.code !== 'Escape' ||
-      event.defaultPrevented ||
-      event.isComposing ||
-      event.ctrlKey ||
-      event.altKey ||
-      event.metaKey
-    )
-      return
+  const menuShortcutFor = (scene: SceneInstance) => {
+    const suspended = session.lifecycle.suspendedScene
+    const menu = game.menuScene
 
-    if (
-      !session.lifecycle.suspendedScene &&
-      (!game.menuScene || session.lifecycle.activeScene?.type !== 'game')
-    )
-      return
-    event.preventDefault()
-    event.stopPropagation()
+    if (!suspended && (!menu || scene.type !== 'game')) return
 
-    if (event.repeat) return
+    const revision = sceneRevision
+    const stillCurrent = () => !disposed && !confirmations.isOpen && revision === sceneRevision
 
-    if (session.lifecycle.suspendedScene) resume()
-    else openMenu(game.menuScene!)
+    // Opening a menu settles queued gameplay work, which must happen outside message delivery.
+    return () =>
+      queueMicrotask(() => {
+        if (!stillCurrent()) return
+
+        if (suspended) resume()
+        else if (menu) openMenu(menu, stillCurrent)
+      })
   }
 
   try {
     if (localization) cleanups.push(localization.subscribe(syncMetadata))
 
     if (localization) cleanups.push(localization.subscribe(() => confirmations.refresh()))
-    cleanups.push(session.lifecycle.subscribeSceneChanges(() => confirmations.cancel()))
+    cleanups.push(
+      session.lifecycle.subscribeSceneChanges(() => {
+        sceneRevision++
+        confirmations.cancel()
+      }),
+    )
     let selectedSlot = session.saves?.selectedSlot
 
     if (session.saves)
@@ -171,9 +172,6 @@ export function mountGameView(
           confirmations.cancel()
         }),
       )
-
-    root.addEventListener('keydown', onMenuKey, true)
-    cleanups.push(() => root.removeEventListener('keydown', onMenuKey, true))
 
     if (options.scenePicker) {
       const label = document.createElement('label')
@@ -265,6 +263,8 @@ export function mountGameView(
       onLoadGame: () => load(),
       onLoadAutosave: () => load(true),
       input: session.input,
+      keyboardSurface: root,
+      menuShortcutFor,
       onActionBarFocusLost: () => root.focus(),
       assets: game.assets,
       localization,

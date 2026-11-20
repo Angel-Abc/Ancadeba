@@ -2623,6 +2623,46 @@ describe('action bar editor controls', () => {
     })
   })
 
+  it('edits and restores movement and menu keys without an action bar', () => {
+    const { controls, commands, initial, field, edit, click, submit, root } = panel(false)
+    click('Game input bindings')
+    click('Create input configuration')
+    click('Movement and menu')
+    expect(
+      ['Move north', 'Move east', 'Move south', 'Move west', 'Toggle game menu'].map(
+        (label) => field(label).value,
+      ),
+    ).toEqual(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Escape'])
+    edit('Move north', 'ArrowRight')
+    submit('Save input bindings')
+    expect(commands).toHaveLength(0)
+    expect(root.textContent).toContain('ArrowRight is assigned to both')
+    edit('Move north', 'KeyW')
+    edit('Toggle game menu', 'KeyM')
+    submit('Save input bindings')
+    const created = applyCommand(project(false), commands[0]!)
+    expect(created.changedFiles).toEqual(['input/controls.json', 'game.json'])
+    const view = inspectProject(created.project)
+    expect(view.input?.['scene-keys']).toEqual({ 'map.north': 'KeyW', 'menu.toggle': 'KeyM' })
+    controls.render(
+      { ...initial, view, preserveDrafts: true, lastCommand: 'game.updateInput' },
+      true,
+    )
+    expect(field('Move north').value).toBe('KeyW')
+    expect(field('Toggle game menu').value).toBe('KeyM')
+    edit('Move north', '')
+    submit('Save input bindings')
+    const cleared = applyCommand(created.project, commands[1]!)
+    expect(inspectProject(cleared.project).input?.['scene-keys']).toEqual({ 'menu.toggle': 'KeyM' })
+    click('Restore default keys')
+    expect(field('Toggle game menu').value).toBe('Escape')
+    submit('Save input bindings')
+    const restored = applyCommand(cleared.project, commands[2]!)
+    const saved = inspectProject(restored.project).input
+    expect(saved).not.toHaveProperty('scene-keys')
+    expect(saved?.keyboard).toEqual(view.input?.keyboard)
+  })
+
   it('validates input edits without losing entries and preserves the input draft after a bar save', () => {
     const { controls, commands, initial, field, edit, click, submit, root } = panel()
     click('Game input bindings')

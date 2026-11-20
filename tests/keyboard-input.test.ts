@@ -143,7 +143,7 @@ function setup(capturesKey?: (code: string) => boolean) {
   const input = new InputController(
     {
       virtualKeys: ['north', 'confirm'],
-      keyboard: { KeyW: 'north', ArrowUp: 'north', Enter: 'confirm' },
+      keyboard: { KeyW: 'north', ArrowUp: 'north', Enter: 'confirm', Escape: 'confirm' },
       contexts: {
         gameplay: { north: 'moveNorth' },
         menu: { north: 'selectPrevious', confirm: 'accept' },
@@ -183,6 +183,39 @@ describe('browser timing adapter', () => {
 })
 
 describe('shared keyboard adapter', () => {
+  it('reserves the menu shortcut over authored Escape only while available', () => {
+    const { document, surface, messages, input, handler, cleanup } = setup()
+    input.setContext('menu')
+    const toggle = vi.fn()
+
+    const unbind = input.bindSceneKeys({
+      keyboard: new Map([['Escape', 'menu.toggle']]),
+      reserved: new Set(['Escape']),
+      capture: (id) => (id === 'menu.toggle' ? toggle : undefined),
+    })
+
+    const field = document.createElement('input')
+    surface.append(field)
+    document.activeElement = field
+    expect(input.getKeyboardCodes('menu', 'accept')).toEqual(['Enter'])
+    expect(key(surface, 'keydown', 'Escape', { isComposing: true }).defaultPrevented).toBe(false)
+    expect(key(surface, 'keydown', 'Escape', { ctrlKey: true }).defaultPrevented).toBe(false)
+    expect(key(surface, 'keydown', 'Escape').defaultPrevented).toBe(true)
+    expect(key(surface, 'keydown', 'Escape', { repeat: true }).defaultPrevented).toBe(true)
+    expect(key(surface, 'keyup', 'Escape').defaultPrevented).toBe(true)
+    expect(toggle).not.toHaveBeenCalled()
+    messages.flush()
+    expect(toggle).toHaveBeenCalledTimes(1)
+    expect(handler.mock.calls.map(([event]) => event.input)).toEqual(['menu.toggle', 'menu.toggle'])
+    unbind()
+    expect(input.getKeyboardCodes('menu', 'accept')).toEqual(['Enter', 'Escape'])
+    document.activeElement = surface
+    key(surface, 'keydown', 'Escape')
+    messages.flush()
+    expect(handler).toHaveBeenLastCalledWith({ context: 'menu', input: 'accept', phase: 'pressed' })
+    cleanup()
+  })
+
   it('accepts claimed action-bar keys while an inventory Inspect button has focus', () => {
     const { document, surface, messages, input, handler, cleanup } = setup((code) =>
       ['KeyW', 'Enter', 'Space'].includes(code),

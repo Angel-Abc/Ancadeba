@@ -13,6 +13,10 @@ export class GameConfirmationDialog {
   private pending: PendingConfirmation | undefined
   private disposed = false
 
+  get isOpen(): boolean {
+    return this.pending !== undefined
+  }
+
   constructor(
     private readonly surface: HTMLElement,
     private readonly target: HTMLElement,

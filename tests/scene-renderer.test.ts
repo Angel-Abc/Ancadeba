@@ -15,6 +15,7 @@ import {
   gameRulesSchema,
   languageCatalogSchema,
   mapDefinitionSchema,
+  type InputDefinition,
 } from '@ancadeba/schemas'
 import {
   Engine,
@@ -181,6 +182,11 @@ class TestElement extends EventTarget {
       (element === this || this.children.some((child) => child.contains(element)))
     )
   }
+  closest(selector: string): TestElement | null {
+    return selector.split(',').some((tag) => tag.trim().toUpperCase() === this.tagName)
+      ? this
+      : (this.parent?.closest(selector) ?? null)
+  }
   find(predicate: (element: TestElement) => boolean): TestElement | undefined {
     if (predicate(this)) return this
 
@@ -235,6 +241,14 @@ class TestDocument extends EventTarget {
 }
 
 const logger: ILogger = { debug: () => '', info: () => '', warn: () => '', error: () => '' }
+
+function pressKey(surface: TestElement, code: string): boolean {
+  const down = Object.assign(new Event('keydown', { cancelable: true }), { code })
+  surface.dispatchEvent(down)
+  surface.dispatchEvent(Object.assign(new Event('keyup', { cancelable: true }), { code }))
+
+  return down.defaultPrevented
+}
 
 const confirmation = (target: TestElement) =>
   target.find((node) => node.attributes.get('role') === 'alertdialog')
@@ -432,7 +446,7 @@ describe('character creation and stat discovery', () => {
 
   const stat = (id: string) => ({ source: 'game.state', path: ['stats', id] }) as const
 
-  async function launch(preview: boolean) {
+  async function launch(preview: boolean, sceneKeys?: InputDefinition['scene-keys']) {
     const document = new TestDocument()
     const target = document.createElement('main')
     const changes = new Map<string, unknown>()
@@ -442,6 +456,19 @@ describe('character creation and stat discovery', () => {
     manifest.scenes.push('story-creator')
     manifest.quests = ['practice']
     manifest.rules.push('stats')
+
+    if (sceneKeys) {
+      manifest.input = 'controls'
+      changes.set('input/controls.json', {
+        'schema-version': '1.0.0',
+        'virtual-keys': ['other'],
+        keyboard: { KeyD: 'other', KeyM: 'other' },
+        contexts: { gameplay: { other: 'other' } },
+        'initial-context': 'gameplay',
+        'scene-keys': sceneKeys,
+      })
+    }
+
     changes.set('game.json', manifest)
     changes.set('scenes/story-creator.json', {
       ...creation,
@@ -810,6 +837,87 @@ describe('character creation and stat discovery', () => {
   )
 
   it.each([true, false])(
+    'delivers map arrows through virtual input in preview mode %s',
+    async (preview) => {
+      const { engine, lifecycle, target } = await launch(preview)
+      lifecycle.startGame()
+      lifecycle.enterScene('adventure')
+      const surface = target.find((node) => node.className === 'ancadeba-game')!
+      expect(target.ownerDocument.activeElement).toBe(surface)
+      const menu = target.find((node) => node.dataset.componentId === 'menu')!
+      menu.focus()
+      const received = vi.fn()
+      engine.messages!.subscribe('input.virtual', received)
+
+      const position = () =>
+        lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'coast-map')
+
+      expect(pressKey(surface, 'ArrowRight')).toBe(true)
+      expect(position()).toEqual({ x: 8, y: 9 })
+      flush(engine)
+      expect(received.mock.calls.map(([event]) => event)).toEqual([
+        { context: 'gameplay', input: 'map.east', phase: 'pressed' },
+        { context: 'gameplay', input: 'map.east', phase: 'released' },
+      ])
+      expect(position()).toEqual({ x: 9, y: 9 })
+      expect(target.ownerDocument.activeElement).toBe(menu)
+
+      expect(pressKey(surface, 'ArrowRight')).toBe(true)
+      lifecycle.leaveScene()
+      lifecycle.enterScene('adventure')
+      flush(engine)
+      expect(position()).toEqual({ x: 9, y: 9 })
+      expect(engine.saves!.save()).toBe(true)
+      expect(engine.saves!.load()).toBe(true)
+      expect(position()).toEqual({ x: 9, y: 9 })
+    },
+  )
+
+  it.each([true, false])(
+    'remaps movement and the menu through virtual input without slots in preview mode %s',
+    async (preview) => {
+      const { engine, lifecycle, target } = await launch(preview, {
+        'map.east': 'KeyD',
+        'menu.toggle': 'KeyM',
+      })
+
+      lifecycle.startGame()
+      lifecycle.enterScene('adventure')
+      const gameplay = lifecycle.activeScene!
+      const position = () => lifecycle.currentGame!.mapMovement!.getPosition(gameplay, 'coast-map')
+      const surface = target.find((node) => node.className === 'ancadeba-game')!
+      const received: string[] = []
+      engine.messages!.subscribe('input.virtual', ({ phase, input }) => {
+        if (phase === 'pressed') received.push(input)
+      })
+
+      const field = target.ownerDocument.createElement('input')
+      surface.append(field)
+      field.focus()
+      expect(pressKey(surface, 'KeyD')).toBe(false)
+      expect(pressKey(surface, 'KeyM')).toBe(false)
+      target.find((node) => node.dataset.componentId === 'menu')!.focus()
+      expect(pressKey(surface, 'Escape')).toBe(false)
+      expect(pressKey(surface, 'ArrowRight')).toBe(false)
+      expect(pressKey(surface, 'KeyD')).toBe(true)
+      expect(position()).toEqual({ x: 8, y: 9 })
+      flush(engine)
+      expect(position()).toEqual({ x: 9, y: 9 })
+      expect(pressKey(surface, 'KeyM')).toBe(true)
+      flush(engine)
+      await Promise.resolve()
+      expect(lifecycle.activeScene?.data.id).toBe('game-menu')
+      expect(pressKey(surface, 'Escape')).toBe(false)
+      expect(pressKey(surface, 'KeyD')).toBe(true)
+      expect(pressKey(surface, 'KeyM')).toBe(true)
+      flush(engine)
+      await Promise.resolve()
+      expect(lifecycle.activeScene).toBe(gameplay)
+      expect(received).toEqual(['map.east', 'menu.toggle', 'other', 'menu.toggle'])
+    },
+  )
+
+  it.each([true, false])(
     'creates and restores the character, including in preview mode %s',
     async (preview) => {
       const { engine, lifecycle, target } = await launch(preview)
@@ -994,14 +1102,13 @@ describe('authored game menus', () => {
     const game = engine.lifecycle!.currentGame
     const root = target.find((node) => node.className === 'ancadeba-game')!
 
-    const escape = () => {
-      const event = new Event('keydown', { cancelable: true })
-      Object.defineProperty(event, 'code', { value: 'Escape' })
-      root.dispatchEvent(event)
-      expect(event.defaultPrevented).toBe(true)
+    const escape = async () => {
+      expect(pressKey(root, 'Escape')).toBe(true)
+      flush(engine)
+      await Promise.resolve()
     }
 
-    escape()
+    await escape()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('game-menu')
     expect(
       ['main-menu', 'save-game', 'load-game', 'settings'].map((id) => component(id).textContent),
@@ -1024,15 +1131,22 @@ describe('authored game menus', () => {
     component('resume').click()
     expect(engine.lifecycle!.activeScene).toBe(gameplay)
     expect(engine.lifecycle!.currentGame).toBe(game)
-    escape()
+    await escape()
     expect(component('main-menu').textContent).toBe('Hoofdmenu')
     component('load-game').click()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
+    expect(pressKey(root, 'Escape')).toBe(true)
     component('load-game').click()
+    flush(engine)
+    await Promise.resolve()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
     expect(confirmation(target)?.textContent).toContain('Opgeslagen voortgang laden?')
     expect(document.activeElement?.textContent).toBe('Annuleren')
-    escape()
+    const dialogInput = vi.fn()
+    const unsubscribe = engine.messages!.subscribe('input.virtual', dialogInput)
+    await escape()
+    expect(dialogInput).not.toHaveBeenCalled()
+    unsubscribe()
     expect(confirmation(target)).toBeUndefined()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('load-game')
     expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
@@ -1041,88 +1155,115 @@ describe('authored game menus', () => {
     expect(engine.lifecycle!.activeScene!.data.id).toBe('standard')
     expect(engine.lifecycle!.currentGame).not.toBe(game)
     expect(engine.lifecycle!.suspendedScene).toBeUndefined()
-    escape()
+    await escape()
     component('main-menu').click()
     expect(engine.lifecycle!.currentGame).toBeUndefined()
     expect(engine.lifecycle!.activeScene!.data.id).toBe('start-screen')
   })
 
-  it('opens with Escape, navigates submenus, saves gameplay, and resumes the same scene', async () => {
-    const files = createStarterProject({ path: 'menus', title: 'Menus', description: '' })
-    const document = new TestDocument()
-    const target = document.createElement('main')
-    const storage = new Map<string, string>()
+  it.each(['standalone', 'preview'])(
+    'routes Escape through virtual input to pause and resume in %s',
+    async (host) => {
+      const files = createStarterProject({ path: 'menus', title: 'Menus', description: '' })
+      const document = new TestDocument()
+      const target = document.createElement('main')
+      const storage = new Map<string, string>()
 
-    const engine = new Engine(
-      new GameLoader(
-        new JsonResourceLoader(
-          {
-            readText: async (path) => {
-              const source = files[path]
+      const engine = new Engine(
+        new GameLoader(
+          new JsonResourceLoader(
+            {
+              readText: async (path) => {
+                const source = files[path]
 
-              return typeof source === 'string' ? source : JSON.stringify(source)
+                return typeof source === 'string' ? source : JSON.stringify(source)
+              },
+              readBytes: async () => new Uint8Array(),
             },
-            readBytes: async () => new Uint8Array(),
-          },
-          logger,
+            logger,
+          ),
         ),
-      ),
-      new DomEngineHost(target.asElement()),
-      logger,
-      () => new MessageBus<EngineMessages>(),
-      {
-        ...timing,
-        saveStore: {
-          read: (id) => storage.get(id),
-          write: (id, value) => {
-            storage.set(id, value)
+        host === 'preview'
+          ? new EditorPreviewHost(target.asElement())
+          : new DomEngineHost(target.asElement()),
+        logger,
+        () => new MessageBus<EngineMessages>(),
+        {
+          ...timing,
+          saveStore: {
+            read: (id) => storage.get(id),
+            write: (id, value) => {
+              storage.set(id, value)
+            },
           },
         },
-      },
-    )
+      )
 
-    onTestFinished(() => engine.stop())
-    await engine.start()
-    expect(target.find((node) => node.className.includes('ancadeba-save-slots'))).toBeUndefined()
-    target.find((node) => node.dataset.componentId === 'play')!.click()
-    const gameplay = engine.lifecycle!.activeScene!
-    const root = target.find((node) => node.className === 'ancadeba-game')!
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      expect(target.find((node) => node.className.includes('ancadeba-save-slots'))).toBeUndefined()
+      target.find((node) => node.dataset.componentId === 'play')!.click()
+      const gameplay = engine.lifecycle!.activeScene!
+      const root = target.find((node) => node.className === 'ancadeba-game')!
 
-    const escape = () => {
-      const event = new Event('keydown', { cancelable: true })
-      Object.defineProperty(event, 'code', { value: 'Escape' })
-      root.dispatchEvent(event)
+      const menuEvents = vi.fn()
+      engine.messages!.subscribe('input.virtual', menuEvents)
 
-      return event.defaultPrevented
-    }
+      // A queued press belongs to the scene that received it, even across an immediate pause/resume.
+      expect(pressKey(root, 'Escape')).toBe(true)
+      engine.flushMessages()
+      engine.lifecycle!.openMenu!('game-menu')
+      engine.lifecycle!.resumeGame!()
+      flush(engine)
+      await Promise.resolve()
+      expect(engine.lifecycle!.activeScene).toBe(gameplay)
+      menuEvents.mockClear()
 
-    expect(escape()).toBe(true)
-    expect(engine.lifecycle!.activeScene!.data.id).toBe('game-menu')
-    expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
-    target.find((node) => node.dataset.componentId === 'save')!.click()
-    expect(engine.lifecycle!.activeScene!.data.id).toBe('save')
-    const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
-    name.value = 'Camp'
-    name.dispatchEvent(new Event('input'))
-    target.find((node) => node.dataset.componentId === 'save')!.click()
-    expect(JSON.parse(storage.get('menus')!)).toMatchObject({
-      scene: 'adventure',
-      slotName: 'Camp',
-    })
-    expect(escape()).toBe(true)
-    expect(engine.lifecycle!.activeScene).toBe(gameplay)
-    escape()
-    target.find((node) => node.dataset.componentId === 'settings')!.click()
-    expect(engine.lifecycle!.activeScene!.data.id).toBe('settings')
-    target.find((node) => node.dataset.componentId === 'resume')!.click()
-    expect(engine.lifecycle!.activeScene).toBe(gameplay)
-    escape()
-    target.find((node) => node.dataset.componentId === 'main-menu')!.click()
-    expect(engine.lifecycle!.currentGame).toBeUndefined()
-    expect(gameplay.disposed).toBe(true)
-    expect(engine.lifecycle!.activeScene!.data.id).toBe('start')
-    expect(escape()).toBe(false)
-  })
+      const escape = async () => {
+        const scene = engine.lifecycle!.activeScene
+        const handled = pressKey(root, 'Escape')
+        expect(engine.lifecycle!.activeScene).toBe(scene)
+        flush(engine)
+        await Promise.resolve()
+
+        return handled
+      }
+
+      expect(await escape()).toBe(true)
+      expect(menuEvents.mock.calls.map(([event]) => event)).toEqual([
+        { context: 'gameplay', input: 'menu.toggle', phase: 'pressed' },
+        { context: 'gameplay', input: 'menu.toggle', phase: 'released' },
+      ])
+      expect(engine.lifecycle!.activeScene!.data.id).toBe('game-menu')
+      expect(engine.lifecycle!.suspendedScene).toBe(gameplay)
+      target.find((node) => node.dataset.componentId === 'save')!.click()
+      expect(engine.lifecycle!.activeScene!.data.id).toBe('save')
+      const name = target.find((node) => node.attributes.get('aria-label') === 'Save name')!
+      name.value = 'Camp'
+      name.dispatchEvent(new Event('input'))
+      target.find((node) => node.dataset.componentId === 'save')!.click()
+      expect(JSON.parse(storage.get('menus')!)).toMatchObject({
+        scene: 'adventure',
+        slotName: 'Camp',
+      })
+      name.focus()
+      menuEvents.mockClear()
+      expect(await escape()).toBe(true)
+      expect(menuEvents.mock.calls.map(([event]) => event.phase)).toEqual(['pressed', 'released'])
+      expect(engine.lifecycle!.activeScene).toBe(gameplay)
+      await escape()
+      target.find((node) => node.dataset.componentId === 'settings')!.click()
+      expect(engine.lifecycle!.activeScene!.data.id).toBe('settings')
+      target.find((node) => node.dataset.componentId === 'resume')!.click()
+      expect(engine.lifecycle!.activeScene).toBe(gameplay)
+      await escape()
+      target.find((node) => node.dataset.componentId === 'main-menu')!.click()
+      expect(engine.lifecycle!.currentGame).toBeUndefined()
+      expect(gameplay.disposed).toBe(true)
+      expect(engine.lifecycle!.activeScene!.data.id).toBe('start')
+      expect(await escape()).toBe(false)
+    },
+  )
 })
 
 // Keep text-binding regressions independent of the sample's optional status presentation.
@@ -3091,6 +3232,8 @@ describe('scene renderer', () => {
               delete input.keyboard.KeyQ
               input.keyboard[firstKey] = 'slot-1'
               input.keyboard.Digit1 = 'slot-1'
+              input.keyboard.KeyM = 'slot-1'
+              input['scene-keys'] = { 'menu.toggle': 'KeyM' }
 
               return JSON.stringify(input)
             },
@@ -3473,7 +3616,7 @@ describe('scene renderer', () => {
   })
 
   it.each(['preview', 'standalone'])(
-    'shares directional buttons, mapped input, and focused-map arrows in %s',
+    'shares directional buttons and queued virtual movement from the game surface in %s',
     async (host) => {
       const game = await new GameLoader(
         new JsonResourceLoader(
@@ -3550,11 +3693,11 @@ describe('scene renderer', () => {
       flush(engine)
       tasks[1]!.callback()
       expect(column()).toBe('10')
-      const view = target.find((node) => node.dataset.componentId === 'coast-map')!
-      const key = new Event('keydown', { cancelable: true })
-      Object.defineProperty(key, 'key', { value: 'ArrowRight' })
-      view.dispatchEvent(key)
-      expect(key.defaultPrevented).toBe(true)
+      const surface = target.find((node) => node.className === 'ancadeba-game')!
+      east.focus()
+      expect(pressKey(surface, 'ArrowRight')).toBe(true)
+      expect(tasks).toHaveLength(2)
+      flush(engine)
       expect(tasks).toHaveLength(3)
       engine.lifecycle!.leaveScene()
       engine.lifecycle!.enterScene('coast')
@@ -4117,8 +4260,9 @@ describe('scene renderer', () => {
       vi.useRealTimers()
     })
 
-    const { lifecycle, target } = setup(game)
+    const { lifecycle, target, document } = setup(game)
     const dispose = mountGameView(target.asElement(), game, { lifecycle, input: undefined })
+    const surface = target.find((element) => element.className === 'ancadeba-game')!
     const view = target.find((element) => element.dataset.componentId === 'coast-map')!
     const grid = view.children[0]!.children[0]!
     const player = grid.find((element) => element.className === 'ancadeba-map-player')!
@@ -4131,15 +4275,20 @@ describe('scene renderer', () => {
         player.style.getPropertyValue(property),
       )
 
-    const press = (key: string) => {
-      const event = new Event('keydown', { cancelable: true })
-      Object.defineProperty(event, 'key', { value: key })
-      view.dispatchEvent(event)
+    const press = (code: string) => {
+      const handled = pressKey(surface, code)
+      vi.advanceTimersByTime(0)
 
-      return event.defaultPrevented
+      return handled
     }
 
     expect(view.tabIndex).toBe(0)
+    expect(document.activeElement).toBe(surface)
+    const field = document.createElement('input')
+    surface.append(field)
+    field.focus()
+    expect(press('ArrowRight')).toBe(false)
+    surface.focus()
     expect(
       grid.children.filter((element) => element.className === 'ancadeba-map-tile'),
     ).toHaveLength(16 * 10)

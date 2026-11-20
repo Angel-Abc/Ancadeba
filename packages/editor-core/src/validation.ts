@@ -180,7 +180,7 @@ export function validateProject(
       code: 'invalid_menu_target',
       file: 'game.json',
       path: ['menu-scene'],
-      message: 'Choose a stand-alone Escape menu scene',
+      message: 'Choose a stand-alone game menu scene',
     })
 
   for (const id of game.data.maps ?? []) {

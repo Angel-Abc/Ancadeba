@@ -1,6 +1,43 @@
 import { z } from 'zod'
 import { gameIdSchema } from './game.js'
 
+export const sceneControlSchema = z.enum([
+  'map.north',
+  'map.east',
+  'map.south',
+  'map.west',
+  'menu.toggle',
+])
+
+export type SceneControl = z.infer<typeof sceneControlSchema>
+
+export const defaultSceneKeys: Readonly<Record<SceneControl, string>> = {
+  'map.north': 'ArrowUp',
+  'map.east': 'ArrowRight',
+  'map.south': 'ArrowDown',
+  'map.west': 'ArrowLeft',
+  'menu.toggle': 'Escape',
+}
+
+const sceneKeysSchema = z
+  .partialRecord(sceneControlSchema, z.string().trim().min(1))
+  .superRefine((overrides, context) => {
+    const assigned = new Map<string, SceneControl>()
+
+    for (const control of sceneControlSchema.options) {
+      const code = overrides[control] ?? defaultSceneKeys[control]
+      const previous = assigned.get(code)
+
+      if (previous)
+        context.addIssue({
+          code: 'custom',
+          path: [overrides[control] === undefined ? previous : control],
+          message: `${code} is assigned to both ${previous} and ${control}`,
+        })
+      assigned.set(code, control)
+    }
+  })
+
 export const inputSchema = z
   .object({
     'schema-version': z.literal('1.0.0'),
@@ -8,6 +45,7 @@ export const inputSchema = z
     keyboard: z.record(z.string().trim().min(1), gameIdSchema),
     contexts: z.record(gameIdSchema, z.record(gameIdSchema, gameIdSchema)),
     'initial-context': gameIdSchema,
+    'scene-keys': sceneKeysSchema.optional(),
   })
   .superRefine((input, context) => {
     const keys = new Set(input['virtual-keys'])

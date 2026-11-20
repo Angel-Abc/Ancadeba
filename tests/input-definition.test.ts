@@ -50,6 +50,9 @@ describe('input definitions', () => {
     { ...definition, contexts: { gameplay: { north: '' } } },
     { ...definition, 'initial-context': 'missing' },
     { ...definition, 'initial-context': 'toString' },
+    { ...definition, 'scene-keys': { 'map.up': 'KeyW' } },
+    { ...definition, 'scene-keys': { 'map.north': ' ' } },
+    { ...definition, 'scene-keys': { 'map.north': 'KeyM', 'menu.toggle': 'KeyM' } },
   ])('rejects invalid input configuration %#', (invalid) => {
     expect(inputSchema.safeParse(invalid).success).toBe(false)
   })

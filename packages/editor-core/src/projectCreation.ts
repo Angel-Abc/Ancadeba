@@ -84,7 +84,7 @@ export function createStarterProject(request: CreateProjectRequest): ProjectDocu
         {
           id: 'menu',
           type: 'button',
-          label: 'Game menu (Escape)',
+          label: 'Game menu',
           placement: { row: 9, column: 5, rowSpan: 2, columnSpan: 8 },
           action: { type: 'open-menu', scene: 'game-menu' },
         },

@@ -70,7 +70,12 @@ export {
   type SceneInstance,
 } from './gameLifecycle.js'
 
-export { InputController, type IGameInput, type VirtualInput } from './input.js'
+export {
+  InputController,
+  type IGameInput,
+  type SceneKeyBindings,
+  type VirtualInput,
+} from './input.js'
 
 export { GameActionBar, type IGameActionBar } from './actionBar.js'
 

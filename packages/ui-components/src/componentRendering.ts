@@ -6,6 +6,7 @@ import type {
   SceneComponentData,
   TextResolutionOptions,
   IGameLocalization,
+  MapDirection,
   IGameInventory,
   IGameSaves,
   GameData,
@@ -61,6 +62,7 @@ export interface ComponentRenderContext extends ComponentRendererOptions {
 
 export interface RenderedComponent {
   readonly element: HTMLElement
+  readonly moveMap?: ((direction: MapDirection) => void) | undefined
   dispose(): void
 }
 
