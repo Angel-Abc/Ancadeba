@@ -38,6 +38,7 @@ function draftFields(root: HTMLElement) {
     (field) =>
       ['input', 'select', 'textarea'].includes(field.tagName?.toLowerCase()) &&
       field.type !== 'file' &&
+      !field.closest?.('[data-draft-exclude]') &&
       (!field.closest || field.closest('[data-editor-draft]') === root),
   )
 }

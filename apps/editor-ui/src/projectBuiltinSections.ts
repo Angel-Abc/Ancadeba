@@ -426,9 +426,16 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
     refresh: () => {},
     setVisible: (visible) => editors.formLibrary!.setVisible(visible),
     canNavigate: ({ node }) =>
-      editors.formLibrary!.canNavigate(node.section === 'form-library' ? node.id : undefined),
+      editors.formLibrary!.canNavigate(
+        node.section === 'form-library'
+          ? node.key
+          : node.kind === 'data-file' && node.parentId === 'forms'
+            ? 'form:' + node.id
+            : undefined,
+      ),
     activate: ({ node }) => {
-      if (node.id) editors.formLibrary!.open(node.id)
+      if (node.kind === 'new-form') editors.formLibrary!.start()
+      else editors.formLibrary!.open(node.id, node.key)
     },
   })
   add('story', 'story-editor', editors.storyEditor, {

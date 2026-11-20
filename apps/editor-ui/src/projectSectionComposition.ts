@@ -15,6 +15,7 @@ import { ProjectEditorController } from './projectController.js'
 import type { Translate } from '@ancadeba/utilities'
 import { bindAssetsPanel } from './assetsPanel.js'
 import { bindRulesPanel } from './rulesPanel.js'
+import { formLabel } from './formElements.js'
 import { bindFormLibrary } from './formLibrary.js'
 import { bindStoryEditor } from './storyEditor.js'
 import { bindActionBarPanel } from './actionBarPanel.js'
@@ -89,6 +90,33 @@ export function createProjectSections({
         },
         t,
         dependencies.createGraphics,
+        {
+          key: () => state.selection.key,
+          select: selectKey,
+          create: () => {
+            visit('form-new')
+          },
+          cancel(origin) {
+            if (history.at(-1)?.destination === 'form-new') goBack()
+            else selectKey(origin)
+          },
+          created(id, label) {
+            const key = 'form:' + id
+
+            if (state.selection.key !== 'form-new') return
+            const step = history.at(-1)
+
+            if (step?.destination === 'form-new') step.destination = key
+            state.selection = { key, id, section: 'form-library', kind: 'form', label }
+          },
+          openKey(key) {
+            if (visit('localization', 'form-library')) localizationEditor?.openKey(key)
+          },
+          openPlacement: (scene, id) => {
+            visit('component:' + scene + ':' + id)
+          },
+          confirm: confirmDelete,
+        },
       )
     : undefined
 
@@ -131,14 +159,21 @@ export function createProjectSections({
           {
             id: 'form-library',
             labelKey: 'forms.heading',
-            nodes: (view: ProjectView): ProjectTreeNode[] =>
-              Object.values(view.forms ?? {}).map((form) => ({
+            nodes: (view: ProjectView): ProjectTreeNode[] => [
+              ...Object.values(view.forms ?? {}).map((form) => ({
                 key: 'form:' + form.id,
                 section: 'form-library',
                 kind: 'form',
                 id: form.id,
-                label: form.label,
+                label: formLabel(view, form),
               })),
+              {
+                key: 'form-new',
+                section: 'form-library',
+                kind: 'new-form',
+                label: t('forms.create'),
+              },
+            ],
           },
         ]
       : []),
@@ -464,7 +499,7 @@ export function createProjectSections({
     }
   }
 
-  function visit(destination: string, retained?: string) {
+  function visit(destination: string, retained?: string, originLabel?: string) {
     if (hasBlockingDraft(retained)) return false
     const origin = state.selection
     const active = root.ownerDocument.activeElement
@@ -473,8 +508,13 @@ export function createProjectSections({
     const restoreEntry = origin.kind === 'component' ? componentEditor?.rememberEntry() : undefined
     const restoreTab = origin.section === 'rules' ? rulesPanel?.rememberTab() : undefined
 
-    const restoreDefinition =
-      origin.section === 'combat'
+    const formOrigin =
+      origin.section === 'form-library' ||
+      (origin.kind === 'data-file' && origin.parentId === 'forms')
+
+    const restoreDefinition = formOrigin
+      ? formLibrary?.rememberSelection()
+      : origin.section === 'combat'
         ? combatEditor?.rememberSelection()
         : origin.section === 'leveling'
           ? levelingEditor?.rememberSelection()
@@ -485,6 +525,8 @@ export function createProjectSections({
       origin: origin.key,
       ...(retained && { retained }),
       label:
+        originLabel ??
+        (formOrigin ? origin.label : undefined) ??
         origin.id ??
         (origin.kind === 'data-group'
           ? origin.label
@@ -579,7 +621,15 @@ export function createProjectSections({
                       ? 'component:' + sceneId + ':' + id
                       : kind
 
-          if (!visit(destination)) return
+          const label =
+            kind === 'form-library' && sceneId
+              ? formLibrary?.placementLabel(sceneId, origin.id)
+              : undefined
+
+          if (!visit(destination, undefined, label)) return
+
+          if (kind === 'form-library' && sceneId && origin.id)
+            formLibrary?.fromScene(sceneId, origin.id)
 
           if (kind === 'character-profile') forms.openProfile()
 

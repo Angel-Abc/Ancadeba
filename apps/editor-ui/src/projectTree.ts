@@ -115,6 +115,12 @@ interface DataFileGroup {
 
 const dataFileGroups: readonly DataFileGroup[] = [
   {
+    id: 'forms',
+    ids: (game) => game.forms,
+    content: (view, id) => view.forms?.[id],
+    editSection: 'form-library',
+  },
+  {
     id: 'maps',
     ids: (game) => game.maps,
     content: (view, id) => view.maps?.[id],

@@ -2288,7 +2288,14 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   min-width: 0;
   max-width: 100%;
 }
-:is(#component-editor, #story-editor, #editor-character-profile, #item-editor, #combat-editor)
+:is(
+    #component-editor,
+    #story-editor,
+    #editor-character-profile,
+    #item-editor,
+    #combat-editor,
+    #form-library
+  )
   .inspector-localized {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2297,24 +2304,52 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   padding-bottom: 0.25rem;
   overflow-wrap: anywhere;
 }
-:is(#component-editor, #story-editor, #editor-character-profile, #item-editor, #combat-editor)
+:is(
+    #component-editor,
+    #story-editor,
+    #editor-character-profile,
+    #item-editor,
+    #combat-editor,
+    #form-library
+  )
   .inspector-localized
   > :is(p, div, details) {
   grid-column: 1 / -1;
 }
-:is(#component-editor, #story-editor, #editor-character-profile, #item-editor, #combat-editor)
+:is(
+    #component-editor,
+    #story-editor,
+    #editor-character-profile,
+    #item-editor,
+    #combat-editor,
+    #form-library
+  )
   .inspector-localized
   > button {
   margin: 0;
   font-size: 0.8rem;
 }
-:is(#component-editor, #story-editor, #editor-character-profile, #item-editor, #combat-editor)
+:is(
+    #component-editor,
+    #story-editor,
+    #editor-character-profile,
+    #item-editor,
+    #combat-editor,
+    #form-library
+  )
   .inspector-translated-value {
   white-space: pre-wrap;
   margin: 0.3rem 0;
   font-size: 1rem;
 }
-:is(#component-editor, #story-editor, #editor-character-profile, #item-editor, #combat-editor)
+:is(
+    #component-editor,
+    #story-editor,
+    #editor-character-profile,
+    #item-editor,
+    #combat-editor,
+    #form-library
+  )
   .inspector-localized
   > .fold {
   border: 0;
@@ -2673,4 +2708,99 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   field-sizing: content;
   min-height: 3.25rem;
   resize: vertical;
+}
+
+#form-library .form-workspace {
+  display: grid;
+  gap: 0.65rem;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+#form-library .form-author,
+#form-library .form-player {
+  min-width: 0;
+}
+#form-library .form-author {
+  display: grid;
+  gap: 0.55rem;
+  align-items: start;
+}
+#form-library .form-outline {
+  display: none;
+}
+#form-library .form-structure {
+  display: grid;
+  gap: 0.5rem;
+}
+#form-library .form-view-switch {
+  display: flex;
+  flex-wrap: wrap;
+}
+#form-library .form-player h4 {
+  margin: 0.25rem 0 0.5rem;
+}
+#form-library .form-element-picker {
+  width: 100%;
+  margin: 0;
+}
+#form-library .form-workspace[data-view='edit'] > .form-player,
+#form-library .form-workspace[data-view='preview'] > .form-author {
+  display: none;
+}
+#form-library .form-author :is(button, input, select) {
+  max-width: 100%;
+  min-width: 0;
+}
+#form-library .form-author .inspector-localized {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#form-library .form-author .inspector-translated-value {
+  white-space: pre-wrap;
+}
+#form-library .form-player .ancadeba-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+#form-library .form-player {
+  container-type: inline-size;
+}
+@container (max-width:28rem) {
+  .form-player .ancadeba-form-row {
+    flex-wrap: wrap;
+  }
+}
+@container editing-pane (min-width:48rem) {
+  #form-library .form-workspace {
+    grid-template-columns: minmax(8rem, 0.7fr) minmax(16rem, 1.2fr) minmax(14rem, 1fr);
+  }
+  #form-library .form-view-switch,
+  #form-library .form-element-picker {
+    display: none;
+  }
+  #form-library .form-outline {
+    display: grid;
+    align-content: start;
+    gap: 0.3rem;
+  }
+  #form-library .form-outline strong {
+    font-size: 0.85em;
+    margin-top: 0.45rem;
+  }
+  #form-library .form-outline button {
+    text-align: start;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  #form-library .form-outline [aria-pressed='true'] {
+    border-color: var(--ed-accent);
+  }
+  #form-library .form-workspace[data-view] > .form-author {
+    display: grid;
+  }
+  #form-library .form-workspace[data-view] > .form-player {
+    display: block;
+  }
 }

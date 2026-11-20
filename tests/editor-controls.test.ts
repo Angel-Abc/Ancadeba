@@ -7256,14 +7256,13 @@ describe('scene inspector registry', () => {
 
     editor.render({ ...ui.initial, view: inspectProject(source) }, true)
     ui.click('New blank form')
-    ui.click('Add row')
-    ui.click('Add element')
+    ui.click('Add first element')
     ui.edit('State field', '["outfit"]')
     ui.edit('Default answer', 'Designer')
     const preview = ui.root.all().find((node) => node.name === '["outfit"]')!
     preview.value = 'Player'
     preview.dispatchEvent(new Event('input'))
-    ui.click('Save form')
+    ui.click('Create form')
     const saved = applyCommand(source, ui.commands[0]!)
     const reopened = inspectProject(saved.project)
     expect(reopened.forms?.form?.rows[0]?.[0]?.[0]).toMatchObject({
@@ -7272,6 +7271,246 @@ describe('scene inspector registry', () => {
     })
     editor.render({ ...ui.initial, lastCommand: 'game.upsertForm', view: reopened }, true)
     expect(editor.hasDrafts()).toBe(false)
+    editor.dispose()
+  })
+
+  it('recovers a choice draft with its selected option and saves a renamed default', async () => {
+    const source = await sample('graphics')
+    const view = inspectProject(source)
+
+    const mount = () => {
+      const ui = panel()
+
+      const editor = bindFormLibrary(
+        ui.root.asElement(),
+        (command) => ui.commands.push(command),
+        editorLocalization().t,
+        vi.fn(),
+      )
+
+      editor.render({ ...ui.initial, view }, true)
+
+      return { ui, editor }
+    }
+
+    const first = mount()
+    first.ui.click('New blank form')
+    first.ui.edit('ID', 'unfinished ID')
+    first.ui.edit('Element to add', 'choice')
+    first.ui.click('Add first element')
+    first.ui.edit('State field', '["outfit"]')
+    first.ui.click('Add option')
+    first.ui.edit('Option ID', 'coat')
+    first.ui.edit('Option wording', 'Winter coat')
+    first.ui.edit('Default answer', 'coat')
+    const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(first.ui.root.asElement())))
+    const { ui, editor } = mount()
+    expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
+    expect(ui.field('ID').value).toBe('unfinished ID')
+    expect(ui.field('Option wording').value).toBe('Winter coat')
+    expect(ui.field('Default answer').value).toBe('coat')
+    ui.click('Create form')
+    expect(ui.commands).toHaveLength(0)
+    expect(editor.hasDrafts()).toBe(true)
+    ui.edit('ID', 'wardrobe')
+    ui.click('Create form')
+    const result = applyCommand(source, ui.commands[0]!)
+    expect(result.changedFiles.sort()).toEqual(['forms/wardrobe.json', 'game.json'])
+    expect(inspectProject(result.project).forms?.wardrobe?.rows[0]?.[0]?.[0]).toMatchObject({
+      default: 'coat',
+      options: [{ id: 'option' }, { id: 'coat', label: 'Winter coat' }],
+    })
+    first.editor.dispose()
+    editor.dispose()
+  })
+
+  it('keeps scene preview controls on refresh and returns a canceled creation to the library', async () => {
+    const ui = panel()
+    const state = { ...ui.initial, view: inspectProject(await sample('market-value')) }
+    let key = 'form-library'
+    const cancel = vi.fn()
+
+    const editor = bindFormLibrary(ui.root.asElement(), vi.fn(), editorLocalization().t, vi.fn(), {
+      key: () => key,
+      select: vi.fn(),
+      create: vi.fn(),
+      cancel,
+      created: vi.fn(),
+      openKey: vi.fn(),
+      openPlacement: vi.fn(),
+      confirm: vi.fn(),
+    })
+
+    editor.render(state, true)
+    editor.start()
+    key = 'form-new'
+    ui.click('Cancel')
+    expect(cancel).toHaveBeenCalledWith('form-library')
+    expect(
+      ui.root.all().some((node) => node.tagName === 'button' && node.textContent === 'Create form'),
+    ).toBe(false)
+    expect(
+      ui.root.all().some((node) => node.tagName === 'button' && node.textContent === 'Appearance'),
+    ).toBe(true)
+    key = 'form:appearance'
+    editor.open('appearance', key)
+    editor.fromScene('create-character', 'creator')
+    editor.render(state, true)
+    editor.open('appearance', key)
+    expect(
+      ui.root.all().some((node) => node.tagName === 'button' && node.textContent === 'Continue'),
+    ).toBe(true)
+    editor.dispose()
+  })
+
+  it.each(['', '1e-'])(
+    'retains unfinished numeric input %j while editing another element',
+    async (raw) => {
+      const ui = panel()
+
+      const editor = bindFormLibrary(
+        ui.root.asElement(),
+        (command) => ui.commands.push(command),
+        editorLocalization().t,
+        vi.fn(),
+      )
+
+      const state = { ...ui.initial, view: inspectProject(await sample('market-value')) }
+      editor.render(state, true)
+      ui.click('New blank form')
+      ui.edit('Element to add', 'number')
+      ui.click('Add first element')
+      ui.edit('Default answer', raw)
+      ui.edit('Element to add', 'text')
+      ui.click('Add element')
+      const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
+      ui.click('Cancel')
+      expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
+      expect(ui.field('Selected element').value).toBe('1')
+      ui.click('Create form')
+      expect(ui.commands).toHaveLength(0)
+      expect(ui.field('Selected element').value).toBe('0')
+      expect(ui.field('Default answer').value).toBe(raw)
+      editor.dispose()
+    },
+  )
+
+  it('resets a removed preview option and preserves other preview answers', async () => {
+    const ui = panel()
+
+    const editor = bindFormLibrary(
+      ui.root.asElement(),
+      (command) => ui.commands.push(command),
+      editorLocalization().t,
+      vi.fn(),
+    )
+
+    const view = inspectProject(await sample('market-value'))
+    editor.render(
+      {
+        ...ui.initial,
+        view: {
+          ...view,
+          forms: {
+            survey: {
+              'schema-version': '1.0.0',
+              id: 'survey',
+              label: 'Survey',
+              rows: [
+                [
+                  [
+                    {
+                      type: 'choice',
+                      label: 'Weather',
+                      path: ['weather'],
+                      default: 'sun',
+                      options: [
+                        { id: 'sun', label: 'Sun' },
+                        { id: 'rain', label: 'Rain' },
+                      ],
+                    },
+                    { type: 'text', label: 'Name', path: ['name'], default: '' },
+                  ],
+                ],
+              ],
+            },
+          },
+        },
+      },
+      true,
+    )
+    editor.open('survey')
+
+    const answer = (key: string) =>
+      ui.root.all().find((node) => node.name === JSON.stringify([key]))!
+
+    answer('weather').value = 'rain'
+    answer('weather').dispatchEvent(new Event('change'))
+    answer('name').value = 'Robin'
+    answer('name').dispatchEvent(new Event('input'))
+    ui.edit('Option', '1')
+    expect(answer('weather').value).toBe('rain')
+    ui.click('Remove option')
+    expect(answer('weather').value).toBe('sun')
+    expect(answer('name').value).toBe('Robin')
+    editor.dispose()
+  })
+
+  it('keeps the selected Appearance field after reordering, recovery and a failed save', async () => {
+    const ui = panel()
+    const source = await sample('market-value')
+    const state = { ...ui.initial, view: inspectProject(source) }
+
+    const editor = bindFormLibrary(
+      ui.root.asElement(),
+      (command) => ui.commands.push(command),
+      editorLocalization().t,
+      vi.fn(),
+    )
+
+    editor.render(state, true)
+    editor.open('appearance')
+    expect(ui.field('Character profile field').value).toBe('gender')
+    expect(
+      ui.root
+        .all()
+        .filter((node) => node.tagName === 'label' && node.ownText === 'Character profile field'),
+    ).toHaveLength(1)
+    ui.edit('Selected element', '4')
+    ui.click('Move up')
+    expect(ui.field('Character profile field').value).toBe('hair-color')
+    const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
+    ui.click('Discard changes')
+    expect(editor.hasDrafts()).toBe(false)
+    expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
+    expect(ui.field('Selected element').value).toBe('3')
+    ui.edit('Character profile field', 'gender')
+    ui.click('Save form')
+    editor.render(
+      {
+        ...state,
+        error: 'Invalid binding',
+        validationIssues: [
+          {
+            code: 'invalid_form',
+            file: 'forms/appearance.json',
+            path: ['rows', 0, 1, 2],
+            message: 'Duplicate state binding',
+          },
+        ],
+      },
+      true,
+    )
+    expect(ui.field('Selected element').value).toBe('3')
+    expect(editor.hasDrafts()).toBe(true)
+    ui.edit('Character profile field', 'hair-color')
+    ui.click('Save form')
+    const result = applyCommand(source, ui.commands.at(-1)!)
+    expect(result.changedFiles).toEqual(['forms/appearance.json'])
+    expect(inspectProject(result.project).forms?.appearance?.rows[0]?.[1]?.[2]).toEqual({
+      type: 'profile-field',
+      field: 'hair-color',
+    })
     editor.dispose()
   })
 
