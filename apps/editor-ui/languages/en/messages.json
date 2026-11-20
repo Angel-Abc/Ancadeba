@@ -1438,6 +1438,7 @@
   "component.pendingBinding": "Add or clear the pending text binding before saving.",
   "component.textTranslation": "Text translation",
   "component.style": "Style",
+  "component.cssClasses": "CSS classes (space-separated)",
   "component.bodyText": "Body text",
   "component.headingStyle": "Heading",
   "component.alignment": "Alignment",

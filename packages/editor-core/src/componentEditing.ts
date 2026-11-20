@@ -36,7 +36,8 @@ export function editComponent(
   // Known fields the author cleared are removed; unknown extension fields are kept.
   const cleared = Object.fromEntries(
     Object.keys(schema?.shape ?? {})
-      .filter((key) => !Object.hasOwn(component, key))
+      // Editors that omit styling preserve it. An explicit empty list clears the classes.
+      .filter((key) => key !== 'cssClasses' && !Object.hasOwn(component, key))
       .map((key) => [key, undefined]),
   )
 

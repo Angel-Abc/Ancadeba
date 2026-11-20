@@ -24,7 +24,6 @@ import type {
   SceneDefinition,
   TextComponentDefinition,
   ButtonComponentDefinition,
-  LanguageSelectComponentDefinition,
   GraphicComponentDefinition,
   BackgroundImageComponentDefinition,
   MapDefinition,
@@ -70,29 +69,29 @@ import {
 } from '@ancadeba/schemas'
 import type { IGameLocalization } from './gameLocalization.js'
 
-export interface TextComponentData extends TextTemplate {
+interface PlacedComponentData {
   readonly id: string
+  readonly placement: Readonly<SceneComponentDefinition['placement']>
+  readonly cssClasses?: readonly string[] | undefined
+}
+
+export interface TextComponentData extends TextTemplate, PlacedComponentData {
   readonly type: 'text'
   readonly text: string
-  readonly placement: Readonly<TextComponentDefinition['placement']>
   readonly presentation: Readonly<TextComponentDefinition['presentation']>
 }
 
-export interface ButtonComponentData {
-  readonly id: string
+export interface ButtonComponentData extends PlacedComponentData {
   readonly type: 'button'
   readonly label: string
   readonly description?: string | undefined
   readonly unavailableText?: string | undefined
-  readonly placement: Readonly<ButtonComponentDefinition['placement']>
   readonly action?: Readonly<NonNullable<ButtonComponentDefinition['action']>> | undefined
 }
 
-export interface LanguageSelectComponentData {
-  readonly id: string
+export interface LanguageSelectComponentData extends PlacedComponentData {
   readonly type: 'language-select'
   readonly label: string
-  readonly placement: Readonly<LanguageSelectComponentDefinition['placement']>
 }
 
 export type SceneComponentData =
@@ -413,7 +412,11 @@ export function assembleGameData(
         type: scene.screen.type,
         grid: { rows, columns },
       },
-      components: scene.components.map((component) => {
+      components: scene.components.map((definition) => {
+        const component = definition.cssClasses
+          ? { ...definition, cssClasses: [...definition.cssClasses] }
+          : definition
+
         if (component.type === 'shop')
           return {
             ...component,

@@ -1530,6 +1530,7 @@ describe('adding scene components', () => {
       'Left column',
       'Rows',
       'Columns',
+      'CSS classes (space-separated)',
     ])
     edit('Columns', '2', 'Visible area')
     edit('Left column', '1', 'Visible area')
@@ -7971,6 +7972,7 @@ describe('scene inspector registry', () => {
       editor.navigate(scene.id, undefined, true)
       ui.edit('Component type', type)
       ui.edit('Component ID', 'inspector-test')
+      ui.edit('CSS classes (space-separated)', 'menu-button   primary menu-button')
       ui.submit('Create component')
       expect(ui.commands, ui.root.children[0]?.textContent).toHaveLength(1)
       const command = ui.commands[0]!
@@ -7989,16 +7991,21 @@ describe('scene inspector registry', () => {
 
       const selected = projectSelection(node, updated)
       expect(selected.component?.type).toBe(type)
+      expect(selected.component?.cssClasses).toEqual(['menu-button', 'primary'])
       expect(editor.navigate(selected.sceneId, selected.component?.id)).toBe(true)
+      expect(ui.field('CSS classes (space-separated)').value).toBe('menu-button primary')
       const oldSpan = ui.field('Column span').value
       const newSpan = oldSpan === '1' ? '2' : '1'
       ui.edit('Column span', newSpan)
+      ui.edit('CSS classes (space-separated)', '')
       expect(editor.hasDrafts()).toBe(true)
       const recovery = captureEditorDrafts(ui.root.asElement())
       ui.click('Discard component draft')
       expect(ui.field('Column span').value).toBe(oldSpan)
+      expect(ui.field('CSS classes (space-separated)').value).toBe('menu-button primary')
       restoreEditorDrafts(ui.root.asElement(), recovery)
       expect(ui.field('Column span').value).toBe(newSpan)
+      expect(ui.field('CSS classes (space-separated)').value).toBe('')
       ui.submit('Save component')
       expect(ui.commands, ui.root.children[0]?.textContent).toHaveLength(2)
       const change = applyCommand(creation.project, ui.commands[1]!)
@@ -8015,6 +8022,7 @@ describe('scene inspector registry', () => {
       expect(components.find((entry) => entry.id === node.id)?.placement.columnSpan).toBe(
         Number(newSpan),
       )
+      expect(components.find((entry) => entry.id === node.id)?.cssClasses).toEqual([])
     },
   )
 })

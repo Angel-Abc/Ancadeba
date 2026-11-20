@@ -267,6 +267,7 @@ describe('editor core', () => {
               id: 'title',
               type: 'text',
               placement: { row: 1, column: 1 },
+              cssClasses: ['hero'],
               text: 'Old',
               presentation: { variant: 'body', align: 'start' },
               extension: 'kept',
@@ -321,6 +322,7 @@ describe('editor core', () => {
         text: 'New',
         presentation: { variant: 'heading', align: 'center' },
         extension: 'kept',
+        cssClasses: ['hero'],
       },
       expect.objectContaining({ id: 'go' }),
     ])

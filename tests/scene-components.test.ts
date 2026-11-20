@@ -128,6 +128,8 @@ describe('text component definitions', () => {
     { ...text, id: '' },
     { ...text, type: 'button' },
     { ...text, text: 12 },
+    { ...text, cssClasses: [''] },
+    { ...text, cssClasses: ['menu button'] },
     { ...text, presentation: { variant: 'script' } },
     { ...text, presentation: { align: 'justify' } },
   ])('rejects unsupported component definitions %#', (component) => {
@@ -143,7 +145,10 @@ describe('text component definitions', () => {
   })
 
   it('copies nested component configuration into runtime data', () => {
-    const definition = sceneSchema.parse(scene)
+    const definition = sceneSchema.parse({
+      ...scene,
+      components: [{ ...text, cssClasses: ['story'] }],
+    })
 
     const game = gameSchema.parse({
       'schema-version': '1.0.0',
@@ -161,8 +166,10 @@ describe('text component definitions', () => {
     component.text = 'Changed'
     component.placement.row = 7
     component.presentation.align = 'end'
+    component.cssClasses!.push('changed')
     expect(assembled.scenes.get('standard')?.components[0]).toEqual({
       ...text,
+      cssClasses: ['story'],
       placement: { row: 2, column: 3, rowSpan: 1, columnSpan: 1 },
       presentation: { variant: 'body', align: 'start' },
     })

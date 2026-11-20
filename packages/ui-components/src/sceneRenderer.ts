@@ -162,6 +162,8 @@ export class SceneRenderer {
         const { element } = rendered
         element.classList.add('ancadeba-scene-item')
 
+        for (const name of component.cssClasses ?? []) element.classList.add(name)
+
         if (component.type === 'background-image') {
           root.classList.add('ancadeba-scene--with-background')
           element.classList.add('ancadeba-scene-item--background')

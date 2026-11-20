@@ -1438,6 +1438,7 @@
   "component.pendingBinding": "Voeg de openstaande tekstkoppeling toe of wis deze voordat je opslaat.",
   "component.textTranslation": "Vertaling van tekst",
   "component.style": "Stijl",
+  "component.cssClasses": "CSS-klassen (gescheiden door spaties)",
   "component.bodyText": "Lopende tekst",
   "component.headingStyle": "Kop",
   "component.alignment": "Uitlijning",

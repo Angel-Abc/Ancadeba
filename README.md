@@ -894,7 +894,9 @@ text color inside the scene. The scene picker sizes itself from its own font wit
 reduce the space available for tracks; component padding is inside its assigned
 rectangle. Stable `data-scene-id` and `data-component-id` attributes allow CSS
 selectors such as `[data-scene-id='standard'] [data-component-id='narrative']` for
-individual styling. Theme files in game definitions, automatic reflow, component
+individual styling. Set `"cssClasses": ["menu-button", "primary"]` on a scene
+component to match it with `.menu-button.primary` in the game stylesheet.
+Theme files in game definitions, automatic reflow, component
 alignment within cells, and richer text formatting are not defined yet.
 
 ### Scene notifications and cleanup

@@ -27,18 +27,23 @@ export const gridPlacementSchema = z.object({
   columnSpan: z.number().int().positive().default(1),
 })
 
+const componentLayoutFields = {
+  placement: gridPlacementSchema,
+  cssClasses: z.array(z.string().regex(/^\S+$/u, 'Expected a single CSS class name')).optional(),
+}
+
 export const characterProgressionComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('character-progression'),
   profile: gameIdSchema,
   textTarget: gameIdSchema.optional(),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
 })
 
 export const combatComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('combat'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   encounter: gameIdSchema,
   textTarget: gameIdSchema.optional(),
   lootInventory: gameIdSchema.optional(),
@@ -48,7 +53,7 @@ export const textComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('text'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     text: z.string().default(''),
     textKey: translationKeySchema.optional(),
     bindings: textBindingsSchema.optional(),
@@ -110,7 +115,7 @@ export const buttonActionSchema = z.discriminatedUnion('type', [
 export const saveSlotsComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('save-slots'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Save slots'),
   labelKey: translationKeySchema.optional(),
   showName: z.boolean().default(true),
@@ -119,7 +124,7 @@ export const saveSlotsComponentSchema = z.object({
 export const saveStatusComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('save-status'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Save status'),
   labelKey: translationKeySchema.optional(),
 })
@@ -128,7 +133,7 @@ export const saveStatusComponentSchema = z.object({
 export const savePointComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('save-point'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Save game'),
   labelKey: translationKeySchema.optional(),
   location: z
@@ -145,7 +150,7 @@ export const buttonComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('button'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
     description: z.string().optional(),
@@ -227,7 +232,7 @@ export const actionBarComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('action-bar'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     slots: z.record(z.string().regex(/^(?:[1-9]|1[0-5])$/), actionBarSlotSchema),
   })
   .superRefine((bar, context) => {
@@ -255,7 +260,7 @@ export type ActionBarSlotDefinition = z.infer<typeof actionBarSlotSchema>
 export const actionInfoComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('action-info'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Action information'),
   labelKey: translationKeySchema.optional(),
   emptyText: z.string().default('Hover over or focus an action to see its description.'),
@@ -268,7 +273,7 @@ export const languageSelectComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('language-select'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
   })
@@ -280,7 +285,7 @@ export const languageSelectComponentSchema = z
 export const graphicComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('graphic'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   visual: assetIdSchema,
   alt: z.string(),
   altKey: translationKeySchema.optional(),
@@ -291,7 +296,7 @@ export const graphicComponentSchema = z.object({
 export const backgroundImageComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('background-image'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   image: assetIdSchema,
   fit: z.enum(['contain', 'cover']).default('cover'),
 })
@@ -300,7 +305,7 @@ export const mapViewComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('map-view'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     map: gameIdSchema,
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
@@ -317,7 +322,7 @@ export const inventoryComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('inventory'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default('Inventory'),
     labelKey: translationKeySchema.optional(),
     owners: z
@@ -337,7 +342,7 @@ export const itemDetailsComponentSchema = z.object({
   showCombatStats: z.boolean().optional(),
   id: gameIdSchema,
   type: z.literal('item-details'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Item details'),
   labelKey: translationKeySchema.optional(),
   inventory: gameIdSchema,
@@ -349,7 +354,7 @@ export const equipmentComponentSchema = z.object({
   showCombatStats: z.boolean().optional(),
   id: gameIdSchema,
   type: z.literal('equipment'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Equipment'),
   labelKey: translationKeySchema.optional(),
   inventory: gameIdSchema,
@@ -397,7 +402,7 @@ export const shopComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('shop'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default('Shop'),
     labelKey: translationKeySchema.optional(),
     playerInventory: gameIdSchema,
@@ -488,7 +493,7 @@ export const nearbyComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('nearby'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default('Nearby'),
     labelKey: translationKeySchema.optional(),
     descriptionTarget: gameIdSchema,
@@ -550,7 +555,7 @@ export const statusPanelComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('status-panel'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().default('Status'),
     labelKey: translationKeySchema.optional(),
     name: z.string().default(''),
@@ -592,7 +597,7 @@ export const formComponentSchema = z.object({
   cancelLabel: z.string().trim().min(1).default('Cancel'),
   cancelLabelKey: translationKeySchema.optional(),
   action: gameIdSchema.optional(),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().trim().min(1).default('Form'),
   labelKey: translationKeySchema.optional(),
   continueScene: gameIdSchema.optional(),
@@ -603,7 +608,7 @@ export const characterSheetComponentSchema = z
   .object({
     id: gameIdSchema,
     type: z.literal('character-sheet'),
-    placement: gridPlacementSchema,
+    ...componentLayoutFields,
     label: z.string().trim().min(1).default('Character'),
     labelKey: translationKeySchema.optional(),
     rows: z.array(statusRowSchema).default([]),
@@ -622,7 +627,7 @@ export type StatusValueDefinition = z.infer<typeof statusValueSchema>
 export const questLogComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('quest-log'),
-  placement: gridPlacementSchema,
+  ...componentLayoutFields,
   label: z.string().default('Quests'),
   labelKey: translationKeySchema.optional(),
   quests: z.array(gameIdSchema).optional(),

@@ -286,6 +286,15 @@ export function bindComponentEditor(
               ),
             ),
             ...sections.layout,
+            controls.row(
+              controls.input(
+                t('component.cssClasses'),
+                model.cssClasses?.join(' ') ?? '',
+                (value) => {
+                  model.cssClasses = [...new Set(value.match(/\S+/gu) ?? [])]
+                },
+              ),
+            ),
           ],
         ],
       ] as const) {

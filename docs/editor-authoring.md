@@ -1536,6 +1536,20 @@ supported. The compatibility check uses the same browser parser as the game;
 browsers may ignore malformed declarations. Restart **Play** to load saved CSS.
 Preview and export use the game's assigned stylesheet through the normal loader.
 
+To share a style across components, open a scene component and enter class names
+under **Layout → CSS classes (space-separated)**. For example, give each menu
+button the class `menu-button` and give the main action both `menu-button primary`.
+Save each component and add the rules to the project stylesheet.
+
+```css
+.menu-button {
+  border-radius: 1em;
+}
+.menu-button.primary {
+  font-weight: 700;
+}
+```
+
 Saved CSS files are discovered within the project, excluding nested games and
 dependency/build folders (`node_modules`, `dist`, `coverage`). The currently
 assigned file is always loaded. Revisions cover discovered CSS contents, so

@@ -4550,6 +4550,48 @@ describe.each([
   ['engine', (element: HTMLElement): IEngineHost => new DomEngineHost(element)],
   ['editor preview', (element: HTMLElement): IEngineHost => new EditorPreviewHost(element)],
 ] as const)('%s rendering integration', (_name, createHost) => {
+  it('applies authored CSS classes to the component root alongside its built-in classes', async () => {
+    const resources: IResourceSource = {
+      ...source,
+      async readText(path) {
+        const raw = await source.readText(path)
+
+        if (path !== 'scenes/start-screen.json') return raw
+        const scene = sceneSchema.parse(JSON.parse(raw))
+        scene.components.find(({ id }) => id === 'new-game')!.cssClasses = [
+          'menu-button',
+          'primary',
+        ]
+        scene.components.find(({ id }) => id === 'load-game')!.cssClasses = ['menu-button']
+
+        return JSON.stringify(scene)
+      },
+    }
+
+    const target = new TestDocument().createElement('main')
+
+    const engine = new Engine(
+      new GameLoader(new JsonResourceLoader(resources, logger)),
+      createHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      timing,
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+
+    const classes = (id: string) =>
+      target.find((node) => node.dataset.componentId === id)!.className.split(' ')
+
+    expect(classes('new-game')).toEqual(
+      expect.arrayContaining(['ancadeba-button', 'ancadeba-scene-item', 'menu-button', 'primary']),
+    )
+    expect(classes('load-game')).toContain('menu-button')
+    expect(classes('load-game')).not.toContain('primary')
+    expect(classes('title')).not.toContain('menu-button')
+  })
+
   it('switches settings language immediately while preserving playthrough state and releasing listeners', async () => {
     const content = await textBindingLoader.load()
     const { target } = setup(content)
