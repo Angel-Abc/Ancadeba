@@ -234,8 +234,8 @@
             <div class="editor-pane-body">
               <section id="recovered-components" hidden></section>
               <p id="editor-error" class="error" role="alert" hidden></p>
-              <ul id="scene-list" class="scene-list" hidden></ul>
               <section id="project-repair" class="project-repair" hidden></section>
+              <ul id="scene-list" class="scene-list" hidden></ul>
               <fieldset id="editor-fields" disabled>
                 <legend class="sr-only" data-i18n="project.properties">Project properties</legend>
                 <form id="editor-metadata">
@@ -337,6 +337,24 @@
                 </form>
                 <label for="editor-scenes" data-i18n="scene.label">Scene</label
                 ><select id="editor-scenes"></select>
+                <div
+                  id="scene-views"
+                  class="specialist-views preview-actions"
+                  role="group"
+                  data-i18n-aria-label="specialist.view"
+                  hidden
+                >
+                  <button
+                    type="button"
+                    data-scene-view="properties"
+                    data-i18n="scene.propertiesView"
+                  >
+                    Properties
+                  </button>
+                  <button type="button" data-scene-view="grid" data-i18n="scene.gridView">
+                    Grid
+                  </button>
+                </div>
                 <form id="scene-metadata" hidden>
                   <div class="save-bar" data-save-actions>
                     <button type="submit" data-i18n="scene.save">Save scene properties</button>
@@ -393,9 +411,14 @@
                   ><input id="scene-columns" type="number" min="1" step="1" required />
                 </form>
                 <form id="scene-create">
-                  <h3 data-i18n="scene.add">Add scene</h3>
+                  <div class="save-bar" data-save-actions>
+                    <button type="submit" data-i18n="scene.create">Create scene</button>
+                    <button type="button" id="scene-cancel" data-i18n="component.cancel">
+                      Cancel
+                    </button>
+                  </div>
                   <label for="new-scene-id" data-i18n="metadata.id">ID</label
-                  ><input id="new-scene-id" pattern="[a-zA-Z0-9_-]+" required />
+                  ><input id="new-scene-id" pattern="[a-zA-Z0-9_\-]+" required />
                   <label for="new-scene-title" data-i18n="metadata.title">Title</label
                   ><input id="new-scene-title" required />
                   <label for="new-scene-type" data-i18n="scene.type">Type</label>
@@ -414,9 +437,6 @@
                     value="16"
                     required
                   />
-                  <div class="preview-actions" data-save-actions>
-                    <button type="submit" data-i18n="scene.create">Create scene</button>
-                  </div>
                 </form>
               </fieldset>
               <section id="assets-panel" aria-label="Assets"></section>
@@ -436,6 +456,7 @@
                 <summary data-i18n="inspector.source">View source</summary>
                 <pre></pre>
               </details>
+              <section id="data-file-directory" hidden></section>
               <section id="component-details" hidden>
                 <p id="component-help" class="help" data-i18n="tree.readOnly">
                   This component is available for inspection. Editing is not yet supported.

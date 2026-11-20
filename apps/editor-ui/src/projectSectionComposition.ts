@@ -1,3 +1,4 @@
+import { dataFileDirectory } from './dataFileDirectory.js'
 import { bindRecoveredComponents } from './recoveredSceneComponents.js'
 import type { OpenSceneComponent } from './componentShortcuts.js'
 import { type ProjectSectionDefinition } from './projectSectionRegistry.js'
@@ -71,6 +72,7 @@ export function createProjectSections({
       void controller.save(command)
     },
     openTranslation,
+    () => selectKey('scenes'),
   )
 
   const treeElement = root.querySelector<HTMLElement>('#project-tree')
@@ -360,6 +362,9 @@ export function createProjectSections({
         visit('data-file:combatLibraries:' + id)
       },
       openTranslation,
+      (key) => {
+        if (visit('localization', 'combat')) localizationEditor?.openKey(key)
+      },
     )
 
   if (shopElement)
@@ -387,7 +392,14 @@ export function createProjectSections({
   const linkStatus = root.querySelector<HTMLElement>('#inspector-navigation-status')
   let currentPath = ''
   let travelling = false
-  const history: { origin: string; destination: string; label: string; restore: () => void }[] = []
+
+  const history: {
+    origin: string
+    destination: string
+    label: string
+    retained?: string
+    restore: () => void
+  }[] = []
 
   function updateBack() {
     const step = history.at(-1)
@@ -401,8 +413,9 @@ export function createProjectSections({
     if (step) returnButton.textContent = t('inspector.return', { id: step.label })
   }
 
-  function hasBlockingDraft() {
-    if (!hasDrafts(['recovered-components'])) return false
+  function hasBlockingDraft(retained?: string) {
+    if (!hasDrafts(retained ? ['recovered-components', retained] : ['recovered-components']))
+      return false
 
     if (linkStatus) linkStatus.textContent = t('inspector.saveFirst')
 
@@ -421,8 +434,8 @@ export function createProjectSections({
     }
   }
 
-  function visit(destination: string) {
-    if (hasBlockingDraft()) return false
+  function visit(destination: string, retained?: string) {
+    if (hasBlockingDraft(retained)) return false
     const origin = state.selection
     const active = root.ownerDocument.activeElement
     const focus = active instanceof HTMLElement ? active : undefined
@@ -440,9 +453,12 @@ export function createProjectSections({
     if (!travel(destination)) return false
     history.push({
       origin: origin.key,
+      ...(retained && { retained }),
       label:
         origin.id ??
-        t(sections.find((section) => section.id === origin.section)?.labelKey ?? origin.label),
+        (origin.kind === 'data-group'
+          ? origin.label
+          : t(sections.find((section) => section.id === origin.section)?.labelKey ?? origin.label)),
       destination,
       restore() {
         restoreEntry?.()
@@ -474,7 +490,7 @@ export function createProjectSections({
   function goBack() {
     const step = history.at(-1)
 
-    if (!step || hasBlockingDraft() || !travel(step.origin)) return
+    if (!step || hasBlockingDraft(step.retained) || !travel(step.origin)) return
     history.pop()
     updateBack()
     step.restore()
@@ -573,6 +589,8 @@ export function createProjectSections({
     (key) => selectKey(key),
   )
 
+  const directory = treeElement && root.querySelector<HTMLElement>('#data-file-directory')
+
   const registrations = builtinSectionDefinitions({
     root,
     t,
@@ -611,6 +629,7 @@ export function createProjectSections({
         },
     ),
     ...registrations.filter((entry) => !entry.tree),
+    ...(directory ? [{ create: () => dataFileDirectory(directory, t, visit) }] : []),
     {
       create: () => ({
         id: 'recovered-components',
@@ -642,7 +661,7 @@ export function createProjectSections({
         id: 'inspector-return',
         role: 'adjunct',
         canNavigate: ({ node }) =>
-          !history.length || node.key === state.selection.key || !hasBlockingDraft(),
+          travelling || !history.length || node.key === state.selection.key || !hasBlockingDraft(),
         matches: () => false,
         selectionChanged: ({ node }) => {
           if (!travelling && history.length && history.at(-1)?.destination !== node.key) {

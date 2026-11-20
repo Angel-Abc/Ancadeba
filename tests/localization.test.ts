@@ -1,7 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { describe, expect, it, vi } from 'vite-plus/test'
 import { GameLoader, resolveText, type GameLanguagePreferences } from '@ancadeba/game-runtime'
-import { gameSchema, languageCatalogSchema, selectLanguage } from '@ancadeba/schemas'
+import {
+  combatTextSchema,
+  gameSchema,
+  languageCatalogSchema,
+  selectLanguage,
+} from '@ancadeba/schemas'
 import { validateProject } from '@ancadeba/editor-core'
 import { createTranslator, JsonResourceLoader, type ILogger } from '@ancadeba/utilities'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
@@ -389,6 +394,9 @@ describe('application localization', () => {
         .sort((a, b) => a.localeCompare(b))
 
     expect(Object.keys(nl).sort()).toEqual(Object.keys(en).sort())
+
+    for (const code of combatTextSchema.keyof().options)
+      expect(en[`combat.wording.${code}`], code).toBeTruthy()
 
     for (const [key, text] of Object.entries(en))
       expect(placeholders(nl[key] ?? ''), key).toEqual(placeholders(text))

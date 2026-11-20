@@ -131,9 +131,23 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
       afterRestore: () => forms.refreshTranslations(),
       canNavigate: ({ sceneId }) =>
         !sceneId || sceneId === forms.selectedScene() || !forms.hasSceneDrafts(),
-      reconcile(node, state) {
+      reconcile(node, state, replace) {
         if (node.section !== 'scenes' || !state.view) return node
         const scene = state.view.scenes.find(({ id }) => id === (node.parentId ?? node.id))
+
+        if (replace && node.kind === 'new-scene' && state.lastCommand === 'scene.create') {
+          const createdId = forms.takeCreatedScene()
+          const created = state.view.scenes.find(({ id }) => id === createdId)
+
+          if (created)
+            return {
+              key: 'scene:' + created.id,
+              section: 'scenes',
+              kind: 'scene',
+              id: created.id,
+              label: created.title || created.id,
+            }
+        }
 
         if (node.kind === 'section' || node.kind.startsWith('new-')) return node
 

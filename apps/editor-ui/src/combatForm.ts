@@ -11,7 +11,6 @@ import type { ProjectView } from '@ancadeba/editor-core'
 import {
   combatHealthSchema,
   combatEquipmentMoveReferences,
-  combatTextSchema,
   gameBindingSchema,
   type CombatSource,
   moveStatusIds,
@@ -414,34 +413,6 @@ export function combatForm(
     fieldPath(
       section('ruleset', combatRulesetForm(controls, view, draft, render, availableStatuses)),
       'mechanics',
-    ),
-  )
-  result.push(
-    fold(
-      'texts',
-      t('combat.texts'),
-      false,
-      ...combatTextSchema.keyof().options.map((code) =>
-        group(
-          humanizeCode(code),
-          input(
-            t('combat.codeText', { code: humanizeCode(code) }),
-            draft.messages[code],
-            (value) => {
-              draft.messages[code] = value
-            },
-          ),
-          translation(
-            t('combat.codeTranslation', { code: humanizeCode(code) }),
-            draft.messageKeys[code] ?? '',
-            keys,
-            (value) => {
-              if (value) draft.messageKeys[code] = value
-              else delete draft.messageKeys[code]
-            },
-          ),
-        ),
-      ),
     ),
   )
 

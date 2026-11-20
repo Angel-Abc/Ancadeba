@@ -42,6 +42,8 @@ export function bindSceneControls(
   let duplicateTitle = ''
   let duplicateComponentId = ''
   let replacement = ''
+  const operations = ['rename', 'duplicate', 'setStartup', 'delete'] as const
+  let operation: (typeof operations)[number] = 'rename'
   let pending: EditorCommand | undefined
 
   const controls = ruleFormControls(
@@ -226,15 +228,15 @@ export function bindSceneControls(
       return
     }
 
-    fields.append(
-      form(
+    const tasks = {
+      rename: form(
         'scene.rename',
         () => ({ type: 'scene.rename', sceneId: current.id, newId: renameId }),
         controls.input(t('scene.renameId'), renameId, (value) => {
           renameId = value.trim()
         }),
       ),
-      form(
+      duplicate: form(
         'scene.duplicate',
         () => ({
           type: 'scene.duplicate',
@@ -249,7 +251,7 @@ export function bindSceneControls(
           duplicateTitle = value
         }),
       ),
-      controls.button(
+      setStartup: controls.button(
         t(
           (view?.game?.['initial-scene'] ?? view?.game?.scenes[0]) === current.id
             ? 'scene.isStartup'
@@ -258,29 +260,61 @@ export function bindSceneControls(
         () => submit({ type: 'game.setInitialScene', sceneId: current.id }),
         (view?.game?.['initial-scene'] ?? view?.game?.scenes[0]) === current.id,
       ),
-      controls.select(
-        t('scene.replacement'),
-        replacement,
-        [
-          ['', t('scene.noReplacement')],
-          ...(view?.scenes
-            .filter(({ id }) => id !== current.id)
-            .map((entry) => [entry.id, view ? sceneTitle(view, entry) : entry.id] as const) ?? []),
-        ],
-        (value) => {
-          replacement = value
-        },
-      ),
-      controls.button(
+      delete: controls.group(
         t('scene.delete'),
-        () =>
-          submit({
-            type: 'scene.remove',
-            sceneId: current.id,
-            ...(replacement ? { replacementScene: replacement } : {}),
-          }),
-        (view?.scenes.length ?? 0) <= 1,
+        controls.select(
+          t('scene.replacement'),
+          replacement,
+          [
+            ['', t('scene.noReplacement')],
+            ...(view?.scenes
+              .filter(({ id }) => id !== current.id)
+              .map((entry) => [entry.id, view ? sceneTitle(view, entry) : entry.id] as const) ??
+              []),
+          ],
+          (value) => {
+            replacement = value
+          },
+        ),
+        controls.button(
+          t('scene.delete'),
+          () =>
+            submit({
+              type: 'scene.remove',
+              sceneId: current.id,
+              ...(replacement ? { replacementScene: replacement } : {}),
+            }),
+          (view?.scenes.length ?? 0) <= 1,
+        ),
       ),
+    }
+
+    const picker = controls.select(
+      t('scene.operation'),
+      operation,
+      operations.map((id) => [id, t(`scene.${id}`)] as const),
+      (id) => {
+        if (dirty) {
+          error.textContent = t('scene.discardControlsFirst')
+          picker.querySelector('select')!.value = operation
+
+          return
+        }
+
+        operation = id
+        showTask()
+      },
+      false,
+    )
+
+    function showTask() {
+      for (const id of operations) tasks[id].hidden = id !== operation
+    }
+
+    showTask()
+    fields.append(
+      picker,
+      ...Object.values(tasks),
       controls.button(t('scene.discardControls'), reset),
     )
   }
@@ -304,6 +338,7 @@ export function bindSceneControls(
       duplicateTitle: z.string(),
       duplicateComponentId: z.string(),
       replacement: z.string(),
+      operation: z.enum(operations).optional(),
     }),
     () =>
       dirty
@@ -315,6 +350,7 @@ export function bindSceneControls(
             duplicateTitle,
             duplicateComponentId,
             replacement,
+            operation,
           }
         : undefined,
     (saved) => {
@@ -324,10 +360,15 @@ export function bindSceneControls(
       duplicateId = saved.duplicateId
       duplicateTitle = saved.duplicateTitle
       duplicateComponentId = saved.duplicateComponentId
+      operation = saved.operation ?? (saved.replacement ? 'delete' : 'rename')
       replacement = saved.replacement
       dirty = true
       render()
+      const disclosure = root.closest?.('details')
+
+      if (disclosure) disclosure.open = true
     },
+    'scene-action-picker',
   )
 
   return {
@@ -377,6 +418,7 @@ export function bindSceneControls(
       if (nextScene === sceneId && nextComponent === componentId) return true
       sceneId = nextScene
       componentId = nextComponent
+      operation = 'rename'
       reset()
 
       return true

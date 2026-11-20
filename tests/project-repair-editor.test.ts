@@ -184,6 +184,34 @@ describe('project repair editor', () => {
     ui.binding.dispose()
   })
 
+  it('places affected files and their repair actions before the editable source', () => {
+    const ui = harness()
+    const view = ui.state.view!
+    ui.binding.render(
+      {
+        ...ui.state,
+        view: {
+          ...view,
+          repairFiles: {
+            ...view.repairFiles,
+            'assets/a.json': '{}',
+          },
+        },
+      },
+      false,
+    )
+    const elements = ui.root.all()
+    const picker = elements.find((element) => element.tagName === 'SELECT')!
+    expect(picker.children.map((option) => option.value)).toEqual([
+      'game.json',
+      'assets/a.json',
+      'scenes/start.json',
+    ])
+    expect(picker.children[0]?.textContent).toContain('has problems')
+    expect(elements.indexOf(ui.button(2))).toBeLessThan(elements.indexOf(ui.source()))
+    ui.binding.dispose()
+  })
+
   it('labels partial repairs clearly and retains rejected or conflicting repair drafts', async () => {
     const ui = harness()
     ui.check.mockResolvedValue({

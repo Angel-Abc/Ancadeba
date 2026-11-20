@@ -48,22 +48,24 @@ export function bindProjectRepair(
   generate.type = 'button'
   check.type = save.type = discard.type = 'button'
   const buttons = document.createElement('div')
-  buttons.className = 'preview-actions'
+  buttons.className = 'save-bar repair-actions'
   let dirty = false
   buttons.append(
     check,
     save,
     saveStatus(document, t, () => dirty),
     discard,
-    generate,
   )
   const feedback = document.createElement('p')
   feedback.setAttribute('role', 'status')
   feedback.setAttribute('aria-live', 'polite')
   const preview = document.createElement('pre')
   preview.className = 'repair-diagnostics'
-  fields.append(fileLabel, issues, sourceLabel, savedDetails, buttons)
-  root.replaceChildren(heading, help, fields, feedback, preview)
+  const results = document.createElement('details')
+  const summary = document.createElement('summary')
+  results.append(summary, preview)
+  fields.append(fileLabel, buttons, feedback, issues, generate, sourceLabel, savedDetails, results)
+  root.replaceChildren(heading, fields, help)
   let state: ProjectEditorState | undefined
   let file = ''
   let text = ''
@@ -91,11 +93,16 @@ export function bindProjectRepair(
     const entries = Object.keys(files())
 
     if (file && !entries.includes(file)) entries.push(file)
+    const affected = new Set(state?.view?.diagnostics.map((issue) => issue.file))
+    entries.sort((a, b) => Number(affected.has(b)) - Number(affected.has(a)) || a.localeCompare(b))
     picker.replaceChildren(
       ...entries.map((name) => {
         const option = document.createElement('option')
         option.value = name
         option.textContent = files()[name] === null ? t('repair.missing', { file: name }) : name
+
+        if (affected.has(name))
+          option.textContent = t('repair.fileWithIssue', { file: option.textContent })
 
         return option
       }),
@@ -104,9 +111,11 @@ export function bindProjectRepair(
 
     if (source.value !== text) source.value = text
     savedSource.textContent = files()[file] ?? ''
-    issues.textContent = diagnosticsText(
-      state?.view?.diagnostics.filter((issue) => issue.file === file) ?? [],
-    )
+    const allIssues = checked?.result.diagnostics ?? state?.view?.diagnostics ?? []
+    issues.textContent = diagnosticsText(allIssues.filter((issue) => issue.file === file))
+    issues.hidden = !issues.textContent
+    summary.textContent = t('repair.checkDetails')
+    results.hidden = !allIssues.length
     check.textContent = t('repair.check')
     save.textContent = checked?.result.diagnostics.length
       ? t('repair.saveRemaining', { count: checked.result.diagnostics.length })
@@ -118,7 +127,11 @@ export function bindProjectRepair(
     fields.disabled = state?.busy === true || submitting || !file
     picker.disabled = state?.busy === true
     save.disabled =
-      !dirty || !checked || checked.text !== text || checked.result.revision !== revision
+      !dirty ||
+      !checked ||
+      checked.text !== text ||
+      checked.result.revision !== revision ||
+      revision !== state?.view?.revision
     discard.disabled = !dirty
     feedback.textContent =
       detail ||
@@ -129,7 +142,8 @@ export function bindProjectRepair(
               count: checked.result.diagnostics.length,
             })
           : '')
-    preview.textContent = checked ? diagnosticsText(checked.result.diagnostics) : ''
+    feedback.hidden = !feedback.textContent
+    preview.textContent = diagnosticsText(allIssues)
   }
 
   const reset = () => {

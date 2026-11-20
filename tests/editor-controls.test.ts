@@ -383,6 +383,7 @@ function ruleWorkspace() {
       setVisible: noop,
       activate: noop,
       selectedScene: () => '',
+      takeCreatedScene: () => undefined,
       hasDrafts: () => false,
       hasSceneDrafts: () => false,
       clear: noop,
@@ -4229,7 +4230,9 @@ describe('editor draft workflows', () => {
         rest: { effects: [{ type: 'change-resource', resource: 'exhaustion', amount: -30 }] },
       },
     })
-    expect(ui.root.all().filter((node) => node.tagName === 'textarea')).toHaveLength(0)
+    expect(ui.root.all().filter((node) => node.tagName === 'textarea')).toEqual([
+      ui.field('Interception preview text'),
+    ])
     await ui.controller.load('demo')
     expect(ui.field('Initial value', 'exhaustion').value).toBe('10')
     expect(ui.field('Phase', 'threshold').value).toBe('enraged')
@@ -7291,6 +7294,41 @@ describe('scene inspector registry', () => {
     editor.render({ ...ui.initial, view: { ...view }, preserveDrafts: true }, false)
     expect(ui.field('Choice ID').value).toBe('report')
     expect(editor.hasDrafts()).toBe(false)
+  })
+
+  it('finds encounter messages by wording and recovers edits to multiple messages', async () => {
+    const ui = panel()
+    const view = inspectProject(await sample('basic'))
+
+    const editor = bindCombatEditor(
+      ui.root.asElement(),
+      (command) => ui.commands.push(command),
+      editorLocalization().t,
+      vi.fn(),
+    )
+
+    editor.render({ ...ui.initial, view }, true)
+    editor.navigate(undefined, 'training')
+    ui.edit('Search messages', 'Interception preview')
+    expect(ui.field('Message').value).toBe('interceptionPreview')
+    expect(editor.hasDrafts()).toBe(false)
+    ui.edit('Interception preview text', '{target}: {interception}')
+    ui.edit('Search messages', 'Already queued')
+    expect(ui.field('Message').value).toBe('reserved')
+    ui.edit('Reserved text', 'Queued: {actor}')
+    const saved = captureEditorDrafts(ui.root.asElement())
+    ui.click(editorLocalization().t('combat.discard'))
+    expect(restoreEditorDrafts(ui.root.asElement(), saved)).toEqual([])
+    expect(ui.field('Search messages').value).toBe('Already queued')
+    expect(ui.field('Message').value).toBe('reserved')
+    expect(ui.field('Reserved text').value).toBe('Queued: {actor}')
+    ui.submit('Save combat encounter')
+    expect(ui.commands.at(-1)).toMatchObject({
+      type: 'game.upsertCombat',
+      encounter: {
+        messages: { interceptionPreview: '{target}: {interception}', reserved: 'Queued: {actor}' },
+      },
+    })
   })
 
   it('keeps the encounter draft and running round when switching between Combat views', async () => {

@@ -270,6 +270,7 @@ export function bindProjectPanel(
   }
 
   const railElement = treeElement && root.querySelector<HTMLElement>('#section-rail')
+  const repairPanel = treeElement && root.querySelector<HTMLElement>('#project-repair')
   const sceneList = treeElement && root.querySelector<HTMLElement>('#scene-list')
   const sceneActions = treeElement && root.querySelector<HTMLElement>('#scene-header-actions')
   let rail: ReturnType<typeof bindSectionRail> | undefined
@@ -300,7 +301,7 @@ export function bindProjectPanel(
       operations.hidden = node.kind !== 'component' && node.kind !== 'scene'
 
       if (operations.dataset.selection !== node.key) {
-        operations.open = node.kind === 'scene'
+        operations.open = false
         operations.dataset.selection = node.key
       }
 
@@ -485,11 +486,13 @@ export function bindProjectPanel(
             : ''
     error.textContent =
       state.error ||
-      view?.diagnostics
-        .map(
-          (diagnostic) => `${diagnostic.file} ${diagnostic.path.join('.')}: ${diagnostic.message}`,
-        )
-        .join('\n') ||
+      (!repairPanel &&
+        view?.diagnostics
+          .map(
+            (diagnostic) =>
+              `${diagnostic.file} ${diagnostic.path.join('.')}: ${diagnostic.message}`,
+          )
+          .join('\n')) ||
       ''
     error.hidden = !error.textContent
     header.hidden = !view
@@ -513,6 +516,8 @@ export function bindProjectPanel(
         }
 
         showOpenControls(false)
+
+        if (repairPanel && view?.diagnostics.length && compact?.matches) setExplorerExpanded(false)
         openToggle.focus()
       } else {
         if (duplicatingProject) {

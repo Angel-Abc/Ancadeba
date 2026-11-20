@@ -1,4 +1,5 @@
-import { combatFile } from '@ancadeba/schemas'
+import { combatWordingForm, type WordingSelection } from './combatWordingForm.js'
+import { combatFile, combatTextSchema } from '@ancadeba/schemas'
 import { linkedTranslationFields } from './inspectorTranslations.js'
 import { focusIssue } from './specialistEntries.js'
 import { recoveredComponent } from './recoveredSceneComponents.js'
@@ -32,6 +33,7 @@ export function bindCombatEditor(
   openComponent?: OpenSceneComponent,
   openLibrary?: (id: string) => void,
   openKey?: (key: string) => void,
+  openWordingKey = openKey,
 ) {
   const document = root.ownerDocument
   const error = document.createElement('p')
@@ -69,17 +71,29 @@ export function bindCombatEditor(
 
   const languageChanged = languageWatcher(t)
 
-  const controls = linkedTranslationFields(
-    ruleFormControls(
-      document,
-      () => {
-        dirty = true
-        simulation.invalidateResults()
-      },
-      t,
-    ),
-    openKey,
+  const selections = new Map<string, WordingSelection>()
+
+  function wordingSelection(id: string) {
+    let selection = selections.get(id)
+
+    if (!selection) {
+      selection = { code: 'interceptionPreview', query: '', open: false }
+      selections.set(id, selection)
+    }
+
+    return selection
+  }
+
+  const baseControls = ruleFormControls(
+    document,
+    () => {
+      dirty = true
+      simulation.invalidateResults()
+    },
+    t,
   )
+
+  const controls = linkedTranslationFields(baseControls, openKey)
 
   const pageLabels = {
     encounter: 'combat.encounter',
@@ -179,6 +193,20 @@ export function bindCombatEditor(
     return true
   }
 
+  function focusEncounterIssue(path: readonly PropertyKey[]) {
+    if (path[0] === 'messages' || path[0] === 'messageKeys') {
+      const code = combatTextSchema.keyof().safeParse(path[1])
+
+      if (draft && code.success) {
+        Object.assign(wordingSelection(encounterId), { query: '', code: code.data, open: true })
+        scopedFolds(baseControls, `encounter:${draft.id}`).unfold('texts')
+        render()
+      }
+    }
+
+    focusIssue(fields, path)
+  }
+
   const submit = (command: EditorCommand) => {
     if (busy) return
 
@@ -200,7 +228,7 @@ export function bindCombatEditor(
       : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
 
     if (!parsed.success && command.type === 'game.upsertCombat')
-      focusIssue(fields, parsed.error.issues[0]!.path.slice(1))
+      focusEncounterIssue(parsed.error.issues[0]!.path.slice(1))
 
     if (parsed.success) {
       if (parsed.data.type === 'game.upsertCombat') encounterId = parsed.data.encounter.id
@@ -441,6 +469,13 @@ export function bindCombatEditor(
         ),
       ),
       ...combatForm(scopedFolds(controls, `encounter:${draft.id}`), view, draft, render, creating),
+      combatWordingForm(
+        scopedFolds(baseControls, `encounter:${draft.id}`),
+        view,
+        draft,
+        wordingSelection(encounterId),
+        openWordingKey,
+      ),
     )
 
     if (!definitionOnly && scene)
@@ -536,6 +571,14 @@ export function bindCombatEditor(
       creating: z.boolean(),
       playerHealth: z.string(),
       enemyHealth: z.string(),
+      wording: z
+        .object({
+          code: combatTextSchema.keyof(),
+          query: z.string(),
+          open: z.boolean(),
+          shown: z.boolean().optional(),
+        })
+        .optional(),
       encounterDirty: z.boolean().default(true),
     }),
     () =>
@@ -550,6 +593,7 @@ export function bindCombatEditor(
             enemyHealth,
             definitionOnly,
             encounterDirty: dirty,
+            wording: wordingSelection(encounterId),
             page,
           }
         : undefined,
@@ -557,6 +601,8 @@ export function bindCombatEditor(
       definitionOnly = saved.definitionOnly ?? false
       sceneId = saved.sceneId
       encounterId = saved.encounterId
+
+      if (saved.wording) selections.set(encounterId, saved.wording)
       draft = saved.draft
       component = saved.component
       creating = saved.creating
@@ -566,7 +612,7 @@ export function bindCombatEditor(
       dirty = saved.encounterDirty
       render()
     },
-    'specialist-inspectors-v2',
+    'encounter-wording-v3',
   )
 
   return {
@@ -619,6 +665,8 @@ export function bindCombatEditor(
       const translated = languageChanged()
       libraryEditor.render(state, replaceFields)
       const projectChanged = path !== state.path
+
+      if (projectChanged) selections.clear()
       const changed = view !== state.view
       path = state.path
       view = state.view
@@ -662,7 +710,7 @@ export function bindCombatEditor(
 
       if (issue) {
         error.textContent = issue.message
-        focusIssue(fields, issue.path)
+        focusEncounterIssue(issue.path)
       }
 
       simulationRoot.disabled = fields.disabled

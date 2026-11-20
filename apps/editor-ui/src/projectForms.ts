@@ -16,6 +16,7 @@ export function bindProjectForms(
   t: Translate,
   save: (command: EditorCommand) => void,
   openKey?: (key: string) => void,
+  cancelCreation?: () => void,
 ) {
   const find = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!
   const metadata = find<HTMLFormElement>('editor-metadata')
@@ -88,6 +89,41 @@ export function bindProjectForms(
     listeners.push(() => element.removeEventListener(event, listener))
   }
 
+  const sceneViews = root.querySelector<HTMLElement>('#scene-views')
+  const sceneButtons = sceneViews?.querySelectorAll?.<HTMLButtonElement>('[data-scene-view]') ?? []
+  let gridVisible = false
+  let sceneVisible = false
+  let sceneViewId = ''
+  let submittedScene: string | undefined
+
+  function showSceneView() {
+    if (sceneViews) sceneViews.hidden = !sceneVisible
+    sceneMetadata.hidden = !sceneVisible || gridVisible
+    layout.hidden = !sceneVisible || (Boolean(sceneViews) && !gridVisible)
+
+    for (const button of sceneButtons)
+      button.setAttribute(
+        'aria-pressed',
+        String((button.dataset.sceneView === 'grid') === gridVisible),
+      )
+  }
+
+  for (const button of sceneButtons)
+    on(button, 'click', () => {
+      gridVisible = button.dataset.sceneView === 'grid'
+      showSceneView()
+    })
+  const cancel = root.querySelector<HTMLElement>('#scene-cancel')
+
+  if (cancel)
+    on(cancel, 'click', () => {
+      if (busy) return
+      dirtyForms.delete(create.id)
+      create.reset()
+      error.hidden = true
+      cancelCreation?.()
+    })
+
   const projectTranslations = bindMetadataTranslations(root, 'editor', t, () => {
     dirtyForms.add(metadata.id)
   })
@@ -99,8 +135,9 @@ export function bindProjectForms(
 
   const fillScene = () => {
     const scene = view?.scenes.find((scene) => scene.id === scenes.value)
-    sceneMetadata.hidden = !scene
-    layout.hidden = !scene
+
+    if (!sceneViews) sceneVisible = Boolean(scene)
+    showSceneView()
 
     if (!scene) return
 
@@ -184,6 +221,7 @@ export function bindProjectForms(
       fields: z.record(z.string(), z.string()),
       dirty: z.array(z.string()),
       scene: z.string(),
+      gridVisible: z.boolean().optional(),
       profile: z.string().optional(),
       profileVisible: z.boolean().optional(),
       appearanceEntry: z.object({ graphicSlot: z.string(), graphicColor: z.string() }).optional(),
@@ -195,6 +233,7 @@ export function bindProjectForms(
             fields: Object.fromEntries(formFields.map((id) => [id, value(id)])),
             dirty: [...dirtyForms],
             scene: scenes.value,
+            gridVisible,
             profile: profile?.snapshot(),
             profileVisible,
             appearanceEntry: profile?.appearanceEntry,
@@ -207,6 +246,9 @@ export function bindProjectForms(
       for (const id of saved.dirty)
         if ([metadata.id, sceneMetadata.id, layout.id, create.id].includes(id)) dirtyForms.add(id)
       scenes.value = saved.scene
+      sceneViewId = saved.scene
+      gridVisible = saved.gridVisible ?? false
+      showSceneView()
 
       if (profile && saved.appearanceEntry)
         Object.assign(profile.appearanceEntry, saved.appearanceEntry)
@@ -334,6 +376,7 @@ export function bindProjectForms(
     })
   })
   submit(create, () => {
+    submittedScene = value('new-scene-id')
     save({
       type: 'scene.create',
       scene: {
@@ -364,16 +407,24 @@ export function bindProjectForms(
     },
     activate({ node, scene }: ProjectSelection) {
       metadata.hidden = node.section !== 'game'
-      sceneMetadata.hidden = node.kind !== 'scene' || !scene
-      layout.hidden = sceneMetadata.hidden
+      sceneVisible = node.kind === 'scene' && Boolean(scene)
+      showSceneView()
       create.hidden = node.kind !== 'new-scene'
-      find('editor-fields').hidden = metadata.hidden && sceneMetadata.hidden && create.hidden
+      find('editor-fields').hidden = metadata.hidden && !sceneVisible && create.hidden
+    },
+    takeCreatedScene() {
+      const id = submittedScene
+      submittedScene = undefined
+
+      return id
     },
     selectedScene: () => scenes.value,
     hasDrafts: () => dirtyForms.size > 0,
     hasSceneDrafts: () => dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id),
     clear: () => dirtyForms.clear(),
     selectScene(id: string) {
+      if (sceneViewId !== id) gridVisible = false
+      sceneViewId = id
       scenes.value = id
       fillScene()
     },
@@ -389,6 +440,9 @@ export function bindProjectForms(
         dirtyForms.clear()
         showProfile(false)
         profile?.clearSelection()
+        gridVisible = false
+        sceneViewId = ''
+        submittedScene = undefined
       }
 
       view = state.view
