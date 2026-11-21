@@ -1,4 +1,4 @@
-import { refreshSaveStatuses, saveStatus } from './formSaveStatus.js'
+import { bindFormSaveBar, refreshSaveStatuses } from './formSaveStatus.js'
 import { registerEditorDraft, registerFormDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import {
@@ -678,13 +678,9 @@ export function bindAssetsPanel(
   on('asset-remove-preset', 'click', () => savePalette('remove'))
 
   for (const id of ['asset-image', 'asset-palettes', 'asset-definition']) {
-    find(id)
-      .querySelector?.('[data-save-actions]')
-      ?.append(
-        saveStatus(document, t, () =>
-          id === 'asset-palettes' ? drafts.has(target) : dirty.has(id),
-        ),
-      )
+    bindFormSaveBar(find(id), t, () =>
+      id === 'asset-palettes' ? drafts.has(target) : dirty.has(id),
+    )
     find(id)
       .querySelector?.('[data-discard]')
       ?.addEventListener(

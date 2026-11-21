@@ -2,6 +2,7 @@ import type { ProjectView } from '@ancadeba/editor-core'
 import type { RuleValue } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
+import { markSaveButton } from './formSaveStatus.js'
 
 /** A translation key with its default-language text; an empty key means "no translation". */
 export type TranslationChoice = readonly [key: string, text: string]
@@ -269,7 +270,11 @@ export function languageWatcher(t: Translate) {
 }
 
 /** Groups a panel form's save action (and optional companions) into a bar that stays in view. */
-export function saveBar(document: Document, ...actions: HTMLElement[]) {
+export function saveBar(document: Document, save: HTMLButtonElement, ...companions: HTMLElement[]) {
+  return actionBar(document, markSaveButton(save), ...companions)
+}
+
+export function actionBar(document: Document, ...actions: HTMLElement[]) {
   const bar = document.createElement('div')
   bar.className = 'save-bar'
   bar.append(...actions)

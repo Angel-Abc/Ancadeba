@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
-import { ruleFormControls, saveBar } from './ruleFormControls.js'
+import { actionBar, ruleFormControls } from './ruleFormControls.js'
 import { sceneTitle } from './projectTree.js'
 import type { ConfirmAction } from './editorConfirmation.js'
 
@@ -134,7 +134,7 @@ export function bindSceneControls(
       button.title = t('shortcuts.duplicate')
     }
 
-    const actions = saveBar(document, button)
+    const actions = actionBar(document, button)
 
     if (buttonLabel === 'component.duplicate' && copyButton) actions.append(copyButton)
     element.append(...children, actions)

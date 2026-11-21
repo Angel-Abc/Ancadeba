@@ -11,7 +11,7 @@ import {
 import { sceneComponentSchema } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
-import { ruleFormControls, saveBar } from './ruleFormControls.js'
+import { actionBar, ruleFormControls } from './ruleFormControls.js'
 
 /** A saved-source clipboard for one open project, with a separate destination draft. */
 export function bindComponentClipboard(
@@ -200,7 +200,7 @@ export function bindComponentClipboard(
           'number',
         ),
       ),
-      saveBar(
+      actionBar(
         document,
         button,
         saveStatus(document, t, () => dirty),

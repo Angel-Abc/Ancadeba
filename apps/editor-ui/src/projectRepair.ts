@@ -1,5 +1,5 @@
 import type { ProjectRepairRequest, ProjectRepairCheck } from '@ancadeba/editor-core'
-import { saveStatus } from './formSaveStatus.js'
+import { markSaveButton, saveStatus } from './formSaveStatus.js'
 import type { Translate } from '@ancadeba/utilities'
 import { z } from 'zod'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -52,7 +52,7 @@ export function bindProjectRepair(
   let dirty = false
   buttons.append(
     check,
-    save,
+    markSaveButton(save),
     saveStatus(document, t, () => dirty),
     discard,
   )

@@ -6,7 +6,7 @@ import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { bindMetadataTranslations } from './metadataTranslations.js'
-import { saveStatus } from './formSaveStatus.js'
+import { bindFormSaveBar } from './formSaveStatus.js'
 import { sceneTitle } from './projectTree.js'
 import { languageWatcher } from './ruleFormControls.js'
 import { bindCharacterProfileForm } from './characterProfileForm.js'
@@ -263,9 +263,7 @@ export function bindProjectForms(
   )
 
   for (const form of [metadata, sceneMetadata, layout, create]) {
-    form
-      .querySelector?.('[data-save-actions]')
-      ?.append(saveStatus(root.ownerDocument, t, () => dirtyForms.has(form.id)))
+    bindFormSaveBar(form, t, () => dirtyForms.has(form.id))
     const discard = form.querySelector?.('[data-discard]')
 
     if (discard)

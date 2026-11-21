@@ -1,5 +1,7 @@
 export interface EditorShortcutActions {
-  blocked(): boolean
+  active(): boolean
+  blocked(action: 'save' | 'selection'): boolean
+  save(): void
   copy(): boolean
   paste(): boolean
   duplicate(): boolean
@@ -11,28 +13,41 @@ export interface EditorShortcutActions {
 /** Actions return whether the current editor selection can handle a shortcut. */
 export function bindEditorShortcuts(window: Window, actions: EditorShortcutActions): () => void {
   const onKeyDown = (event: KeyboardEvent) => {
-    if (
-      event.defaultPrevented ||
-      event.repeat ||
-      event.isComposing ||
-      event.altKey ||
-      actions.blocked()
-    )
-      return
+    if (event.defaultPrevented || event.isComposing || event.altKey || !actions.active()) return
     const target = event.target
 
-    if (
+    const isWithin = (selector: string) =>
       target &&
       'closest' in target &&
       typeof target.closest === 'function' &&
-      target.closest(
-        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], dialog[open], [role="dialog"], #preview-pane, #preview-form, #project-open-controls, #project-create-controls',
+      target.closest(selector)
+
+    if (
+      isWithin(
+        'dialog[open], [role="dialog"], #preview-pane, #preview-form, #project-open-controls, #project-create-controls',
       )
     )
       return
     const key = event.key.toLowerCase()
     const modified = event.ctrlKey || event.metaKey
-    let action: keyof Omit<EditorShortcutActions, 'blocked'> | undefined
+
+    if (modified && !event.shiftKey && key === 's') {
+      event.preventDefault()
+
+      if (!event.repeat && !actions.blocked('save')) actions.save()
+
+      return
+    }
+
+    if (
+      event.repeat ||
+      actions.blocked('selection') ||
+      isWithin(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"]',
+      )
+    )
+      return
+    let action: keyof Omit<EditorShortcutActions, 'active' | 'blocked' | 'save'> | undefined
 
     if (modified && !event.shiftKey) {
       if (key === 'c') action = 'copy'

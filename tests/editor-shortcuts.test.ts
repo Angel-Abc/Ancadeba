@@ -1,12 +1,16 @@
 import { describe, expect, it, vi } from 'vite-plus/test'
 import { bindEditorShortcuts } from '../apps/editor-ui/src/editorShortcuts.js'
+import { saveActiveDraft } from '../apps/editor-ui/src/formSaveStatus.js'
 
 function keyboard() {
+  let active = true
   let blocked = false
   let selectedText = ''
 
   const actions = {
+    active: () => active,
     blocked: () => blocked,
+    save: vi.fn(),
     copy: vi.fn(() => true),
     paste: vi.fn(() => true),
     duplicate: vi.fn(() => true),
@@ -63,6 +67,9 @@ function keyboard() {
     actions,
     press,
     dispose,
+    close: () => {
+      active = false
+    },
     block: () => {
       blocked = true
     },
@@ -73,6 +80,75 @@ function keyboard() {
 }
 
 describe('editor keyboard shortcuts', () => {
+  it('saves only the focused draft or a single visible draft when focus leaves the form', () => {
+    const button = () => ({
+      checkVisibility: vi.fn(() => true),
+      matches: vi.fn(() => false),
+      parentElement: { querySelector: vi.fn(() => true) },
+      click: vi.fn(),
+    })
+
+    const first = button()
+    const second = button()
+
+    const scope = (...buttons: (typeof first)[]) => ({
+      querySelectorAll: (selector: string) => (selector.startsWith('button') ? buttons : []),
+    })
+
+    const form = scope(second)
+    const field = { closest: () => form }
+
+    const workspace = {
+      ...scope(first, second),
+      contains: vi.fn(() => false),
+      ownerDocument: { activeElement: field },
+    }
+
+    // @ts-expect-error -- This DOM surface models focus, save controls, and their draft status.
+    const save = () => saveActiveDraft(workspace)
+    save()
+    expect(first.click).not.toHaveBeenCalled()
+    expect(second.click).not.toHaveBeenCalled()
+    workspace.contains.mockReturnValue(true)
+    save()
+    expect(second.click).toHaveBeenCalledTimes(1)
+    second.parentElement.querySelector.mockReturnValue(false)
+    save()
+    expect(second.click).toHaveBeenCalledTimes(1)
+    expect(first.click).not.toHaveBeenCalled()
+    workspace.contains.mockReturnValue(false)
+    second.parentElement.querySelector.mockReturnValue(true)
+    second.checkVisibility.mockReturnValue(false)
+    save()
+    expect(first.click).toHaveBeenCalledTimes(1)
+    first.matches.mockReturnValue(true)
+    save()
+    expect(first.click).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['ctrlKey', 'metaKey'] as const)('saves while editing a field with %s+S', (modifier) => {
+    const { actions, press, block, close, dispose } = keyboard()
+    const chord = { [modifier]: true, target: 'textarea' }
+
+    try {
+      expect(press('S', chord).defaultPrevented).toBe(true)
+      expect(press('s', { ...chord, repeat: true }).defaultPrevented).toBe(true)
+      expect(press('s', { ...chord, shiftKey: true }).defaultPrevented).toBe(false)
+      expect(press('s', { ...chord, altKey: true }).defaultPrevented).toBe(false)
+      expect(press('s', { ...chord, isComposing: true }).defaultPrevented).toBe(false)
+      expect(press('s', { ...chord, target: '#preview-pane' }).defaultPrevented).toBe(false)
+      expect(press('s', { ...chord, target: 'dialog[open]' }).defaultPrevented).toBe(false)
+      expect(press('s', { target: 'input' }).defaultPrevented).toBe(false)
+      block()
+      expect(press('s', chord).defaultPrevented).toBe(true)
+      close()
+      expect(press('s', chord).defaultPrevented).toBe(false)
+      expect(actions.save).toHaveBeenCalledTimes(1)
+    } finally {
+      dispose()
+    }
+  })
+
   it.each(['ctrlKey', 'metaKey'] as const)(
     'routes copy, paste, duplicate, and history with %s',
     (modifier) => {

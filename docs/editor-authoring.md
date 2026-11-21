@@ -459,6 +459,10 @@ Undo restores exact previous file contents; redo reapplies the saved contents.
 Saving a different change after undo clears the redo branch. Failed and unchanged
 commands do not create steps. New-project creation itself is not undoable.
 
+Press **Ctrl+S** (**Cmd+S** on macOS) to save the form you are editing, even while
+typing in a field. From the explorer, the shortcut saves the current pane's draft
+if exactly one visible form has unsaved changes. Saving uses the form's usual validation.
+
 Use Ctrl/Cmd+Z for undo, Ctrl/Cmd+Shift+Z or Ctrl+Y for redo outside text fields.
 Inside editable fields those keys retain normal text-editing behavior. While a
 map has local edit history, these controls and shortcuts undo or redo its unsaved
@@ -547,7 +551,7 @@ The shortcuts use the same validation, draft guards, and undoable save operation
 as the buttons; duplicating or deleting also requires discarding a component-control
 draft first. Singleton components cannot be duplicated.
 
-Shortcuts leave text inputs, textareas, selectors, editable text, dialogs, project
+Component shortcuts leave text inputs, textareas, selectors, editable text, dialogs, project
 opening/creation forms, and the game preview alone. Selecting read-only text keeps
 native copy/delete behavior. Repeated keydown events, IME composition, busy saves,
 and unresolved project conflicts do not trigger editor shortcuts. Ordinary browser

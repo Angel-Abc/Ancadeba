@@ -8,7 +8,7 @@ import {
 import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
 import { renderSceneNavigation } from './sceneNavigation.js'
 import { compactWorkspaceQuery } from './workspaceLayout.js'
-import { refreshSaveStatuses } from './formSaveStatus.js'
+import { refreshSaveStatuses, saveActiveDraft } from './formSaveStatus.js'
 import { captureEditorDrafts, restoreEditorDrafts } from './editorDraftState.js'
 import { type EditorDraftStorage } from './editorDraftStore.js'
 import { bindEditorDraftRecovery } from './editorDraftRecovery.js'
@@ -948,7 +948,10 @@ export function bindProjectPanel(
   if (root.ownerDocument.defaultView)
     listeners.push(
       bindEditorShortcuts(root.ownerDocument.defaultView, {
-        blocked: () => busy || (historyBlocked && !mapHistory()?.active) || !view,
+        active: () => Boolean(view),
+        blocked: (action) =>
+          busy || (historyBlocked && (action === 'save' || !mapHistory()?.active)),
+        save: () => saveActiveDraft(workspace),
         copy: () => registry.shortcut('copy'),
         paste: () => registry.shortcut('paste'),
         duplicate: () => registry.shortcut('duplicate'),

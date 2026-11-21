@@ -6,7 +6,8 @@ import type { Translate } from '@ancadeba/utilities'
 import { MapDraft, MapDraftError, type TilePoint } from './mapDraft.js'
 import { mapTileGrid, mapGridViewport } from './mapTileGrid.js'
 import type { ProjectEditorState } from './projectController.js'
-import { ruleFormControls, saveBar } from './ruleFormControls.js'
+import { actionBar, ruleFormControls } from './ruleFormControls.js'
+import { markSaveButton } from './formSaveStatus.js'
 import { mapTileImages, type IGraphicResources } from '@ancadeba/ui-components'
 import { mapTilesetEditor, type TilesetEditorState } from './mapTilesetEditor.js'
 import { mapLayerEditor, type MapLayerEditorState } from './mapLayerEditor.js'
@@ -750,11 +751,11 @@ export function bindMapEditor(
     const undo = controls.button(t('maps.undoDraft'), () => restoreDraft('undo'))
     const redo = controls.button(t('maps.redoDraft'), () => restoreDraft('redo'))
 
-    const actions = saveBar(
+    const actions = actionBar(
       document,
       title,
       status,
-      saveButton,
+      markSaveButton(saveButton),
       undo,
       redo,
       controls.button(t('maps.discard'), reset),
@@ -764,6 +765,7 @@ export function bindMapEditor(
     refreshActions = () => {
       title.textContent = id || t('maps.new')
       status.textContent = t(dirty ? 'maps.unsaved' : 'maps.noChanges')
+      status.setAttribute('data-dirty', String(dirty))
       undo.disabled = busy || confirming || !draftHistory().canUndo
       redo.disabled = busy || confirming || !draftHistory().canRedo
     }
