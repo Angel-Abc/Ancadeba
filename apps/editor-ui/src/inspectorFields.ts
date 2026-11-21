@@ -59,7 +59,7 @@ interface FieldContext {
   error: HTMLElement
   bindingPending: TextBindingPending
   panels: InventoryComponentDefinition[]
-  hiddenPreviews: InventoryComponentDefinition['previews']
+  hiddenPreviews: InventoryComponentDefinition['characterPreviews']
   render: () => void
   open: OpenSpecialist
   createPreview?: SceneGraphicPreviewFactory | undefined
@@ -88,7 +88,40 @@ export function inspectorFields(context: FieldContext) {
   const layout: HTMLElement[] = []
 
   if (isBasicComponent(draft)) {
-    if (draft.type === 'character-sheet') {
+    if (draft.type === 'character-view') {
+      main.push(
+        controls.input(t('form.label'), draft.label, (value) => {
+          draft.label = value
+        }),
+        controls.translation(
+          t('form.labelTranslation'),
+          draft.labelKey ?? '',
+          translationChoices(view),
+          (value) => {
+            draft.labelKey = value || undefined
+          },
+        ),
+        select(
+          t('appearance.character'),
+          draft.character,
+          Object.keys(view.game?.appearances?.characters ?? {}),
+          (value) => {
+            draft.character = value
+          },
+        ),
+        select(
+          t('appearance.view'),
+          draft.view,
+          [
+            ['full-body', t('appearance.fullBody')],
+            ['portrait', t('form.portrait')],
+          ],
+          (value) => {
+            draft.view = value === 'portrait' ? 'portrait' : 'full-body'
+          },
+        ),
+      )
+    } else if (draft.type === 'character-sheet') {
       main.push(
         controls.input(t('form.label'), draft.label, (value) => {
           draft.label = value

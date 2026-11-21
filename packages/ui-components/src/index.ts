@@ -68,3 +68,5 @@ export * from './mapTileAppearance.js'
 export * from './mapCellAppearance.js'
 
 export { renderForm } from './formRenderer.js'
+
+export { CharacterViewRenderer } from './characterViewRenderer.js'

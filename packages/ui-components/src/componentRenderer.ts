@@ -1,3 +1,4 @@
+import { CharacterViewRenderer } from './characterViewRenderer.js'
 import { FormRenderer } from './formRenderer.js'
 import { QuestLogComponentRenderer } from './questLogComponentRenderer.js'
 import { SaveSlotsComponentRenderer } from './saveSlotsComponentRenderer.js'
@@ -54,6 +55,7 @@ export class ComponentRenderer implements IComponentRenderer {
       'quest-log': new QuestLogComponentRenderer(),
       'character-progression': new CharacterProgressionComponentRenderer(),
       form: new FormRenderer(),
+      'character-view': new CharacterViewRenderer(graphics),
       'character-sheet': new CharacterSheetRenderer(),
       ...renderers,
     }
@@ -73,6 +75,8 @@ export class ComponentRenderer implements IComponentRenderer {
         return this.renderers['character-progression'].render(component, context)
       case 'form':
         return this.renderers['form'].render(component, context)
+      case 'character-view':
+        return this.renderers['character-view'].render(component, context)
       case 'character-sheet':
         return this.renderers['character-sheet'].render(component, context)
       case 'combat':

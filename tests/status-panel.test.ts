@@ -88,7 +88,7 @@ describe('status panel data and resolution', () => {
         ],
       }).success,
     ).toBe(true)
-    expect(statusPanelIssues({ ...panel, portrait: 'missing' })).toHaveLength(1)
+    expect(statusPanelIssues({ ...panel, portrait: { character: 'missing' } })).toHaveLength(1)
 
     const assets = assetCatalogSchema.parse({
       'schema-version': '1.0.0',
@@ -99,8 +99,13 @@ describe('status panel data and resolution', () => {
 
     expect(
       statusPanelIssues(
-        { ...panel, portrait: 'face', effects: [{ ...panel.effects[0]!, icon: 'face' }] },
+        {
+          ...panel,
+          portrait: { character: 'hero' },
+          effects: [{ ...panel.effects[0]!, icon: 'face' }],
+        },
         assets,
+        { presets: {}, characters: { hero: { preset: 'painted' } } },
       ),
     ).toEqual([])
     expect(
@@ -198,7 +203,10 @@ describe('status panel data and resolution', () => {
     expect(
       validateProject({
         ...updated.project.documents,
-        'scenes/room.json': { ...scene, components: [{ ...panel, portrait: 'missing' }] },
+        'scenes/room.json': {
+          ...scene,
+          components: [{ ...panel, portrait: { character: 'missing' } }],
+        },
       }),
     ).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'invalid_status_panel' })]))
 

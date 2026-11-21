@@ -112,4 +112,6 @@ export * from './choices.js'
 
 export * from './characterProfile.js'
 
+export * from './characterAppearances.js'
+
 export * from './characterProfileValidation.js'

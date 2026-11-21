@@ -9,7 +9,7 @@ const recoveredSchema = z.object({
   component: sceneComponentSchema,
   existingId: z.string().optional(),
   panels: z.array(inventoryComponentSchema).optional(),
-  hiddenPreviews: inventoryComponentSchema.shape.previews.optional(),
+  hiddenPreviews: inventoryComponentSchema.shape.characterPreviews.optional(),
   slot: z.string().optional(),
   nearby: z
     .object({ selected: z.string(), newAction: z.string(), newTarget: z.string() })

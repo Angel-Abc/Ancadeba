@@ -180,10 +180,10 @@ export function statusPanelForm(
           }),
           select(
             t('form.portrait'),
-            draft.portrait ?? '',
-            [['', t('form.none')], ...visuals],
+            draft.portrait?.character ?? '',
+            [['', t('form.none')], ...Object.keys(view.game?.appearances?.characters ?? {})],
             (value) => {
-              draft.portrait = value || undefined
+              draft.portrait = value ? { character: value } : undefined
             },
           ),
         )

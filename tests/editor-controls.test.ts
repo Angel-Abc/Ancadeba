@@ -1,3 +1,4 @@
+import { bindAppearanceLibrary } from '../apps/editor-ui/src/appearanceLibraryForm.js'
 import { bindChoiceLibrary } from '../apps/editor-ui/src/choiceLibrary.js'
 import { bindCharacterProfileForm } from '../apps/editor-ui/src/characterProfileForm.js'
 import { bindFormLibrary } from '../apps/editor-ui/src/formLibrary.js'
@@ -530,8 +531,7 @@ describe('rule editor workspace refresh', () => {
   })
 })
 
-function panel(withInput = true) {
-  const document = new ControlDocument()
+function panel(withInput = true, document = new ControlDocument()) {
   const root = document.createElement('section')
   const commands: EditorCommand[] = []
 
@@ -3131,15 +3131,29 @@ describe('editor draft workflows', () => {
       },
     }).project
 
+    source = applyCommand(
+      source,
+      commandSchema.parse({
+        type: 'game.updateMetadata',
+        title: 'Shop',
+        description: '',
+        version: '1',
+        appearances: {
+          presets: { painted: { visual: 'portrait' } },
+          characters: {
+            hero: { preset: 'painted', owner: 'hero' },
+            companion: { preset: 'painted', owner: 'companion' },
+          },
+        },
+      }),
+    ).project
+
     for (const component of [
       {
         id: 'items',
         type: 'inventory',
         owners: ['hero', 'companion'],
-        previews: {
-          hero: { composition: 'portrait', slots: {} },
-          companion: { composition: 'portrait', slots: {} },
-        },
+        characterPreviews: { hero: 'hero', companion: 'companion' },
       },
       { id: 'other-items', type: 'inventory', owners: ['hero'] },
       { id: 'equipment', type: 'equipment', inventory: 'items', owner: 'hero' },
@@ -3349,7 +3363,7 @@ describe('editor draft workflows', () => {
     ui.submit('Save items and equipment')
     await ui.flush()
     expect(ui.read().scenes[0]!.components.find(({ id }) => id === 'items')).toMatchObject({
-      previews: { hero: { composition: 'portrait' }, companion: { composition: 'portrait' } },
+      characterPreviews: { hero: 'hero', companion: 'companion' },
     })
     ui.edit('Show owner Companion', 'false')
     ui.click('Discard item draft')
@@ -3364,9 +3378,9 @@ describe('editor draft workflows', () => {
     const saved = ui.read().scenes[0]!.components.find(({ id }) => id === 'items')
     expect(saved).toMatchObject({
       owners: ['hero'],
-      previews: { hero: { composition: 'portrait' } },
+      characterPreviews: { hero: 'hero' },
     })
-    expect(saved?.type === 'inventory' && Object.keys(saved.previews)).toEqual(['hero'])
+    expect(saved?.type === 'inventory' && Object.keys(saved.characterPreviews)).toEqual(['hero'])
     expect(ui.read().diagnostics).toEqual([])
     expect(ui.editor.hasDrafts()).toBe(false)
   })
@@ -6977,12 +6991,101 @@ describe('editor draft workflows', () => {
     expect(ui.editor.hasDrafts()).toBe(false)
   })
 
+  it('creates a painted character and previews both frames after reopening the editor', async () => {
+    class PreviewElement extends Control {
+      readonly dataset: Record<string, string> = {}
+      readonly classList = {
+        remove: (name: string) => {
+          this.className = this.className
+            .split(' ')
+            .filter((entry) => entry !== name)
+            .join(' ')
+        },
+      }
+    }
+
+    class PreviewDocument extends ControlDocument {
+      override createElement(tag: string) {
+        return new PreviewElement(this, tag)
+      }
+      createElementNS(_namespace: string, tag: string) {
+        return this.createElement(tag)
+      }
+    }
+
+    const ui = panel(true, new PreviewDocument())
+
+    let source = applyCommand(
+      project(),
+      commandSchema.parse({
+        type: 'assets.upsertImage',
+        id: 'doll',
+        image: {
+          bounds: { x: 0, y: 0, width: 100, height: 180 },
+          format: 'png',
+          source: 'assets/doll.png',
+        },
+      }),
+    ).project
+
+    const editor = bindAppearanceLibrary(
+      ui.root.asElement(),
+      editorLocalization().t,
+      () => {},
+      () => ({
+        acquire: async (piece) => ({ url: piece.image.source, release() {} }),
+        dispose() {},
+      }),
+    )
+
+    const save = () => {
+      source = applyCommand(source, {
+        type: 'game.updateMetadata',
+        title: 'Test',
+        description: '',
+        version: '1',
+        appearances: editor.read(),
+      }).project
+      editor.render(inspectProject(source), 'demo', true)
+    }
+
+    editor.render(inspectProject(source), 'demo', true)
+    ui.edit('New preset ID', 'uniform')
+    ui.click('Add preset')
+    ui.edit('Portrait framing', 'crop')
+    ui.edit('Width', '75')
+    ui.edit('New character ID', 'captain')
+    ui.click('Add character')
+    save()
+    expect(editor.read().characters.captain).toEqual({ preset: 'uniform' })
+    ui.edit('Height', '85')
+    save()
+    expect(inspectProject(source).game?.appearances?.presets.uniform?.portraitCrop).toEqual({
+      x: 0,
+      y: 0,
+      width: 75,
+      height: 85,
+    })
+    await vi.waitFor(() => {
+      const images = ui.root.all().filter((node) => node.tagName === 'svg')
+      expect(images.map((image) => image.attributes.get('viewBox'))).toEqual([
+        '0 0 100 180',
+        '0 0 75 85',
+      ])
+      expect(images.map((image) => image.querySelector('image')?.attributes.get('href'))).toEqual([
+        'assets/doll.png',
+        'assets/doll.png',
+      ])
+    })
+    editor.dispose()
+  })
+
   it('recovers the selected library choice in the profile after reordering', () => {
     const ui = panel()
     const view = inspectProject(project())
     view.game!.characterProfile = characterProfileSchema.parse({
       fields: ['gender', 'hair'],
-      portrait: { visual: 'portrait' },
+      character: 'hero',
     })
 
     const bind = () =>
@@ -7350,7 +7453,7 @@ describe('scene inspector registry', () => {
       }
       manifest.characterProfile = {
         fields: ['outfit'],
-        portrait: { visual: 'body' },
+        character: 'wayfarer',
       }
     }
 
@@ -8012,7 +8115,7 @@ describe('scene inspector registry', () => {
       const source = await sample(
         type === 'form'
           ? 'market-value'
-          : ['graphic', 'background-image', 'character-sheet'].includes(type)
+          : ['graphic', 'background-image', 'character-sheet', 'character-view'].includes(type)
             ? 'graphics'
             : 'basic',
       )

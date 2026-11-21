@@ -611,6 +611,116 @@ describe('character creation and stat discovery', () => {
     return form
   }
 
+  it('keeps markings, worn dyes and framing consistent across the wardrobe, ranger post, combat and a save', async () => {
+    const target = new TestDocument().createElement('main')
+    const directory = new URL('../sample-games/graphics/', import.meta.url)
+
+    const source = {
+      readText: (path: string) => readFile(new URL(path, directory), 'utf8'),
+      readBytes: (path: string) => readFile(new URL(path, directory)),
+    }
+
+    const store = new Map<string, string>()
+
+    const engine = new Engine(
+      new GameLoader(new JsonResourceLoader(source, logger)),
+      {
+        mount: (game, session) =>
+          mountGameView(target.asElement(), game, session, {
+            graphics: {
+              acquire: async (piece) => ({
+                url: piece.imageId + '/' + (piece.colors.fabric ?? ''),
+                release() {},
+              }),
+            },
+          }),
+      },
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      {
+        ...timing,
+        saveStore: {
+          read: (id) => store.get(id),
+          write: (id, save) => {
+            store.set(id, save)
+          },
+        },
+      },
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    const lifecycle = engine.lifecycle!
+    lifecycle.startGame()
+    lifecycle.enterScene('markings')
+    const mark = target.find((node) => node.name === JSON.stringify(['ranger', 'cheek']))!
+    mark.checked = true
+    mark.dispatchEvent(new Event('change'))
+    confirm(target)
+
+    const owner = (id: string) =>
+      target
+        .find((node) => node.dataset.inventoryOwner === id)!
+        .find((node) => node.className.split(' ').includes('ancadeba-inventory-preview'))!
+
+    const image = (node: TestElement, art: string) =>
+      node.find((child) => child.attributes.get('href') === art)
+
+    const inventory = lifecycle.currentGame!.inventory!
+    await vi.waitFor(() => {
+      expect(image(owner('ranger'), 'forearm-ink/')).toBeDefined()
+      expect(image(owner('ranger'), 'cheek-ink/')).toBeDefined()
+      expect(image(owner('wayfarer'), 'forearm-ink/')).toBeUndefined()
+    })
+    inventory.move('moss-cloak', { type: 'equipped', owner: 'ranger', slot: 'outerwear' })
+    inventory.move('amber-cloak', { type: 'equipped', owner: 'wayfarer', slot: 'outerwear' })
+    await vi.waitFor(() => {
+      expect(image(owner('ranger'), 'cloak-mantle/#397c73')).toBeDefined()
+      expect(image(owner('wayfarer'), 'cloak-mantle/#bd7d32')).toBeDefined()
+    })
+
+    expect(image(owner('ranger'), 'ranger-tunic/#397c73')).toBeDefined()
+
+    const layers = owner('ranger')
+      .find((node) => node.tagName === 'SVG')!
+      .children.map((piece) => piece.attributes.get('data-layer'))
+
+    expect(layers.indexOf('skin-marks')).toBeLessThan(layers.indexOf('mantle'))
+    lifecycle.enterScene('ranger-post')
+    const portrait = () => target.find((node) => node.dataset.componentId === 'ranger-portrait')!
+    await vi.waitFor(() => expect(image(portrait(), 'cloak-mantle/#397c73')).toBeDefined())
+    expect(
+      portrait()
+        .find((node) => node.tagName === 'SVG')!
+        .attributes.get('viewBox'),
+    ).toBe('86 10 148 160')
+    expect(engine.saves!.save()).toBe(true)
+
+    for (const encounter of ['training', 'advanced-training']) {
+      lifecycle.enterScene(encounter)
+      await vi.waitFor(() =>
+        expect(
+          image(
+            target.find((node) => node.dataset.combatActor === 'player')!,
+            'cloak-mantle/#bd7d32',
+          ),
+        ).toBeDefined(),
+      )
+    }
+
+    lifecycle.startGame()
+    expect(engine.saves!.load()).toBe(true)
+    await vi.waitFor(() => expect(image(portrait(), 'cloak-mantle/#397c73')).toBeDefined())
+    lifecycle.currentGame!.inventory!.move('moss-cloak', { type: 'carried', owner: 'ranger' })
+    lifecycle.enterScene('wardrobe')
+    await vi.waitFor(() => {
+      expect(image(owner('ranger'), 'cheek-ink/')).toBeDefined()
+      expect(image(owner('ranger'), 'forearm-ink/')).toBeDefined()
+      expect(image(owner('ranger'), 'cloak-mantle/#397c73')).toBeUndefined()
+      expect(image(owner('wayfarer'), 'cloak-mantle/#bd7d32')).toBeDefined()
+    })
+  })
+
   it('plays the exported Market Value creator and appearance editor using the same form', async () => {
     const folder = await mkdtemp(join(tmpdir(), 'ancadeba-form-export-'))
     onTestFinished(() => rm(folder, { recursive: true, force: true }))

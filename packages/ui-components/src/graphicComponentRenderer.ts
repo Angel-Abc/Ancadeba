@@ -13,6 +13,7 @@ import {
   assertBackgroundImageReference,
   type BackgroundImageComponentDefinition,
   type GraphicAppearance,
+  type GraphicBounds,
 } from '@ancadeba/schemas'
 
 export interface RenderedGraphic extends RenderedComponent {
@@ -27,6 +28,7 @@ export class GraphicComponentRenderer implements IComponentRenderer<
   render(
     initial: GraphicComponentData | BackgroundImageComponentDefinition,
     context: ComponentRenderContext,
+    crop?: GraphicBounds,
   ): RenderedGraphic {
     const background = initial.type === 'background-image'
     const bindings = background ? undefined : context.bindings
@@ -98,7 +100,7 @@ export class GraphicComponentRenderer implements IComponentRenderer<
       }
 
       const svg = document.createElementNS(namespace, 'svg')
-      const { x, y, width, height } = resolution.bounds
+      const { x, y, width, height } = crop ?? resolution.bounds
       svg.setAttribute('viewBox', `${x} ${y} ${width} ${height}`)
       svg.setAttribute(
         'preserveAspectRatio',

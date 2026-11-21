@@ -282,7 +282,7 @@ describe('standalone game export', () => {
       const resources = new HttpGameResources(config.gameUrl, base, fetch)
       const logger: ILogger = { debug: () => '', info: () => '', warn: () => '', error: () => '' }
       const loaded = await new GameLoader(new JsonResourceLoader(resources, logger)).load()
-      expect(loaded.assets?.parts.cloak?.pieces).toHaveLength(2)
+      expect(loaded.assets?.parts.cloak?.pieces).toHaveLength(3)
       expect(loaded.inventory?.items['moss-cloak']?.placement).toEqual({
         type: 'inside',
         container: 'travel-pack',
@@ -483,7 +483,7 @@ describe('standalone game export', () => {
         resolveGraphic(loaded.assets!, 'paper-doll', graphicAppearanceSchema.parse({})).pieces.map(
           (piece) => piece.layer,
         ),
-      ).toEqual(['rear', 'body', 'clothes', 'sword', 'hands', 'clasp'])
+      ).toEqual(['rear', 'body', 'clothes', 'mantle', 'sword', 'hands', 'clasp'])
     } finally {
       await server.close()
     }

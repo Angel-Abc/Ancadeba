@@ -14,6 +14,7 @@ export const creatableComponentTypes = [
   'quest-log',
   'form',
   'character-sheet',
+  'character-view',
 ] as const
 
 export type CreatableComponentType = (typeof creatableComponentTypes)[number]
@@ -96,6 +97,16 @@ export function createComponentDraft(
         scene.type === 'stand-alone'
           ? view.scenes.find((entry) => entry.type === 'game')?.id
           : undefined,
+    }
+
+  if (type === 'character-view')
+    return {
+      id,
+      type,
+      label: 'Character',
+      character: Object.keys(view.game?.appearances?.characters ?? {})[0] ?? '',
+      view: 'full-body',
+      placement,
     }
 
   if (type === 'character-sheet') return { id, type, label: 'Character', placement, rows: [] }

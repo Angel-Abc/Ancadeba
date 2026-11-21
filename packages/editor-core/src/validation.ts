@@ -53,6 +53,7 @@ import {
   validateRuleSources,
   statusPanelIssues,
   characterProfileIssues,
+  appearanceIssues,
   localizeInventory,
   equipmentIssues,
   shopIssues,
@@ -273,7 +274,7 @@ export function validateProject(
           })
 
       if (component.type === 'status-panel')
-        for (const issue of statusPanelIssues(component, assets?.data))
+        for (const issue of statusPanelIssues(component, assets?.data, game.data.appearances))
           diagnostics.push({
             code: 'invalid_status_panel',
             file: `scenes/${id}.json`,
@@ -293,9 +294,9 @@ export function validateProject(
       if (component.type === 'inventory') {
         for (const issue of inventoryPanelIssues(
           component.owners,
-          component.previews,
+          component.characterPreviews,
           inventory,
-          assets?.data,
+          game.data.appearances,
         ))
           diagnostics.push({
             code: 'invalid_inventory_panel',
@@ -425,7 +426,10 @@ export function validateProject(
   for (const issue of formIssues(game.data, forms, scenes, mergedRules, assets?.data, choices))
     diagnostics.push({ code: 'invalid_form', ...issue })
 
-  for (const issue of characterProfileIssues(game.data, scenes, mergedRules, assets?.data, choices))
+  for (const issue of appearanceIssues(game.data.appearances, assets?.data, inventory))
+    diagnostics.push({ ...issue, code: 'invalid_appearance' })
+
+  for (const issue of characterProfileIssues(game.data, scenes, mergedRules, choices))
     diagnostics.push({ ...issue, code: 'invalid_character_profile' })
 
   for (const issue of storyIssues({
@@ -468,6 +472,7 @@ export function validateProject(
       new Set(game.data.scenes),
       assets?.data,
       inventory,
+      game.data.appearances,
     ))
       diagnostics.push({ code: 'invalid_combat', file: combatFile(id), ...issue })
   }

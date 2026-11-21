@@ -1,3 +1,4 @@
+import { CharacterViewRenderer } from './characterViewRenderer.js'
 import {
   formField,
   type FormDefinition,
@@ -185,30 +186,30 @@ export function renderForm(
             ),
           )
         } else {
-          const graphic =
-            element.type === 'portrait'
-              ? profile?.portrait
+          const options = { ...context, bindings: preview }
+
+          const common = {
+            id: component.id + '-graphic-' + images.length,
+            placement: component.placement,
+          }
+
+          const image =
+            element.type === 'portrait' && profile
+              ? new CharacterViewRenderer(graphics).render(
+                  {
+                    ...common,
+                    type: 'character-view',
+                    character: profile.character,
+                    view: 'portrait',
+                    label: runtimeText(context.game, 'character.portrait'),
+                  },
+                  options,
+                )
               : element.type === 'graphic'
-                ? element
+                ? graphics.render({ ...common, ...element, fit: 'contain' }, options)
                 : undefined
 
-          if (!graphic) continue
-
-          const image = graphics.render(
-            {
-              ...graphic,
-              type: 'graphic',
-              id: component.id + '-graphic-' + images.length,
-              placement: component.placement,
-              alt:
-                element.type === 'graphic'
-                  ? element.alt
-                  : runtimeText(context.game, 'character.portrait'),
-              fit: 'contain',
-            },
-            { ...context, bindings: preview },
-          )
-
+          if (!image) continue
           images.push(image)
           group.append(image.element)
         }

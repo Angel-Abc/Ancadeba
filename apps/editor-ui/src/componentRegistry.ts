@@ -24,6 +24,7 @@ export const componentGroups = {
   'action-info': 'interaction',
   nearby: 'interaction',
   form: 'interaction',
+  'character-view': 'character',
   'character-sheet': 'character',
   'character-progression': 'character',
   'status-panel': 'character',
@@ -101,6 +102,10 @@ export function componentUnavailable(
       return Object.keys(view.combatSources ?? {}).length ? undefined : 'inspector.encounterFirst'
     case 'character-progression':
       return Object.keys(view.leveling ?? {}).length ? undefined : 'inspector.profileFirst'
+    case 'character-view':
+      return Object.keys(view.game?.appearances?.characters ?? {}).length
+        ? undefined
+        : 'appearance.createFirst'
     case 'character-sheet':
       return view.game?.characterProfile ? undefined : 'inspector.characterProfileFirst'
     case 'form':

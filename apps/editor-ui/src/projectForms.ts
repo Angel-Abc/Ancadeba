@@ -1,6 +1,6 @@
 import type { ProjectSelection } from './projectSectionRegistry.js'
 import { z } from 'zod'
-import { savingPolicySchema } from '@ancadeba/schemas'
+import { appearanceLibrarySchema, savingPolicySchema } from '@ancadeba/schemas'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectEditorState } from './projectController.js'
@@ -11,12 +11,16 @@ import { sceneTitle } from './projectTree.js'
 import { languageWatcher } from './ruleFormControls.js'
 import { bindCharacterProfileForm } from './characterProfileForm.js'
 
+import { bindAppearanceLibrary } from './appearanceLibraryForm.js'
+import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
+
 export function bindProjectForms(
   root: HTMLElement,
   t: Translate,
   save: (command: EditorCommand) => void,
   openKey?: (key: string) => void,
   cancelCreation?: () => void,
+  createGraphics?: ProjectPanelDependencies['createGraphics'],
 ) {
   const find = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!
   const metadata = find<HTMLFormElement>('editor-metadata')
@@ -41,34 +45,47 @@ export function bindProjectForms(
       openKey,
     )
 
-  let profileVisible = false
+  const appearanceRoot = root.querySelector<HTMLElement>('#editor-appearances')
+
+  const appearances =
+    appearanceRoot &&
+    bindAppearanceLibrary(appearanceRoot, t, () => dirtyForms.add(metadata.id), createGraphics)
+
+  let projectPath = ''
+  let projectTab = 'general'
   const general = root.querySelector<HTMLElement>('#project-general')
   const viewButtons = metadata.querySelectorAll?.<HTMLElement>('[data-project-view]') ?? []
 
-  const showProfile = (visible: boolean) => {
-    profileVisible = visible
+  const showTab = (tab: string) => {
+    projectTab = tab
 
     if (!general || !profileRoot) return
-    general.hidden = visible
-    profileRoot.hidden = !visible
+    general.hidden = tab !== 'general'
+    profileRoot.hidden = tab !== 'profile'
+
+    if (appearanceRoot) appearanceRoot.hidden = tab !== 'appearances'
+    appearances?.draw()
+
+    if (view && tab === 'profile') showProfileFields(false)
 
     for (const control of viewButtons)
-      control.setAttribute(
-        'aria-pressed',
-        String((control.dataset.projectView === 'profile') === visible),
-      )
+      control.setAttribute('aria-pressed', String(control.dataset.projectView === tab))
   }
 
   if (general) {
     for (const control of viewButtons)
-      control.addEventListener('click', () =>
-        showProfile(control.dataset.projectView === 'profile'),
-      )
+      control.addEventListener('click', () => showTab(control.dataset.projectView ?? 'general'))
     metadata.addEventListener(
       'invalid',
       (event) => {
         if (!(event.target instanceof Node)) return
-        showProfile(!general.contains(event.target))
+        showTab(
+          appearanceRoot?.contains(event.target)
+            ? 'appearances'
+            : general.contains(event.target)
+              ? 'general'
+              : 'profile',
+        )
       },
       true,
     )
@@ -154,9 +171,18 @@ export function bindProjectForms(
     }
   }
 
+  function showProfileFields(replace: boolean) {
+    if (!view?.game) return
+    profile?.render(
+      appearances ? { ...view, game: { ...view.game, appearances: appearances.read() } } : view,
+      replace,
+    )
+  }
+
   const fillProject = () => {
     if (!view?.game) return
-    profile?.render(view, !dirtyForms.has(metadata.id))
+    appearances?.render(view, projectPath, !dirtyForms.has(metadata.id))
+    showProfileFields(!dirtyForms.has(metadata.id))
 
     if (!dirtyForms.has(metadata.id)) {
       set('editor-title', view.game.title)
@@ -223,8 +249,8 @@ export function bindProjectForms(
       scene: z.string(),
       gridVisible: z.boolean().optional(),
       profile: z.string().optional(),
-      profileVisible: z.boolean().optional(),
-      appearanceEntry: z.object({ graphicSlot: z.string(), graphicColor: z.string() }).optional(),
+      projectTab: z.string().optional(),
+      appearances: appearanceLibrarySchema.optional(),
       profileEntries: z.record(z.string(), z.number()).optional(),
     }),
     () =>
@@ -235,8 +261,8 @@ export function bindProjectForms(
             scene: scenes.value,
             gridVisible,
             profile: profile?.snapshot(),
-            profileVisible,
-            appearanceEntry: profile?.appearanceEntry,
+            projectTab,
+            appearances: appearances?.read(),
             profileEntries: profile?.entries(),
           }
         : undefined,
@@ -250,11 +276,10 @@ export function bindProjectForms(
       gridVisible = saved.gridVisible ?? false
       showSceneView()
 
-      if (profile && saved.appearanceEntry)
-        Object.assign(profile.appearanceEntry, saved.appearanceEntry)
-
       if (saved.profile) profile?.restore(saved.profile, saved.profileEntries)
-      showProfile(saved.profileVisible ?? false)
+
+      if (saved.appearances) appearances?.restore(saved.appearances)
+      showTab(saved.projectTab ?? 'general')
 
       for (const id of formFields) if (Object.hasOwn(saved.fields, id)) set(id, saved.fields[id]!)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)
@@ -303,9 +328,22 @@ export function bindProjectForms(
     const issue = projectTranslations.validate()
 
     if (issue) {
-      showProfile(false)
+      showTab('general')
       metadata.querySelector?.<HTMLElement>('[aria-invalid="true"]')?.focus()
       error.textContent = issue
+      error.hidden = false
+
+      return
+    }
+
+    const library = appearances?.read()
+    const parsedLibrary = appearanceLibrarySchema.optional().safeParse(library)
+
+    if (!parsedLibrary.success) {
+      showTab('appearances')
+      error.textContent = parsedLibrary.error.issues
+        .map((issue) => issue.path.join('.') + ': ' + issue.message)
+        .join('\n')
       error.hidden = false
 
       return
@@ -314,7 +352,7 @@ export function bindProjectForms(
     const characterProfile = profile?.read()
 
     if (characterProfile && !characterProfile.success) {
-      showProfile(true)
+      showTab('profile')
       profile?.focusIssue(characterProfile.error.issues[0]!.path)
       error.textContent = characterProfile.error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
@@ -326,6 +364,10 @@ export function bindProjectForms(
 
     save({
       type: 'game.updateMetadata',
+      ...(library &&
+        (view?.game?.appearances || Object.keys(library.presets).length) && {
+          appearances: library,
+        }),
       ...(characterProfile &&
         (characterProfile.data || view?.game?.characterProfile) && {
           characterProfile: characterProfile.data,
@@ -397,7 +439,7 @@ export function bindProjectForms(
 
   return {
     openProfile() {
-      showProfile(true)
+      showTab('profile')
       profileRoot?.querySelector<HTMLElement>('.entry-picker select,select')?.focus()
     },
     setVisible(visible: boolean) {
@@ -427,7 +469,11 @@ export function bindProjectForms(
       fillScene()
     },
     refreshTranslations() {
-      if (languageChanged() && view) profile?.render(view, false)
+      if (languageChanged() && view) {
+        showProfileFields(false)
+        appearances?.draw()
+      }
+
       projectTranslations.render(view, view?.game ?? undefined, false)
       const scene = view?.scenes.find((scene) => scene.id === scenes.value)
 
@@ -436,13 +482,14 @@ export function bindProjectForms(
     refresh(state: ProjectEditorState) {
       if (view && !state.view) {
         dirtyForms.clear()
-        showProfile(false)
+        showTab('general')
         profile?.clearSelection()
         gridVisible = false
         sceneViewId = ''
         submittedScene = undefined
       }
 
+      projectPath = state.path
       view = state.view
       busy = state.busy
       this.refreshTranslations()
@@ -498,6 +545,7 @@ export function bindProjectForms(
       fillScene()
     },
     dispose() {
+      appearances?.dispose()
       projectTranslations.dispose()
       sceneTranslations.dispose()
 

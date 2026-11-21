@@ -14,13 +14,101 @@
     "shop",
     "training",
     "advanced-training",
-    "ranger-post"
+    "ranger-post",
+    "markings"
   ],
   "input": "controls",
-  "rules": ["shop", "combat"],
+  "rules": ["shop", "combat", "markings"],
   "combat": ["training", "advanced-training"],
   "leveling": ["player"],
   "combatLibraries": ["common"],
   "dialogues": ["ranger"],
-  "quests": ["ranger-letter"]
+  "quests": ["ranger-letter"],
+  "appearances": {
+    "presets": {
+      "traveler": {
+        "visual": "paper-doll",
+        "portraitCrop": {
+          "x": 86,
+          "y": 10,
+          "width": 148,
+          "height": 160
+        },
+        "equipment": {
+          "outerwear": "cloak",
+          "shirt": "tunic"
+        }
+      }
+    },
+    "characters": {
+      "wayfarer": {
+        "preset": "traveler",
+        "owner": "wayfarer",
+        "overrides": {
+          "slots": {
+            "forearm": {
+              "part": "forearm-mark",
+              "bindings": {
+                "visible": {
+                  "source": "game.state",
+                  "path": ["wayfarer", "forearm"]
+                }
+              }
+            },
+            "cheek": {
+              "part": "cheek-mark",
+              "bindings": {
+                "visible": {
+                  "source": "game.state",
+                  "path": ["wayfarer", "cheek"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "ranger": {
+        "preset": "traveler",
+        "owner": "ranger",
+        "overrides": {
+          "slots": {
+            "forearm": {
+              "part": "forearm-mark",
+              "bindings": {
+                "visible": {
+                  "source": "game.state",
+                  "path": ["ranger", "forearm"]
+                }
+              }
+            },
+            "cheek": {
+              "part": "cheek-mark",
+              "bindings": {
+                "visible": {
+                  "source": "game.state",
+                  "path": ["ranger", "cheek"]
+                }
+              }
+            },
+            "sword": {
+              "part": "saber-part"
+            }
+          }
+        }
+      },
+      "sentinel": {
+        "preset": "traveler"
+      },
+      "keeper": {
+        "preset": "traveler"
+      },
+      "advanced-sentinel": {
+        "preset": "traveler"
+      },
+      "advanced-keeper": {
+        "preset": "traveler"
+      }
+    }
+  },
+  "forms": ["markings"]
 }

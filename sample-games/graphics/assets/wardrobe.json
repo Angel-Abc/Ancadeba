@@ -226,6 +226,39 @@
       },
       "colors": {},
       "palettes": {}
+    },
+    "forearm-ink": {
+      "format": "svg",
+      "source": "assets/images/forearm-ink.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 440
+      }
+    },
+    "cheek-ink": {
+      "format": "svg",
+      "source": "assets/images/cheek-ink.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 440
+      }
+    },
+    "cloak-mantle": {
+      "format": "svg",
+      "source": "assets/images/cloak-mantle.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 440
+      },
+      "colors": {
+        "fabric": "#665191"
+      }
     }
   },
   "parts": {
@@ -394,6 +427,14 @@
           }
         },
         {
+          "id": "mantle",
+          "image": "cloak-mantle",
+          "layer": "mantle",
+          "slots": {
+            "fabric": "fabric"
+          }
+        },
+        {
           "id": "clasp",
           "image": "cloak-clasp",
           "layer": "clasp",
@@ -526,6 +567,36 @@
           "grip": "#373245"
         }
       }
+    },
+    "forearm-mark": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 440
+      },
+      "pieces": [
+        {
+          "id": "ink",
+          "image": "forearm-ink",
+          "layer": "skin-marks"
+        }
+      ]
+    },
+    "cheek-mark": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 440
+      },
+      "pieces": [
+        {
+          "id": "ink",
+          "image": "cheek-ink",
+          "layer": "skin-marks"
+        }
+      ]
     }
   },
   "compositions": {
@@ -536,7 +607,7 @@
         "width": 320,
         "height": 440
       },
-      "layers": ["rear", "body", "clothes", "sword", "hands", "clasp"],
+      "layers": ["rear", "body", "skin-marks", "clothes", "mantle", "sword", "hands", "clasp"],
       "anchors": {
         "origin": {
           "x": 0,
@@ -563,6 +634,14 @@
         "cloak": {
           "parts": ["cloak"],
           "default": "cloak"
+        },
+        "forearm": {
+          "parts": ["forearm-mark"],
+          "default": null
+        },
+        "cheek": {
+          "parts": ["cheek-mark"],
+          "default": null
         }
       }
     }

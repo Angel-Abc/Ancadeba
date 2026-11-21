@@ -30,7 +30,9 @@
       "regenerate",
       "stunning-blow"
     ],
-    "portrait": "paper-doll",
+    "portrait": {
+      "character": "wayfarer"
+    },
     "leveling": "player",
     "moveLevels": {
       "power-strike": 2
@@ -49,7 +51,9 @@
       "ap": 2,
       "moves": ["attack", "guard", "weaken"],
       "rotation": ["weaken", "attack"],
-      "portrait": "paper-doll",
+      "portrait": {
+        "character": "advanced-sentinel"
+      },
       "equipmentOwner": "advanced-sentinel"
     },
     {
@@ -63,7 +67,9 @@
       "ap": 2,
       "moves": ["attack", "guard", "regenerate", "stunning-blow"],
       "rotation": ["regenerate", "stunning-blow", "attack"],
-      "portrait": "paper-doll",
+      "portrait": {
+        "character": "advanced-keeper"
+      },
       "equipmentOwner": "advanced-keeper"
     }
   ],

@@ -14,7 +14,12 @@ import type {
   SceneInstance,
   SubmitForm,
 } from '@ancadeba/game-runtime'
-import type { AssetCatalog, InventoryDefinition, SceneTransition } from '@ancadeba/schemas'
+import type {
+  AppearanceLibrary,
+  AssetCatalog,
+  InventoryDefinition,
+  SceneTransition,
+} from '@ancadeba/schemas'
 import type { IGraphicResources } from './graphicResources.js'
 import type { KeyboardInputSink } from './keyboardInput.js'
 import type { GameConfirmation } from './gameConfirmationDialog.js'
@@ -37,6 +42,7 @@ export interface ComponentRendererOptions {
   readonly saves?: IGameSaves | undefined
   readonly onLoadGame?: (() => void) | undefined
   readonly input?: KeyboardInputSink | undefined
+  readonly appearances?: AppearanceLibrary | undefined
   readonly assets?: AssetCatalog | undefined
   readonly graphics?: IGraphicResources | undefined
   readonly localization?: IGameLocalization | undefined
@@ -49,6 +55,7 @@ export interface ComponentRendererOptions {
 
 export interface ComponentRenderContext extends ComponentRendererOptions {
   readonly formDrafts?: Map<string, FormDraft> | undefined
+  readonly suspendedInventory?: IGameInventory | undefined
   readonly suspendedBindings?: IGameBindings | undefined
   readonly actionInfo?: ActionInfo | undefined
   readonly scene?: SceneInstance | undefined

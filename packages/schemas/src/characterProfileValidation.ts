@@ -1,5 +1,4 @@
 import type { ChoiceDefinition } from './choices.js'
-import { assertGraphicReference, type AssetCatalog } from './assets.js'
 import type { GameDefinition } from './game.js'
 import { ruleStateType, type GameRulesDefinition } from './rules.js'
 import type { SceneDefinition } from './scene.js'
@@ -9,7 +8,6 @@ export function characterProfileIssues(
   game: GameDefinition,
   scenes: ReadonlyMap<string, SceneDefinition>,
   rules: GameRulesDefinition,
-  assets: AssetCatalog | undefined,
   choices: ReadonlyMap<string, ChoiceDefinition>,
 ): RuleIssue[] {
   const issues: RuleIssue[] = []
@@ -39,16 +37,8 @@ export function characterProfileIssues(
       paths.add(path)
     }
 
-    try {
-      if (!assets) throw new Error('A character portrait requires an asset catalogue')
-      assertGraphicReference(assets, profile.portrait.visual, profile.portrait.appearance)
-    } catch (error) {
-      add(
-        'game.json',
-        ['characterProfile', 'portrait'],
-        error instanceof Error ? error.message : String(error),
-      )
-    }
+    if (!Object.hasOwn(game.appearances?.characters ?? {}, profile.character))
+      add('game.json', ['characterProfile', 'character'], 'Unknown character: ' + profile.character)
   }
 
   for (const [id, scene] of scenes) {
@@ -56,6 +46,12 @@ export function characterProfileIssues(
 
     for (const [index, component] of scene.components.entries()) {
       const path = ['components', index]
+
+      if (
+        component.type === 'character-view' &&
+        !Object.hasOwn(game.appearances?.characters ?? {}, component.character)
+      )
+        add(file, [...path, 'character'], 'Unknown character: ' + component.character)
 
       if (component.type === 'character-sheet' && !profile)
         add(file, path, 'Define the game character profile first')

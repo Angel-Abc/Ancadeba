@@ -131,6 +131,18 @@
       },
       "icon": "rune",
       "artwork": "rune"
+    },
+    "wayfarer-tunic": {
+      "label": "Wayfarer tunic",
+      "equipmentSlots": ["shirt"],
+      "wornPart": "tunic-part",
+      "icon": "tunic-part"
+    },
+    "ranger-tunic": {
+      "label": "Ranger tunic",
+      "equipmentSlots": ["shirt"],
+      "wornPart": "ranger-tunic-part",
+      "icon": "ranger-tunic-part"
     }
   },
   "owners": {
@@ -138,7 +150,8 @@
       "label": "Wayfarer",
       "equipmentSlots": {
         "back": "Back",
-        "outerwear": "Outerwear"
+        "outerwear": "Outerwear",
+        "shirt": "Shirt"
       },
       "combatStats": {
         "health": {
@@ -155,7 +168,8 @@
       "label": "Ranger",
       "equipmentSlots": {
         "back": "Back",
-        "outerwear": "Outerwear"
+        "outerwear": "Outerwear",
+        "shirt": "Shirt"
       }
     },
     "training-loot": {
@@ -269,6 +283,22 @@
       "placement": {
         "type": "carried",
         "owner": "wayfarer"
+      }
+    },
+    "wayfarer-tunic": {
+      "itemType": "wayfarer-tunic",
+      "placement": {
+        "type": "equipped",
+        "owner": "wayfarer",
+        "slot": "shirt"
+      }
+    },
+    "ranger-tunic": {
+      "itemType": "ranger-tunic",
+      "placement": {
+        "type": "equipped",
+        "owner": "ranger",
+        "slot": "shirt"
       }
     }
   }

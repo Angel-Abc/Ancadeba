@@ -113,6 +113,69 @@ describe('MCP and shared editor integration', () => {
     return gameSummarySchema.parse(object(result.structuredContent).data)
   }
 
+  it('authors and edits a named appearance over MCP and reopens the saved scene', async () => {
+    const apply = async (command: unknown) => {
+      const result = await client.callTool({
+        name: 'ancadeba_apply_command',
+        arguments: { expectedRevision: (await game()).revision, command },
+      })
+
+      expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false)
+    }
+
+    await apply({
+      type: 'assets.upsertComposition',
+      id: 'doll',
+      composition: {
+        bounds: { x: 0, y: 0, width: 88, height: 160 },
+        layers: ['body'],
+        anchors: {},
+        slots: {},
+      },
+    })
+
+    const appearances = {
+      presets: {
+        civilian: { visual: 'doll', portraitCrop: { x: 10, y: 0, width: 44, height: 44 } },
+      },
+      characters: { merchant: { preset: 'civilian' } },
+    }
+
+    const metadata = {
+      type: 'game.updateMetadata',
+      title: 'Game',
+      description: '',
+      version: '1',
+      appearances,
+    }
+
+    await apply(metadata)
+    await apply({
+      type: 'scene.create',
+      scene: {
+        ...scene,
+        components: [
+          {
+            type: 'character-view',
+            id: 'speaker',
+            label: 'Merchant',
+            character: 'merchant',
+            view: 'portrait',
+            placement: { row: 1, column: 1 },
+          },
+        ],
+      },
+    })
+    appearances.presets.civilian.portraitCrop.width = 64
+    await apply(metadata)
+    const reopened = await repository.load('basic')
+    expect(reopened.documents['game.json']).toMatchObject({ appearances })
+    expect((await game()).game?.appearances).toMatchObject(appearances)
+    expect(reopened.documents['scenes/shop.json']).toMatchObject({
+      components: [{ character: 'merchant', view: 'portrait' }],
+    })
+  })
+
   it('creates a form with MCP, reopens it through the editor and reads a revised definition', async () => {
     const form = { 'schema-version': '1.0.0', id: 'survey', label: 'Survey', rows: [] }
 

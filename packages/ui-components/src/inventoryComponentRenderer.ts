@@ -1,10 +1,10 @@
+import { CharacterViewRenderer } from './characterViewRenderer.js'
 import type { InventoryComponentData, InventoryItemSnapshot } from '@ancadeba/game-runtime'
 import {
   inventoryColors,
   inventoryIcon,
   type GameBindingDefinition,
   type InventoryPlacement,
-  type SlotAppearance,
 } from '@ancadeba/schemas'
 import { GraphicComponentRenderer, type RenderedGraphic } from './graphicComponentRenderer.js'
 import { componentRuntimeText } from './runtimeText.js'
@@ -81,7 +81,7 @@ export class InventoryComponentRenderer implements IComponentRenderer<InventoryC
     const simple =
       component.readOnly &&
       onlyOwner !== undefined &&
-      !component.previews[onlyOwner] &&
+      !component.characterPreviews[onlyOwner] &&
       !Object.keys(definition.owners[onlyOwner]!.equipmentSlots).length
 
     if (simple) root.className += ' ancadeba-inventory--simple'
@@ -119,10 +119,20 @@ export class InventoryComponentRenderer implements IComponentRenderer<InventoryC
     if (!component.readOnly) root.append(controls)
 
     const icons = new Map<string, RenderedGraphic>()
-    const previews = new Map<string, RenderedGraphic>()
+    const previews = new Map<string, RenderedComponent>()
 
-    for (const [id, preview] of Object.entries(component.previews)) {
-      const graphic = renderGraphic(preview.composition, definition.owners[id]!.label)
+    for (const [id, preview] of Object.entries(component.characterPreviews)) {
+      const graphic = new CharacterViewRenderer(this.graphics).render(
+        {
+          ...component,
+          type: 'character-view',
+          view: 'full-body',
+          character: preview,
+          label: definition.owners[id]!.label,
+        },
+        context,
+      )
+
       graphic.element.classList.add('ancadeba-inventory-preview')
       previews.set(id, graphic)
     }
@@ -370,23 +380,7 @@ export class InventoryComponentRenderer implements IComponentRenderer<InventoryC
           placement: { type: 'carried', owner: ownerId },
         })
 
-        if (preview) {
-          const slots: Record<string, SlotAppearance> = {}
-
-          for (const [slot, target] of Object.entries(component.previews[ownerId]!.slots)) {
-            const item = equipped.get(slot)
-            const part = item && definition.itemTypes[item.itemType]?.wornPart
-            const asset = part && assets?.parts[part]
-            slots[target] = {
-              part: part ?? null,
-              visible: true,
-              colors: item && asset ? inventoryColors(item.colors, asset) : {},
-            }
-          }
-
-          preview.setAppearance({ ...appearance, slots })
-          section.append(preview.element)
-        }
+        if (preview) section.append(preview.element)
 
         const carried = simple
           ? document.createElement('ul')

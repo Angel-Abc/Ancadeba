@@ -222,3 +222,5 @@ export * from './savePoints.js'
 export * from './combatCollaborators.js'
 
 export type { SubmitForm } from './formSubmission.js'
+
+export { resolveCharacterAppearance } from './characterAppearance.js'

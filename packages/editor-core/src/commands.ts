@@ -33,7 +33,9 @@ import {
   nearbyComponentSchema,
   statusPanelComponentSchema,
   formComponentSchema,
+  characterViewComponentSchema,
   characterSheetComponentSchema,
+  appearanceLibrarySchema,
   characterProfileSchema,
   itemPresentationSchema,
   itemDetailsComponentSchema,
@@ -75,6 +77,7 @@ export const basicComponentSchema = z.discriminatedUnion('type', [
   backgroundImageComponentSchema,
   mapViewComponentSchema,
   formComponentSchema,
+  characterViewComponentSchema,
   characterSheetComponentSchema,
 ])
 
@@ -94,6 +97,7 @@ export const commandSchema = z.discriminatedUnion('type', [
     version: z.string().trim().min(1),
     saving: savingPolicySchema.optional(),
     menuScene: gameIdSchema.nullable().optional(),
+    appearances: appearanceLibrarySchema.optional(),
     characterProfile: characterProfileSchema.nullable().optional(),
   }),
   z.strictObject({

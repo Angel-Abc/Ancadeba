@@ -15,7 +15,7 @@ export function basicComponentFields(
   controls: RuleFormControls,
   view: ProjectView,
   sceneId: string,
-  draft: Exclude<BasicComponent, { type: 'character-sheet' }>,
+  draft: Exclude<BasicComponent, { type: 'character-sheet' | 'character-view' }>,
   render: () => void,
   bindingPending: TextBindingPending,
   selection: { binding: string },

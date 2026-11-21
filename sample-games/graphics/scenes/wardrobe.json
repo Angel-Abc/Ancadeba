@@ -16,27 +16,17 @@
       "type": "inventory",
       "label": "Wardrobe inventory",
       "owners": ["wayfarer", "ranger"],
-      "previews": {
-        "wayfarer": {
-          "composition": "paper-doll",
-          "slots": {
-            "outerwear": "cloak"
-          }
-        },
-        "ranger": {
-          "composition": "paper-doll",
-          "slots": {
-            "outerwear": "cloak"
-          }
-        }
-      },
       "placement": {
         "row": 1,
         "column": 1,
         "rowSpan": 9,
         "columnSpan": 6
       },
-      "readOnly": false
+      "readOnly": false,
+      "characterPreviews": {
+        "wayfarer": "wayfarer",
+        "ranger": "ranger"
+      }
     },
     {
       "id": "gallery",
@@ -168,6 +158,13 @@
           "inputBinding": {
             "context": "wardrobe",
             "input": "slot-7"
+          }
+        },
+        "5": {
+          "label": "Change markings",
+          "action": {
+            "type": "enter-scene",
+            "scene": "markings"
           }
         }
       }

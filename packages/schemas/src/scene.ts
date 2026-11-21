@@ -17,7 +17,7 @@ import {
 } from './assets.js'
 import { mapPositionSchema, mapViewportSchema } from './map.js'
 import { sceneTransitionSchema } from './sceneTransition.js'
-import { inventoryPreviewSchema } from './inventory.js'
+import { characterReferenceSchema, characterViewKindSchema } from './characterAppearances.js'
 import { combatCommandSchema } from './combat.js'
 
 export const gridPlacementSchema = z.object({
@@ -282,6 +282,16 @@ export const languageSelectComponentSchema = z
     message: 'A label or labelKey is required',
   })
 
+export const characterViewComponentSchema = z.strictObject({
+  id: gameIdSchema,
+  type: z.literal('character-view'),
+  ...componentLayoutFields,
+  character: assetIdSchema,
+  view: characterViewKindSchema,
+  label: z.string().trim().min(1),
+  labelKey: translationKeySchema.optional(),
+})
+
 export const graphicComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('graphic'),
@@ -329,7 +339,9 @@ export const inventoryComponentSchema = z
       .array(gameIdSchema)
       .min(1)
       .refine((owners) => new Set(owners).size === owners.length),
-    previews: z.record(gameIdSchema, inventoryPreviewSchema).default({}),
+    // Preserve unrelated extension fields while rejecting retired inventory mappings.
+    previews: z.never({ error: 'Use characterPreviews to reference named characters' }).optional(),
+    characterPreviews: z.record(gameIdSchema, assetIdSchema).default({}),
     readOnly: z.boolean().optional(),
     descriptionTarget: gameIdSchema.optional(),
   })
@@ -560,7 +572,7 @@ export const statusPanelComponentSchema = z
     labelKey: translationKeySchema.optional(),
     name: z.string().default(''),
     nameKey: translationKeySchema.optional(),
-    portrait: assetIdSchema.optional(),
+    portrait: characterReferenceSchema.optional(),
     rows: z.array(statusRowSchema).default([]),
     effects: z.array(statusEffectSchema).default([]),
   })
@@ -648,6 +660,7 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   buttonComponentSchema,
   languageSelectComponentSchema,
   graphicComponentSchema,
+  characterViewComponentSchema,
   backgroundImageComponentSchema,
   mapViewComponentSchema,
   inventoryComponentSchema,

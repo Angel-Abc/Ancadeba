@@ -42,9 +42,13 @@ function project(statRows: StatusRowDefinition[]): ProjectSnapshot {
         rules: ['state'],
         assets: 'art',
         choices: ['appearance'],
+        appearances: {
+          presets: { painted: { visual: 'portrait' } },
+          characters: { hero: { preset: 'painted' } },
+        },
         characterProfile: {
           fields: ['appearance'],
-          portrait: { visual: 'portrait' },
+          character: 'hero',
         },
       },
       'choices/appearance.json': {

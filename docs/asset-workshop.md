@@ -6,8 +6,8 @@ Set `assets` in the game manifest to a catalogue ID. For example,
 Visual IDs are unique across those dictionaries.
 
 `sample-games/graphics` is the complete reference game: two independent characters,
-matching item icons, tunic palettes, sword materials, and a cloak with rear fabric
-and a front clasp selected together. In the editor's Assets panel, select `paper-doll`
+matching item icons, tunic palettes, sword materials, and a cloak with rear fabric,
+a dyed mantle, and a front clasp selected together. In the editor's Assets panel, select `paper-doll`
 to swap `tunic-part` (wayfarer) with `ranger-tunic-part` (longer, split hem), and
 `sword-part` (straight blade) with `saber-part` (curved blade and knuckle guard).
 Both tunics share fabric, trim, and metal slots and the wayfarer/royal/ember presets;
@@ -86,6 +86,45 @@ Placement is translate(destination), rotate(rotation), scale(scale), then
 translate(-sourceAnchor), preserving artwork coordinates. The sample sword's grip
 at (40, 215) meets the right hand at (250, 257). When previewing a part by itself,
 each source attachment point is its own destination; part bounds frame the preview.
+
+## Named character appearances
+
+Define reusable presets and named characters in the game manifest. The following excerpt uses the Graphics sample's composition and inventory owner.
+
+```json
+{
+  "appearances": {
+    "presets": {
+      "traveler": {
+        "visual": "paper-doll",
+        "portraitCrop": { "x": 86, "y": 10, "width": 148, "height": 160 },
+        "equipment": { "outerwear": "cloak", "shirt": "tunic" }
+      }
+    },
+    "characters": {
+      "ranger": {
+        "preset": "traveler",
+        "owner": "ranger",
+        "overrides": {
+          "slots": {
+            "sword": { "part": "saber-part" },
+            "forearm": {
+              "part": "forearm-mark",
+              "bindings": { "visible": { "source": "game.state", "path": ["ranger", "forearm"] } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+A preset's optional `appearance` uses the ordinary graphic appearance fields. Characters inherit its choices. A personal color, palette, visibility, or part can replace the inherited value and its binding. A character with an inventory owner takes each mapped slot from that owner's equipped item and its dyes. An empty mapped slot is empty on the doll. Omit the owner for a fixed outfit. A preset can also use a single image.
+
+Place a `character-view` scene component with a `character` ID, accessible `label`, `placement`, and a `view` of `full-body` or `portrait`. The portrait crop uses artwork coordinates. Both views draw the same ordered pieces. Use `characterProfile.character` to supply the subject for a creation form and character sheet. A status panel or combat actor uses `"portrait": { "character": "ranger" }`. An inventory uses `"characterPreviews": { "ranger": "ranger" }`, mapping a displayed owner to a character linked to that owner.
+
+In the Graphics wardrobe, choose **Change markings** to change either character's forearm or cheek. Each character starts with a tunic in the shirt slot. Move a dyed cloak to the Ranger's outerwear slot and visit the ranger post. Unequip it to reveal the forearm marking again.
 
 ## Scene graphics and bindings
 

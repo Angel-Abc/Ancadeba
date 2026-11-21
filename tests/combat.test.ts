@@ -533,11 +533,15 @@ describe('combat validation, localization, and editing', () => {
     ).toThrow('rotations')
     expect(
       combatIssues(
-        { ...encounter, player: { ...encounter.player, portrait: 'missing' } },
+        { ...encounter, player: { ...encounter.player, portrait: { character: 'missing' } } },
         rules,
         new Set(['other']),
       ),
-    ).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['portrait'] })]))
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: ['player', 'portrait', 'character'] }),
+      ]),
+    )
     expect(() =>
       applyCommand(project(), { type: 'game.removeCombat', encounterId: 'training' }),
     ).toThrow('invalid project')

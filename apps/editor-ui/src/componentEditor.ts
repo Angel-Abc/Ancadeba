@@ -73,7 +73,7 @@ export function bindComponentEditor(
   let draft: SceneComponentDefinition | undefined
   let panels: InventoryComponentDefinition[] = []
   let selection = inspectorSelectionSchema.parse({})
-  let hiddenPreviews: InventoryComponentDefinition['previews'] = {}
+  let hiddenPreviews: InventoryComponentDefinition['characterPreviews'] = {}
   let preview: RenderedGraphic | undefined
   const bindingPending = { alias: '', value: '' }
   let submitted: { type: EditorCommand['type']; id: string } | undefined
@@ -390,7 +390,7 @@ export function bindComponentEditor(
       bindingPending: z.object({ alias: z.string(), value: z.string() }),
       selection: inspectorSelectionSchema.optional(),
       panels: z.array(inventoryComponentSchema).optional(),
-      hiddenPreviews: inventoryComponentSchema.shape.previews.optional(),
+      hiddenPreviews: inventoryComponentSchema.shape.characterPreviews.optional(),
     }),
     () =>
       dirty

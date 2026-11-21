@@ -1,8 +1,4 @@
-import {
-  characterProfileSchema,
-  graphicAppearanceSchema,
-  type CharacterProfileDefinition,
-} from '@ancadeba/schemas'
+import { characterProfileSchema, type CharacterProfileDefinition } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import {
@@ -13,7 +9,6 @@ import {
   type EntrySelections,
 } from './specialistEntries.js'
 import { inspectorTranslations } from './inspectorTranslations.js'
-import { graphicAppearanceForm } from './graphicAppearanceForm.js'
 import { choicePicker, formLabel } from './formElements.js'
 import { ruleFormControls } from './ruleFormControls.js'
 
@@ -27,7 +22,6 @@ export function bindCharacterProfileForm(
   const localized = inspectorTranslations(ruleFormControls(document, edited, t), openKey)
   const controls = localized.controls
   let entries: EntrySelections = {}
-  const appearanceEntry = { graphicSlot: '', graphicColor: '' }
   const { button, group, select } = controls
   let view: ProjectView | undefined
   let draft: CharacterProfileDefinition | null = null
@@ -54,7 +48,7 @@ export function bindCharacterProfileForm(
             draft = next
               ? {
                   fields: [],
-                  portrait: { visual: '', appearance: graphicAppearanceSchema.parse({}) },
+                  character: Object.keys(view?.game?.appearances?.characters ?? {})[0] ?? '',
                 }
               : null
           }),
@@ -63,16 +57,6 @@ export function bindCharacterProfileForm(
 
     if (!profile || !view) return
     const current = view
-    const catalog = view.assets
-
-    const visuals = catalog
-      ? [
-          ...Object.keys(catalog.images),
-          ...Object.keys(catalog.parts),
-          ...Object.keys(catalog.compositions),
-        ]
-      : []
-
     const available = Object.keys(view.choices ?? {}).find((id) => !profile.fields.includes(id))
 
     const addField = () =>
@@ -141,45 +125,20 @@ export function bindCharacterProfileForm(
 
     root.append(profile.fields.length ? fields : addField())
 
-    const portrait = fieldPath(
-      controls.fold(
-        'portrait',
-        t('form.portrait'),
-        false,
-        fieldPath(
-          select(t('form.portrait'), profile.portrait.visual, ['', ...visuals], (next) =>
+    root.append(
+      fieldPath(
+        select(
+          t('form.portrait'),
+          profile.character,
+          ['', ...Object.keys(view.game?.appearances?.characters ?? {})],
+          (value) =>
             change(() => {
-              profile.portrait.visual = next
-              profile.portrait.appearance = graphicAppearanceSchema.parse({})
+              profile.character = value
             }),
-          ),
-          'portrait',
-          'visual',
         ),
+        'character',
       ),
-      'portrait',
     )
-
-    if (catalog && visuals.includes(profile.portrait.visual))
-      portrait.append(
-        fieldPath(
-          graphicAppearanceForm(
-            controls,
-            current,
-            catalog,
-            profile.portrait.visual,
-            profile.portrait.appearance,
-            true,
-            change,
-            edited,
-            appearanceEntry,
-            render,
-          ),
-          'portrait',
-          'appearance',
-        ),
-      )
-    root.append(portrait)
     restoreFocus?.()
   }
 
@@ -192,11 +151,8 @@ export function bindCharacterProfileForm(
     },
     snapshot: () => JSON.stringify(draft),
     entries: () => entries,
-    appearanceEntry,
     clearSelection: () => {
       entries = {}
-      appearanceEntry.graphicSlot = ''
-      appearanceEntry.graphicColor = ''
     },
     focusIssue: (path: PropertyKey[]) => focusIssue(root, path),
     restore(saved: string, selection?: EntrySelections) {

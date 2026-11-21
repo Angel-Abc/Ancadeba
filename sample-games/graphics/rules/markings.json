@@ -1,0 +1,21 @@
+{
+  "state": [
+    {
+      "path": ["wayfarer", "forearm"],
+      "value": false
+    },
+    {
+      "path": ["wayfarer", "cheek"],
+      "value": false
+    },
+    {
+      "path": ["ranger", "forearm"],
+      "value": true
+    },
+    {
+      "path": ["ranger", "cheek"],
+      "value": false
+    }
+  ],
+  "actions": {}
+}

@@ -1,0 +1,37 @@
+{
+  "schema-version": "1.0.0",
+  "id": "markings",
+  "label": "Body markings",
+  "rows": [
+    [
+      [
+        {
+          "type": "checkbox",
+          "label": "Wayfarer forearm marking",
+          "path": ["wayfarer", "forearm"],
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "label": "Wayfarer cheek marking",
+          "path": ["wayfarer", "cheek"],
+          "default": false
+        }
+      ],
+      [
+        {
+          "type": "checkbox",
+          "label": "Ranger forearm marking",
+          "path": ["ranger", "forearm"],
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "label": "Ranger cheek marking",
+          "path": ["ranger", "cheek"],
+          "default": false
+        }
+      ]
+    ]
+  ]
+}

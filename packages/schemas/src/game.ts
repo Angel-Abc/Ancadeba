@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { gameLanguagesSchema, translationKeySchema } from './languages.js'
 import { gameIdSchema } from './gameId.js'
+import { appearanceLibrarySchema } from './characterAppearances.js'
 import { characterProfileSchema } from './characterProfile.js'
 
 export { gameIdSchema } from './gameId.js'
@@ -44,6 +45,7 @@ export const gameSchema = z
     assets: gameIdSchema.optional(),
     choices: z.array(gameIdSchema).refine(uniqueFileIds, 'Choice IDs must be unique').optional(),
     forms: z.array(gameIdSchema).refine(uniqueFileIds, 'Form IDs must be unique').optional(),
+    appearances: appearanceLibrarySchema.optional(),
     characterProfile: characterProfileSchema.optional(),
     inventory: z
       .array(gameIdSchema)

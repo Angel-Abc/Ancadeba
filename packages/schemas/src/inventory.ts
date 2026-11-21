@@ -1,3 +1,4 @@
+import type { AppearanceLibrary } from './characterAppearances.js'
 import { z } from 'zod'
 import { itemUseSchema } from './itemUse.js'
 import { equipmentCombatEffectsSchema } from './combatEquipment.js'
@@ -114,16 +115,9 @@ export const inventorySchema = z.object({
   items: z.record(gameIdSchema, inventoryStartingItemSchema),
 })
 
-export const inventoryPreviewSchema = z.object({
-  composition: gameIdSchema,
-  slots: z.record(gameIdSchema, gameIdSchema),
-})
-
 export type InventoryDefinition = z.infer<typeof inventorySchema>
 
 export type InventoryPlacement = Readonly<z.infer<typeof inventoryPlacementSchema>>
-
-export type InventoryPreview = z.infer<typeof inventoryPreviewSchema>
 
 export interface InventoryItem {
   readonly itemType: string
@@ -359,9 +353,9 @@ export function inventoryIssues(
 
 export function inventoryPanelIssues(
   owners: readonly string[],
-  previews: Readonly<Record<string, InventoryPreview>>,
+  previews: Readonly<Record<string, string>>,
   definition: InventoryDefinition | undefined,
-  assets: AssetCatalog | undefined,
+  library: AppearanceLibrary | undefined,
 ): InventoryIssue[] {
   if (!definition)
     return [{ path: [], message: 'Inventory panel requires an inventory definition' }]
@@ -372,52 +366,13 @@ export function inventoryPanelIssues(
       issues.push({ path: ['owners'], message: `Unknown inventory owner: ${owner}` })
   }
 
-  for (const [id, preview] of Object.entries(previews)) {
-    const path = ['previews', id]
-    const owner = inventoryEntry(definition.owners, id)
+  for (const [id, character] of Object.entries(previews)) {
+    const path = ['characterPreviews', id]
 
-    if (!owner || !owners.includes(id)) {
-      issues.push({ path, message: `Preview owner is not shown in this panel: ${id}` })
-      continue
-    }
-
-    const composition = assets && inventoryEntry(assets.compositions, preview.composition)
-
-    if (!composition) {
-      issues.push({ path, message: `Unknown composition: ${preview.composition}` })
-      continue
-    }
-
-    if (new Set(Object.values(preview.slots)).size !== Object.keys(preview.slots).length)
-      issues.push({
-        path: [...path, 'slots'],
-        message: 'Composition slots may only be mapped once',
-      })
-
-    for (const [slot, target] of Object.entries(preview.slots)) {
-      const mapped = inventoryEntry(composition.slots, target)
-      const slotPath = [...path, 'slots', slot]
-
-      if (!Object.hasOwn(owner.equipmentSlots, slot) || !mapped) {
-        issues.push({
-          path: slotPath,
-          message: `Unknown equipment or composition slot: ${slot} → ${target}`,
-        })
-        continue
-      }
-
-      for (const type of Object.values(definition.itemTypes)) {
-        if (
-          type.wornPart &&
-          type.equipmentSlots.includes(slot) &&
-          !mapped.parts.includes(type.wornPart)
-        )
-          issues.push({
-            path: slotPath,
-            message: `Part ${type.wornPart} is not allowed in slot ${target}`,
-          })
-      }
-    }
+    if (!owners.includes(id))
+      issues.push({ path, message: 'Preview owner is not shown in this panel: ' + id })
+    else if (library?.characters[character]?.owner !== id)
+      issues.push({ path, message: 'Choose a character linked to inventory owner ' + id })
   }
 
   return issues

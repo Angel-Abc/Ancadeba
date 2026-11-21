@@ -81,12 +81,7 @@ export function combatForm(
         [JSON.stringify({ source: 'game.state', path: field.path }), field.path.join('.')] as const,
     )
 
-  const art = [
-    '',
-    ...Object.keys(view.assets?.images ?? {}),
-    ...Object.keys(view.assets?.parts ?? {}),
-    ...Object.keys(view.assets?.compositions ?? {}),
-  ]
+  const characters = ['', ...Object.keys(view.game?.appearances?.characters ?? {})]
 
   const number = (label: string, value: number, change: (value: number) => void) =>
     input(label, String(value), (value) => change(Number(value)), 'number')
@@ -137,8 +132,8 @@ export function combatForm(
           'id',
         ),
         ...presentation('', actor),
-        select(t('form.portrait'), actor.portrait ?? '', art, (value) => {
-          actor.portrait = value || undefined
+        select(t('form.portrait'), actor.portrait?.character ?? '', characters, (value) => {
+          actor.portrait = value ? { character: value } : undefined
         }),
         select(
           t('combat.statOwner'),

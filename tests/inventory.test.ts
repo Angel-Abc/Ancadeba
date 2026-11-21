@@ -36,6 +36,9 @@ const paths = [
   'scenes/gallery.json',
   'scenes/ember.json',
   'scenes/wardrobe.json',
+  'scenes/markings.json',
+  'rules/markings.json',
+  'forms/markings.json',
 ]
 
 function readSample(path: string) {
@@ -174,17 +177,17 @@ describe('wardrobe inventory', () => {
     files.set('inventory/wardrobe.json', await readSample('inventory/wardrobe.json'))
     files.set(
       'scenes/wardrobe.json',
-      files.get('scenes/wardrobe.json')!.replace('"outerwear": "cloak"', '"outerwear": "body"'),
+      files.get('scenes/wardrobe.json')!.replace('"wayfarer": "wayfarer"', '"wayfarer": "ranger"'),
     )
     expect(validateProject(documents())).toEqual([
       expect.objectContaining({ code: 'invalid_inventory_panel', file: 'scenes/wardrobe.json' }),
     ])
     await expect(loader(async (path) => files.get(path)!).load()).rejects.toThrow(
-      'Unknown equipment or composition slot',
+      'Choose a character linked to inventory owner',
     )
   })
 
-  it('uses the instance dye for the icon and both-piece worn graphic without recoloring another copy', async () => {
+  it('uses the instance dye for the icon and layered worn graphic without recoloring another copy', async () => {
     const { assets, inventory } = await loader().load()
     const moss = inventory!.items['moss-cloak']!
     const royal = inventory!.items['royal-cloak']!
@@ -210,13 +213,14 @@ describe('wardrobe inventory', () => {
 
     expect(icon.pieces.map(({ colors }) => colors)).toEqual([
       { fabric: '#397c73' },
+      { fabric: '#397c73' },
       { metal: '#c99b50' },
     ])
     expect(wornGraphic.pieces.find(({ layer }) => layer === 'rear')?.colors).toEqual(
       icon.pieces[0]?.colors,
     )
     expect(wornGraphic.pieces.find(({ layer }) => layer === 'clasp')?.colors).toEqual(
-      icon.pieces[1]?.colors,
+      icon.pieces[2]?.colors,
     )
     expect(otherIcon.pieces[0]?.colors).toEqual({ fabric: '#665191' })
   })

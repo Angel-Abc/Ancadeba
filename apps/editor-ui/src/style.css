@@ -2858,3 +2858,17 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     display: block;
   }
 }
+
+#editor-appearances .appearance-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.appearance-preview .ancadeba-graphic {
+  height: 14rem;
+}
+.appearance-preview svg {
+  width: 100%;
+  height: 100%;
+}

@@ -93,12 +93,6 @@ export function editShop(
         labelKey: panel.labelKey,
         descriptionTarget: panel.descriptionTarget,
         placement: { ...object(previous.placement), ...panel.placement },
-        previews: Object.fromEntries(
-          Object.entries(panel.previews).map(([owner, preview]) => [
-            owner,
-            { ...object(object(previous.previews)[owner]), ...preview },
-          ]),
-        ),
       }
 
       if (index < 0) components.push(next)

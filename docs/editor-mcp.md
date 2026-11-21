@@ -702,3 +702,9 @@ are unavailable; a request containing `folderName` is rejected before posting or
 that flag is false. Creation, duplication, import, deletion, and restoration flags reflect the
 workspace directory primitives available to the repository. MCP clients check these flags
 before invoking the associated operation.
+
+## Named character artwork
+
+Read the active manifest and revision with `ancadeba_inspect_game`. Submit the full `appearances` library with `ancadeba_update_game_metadata` or the shared `game.updateMetadata` command. Include the existing title, description, and version. The dictionaries under `presets` and `characters` are replaced together. Fetch the new revision before the next edit.
+
+Use `scene.upsertComponent` for a `character-view` and the corresponding inventory, status-panel, or combat command for a character portrait. Inspect a scene or reopen the project to read the saved references. The [appearance format and example](asset-workshop.md#named-character-appearances) describe the data shared with the editor.

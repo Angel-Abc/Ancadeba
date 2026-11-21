@@ -431,7 +431,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     'ancadeba_inspect_game',
     {
       description:
-        'Read game metadata, scene summaries, rules, inventory, maps, choices, forms, combat, leveling, dialogues, quests, input, localization catalogs, stylesheet text, assets, diagnostics, and the current revision. Use this revision for an edit; inspect a scene for full component definitions.',
+        'Read game metadata, named character appearances and presets, scene summaries, rules, inventory, maps, choices, forms, combat, leveling, dialogues, quests, input, localization catalogs, stylesheet text, assets, diagnostics, and the current revision. Use this revision for an edit; inspect a scene for full component definitions.',
       inputSchema: z.strictObject({}),
       outputSchema: resultSchema(advertisedGameSummarySchema),
       annotations: readAnnotations,
@@ -582,7 +582,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     'ancadeba_update_game_metadata',
     {
       description:
-        'Save game title, description, and version. Supply every literal metadata field and expectedRevision from inspection. Optional titleKey and descriptionKey assign translations; null removes a key, omission preserves it.',
+        'Save game metadata, the appearance library and character profile. To edit appearances, supply the complete presets and characters dictionaries in appearances. Supply every literal metadata field and expectedRevision from inspection. Optional titleKey and descriptionKey assign translations; null removes a key, omission preserves it.',
       inputSchema: gameMetadata.omit({ type: true }).extend(revision),
       outputSchema: resultSchema(changeSummarySchema),
       annotations: writeAnnotations,

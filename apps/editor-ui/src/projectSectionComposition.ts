@@ -76,6 +76,7 @@ export function createProjectSections({
     },
     openTranslation,
     () => selectKey('scenes'),
+    dependencies.createGraphics,
   )
 
   const treeElement = root.querySelector<HTMLElement>('#project-tree')

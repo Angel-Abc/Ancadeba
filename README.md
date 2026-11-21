@@ -153,8 +153,8 @@ discovery reports availability and the 6 MiB archive limit. See the
 [MCP export guide](docs/editor-mcp.md#export-the-active-game) for timeouts and client usage.
 
 `sample-games/graphics` is a self-contained wardrobe example with two independent
-characters, item previews, and a two-piece cloak. Choose **Try the wardrobe inventory**
-to equip the cloak and move items between characters and their bags. The sample's
+named characters, item previews, and a cloak with a dyed mantle and clasp. Choose **Try the wardrobe inventory**
+to equip a cloak, change body markings, and visit the ranger post or training courtyard to see the same outfit in a cropped portrait. The sample's
 `inventory/wardrobe.json` shows how to define items, owners, slots, and starting contents in
 any game. Export it with
 `pnpm export:game sample-games/graphics` or select it in the editor workspace.

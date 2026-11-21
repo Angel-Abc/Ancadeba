@@ -19,7 +19,9 @@
     },
     "ap": 3,
     "moves": ["attack", "heavy", "guard", "power-strike", "poison-strike"],
-    "portrait": "paper-doll",
+    "portrait": {
+      "character": "wayfarer"
+    },
     "leveling": "player",
     "moveLevels": {
       "power-strike": 2
@@ -38,7 +40,9 @@
       "ap": 2,
       "moves": ["attack", "guard"],
       "rotation": ["guard", "attack"],
-      "portrait": "paper-doll"
+      "portrait": {
+        "character": "sentinel"
+      }
     },
     {
       "id": "keeper",
@@ -51,7 +55,9 @@
       "ap": 2,
       "moves": ["attack", "guard"],
       "rotation": ["guard", "attack"],
-      "portrait": "paper-doll"
+      "portrait": {
+        "character": "keeper"
+      }
     }
   ],
   "moves": {

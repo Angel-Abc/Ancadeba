@@ -190,7 +190,9 @@ export function shopForm(
           Object.keys(view.inventory?.owners ?? {}),
           (owner) => {
             panel.owners = [owner]
-            panel.previews = panel.previews[owner] ? { [owner]: panel.previews[owner] } : {}
+            panel.characterPreviews = panel.characterPreviews[owner]
+              ? { [owner]: panel.characterPreviews[owner] }
+              : {}
             render()
           },
         ),

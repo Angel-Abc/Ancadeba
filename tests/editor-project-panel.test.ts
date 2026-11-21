@@ -162,7 +162,9 @@ function panel(
 
   const root = {
     querySelector: (selector: string) =>
-      ['#assets-panel', '#project-tree'].includes(selector) ? null : control(selector.slice(1)),
+      ['#assets-panel', '#project-tree', '#editor-appearances'].includes(selector)
+        ? null
+        : control(selector.slice(1)),
     querySelectorAll: () =>
       [...controls.values()].filter((node) => node.attributes.has('data-editor-draft')),
     ownerDocument: { createElement: () => new Control('option'), defaultView: new EventTarget() },

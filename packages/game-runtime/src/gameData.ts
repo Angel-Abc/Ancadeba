@@ -53,6 +53,7 @@ import {
   formIssues,
   localizeForm,
   characterProfileIssues,
+  appearanceIssues,
   assertGraphicReference,
   validateInventorySources,
   inventoryPanelIssues,
@@ -107,6 +108,7 @@ export type SceneComponentData =
           | 'save-point'
           | 'action-info'
           | 'form'
+          | 'character-view'
           | 'character-sheet'
       }
     >
@@ -174,6 +176,7 @@ export interface GameData {
   readonly assets?: AssetCatalog
   readonly inventory?: InventoryDefinition | undefined
   readonly rules?: GameRulesDefinition
+  readonly appearances?: GameDefinition['appearances']
   readonly characterProfile?: GameDefinition['characterProfile']
   readonly ruleTranslation?: GameTranslation | undefined
   readonly localization?: IGameLocalization
@@ -263,7 +266,8 @@ export function assembleGameData(
       assets,
       choices,
     )[0] ??
-    characterProfileIssues(definition, sceneDefinitions, validation.rules, assets, choices)[0]
+    appearanceIssues(definition.appearances, assets, inventory)[0] ??
+    characterProfileIssues(definition, sceneDefinitions, validation.rules, choices)[0]
 
   if (issue) throw new Error(`${issue.file} (${issue.path.join('.')}): ${issue.message}`)
 
@@ -308,6 +312,7 @@ export function assembleGameData(
       new Set(definition.scenes),
       assets,
       inventory,
+      definition.appearances,
     )[0]
 
     if (problem) throw new Error(`Combat ${id}: ${problem.message}`)
@@ -679,7 +684,7 @@ export function assembleGameData(
       }
 
       if (component.type === 'status-panel') {
-        const issue = statusPanelIssues(component, assets)[0]
+        const issue = statusPanelIssues(component, assets, definition.appearances)[0]
 
         if (issue)
           throw new Error(`Scene ${scene.id}, status panel ${component.id}: ${issue.message}`)
@@ -708,9 +713,9 @@ export function assembleGameData(
       if (component.type === 'inventory') {
         const issue = inventoryPanelIssues(
           component.owners,
-          component.previews,
+          component.characterPreviews,
           inventory,
-          assets,
+          definition.appearances,
         )[0]
 
         if (issue) throw new Error(`Scene ${scene.id}, panel ${component.id}: ${issue.message}`)
@@ -765,6 +770,7 @@ export function assembleGameData(
       : {}),
     ...(combat.size ? { combat } : {}),
     ...(assets ? { assets } : {}),
+    ...(definition.appearances && { appearances: definition.appearances }),
     ...(definition.characterProfile ? { characterProfile: definition.characterProfile } : {}),
     ...(inventory ? { inventory } : {}),
     ...(validated ? { rules: validated.rules } : {}),

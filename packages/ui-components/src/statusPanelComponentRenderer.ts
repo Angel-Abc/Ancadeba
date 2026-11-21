@@ -1,3 +1,4 @@
+import { CharacterViewRenderer } from './characterViewRenderer.js'
 import { resolveStatusValue, statusBarFill } from '@ancadeba/game-runtime'
 import type { StatusPanelComponentDefinition } from '@ancadeba/schemas'
 import { GraphicComponentRenderer } from './graphicComponentRenderer.js'
@@ -43,7 +44,17 @@ export class StatusPanelComponentRenderer implements IComponentRenderer<StatusPa
 
     try {
       if (component.portrait) {
-        const portrait = graphic(component.portrait, component.name || component.label)
+        const portrait = new CharacterViewRenderer(this.graphics).render(
+          {
+            ...component,
+            type: 'character-view',
+            character: component.portrait.character,
+            view: 'portrait',
+            label: component.name || component.label,
+          },
+          context,
+        )
+
         portrait.element.classList.add('ancadeba-status-portrait')
         root.append(portrait.element)
         cleanups.push(() => portrait.dispose())

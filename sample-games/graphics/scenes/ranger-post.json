@@ -17,9 +17,22 @@
       "text": "A ranger waits beside the woodland trail. Select the ranger and Talk. Accept the delivery, then talk again to hand over the letter.",
       "placement": {
         "row": 1,
-        "column": 4,
+        "column": 6,
         "rowSpan": 6,
-        "columnSpan": 6
+        "columnSpan": 4
+      }
+    },
+    {
+      "id": "ranger-portrait",
+      "type": "character-view",
+      "label": "Ranger",
+      "character": "ranger",
+      "view": "portrait",
+      "placement": {
+        "column": 4,
+        "row": 1,
+        "columnSpan": 2,
+        "rowSpan": 3
       }
     },
     {

@@ -91,7 +91,6 @@
       },
       "label": "Inventory",
       "owners": ["player"],
-      "previews": {},
       "readOnly": true
     },
     {

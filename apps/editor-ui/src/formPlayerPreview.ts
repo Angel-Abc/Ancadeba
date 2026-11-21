@@ -95,7 +95,14 @@ export function formPlayerPreview(
           },
           definition,
           profile,
-          { document: root.ownerDocument, assets: view.assets, graphics, formDrafts: answers },
+          {
+            document: root.ownerDocument,
+            assets: view.assets,
+            appearances: view.game?.appearances,
+            inventoryDefinition: view.inventory,
+            graphics,
+            formDrafts: answers,
+          },
           { choices, ...(view.rules && { rules: view.rules }), ruleTranslation: translations },
         )
         root.append(rendered.element)

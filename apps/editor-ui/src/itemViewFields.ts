@@ -16,7 +16,7 @@ export function itemViewFields(
     | EquipmentComponentDefinition,
   creating: boolean,
   render: () => void,
-  hiddenPreviews: InventoryComponentDefinition['previews'],
+  hiddenPreviews: InventoryComponentDefinition['characterPreviews'],
   includeIdentity = true,
   selection?: { inventoryOwner: string },
 ) {
@@ -135,12 +135,32 @@ export function itemViewFields(
                   : draft.owners.filter((owner) => owner !== id)
 
               if (value === 'false') {
-                if (draft.previews[id]) hiddenPreviews[id] = draft.previews[id]
-                delete draft.previews[id]
+                if (draft.characterPreviews[id]) hiddenPreviews[id] = draft.characterPreviews[id]
+                delete draft.characterPreviews[id]
               } else if (hiddenPreviews[id]) {
-                draft.previews[id] = hiddenPreviews[id]
+                draft.characterPreviews[id] = hiddenPreviews[id]
                 delete hiddenPreviews[id]
               }
+            },
+          ),
+        ),
+      ...owners
+        .filter(
+          ([id]) => draft.owners.includes(id) && (!selection || selection.inventoryOwner === id),
+        )
+        .map(([id]) =>
+          controls.select(
+            t('form.portrait'),
+            draft.characterPreviews[id] ?? '',
+            [
+              '',
+              ...Object.entries(view.game?.appearances?.characters ?? {})
+                .filter(([, character]) => character.owner === id)
+                .map(([key]) => key),
+            ],
+            (value) => {
+              if (value) draft.characterPreviews[id] = value
+              else delete draft.characterPreviews[id]
             },
           ),
         ),

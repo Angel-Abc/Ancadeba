@@ -227,7 +227,7 @@ describe('appearance resolution', () => {
         resolveGraphic(catalog, 'paper-doll', appearance, bindings).pieces.map(
           (piece) => piece.layer,
         ),
-      ).toEqual(['rear', 'body', 'hands', 'clasp'])
+      ).toEqual(['rear', 'body', 'mantle', 'hands', 'clasp'])
       state.tunic = 'ranger-tunic-part'
       state.sword = 'saber-part'
       const restored = resolveGraphic(catalog, 'paper-doll', appearance, bindings)
@@ -243,7 +243,7 @@ describe('appearance resolution', () => {
     }
   })
 
-  it('orders grouped cloak pieces around the body and maps shared palette slots to both images', () => {
+  it('orders grouped cloak pieces around the body and maps shared palette slots to the cloak artwork', () => {
     const appearance = graphicAppearanceSchema.parse({
       slots: { cloak: { colors: { fabric: '#112233', metal: '#aabbcc' } } },
     })
@@ -253,6 +253,7 @@ describe('appearance resolution', () => {
       'rear',
       'body',
       'clothes',
+      'mantle',
       'sword',
       'hands',
       'clasp',
@@ -332,7 +333,7 @@ describe('appearance resolution', () => {
       resolveGraphic(catalog, 'paper-doll', appearance, bindings).pieces.map(
         (piece) => piece.layer,
       ),
-    ).toEqual(['rear', 'body', 'clothes', 'hands', 'clasp'])
+    ).toEqual(['rear', 'body', 'clothes', 'mantle', 'hands', 'clasp'])
     state.part = 'missing'
     state.material = 'missing'
     state.fabric = 'url(https://invalid)'

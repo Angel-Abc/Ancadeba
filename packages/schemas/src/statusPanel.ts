@@ -1,3 +1,4 @@
+import type { AppearanceLibrary } from './characterAppearances.js'
 import { assertGraphicReference, graphicAppearanceSchema, type AssetCatalog } from './assets.js'
 import type { GameBindingDefinition } from './bindings.js'
 import type { StatusPanelComponentDefinition } from './scene.js'
@@ -28,15 +29,13 @@ export function statusPanelBindings(
 export function statusPanelIssues(
   panel: StatusPanelComponentDefinition,
   assets?: AssetCatalog,
+  appearances?: AppearanceLibrary,
 ): { path: (string | number)[]; message: string }[] {
-  const references = [
-    ...(panel.portrait ? [{ visual: panel.portrait, path: ['portrait'] }] : []),
-    ...panel.effects.flatMap((effect, index) =>
-      effect.icon ? [{ visual: effect.icon, path: ['effects', index, 'icon'] }] : [],
-    ),
-  ]
+  const references = panel.effects.flatMap((effect, index) =>
+    effect.icon ? [{ visual: effect.icon, path: ['effects', index, 'icon'] }] : [],
+  )
 
-  return references.flatMap(({ visual, path }) => {
+  const issues = references.flatMap(({ visual, path }) => {
     try {
       if (!assets) throw new Error('Status artwork requires an asset catalogue')
       assertGraphicReference(assets, visual, graphicAppearanceSchema.parse({}))
@@ -46,4 +45,12 @@ export function statusPanelIssues(
       return [{ path, message: error instanceof Error ? error.message : String(error) }]
     }
   })
+
+  if (panel.portrait && !Object.hasOwn(appearances?.characters ?? {}, panel.portrait.character))
+    issues.push({
+      path: ['portrait', 'character'],
+      message: 'Unknown character: ' + panel.portrait.character,
+    })
+
+  return issues
 }

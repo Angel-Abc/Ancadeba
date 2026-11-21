@@ -1765,6 +1765,12 @@ wardrobe demonstrates larger artwork, two dyed cloaks for replacement, paper-dol
 updates, and Q/W equipment commands. Saves use the shared revision checks;
 conflicts and unrelated saves preserve item drafts until saved or discarded.
 
+### Character appearances
+
+Open **Game properties → Character appearances**. Add a preset, choose its visual, and set its portrait framing in artwork coordinates. For a layered visual, choose the default parts and map the inventory slots that supply clothing. Add a named character, choose its preset, select an optional inventory owner, and edit personal choices or markings. The full-body and portrait previews use starting Rules values and equipped items. Save game properties to commit the library.
+
+Choose the character in a profile, status panel, combat actor, or inventory inspector. To place artwork directly, add a **Character view** to a scene and select its character and framing. The Graphics wardrobe and the Market Value creation form demonstrate these workflows.
+
 ### Equipment-granted combat mechanics
 
 In **Inventory definitions**, select an item type, or select it under **Item views

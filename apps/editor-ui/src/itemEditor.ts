@@ -70,7 +70,7 @@ export function bindItemEditor(
   let busy = false
   let creating = false
   let submitted: EditorCommand | undefined
-  let hiddenPreviews: InventoryComponentDefinition['previews'] = {}
+  let hiddenPreviews: InventoryComponentDefinition['characterPreviews'] = {}
 
   const languageChanged = languageWatcher(t)
 
@@ -451,7 +451,7 @@ export function bindItemEditor(
       slots: z.array(z.tuple([z.string(), z.string()])).optional(),
       combatStats: combatStatsProfileSchema.optional(),
       creating: z.boolean(),
-      hiddenPreviews: inventoryComponentSchema.shape.previews,
+      hiddenPreviews: inventoryComponentSchema.shape.characterPreviews,
     }),
     () =>
       dirty || inventoryEditor.hasDrafts()

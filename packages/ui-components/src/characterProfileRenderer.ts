@@ -1,3 +1,4 @@
+import { CharacterViewRenderer } from './characterViewRenderer.js'
 import { runtimeText, type IGameBindings, type SceneComponentData } from '@ancadeba/game-runtime'
 import type {
   ChoiceDefinition,
@@ -44,14 +45,13 @@ function portrait(
   context: ComponentRenderContext,
   bindings: IGameBindings | undefined,
 ) {
-  const rendered = graphics.render(
+  const rendered = new CharacterViewRenderer(graphics).render(
     {
-      id: `${component.id}-portrait`,
-      type: 'graphic',
-      placement: component.placement,
-      ...profile.portrait,
-      alt: text(context, 'character.portrait'),
-      fit: 'contain',
+      ...component,
+      type: 'character-view',
+      view: 'portrait',
+      character: profile.character,
+      label: text(context, 'character.portrait'),
     },
     { ...context, bindings },
   )

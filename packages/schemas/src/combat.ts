@@ -8,6 +8,7 @@ import {
 } from './combatRestrictions.js'
 import { combatScalingSchema } from './combatValues.js'
 import { combatConditionSchema, combatConditionIssues } from './combatConditions.js'
+import { characterReferenceSchema, type AppearanceLibrary } from './characterAppearances.js'
 import { z } from 'zod'
 import { combatMechanicsSchema } from './combatMechanics.js'
 import { combatEnemyAISchema } from './combatEnemyAI.js'
@@ -110,7 +111,7 @@ export const combatActorSchema = z
   .object({
     id,
     ...label,
-    portrait: id.optional(),
+    portrait: characterReferenceSchema.optional(),
     equipmentOwner: id.optional(),
     equipmentMoves: z.array(id).max(100).optional(),
     damageDefenses: combatDamageDefensesSchema.optional(),
@@ -487,6 +488,7 @@ export function combatIssues(
   scenes: ReadonlySet<string>,
   assets?: AssetCatalog,
   inventory?: InventoryDefinition,
+  appearances?: AppearanceLibrary,
 ): { path: (string | number)[]; message: string }[] {
   const issues: ReturnType<typeof combatIssues> = []
 
@@ -521,16 +523,15 @@ export function combatIssues(
         })
     }
 
-    if (actor.portrait)
-      try {
-        if (!assets) throw new Error('Combat portraits require an asset catalogue')
-        assertGraphicReference(assets, actor.portrait, graphicAppearanceSchema.parse({}))
-      } catch (error) {
-        issues.push({
-          path: ['portrait'],
-          message: error instanceof Error ? error.message : String(error),
-        })
-      }
+    if (actor.portrait && !Object.hasOwn(appearances?.characters ?? {}, actor.portrait.character))
+      issues.push({
+        path: [
+          ...(actor === combat.player ? ['player'] : ['enemies', combat.enemies.indexOf(actor)]),
+          'portrait',
+          'character',
+        ],
+        message: 'Unknown character: ' + actor.portrait.character,
+      })
   }
 
   for (const destination of Object.values(combat.outcomes))
