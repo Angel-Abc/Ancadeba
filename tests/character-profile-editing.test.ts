@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { applyCommand, validateProject, type ProjectSnapshot } from '@ancadeba/editor-core'
-import { gameRulesSchema, type StatusRowDefinition } from '@ancadeba/schemas'
+import { object, applyCommand, validateProject, type ProjectSnapshot } from '@ancadeba/editor-core'
+import {
+  choiceSchema,
+  formField,
+  formSchema,
+  gameRulesSchema,
+  type StatusRowDefinition,
+} from '@ancadeba/schemas'
 
 const rules = gameRulesSchema.parse({
   state: [
@@ -35,18 +41,19 @@ function project(statRows: StatusRowDefinition[]): ProjectSnapshot {
         scenes: ['sheet'],
         rules: ['state'],
         assets: 'art',
+        choices: ['appearance'],
         characterProfile: {
-          fields: [
-            {
-              id: 'appearance',
-              label: 'Appearance',
-              path: ['character'],
-              options: [{ id: 'default', label: 'Default' }],
-              default: 'default',
-            },
-          ],
+          fields: ['appearance'],
           portrait: { visual: 'portrait' },
         },
+      },
+      'choices/appearance.json': {
+        'schema-version': '1.0.0',
+        id: 'appearance',
+        label: 'Appearance',
+        path: ['character'],
+        options: [{ id: 'default', label: 'Default' }],
+        default: 'default',
       },
       'assets/art.json': {
         'schema-version': '1.0.0',
@@ -77,6 +84,104 @@ function project(statRows: StatusRowDefinition[]): ProjectSnapshot {
     },
   }
 }
+
+describe('shared choices', () => {
+  const form = (id: string, choice: string) =>
+    formSchema.parse({
+      'schema-version': '1.0.0',
+      id,
+      label: id,
+      rows: [[[{ type: 'choice', choice }]]],
+    })
+
+  it('resolves a single edited definition on two forms and identifies all uses before removal', () => {
+    let source = project([])
+
+    for (const id of ['creator', 'wardrobe']) {
+      source = applyCommand(source, {
+        type: 'game.upsertForm',
+        form: form(id, 'appearance'),
+      }).project
+    }
+
+    const choice = choiceSchema.parse(source.documents['choices/appearance.json'])
+
+    const result = applyCommand(source, {
+      type: 'game.upsertChoice',
+      choice: { ...choice, label: 'Hair color' },
+    })
+
+    expect(result.changedFiles).toEqual(['choices/appearance.json'])
+
+    const choices = new Map([
+      [choice.id, choiceSchema.parse(result.project.documents['choices/appearance.json'])],
+    ])
+
+    for (const id of ['creator', 'wardrobe']) {
+      const saved = formSchema.parse(result.project.documents['forms/' + id + '.json'])
+      expect(formField(saved.rows[0]![0]![0]!, choices)).toMatchObject({
+        label: 'Hair color',
+        path: ['character'],
+      })
+    }
+
+    expect(() =>
+      applyCommand(result.project, { type: 'game.removeChoice', choiceId: 'appearance' }),
+    ).toThrow(/creator.*wardrobe.*character profile/)
+    const unused = { ...choice, id: 'unused' }
+
+    const added = applyCommand(result.project, {
+      type: 'game.upsertChoice',
+      choice: unused,
+    }).project
+
+    const removed = applyCommand(added, { type: 'game.removeChoice', choiceId: unused.id })
+    expect(removed.removedFiles).toEqual(['choices/unused.json'])
+    expect(removed.project.documents['game.json']).toEqual(result.project.documents['game.json'])
+  })
+
+  it('rejects missing references, repeated state bindings, and invalid option IDs', () => {
+    const source = project([])
+    const choice = choiceSchema.parse(source.documents['choices/appearance.json'])
+    const bad = form('bad', 'missing')
+    expect(() => applyCommand(source, { type: 'game.upsertForm', form: bad })).toThrow(
+      expect.objectContaining({
+        diagnostics: expect.arrayContaining([expect.objectContaining({ code: 'invalid_form' })]),
+      }),
+    )
+    const duplicate = form('duplicate', 'appearance')
+    duplicate.rows[0]![0]!.push({ type: 'text', label: 'Other', path: choice.path, default: '' })
+    expect(() => applyCommand(source, { type: 'game.upsertForm', form: duplicate })).toThrow(
+      expect.objectContaining({
+        diagnostics: expect.arrayContaining([
+          expect.objectContaining({ message: 'A form can edit a state path only once' }),
+        ]),
+      }),
+    )
+    expect(
+      choiceSchema.safeParse({ ...choice, options: [...choice.options, ...choice.options] })
+        .success,
+    ).toBe(false)
+    expect(choiceSchema.safeParse({ ...choice, default: 'missing' }).success).toBe(false)
+    expect(() =>
+      applyCommand(source, {
+        type: 'game.upsertChoice',
+        choice: { ...choice, options: [{ id: 'other', label: 'Other' }], default: 'other' },
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        diagnostics: expect.arrayContaining([expect.objectContaining({ code: 'invalid_choice' })]),
+      }),
+    )
+    const manifest = { ...object(source.documents['game.json']), choices: [] }
+    expect(validateProject({ ...source.documents, 'game.json': manifest })).toContainEqual(
+      expect.objectContaining({
+        code: 'invalid_character_profile',
+        path: ['characterProfile', 'fields', 0],
+      }),
+    )
+  })
+})
 
 describe('Rules editing with a character sheet', () => {
   it('preserves authored row and binding extensions across relabel, reorder, change of type and removal', () => {

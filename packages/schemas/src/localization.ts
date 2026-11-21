@@ -33,25 +33,7 @@ export function localizeDefinitions(
     description: text(definition.descriptionKey, definition.description),
   })
 
-  const profile = game.characterProfile
-
-  const localizedGame = {
-    ...game,
-    ...metadata(game),
-    ...(profile && {
-      characterProfile: {
-        ...profile,
-        fields: profile.fields.map((field) => ({
-          ...field,
-          label: text(field.labelKey, field.label, true),
-          options: field.options.map((option) => ({
-            ...option,
-            label: text(option.labelKey, option.label, true),
-          })),
-        })),
-      },
-    }),
-  }
+  const localizedGame = { ...game, ...metadata(game) }
 
   if (!localizedGame.title.trim()) throw new Error('Translated game title must not be empty')
 
@@ -200,9 +182,6 @@ export function assertGameLanguages(
   const keyed =
     game.titleKey !== undefined ||
     game.descriptionKey !== undefined ||
-    game.characterProfile?.fields.some(
-      (field) => field.labelKey || field.options.some((option) => option.labelKey),
-    ) ||
     [...scenes.values()].some(
       (scene) =>
         scene.titleKey !== undefined ||

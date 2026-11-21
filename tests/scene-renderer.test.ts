@@ -81,6 +81,12 @@ class TestElement extends EventTarget {
   className = ''
   media = ''
   readonly classList = {
+    remove: (name: string) => {
+      this.className = this.className
+        .split(' ')
+        .filter((item) => item !== name)
+        .join(' ')
+    },
     add: (name: string) => {
       this.className = [this.className, name].filter(Boolean).join(' ')
     },
@@ -235,6 +241,10 @@ class TestDocument extends EventTarget {
   readonly body = this.createElement('body')
   activeElement: TestElement | null = null
   hidden = false
+  createElementNS(_namespace: string, tag: string): TestElement {
+    return this.createElement(tag)
+  }
+
   createElement(tag: string): TestElement {
     return new TestElement(this, tag.toUpperCase())
   }
@@ -618,7 +628,13 @@ describe('character creation and stat discovery', () => {
 
     const engine = new Engine(
       new GameLoader(new JsonResourceLoader(source, logger)),
-      new DomEngineHost(target.asElement()),
+      {
+        mount: (game, session) =>
+          mountGameView(target.asElement(), game, session, {
+            bindingMode: 'standalone',
+            graphics: { acquire: async (piece) => ({ url: piece.image.source, release() {} }) },
+          }),
+      },
       logger,
       () => new MessageBus<EngineMessages>(),
       timing,
@@ -626,8 +642,18 @@ describe('character creation and stat discovery', () => {
 
     onTestFinished(() => engine.stop())
     await engine.start()
-    click(target, 'New game')
+    click(target, 'Settings')
+    choose(target, 'difficulty', 'hard')
+    confirm(target)
+
+    const previewHair = (style: string) =>
+      target.find(
+        (node) => node.attributes.get('href')?.includes('portrait-hair-' + style + '-') ?? false,
+      )
+
+    await vi.waitFor(() => expect(previewHair('crop')).toBeDefined())
     choose(target, 'hairstyle', 'waves')
+    await vi.waitFor(() => expect(previewHair('waves')).toBeDefined())
     confirm(target)
     click(target, 'Edit appearance')
     expect(target.find((node) => node.name === 'hairstyle')?.value).toBe('waves')
@@ -637,6 +663,17 @@ describe('character creation and stat discovery', () => {
     expect(target.find((node) => node.name === 'hairstyle')?.value).toBe('waves')
     choose(target, 'hairstyle', 'tied')
     confirm(target)
+    click(target, 'Game menu (Escape)')
+    click(target, 'Settings')
+    expect(target.find((node) => node.name === 'difficulty')?.value).toBe('hard')
+    choose(target, 'difficulty', 'easy')
+    confirm(target)
+    expect(
+      engine.lifecycle!.currentGame!.bindings!.read({
+        source: 'game.state',
+        path: ['settings', 'difficulty'],
+      }),
+    ).toEqual({ status: 'resolved', value: 'easy' })
     click(target, 'Game menu (Escape)')
     click(target, 'Character')
     expect(target.textContent).toContain('Tied back')
@@ -675,12 +712,23 @@ describe('character creation and stat discovery', () => {
           'initial-scene': 'start',
           scenes: ['start', 'play', 'unused'],
           forms: ['survey'],
+          choices: ['route'],
           quests: ['welcome'],
           rules: ['main'],
           languages: { default: 'en', available: ['en', 'nl'] },
         },
-        'languages/en/messages.json': { name: 'Your name', send: 'Submit answers' },
-        'languages/nl/messages.json': { name: 'Je naam', send: 'Versturen' },
+        'languages/en/messages.json': {
+          name: 'Your name',
+          send: 'Submit answers',
+          route: 'Route',
+          long: 'Long',
+        },
+        'languages/nl/messages.json': {
+          name: 'Je naam',
+          send: 'Versturen',
+          route: 'Traject',
+          long: 'Lang',
+        },
         'scenes/start.json': scene('start', 'stand-alone', [
           { ...placement, continueScene: withQuest ? 'play' : 'unused' },
         ]),
@@ -705,6 +753,18 @@ describe('character creation and stat discovery', () => {
             },
           ],
         },
+        'choices/route.json': {
+          'schema-version': '1.0.0',
+          id: 'route',
+          label: 'Route',
+          labelKey: 'route',
+          path: ['route'],
+          options: [
+            { id: 'short', label: 'Short' },
+            { id: 'long', label: 'Long', labelKey: 'long' },
+          ],
+          default: 'short',
+        },
         'forms/survey.json': {
           'schema-version': '1.0.0',
           id: 'survey',
@@ -713,16 +773,7 @@ describe('character creation and stat discovery', () => {
             [
               [
                 { type: 'text', label: 'Name', labelKey: 'name', path: ['name'], default: '' },
-                {
-                  type: 'choice',
-                  label: 'Route',
-                  path: ['route'],
-                  options: [
-                    { id: 'short', label: 'Short' },
-                    { id: 'long', label: 'Long' },
-                  ],
-                  default: 'short',
-                },
+                { type: 'choice', choice: 'route' },
               ],
               [
                 { type: 'number', label: 'Pace', path: ['pace'], default: 2 },
@@ -780,7 +831,9 @@ describe('character creation and stat discovery', () => {
 
       onTestFinished(() => engine.stop())
       await engine.start()
-      const control = (id: string) => target.find((node) => node.name === JSON.stringify([id]))!
+
+      const control = (id: string) =>
+        target.find((node) => node.name === (id === 'route' ? 'route' : JSON.stringify([id])))!
 
       const change = (id: string, value: string | boolean) => {
         const input = control(id)
@@ -800,6 +853,8 @@ describe('character creation and stat discovery', () => {
       expect(target.textContent).toContain('Select Ready to continue')
       engine.game!.localization!.select('nl')
       expect(control('name').value).toBe('Player')
+      expect(target.textContent).toContain('Traject')
+      expect(target.textContent).toContain('Lang')
       expect(target.textContent).toContain('Je naam')
       expect(target.textContent).toContain('Versturen')
       change('ready', true)

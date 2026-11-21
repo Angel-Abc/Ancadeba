@@ -41,6 +41,7 @@ interface BuiltinEditors {
   localizationEditor: ReturnType<typeof bindLocalizationEditor> | undefined
   stylesheetEditor: ReturnType<typeof bindStylesheetEditor> | undefined
   componentEditor: ReturnType<typeof bindComponentEditor> | undefined
+  choiceLibrary?: ReturnType<typeof import('./choiceLibrary.js').bindChoiceLibrary> | undefined
   formLibrary?: ReturnType<typeof import('./formLibrary.js').bindFormLibrary> | undefined
   storyEditor: ReturnType<typeof bindStoryEditor> | undefined
   mapEditor: ReturnType<typeof bindMapEditor> | undefined
@@ -422,6 +423,27 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
       ? (node.parentId === 'dialogues' ? 'dialogue:' : 'quest:') + node.id
       : ''
 
+  add('choices', 'choice-library', editors.choiceLibrary, {
+    canNavigate: ({ node }) =>
+      editors.choiceLibrary!.canOpen(
+        node.kind === 'data-file' && node.parentId === 'choices' ? node.id : undefined,
+      ),
+    activate: ({ node }) =>
+      editors.choiceLibrary!.open(node.kind === 'data-file' ? node.id : undefined),
+    reconcile(node, state) {
+      if (
+        node.kind === 'data-file' &&
+        node.parentId === 'choices' &&
+        node.id &&
+        state.view?.game &&
+        !state.view.game.choices?.includes(node.id)
+      ) {
+        return { key: 'choices', section: 'choices', kind: 'section', label: t('choices.heading') }
+      }
+
+      return node
+    },
+  })
   add('form-library', 'form-library', editors.formLibrary, {
     refresh: () => {},
     setVisible: (visible) => editors.formLibrary!.setVisible(visible),

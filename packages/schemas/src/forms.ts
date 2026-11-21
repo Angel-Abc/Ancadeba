@@ -1,3 +1,4 @@
+import type { ChoiceDefinition } from './choices.js'
 import { z } from 'zod'
 import {
   assetIdSchema,
@@ -17,26 +18,11 @@ import type { SceneDefinition } from './scene.js'
 const wording = { label: z.string().trim().min(1), labelKey: translationKeySchema.optional() }
 const field = { ...wording, path: z.array(assetIdSchema).min(1) }
 
-const choice = z
-  .strictObject({
-    type: z.literal('choice'),
-    ...field,
-    default: assetIdSchema,
-    options: z.array(z.strictObject({ id: assetIdSchema, ...wording })).min(1),
-  })
-  .refine(
-    ({ options, default: initial }) =>
-      options.some((option) => option.id === initial) &&
-      new Set(options.map((option) => option.id)).size === options.length,
-    'Choose unique options and a valid default',
-  )
-
 export const formElementSchema = z.discriminatedUnion('type', [
-  choice,
+  z.strictObject({ type: z.literal('choice'), choice: gameIdSchema }),
   z.strictObject({ type: z.literal('text'), ...field, default: z.string().default('') }),
   z.strictObject({ type: z.literal('number'), ...field, default: z.number().finite().default(0) }),
   z.strictObject({ type: z.literal('checkbox'), ...field, default: z.boolean().default(false) }),
-  z.strictObject({ type: z.literal('profile-field'), field: gameIdSchema }),
   z.strictObject({ type: z.literal('portrait') }),
   z.strictObject({
     type: z.literal('graphic'),
@@ -58,7 +44,9 @@ export type FormDefinition = z.infer<typeof formSchema>
 
 export type FormElement = z.infer<typeof formElementSchema>
 
-export type FormField = Extract<FormElement, { path: string[] }>
+export type FormField =
+  | Extract<FormElement, { path: string[] }>
+  | (ChoiceDefinition & { type: 'choice' })
 
 export type FormValue = string | number | boolean
 
@@ -68,12 +56,12 @@ export function formFile(id: string) {
 
 export function formField(
   element: FormElement,
-  profile?: CharacterProfileDefinition,
+  choices?: ReadonlyMap<string, ChoiceDefinition>,
 ): FormField | undefined {
   if ('path' in element) return element
 
-  if (element.type !== 'profile-field') return
-  const field = profile?.fields.find(({ id }) => id === element.field)
+  if (element.type !== 'choice') return
+  const field = choices?.get(element.choice)
 
   if (field) return { ...field, type: 'choice' }
 }
@@ -96,12 +84,7 @@ export function characterForm(id: string, profile: CharacterProfileDefinition): 
     'schema-version': '1.0.0',
     id,
     label: 'Create character',
-    rows: [
-      [
-        [{ type: 'portrait' }],
-        profile.fields.map((field) => ({ type: 'profile-field', field: field.id })),
-      ],
-    ],
+    rows: [[[{ type: 'portrait' }], profile.fields.map((choice) => ({ type: 'choice', choice }))]],
   }
 }
 
@@ -129,12 +112,6 @@ export function localizeForm(form: FormDefinition, translation?: GameTranslation
           return {
             ...element,
             label: text(element.labelKey, element.label),
-            ...(element.type === 'choice' && {
-              options: element.options.map((option) => ({
-                ...option,
-                label: text(option.labelKey, option.label),
-              })),
-            }),
           }
         }),
       ),
@@ -147,7 +124,8 @@ export function formIssues(
   forms: ReadonlyMap<string, FormDefinition>,
   scenes: ReadonlyMap<string, SceneDefinition>,
   rules: GameRulesDefinition,
-  assets?: AssetCatalog,
+  assets: AssetCatalog | undefined,
+  choices: ReadonlyMap<string, ChoiceDefinition>,
 ): RuleIssue[] {
   const issues: RuleIssue[] = []
   const state = new Map(rules.state.map((field) => [JSON.stringify(field.path), field]))
@@ -180,10 +158,10 @@ export function formIssues(
             }
           }
 
-          const field = formField(element, game.characterProfile)
+          const field = formField(element, choices)
 
           if (!field) {
-            if (element.type === 'profile-field') add('Choose an existing profile field')
+            if (element.type === 'choice') add('Choose an existing library choice')
 
             return
           }

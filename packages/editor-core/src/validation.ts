@@ -1,5 +1,9 @@
 import {
   formFile,
+  choiceSchema,
+  choiceFile,
+  choiceIssues,
+  localizeChoice,
   formSchema,
   formIssues,
   localizeForm,
@@ -146,6 +150,14 @@ export function validateProject(
       const result = check(levelingFile(id), levelingProfileSchema)
 
       return result.success ? [[id, result.data] as const] : []
+    }),
+  )
+
+  const choices = new Map(
+    (game.data.choices ?? []).flatMap((id) => {
+      const choice = check(choiceFile(id), choiceSchema).data
+
+      return choice ? [[id, choice] as const] : []
     }),
   )
 
@@ -369,6 +381,8 @@ export function validateProject(
     if (fallback && scenes.size === game.data.scenes.length) {
       for (const [language, messages] of catalogs) {
         try {
+          for (const choice of choices.values()) localizeChoice(choice, { fallback, messages })
+
           for (const form of forms.values()) localizeForm(form, { fallback, messages })
           localizeDefinitions(game.data, scenes, { fallback, messages })
 
@@ -405,10 +419,13 @@ export function validateProject(
   const validatedRules = validateRuleSources(sources, scenes, maps, inventory, defaultMessages)
   const mergedRules = validatedRules.rules
 
-  for (const issue of formIssues(game.data, forms, scenes, mergedRules, assets?.data))
+  for (const issue of choiceIssues(game.data.choices ?? [], choices, mergedRules))
+    diagnostics.push({ code: 'invalid_choice', ...issue })
+
+  for (const issue of formIssues(game.data, forms, scenes, mergedRules, assets?.data, choices))
     diagnostics.push({ code: 'invalid_form', ...issue })
 
-  for (const issue of characterProfileIssues(game.data, scenes, mergedRules, assets?.data))
+  for (const issue of characterProfileIssues(game.data, scenes, mergedRules, assets?.data, choices))
     diagnostics.push({ ...issue, code: 'invalid_character_profile' })
 
   for (const issue of storyIssues({
@@ -536,6 +553,8 @@ export function validateProject(
     if (inventory && !game.data.languages) localizeInventory(inventory)
 
     if (!game.data.languages) {
+      for (const choice of choices.values()) localizeChoice(choice)
+
       for (const form of forms.values()) localizeForm(form)
 
       for (const combat of combats.values()) localizeCombat(combat)

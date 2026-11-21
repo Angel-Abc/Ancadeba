@@ -1,0 +1,29 @@
+{
+  "schema-version": "1.0.0",
+  "id": "skin-tone",
+  "label": "Skin tone",
+  "path": ["character", "skin-tone"],
+  "options": [
+    {
+      "id": "light",
+      "label": "Light"
+    },
+    {
+      "id": "warm",
+      "label": "Warm"
+    },
+    {
+      "id": "olive",
+      "label": "Olive"
+    },
+    {
+      "id": "brown",
+      "label": "Brown"
+    },
+    {
+      "id": "deep",
+      "label": "Deep"
+    }
+  ],
+  "default": "warm"
+}

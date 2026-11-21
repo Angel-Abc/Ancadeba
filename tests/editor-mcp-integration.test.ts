@@ -136,6 +136,43 @@ describe('MCP and shared editor integration', () => {
     expect((await game()).forms?.survey?.label).toBe('Questionnaire')
   })
 
+  it('saves, inspects and removes a shared choice through MCP', async () => {
+    const choice = {
+      'schema-version': '1.0.0' as const,
+      id: 'weather',
+      label: 'Weather',
+      path: ['weather'],
+      options: [{ id: 'sun', label: 'Sunny' }],
+      default: 'sun',
+    }
+
+    const apply = async (command: EditorCommand) => {
+      const result = await client.callTool({
+        name: 'ancadeba_apply_command',
+        arguments: { expectedRevision: (await game()).revision, command },
+      })
+
+      expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false)
+    }
+
+    await apply({
+      type: 'game.updateRules',
+      ruleId: 'world',
+      rules: { state: [{ path: choice.path, value: 'sun' }], actions: {} },
+    })
+    await apply({ type: 'game.upsertChoice', choice })
+    expect((await game()).choices?.weather).toEqual(choice)
+    expect((await repository.load('basic')).documents['choices/weather.json']).toEqual(choice)
+    await apply({ type: 'game.upsertChoice', choice: { ...choice, label: 'Forecast' } })
+    expect((await game()).choices?.weather?.label).toBe('Forecast')
+    await apply({ type: 'game.removeChoice', choiceId: 'weather' })
+    expect((await game()).game?.choices).toEqual([])
+    await expect(readFile(join(root, 'basic/choices/weather.json'))).rejects.toHaveProperty(
+      'code',
+      'ENOENT',
+    )
+  })
+
   it('exports the selected starter with saved edits and exact assets, preserving revision and history', async () => {
     const created = await client.callTool({
       name: 'ancadeba_create_project',

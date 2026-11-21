@@ -108,6 +108,8 @@ export * from './saveCompatibility.js'
 
 export * from './forms.js'
 
+export * from './choices.js'
+
 export * from './characterProfile.js'
 
 export * from './characterProfileValidation.js'

@@ -1,4 +1,4 @@
-import { formFile, dialogueFile, questFile, levelingFile } from '@ancadeba/schemas'
+import { choiceFile, formFile, dialogueFile, questFile, levelingFile } from '@ancadeba/schemas'
 import { createHash } from 'node:crypto'
 import {
   gameSchema,
@@ -372,6 +372,8 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
       for (const id of game.data.inventory ?? []) await read(inventoryFile(id))
 
       for (const id of game.data.rules ?? []) await read(ruleFile(id))
+
+      for (const id of game.data.choices ?? []) await read(choiceFile(id))
 
       for (const id of game.data.forms ?? []) await read(formFile(id))
 

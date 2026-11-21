@@ -78,8 +78,9 @@ export function renderForm(
   definition: FormDefinition,
   profile: CharacterProfileDefinition | undefined,
   context: ComponentRenderContext,
-  defaults: Pick<GameData, 'rules' | 'ruleTranslation'> | undefined = context.game,
+  defaults: Pick<GameData, 'rules' | 'ruleTranslation' | 'choices'> | undefined = context.game,
 ): RenderedComponent {
+  const choices = context.localization?.current.choices ?? defaults?.choices
   const { document, scene, submitForm } = context
   const form = document.createElement('form')
   form.className = 'ancadeba-form'
@@ -96,7 +97,7 @@ export function renderForm(
   context.formDrafts?.set(component.id, draft)
 
   for (const element of definition.rows.flat(2)) {
-    const field = formField(element, profile)
+    const field = formField(element, choices)
 
     if (!field) continue
     const key = JSON.stringify(field.path)
@@ -163,7 +164,7 @@ export function renderForm(
       group.className = 'ancadeba-form-column'
 
       for (const element of column) {
-        const field = formField(element, profile)
+        const field = formField(element, choices)
 
         if (field) {
           const key = JSON.stringify(field.path)
@@ -171,7 +172,7 @@ export function renderForm(
             fieldControl(
               document,
               field,
-              element.type === 'profile-field' ? element.field : key,
+              element.type === 'choice' ? element.choice : key,
               draft.values.get(key)!,
               (value) => {
                 draft.values.set(key, value)

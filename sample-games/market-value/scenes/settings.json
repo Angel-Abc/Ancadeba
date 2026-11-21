@@ -13,48 +13,20 @@
   },
   "components": [
     {
-      "id": "help",
-      "type": "text",
+      "id": "difficulty",
+      "type": "form",
+      "form": "difficulty",
+      "submitLabel": "Continue to character creation",
+      "cancelLabel": "Back",
       "placement": {
         "row": 2,
-        "column": 2,
-        "rowSpan": 3,
-        "columnSpan": 14
+        "column": 3,
+        "rowSpan": 7,
+        "columnSpan": 12
       },
-      "text": "Add your game settings here.",
-      "presentation": {
-        "variant": "body",
-        "align": "start"
-      }
-    },
-    {
-      "id": "resume",
-      "type": "button",
-      "placement": {
-        "row": 10,
-        "column": 5,
-        "rowSpan": 1,
-        "columnSpan": 8
-      },
-      "label": "Resume",
-      "action": {
-        "type": "resume-game"
-      }
-    },
-    {
-      "id": "main-menu",
-      "type": "button",
-      "placement": {
-        "row": 11,
-        "column": 5,
-        "rowSpan": 1,
-        "columnSpan": 8
-      },
-      "label": "Main menu",
-      "action": {
-        "type": "main-menu",
-        "scene": "start"
-      }
+      "label": "New game settings",
+      "continueScene": "setup-character",
+      "backScene": "start"
     }
   ]
 }

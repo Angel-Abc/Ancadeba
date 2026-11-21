@@ -1,0 +1,47 @@
+{
+  "schema-version": "1.0.0",
+  "id": "play-settings",
+  "title": "Settings",
+  "description": "",
+  "type": "game",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "difficulty",
+      "type": "form",
+      "form": "difficulty",
+      "submitLabel": "Apply and resume",
+      "cancelLabel": "Cancel",
+      "placement": {
+        "row": 2,
+        "column": 3,
+        "rowSpan": 7,
+        "columnSpan": 12
+      },
+      "label": "Settings",
+      "continueScene": "adventure",
+      "backScene": "adventure"
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "placement": {
+        "row": 11,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Main menu",
+      "action": {
+        "type": "main-menu",
+        "scene": "start"
+      }
+    }
+  ]
+}

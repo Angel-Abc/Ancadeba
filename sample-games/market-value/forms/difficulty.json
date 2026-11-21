@@ -1,0 +1,15 @@
+{
+  "schema-version": "1.0.0",
+  "id": "difficulty",
+  "label": "Settings",
+  "rows": [
+    [
+      [
+        {
+          "type": "choice",
+          "choice": "difficulty"
+        }
+      ]
+    ]
+  ]
+}

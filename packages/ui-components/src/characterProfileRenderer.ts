@@ -1,5 +1,9 @@
 import { runtimeText, type IGameBindings, type SceneComponentData } from '@ancadeba/game-runtime'
-import type { CharacterProfileDefinition, RuntimeTextKey } from '@ancadeba/schemas'
+import type {
+  ChoiceDefinition,
+  CharacterProfileDefinition,
+  RuntimeTextKey,
+} from '@ancadeba/schemas'
 import type {
   ComponentRenderContext,
   IComponentRenderer,
@@ -10,15 +14,13 @@ import { StatusPanelComponentRenderer } from './statusPanelComponentRenderer.js'
 
 type Sheet = Extract<SceneComponentData, { type: 'character-sheet' }>
 
-type Field = CharacterProfileDefinition['fields'][number]
-
 const profileFor = (context: ComponentRenderContext) =>
   (context.localization?.current ?? context.game)?.characterProfile
 
 const text = (context: ComponentRenderContext, key: RuntimeTextKey) =>
   runtimeText(context.game, key)
 
-function selectedOption(field: Field, bindings: IGameBindings | undefined) {
+function selectedOption(field: ChoiceDefinition, bindings: IGameBindings | undefined) {
   const result = bindings?.read({ source: 'game.state', path: field.path })
 
   if (result?.status === 'resolved') return field.options.find(({ id }) => id === result.value)
@@ -92,7 +94,12 @@ export class CharacterSheetRenderer implements IComponentRenderer<Sheet> {
     const update = () => {
       details.replaceChildren()
 
-      for (const field of profile.fields) {
+      const choices = (context.localization?.current ?? context.game)?.choices
+
+      for (const id of profile.fields) {
+        const field = choices?.get(id)
+
+        if (!field) continue
         const selected = selectedOption(field, bindings)
 
         if (!selected) continue

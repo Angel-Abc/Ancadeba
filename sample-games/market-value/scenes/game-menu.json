@@ -29,9 +29,17 @@
     {
       "id": "character",
       "type": "button",
-      "placement": { "row": 4, "column": 5, "rowSpan": 1, "columnSpan": 8 },
+      "placement": {
+        "row": 4,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
       "label": "Character",
-      "action": { "type": "open-menu", "scene": "character" }
+      "action": {
+        "type": "open-menu",
+        "scene": "character"
+      }
     },
     {
       "id": "main-menu",
@@ -90,7 +98,7 @@
       "label": "Settings",
       "action": {
         "type": "enter-scene",
-        "scene": "settings"
+        "scene": "play-settings"
       }
     }
   ]

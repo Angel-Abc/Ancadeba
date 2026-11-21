@@ -1,4 +1,12 @@
-.ancadeba-scene {
+.larger {
+  font-size: 150%;
+}
+
+.much-larger {
+  font-size: 200%;
+}
+
+/* .ancadeba-scene {
   --ge-scene-font-size: clamp(14px, 3cqw, 22px);
   --ge-scene-heading-size: clamp(20px, 5cqw, 36px);
   --ge-scene-text-padding: 0.5em;
@@ -68,4 +76,4 @@
   [data-scene-id='start'] .ancadeba-button {
     grid-column: 2 / span 10;
   }
-}
+} */

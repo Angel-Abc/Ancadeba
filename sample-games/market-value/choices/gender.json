@@ -1,0 +1,25 @@
+{
+  "schema-version": "1.0.0",
+  "id": "gender",
+  "label": "Gender",
+  "path": ["character", "gender"],
+  "options": [
+    {
+      "id": "woman",
+      "label": "Woman"
+    },
+    {
+      "id": "man",
+      "label": "Man"
+    },
+    {
+      "id": "nonbinary",
+      "label": "Nonbinary"
+    },
+    {
+      "id": "undisclosed",
+      "label": "Prefer not to say"
+    }
+  ],
+  "default": "woman"
+}

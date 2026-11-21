@@ -2,6 +2,7 @@ import type { DialogueDefinition, QuestDefinition, LevelingProfile } from '@anca
 import {
   ruleFile,
   inventoryFile,
+  type ChoiceDefinition,
   type FormDefinition,
   type GameDefinition,
   type SceneDefinition,
@@ -53,6 +54,7 @@ export interface ProjectView {
         redoLabel?: string | undefined
       }
     | undefined
+  choices?: Record<string, ChoiceDefinition> | undefined
   forms?: Record<string, FormDefinition> | undefined
   dialogues?: Record<string, DialogueDefinition> | undefined
   quests?: Record<string, QuestDefinition> | undefined

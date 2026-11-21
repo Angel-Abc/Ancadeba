@@ -20,112 +20,18 @@
     "character",
     "save",
     "load",
-    "settings"
+    "settings",
+    "setup-character",
+    "play-settings"
   ],
   "assets": "catalogue",
   "maps": ["coast"],
   "inventory": ["items"],
-  "rules": ["beach-pickups", "character"],
-  "forms": ["appearance"],
+  "rules": ["beach-pickups", "character", "settings"],
+  "choices": ["gender", "skin-tone", "hairstyle", "hair-color", "difficulty"],
+  "forms": ["appearance", "difficulty"],
   "characterProfile": {
-    "fields": [
-      {
-        "id": "gender",
-        "label": "Gender",
-        "path": ["character", "gender"],
-        "options": [
-          {
-            "id": "woman",
-            "label": "Woman"
-          },
-          {
-            "id": "man",
-            "label": "Man"
-          },
-          {
-            "id": "nonbinary",
-            "label": "Nonbinary"
-          },
-          {
-            "id": "undisclosed",
-            "label": "Prefer not to say"
-          }
-        ],
-        "default": "undisclosed"
-      },
-      {
-        "id": "skin-tone",
-        "label": "Skin tone",
-        "path": ["character", "skin-tone"],
-        "options": [
-          {
-            "id": "light",
-            "label": "Light"
-          },
-          {
-            "id": "warm",
-            "label": "Warm"
-          },
-          {
-            "id": "olive",
-            "label": "Olive"
-          },
-          {
-            "id": "brown",
-            "label": "Brown"
-          },
-          {
-            "id": "deep",
-            "label": "Deep"
-          }
-        ],
-        "default": "warm"
-      },
-      {
-        "id": "hairstyle",
-        "label": "Hairstyle",
-        "path": ["character", "hairstyle"],
-        "options": [
-          {
-            "id": "crop",
-            "label": "Cropped"
-          },
-          {
-            "id": "waves",
-            "label": "Wavy"
-          },
-          {
-            "id": "tied",
-            "label": "Tied back"
-          }
-        ],
-        "default": "crop"
-      },
-      {
-        "id": "hair-color",
-        "label": "Hair color",
-        "path": ["character", "hair-color"],
-        "options": [
-          {
-            "id": "black",
-            "label": "Black"
-          },
-          {
-            "id": "brown",
-            "label": "Brown"
-          },
-          {
-            "id": "auburn",
-            "label": "Auburn"
-          },
-          {
-            "id": "blond",
-            "label": "Blond"
-          }
-        ],
-        "default": "black"
-      }
-    ],
+    "fields": ["gender", "skin-tone", "hairstyle", "hair-color"],
     "portrait": {
       "visual": "castaway",
       "appearance": {

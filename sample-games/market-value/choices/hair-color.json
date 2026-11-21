@@ -1,0 +1,25 @@
+{
+  "schema-version": "1.0.0",
+  "id": "hair-color",
+  "label": "Hair color",
+  "path": ["character", "hair-color"],
+  "options": [
+    {
+      "id": "black",
+      "label": "Black"
+    },
+    {
+      "id": "brown",
+      "label": "Brown"
+    },
+    {
+      "id": "auburn",
+      "label": "Auburn"
+    },
+    {
+      "id": "blond",
+      "label": "Blond"
+    }
+  ],
+  "default": "black"
+}

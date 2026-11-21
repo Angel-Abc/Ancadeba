@@ -47,6 +47,9 @@ import {
   assertGameLanguages,
   assertBackgroundImageReference,
   type FormDefinition,
+  type ChoiceDefinition,
+  choiceIssues,
+  localizeChoice,
   formIssues,
   localizeForm,
   characterProfileIssues,
@@ -161,6 +164,7 @@ export interface GameData {
   readonly saveCompatibility?: string
   /** Earlier fingerprint that included decorative scene backgrounds. */
   readonly legacySaveCompatibility?: string
+  readonly choices?: ReadonlyMap<string, ChoiceDefinition> | undefined
   readonly forms?: ReadonlyMap<string, FormDefinition> | undefined
   readonly dialogues?: ReadonlyMap<string, DialogueDefinition> | undefined
   readonly quests?: ReadonlyMap<string, QuestDefinition> | undefined
@@ -204,6 +208,7 @@ export function assembleGameData(
   dialogueDefinitions: ReadonlyMap<string, DialogueDefinition> = new Map(),
   questDefinitions: ReadonlyMap<string, QuestDefinition> = new Map(),
   formDefinitions: ReadonlyMap<string, FormDefinition> = new Map(),
+  choices: ReadonlyMap<string, ChoiceDefinition> = new Map(),
 ): GameData {
   assertGameLanguages(definition, sceneDefinitions)
 
@@ -249,8 +254,16 @@ export function assembleGameData(
 
   const issue =
     validation.issues[0] ??
-    formIssues(definition, formDefinitions, sceneDefinitions, validation.rules, assets)[0] ??
-    characterProfileIssues(definition, sceneDefinitions, validation.rules, assets)[0]
+    choiceIssues(definition.choices ?? [], choices, validation.rules)[0] ??
+    formIssues(
+      definition,
+      formDefinitions,
+      sceneDefinitions,
+      validation.rules,
+      assets,
+      choices,
+    )[0] ??
+    characterProfileIssues(definition, sceneDefinitions, validation.rules, assets, choices)[0]
 
   if (issue) throw new Error(`${issue.file} (${issue.path.join('.')}): ${issue.message}`)
 
@@ -727,6 +740,11 @@ export function assembleGameData(
   }
 
   return {
+    ...(choices.size && {
+      choices: new Map(
+        [...choices].map(([id, choice]) => [id, localizeChoice(choice, ruleTranslation)]),
+      ),
+    }),
     ...(formDefinitions.size && {
       forms: new Map(
         [...formDefinitions].map(([id, form]) => [id, localizeForm(form, ruleTranslation)]),

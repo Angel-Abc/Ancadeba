@@ -2,6 +2,7 @@ import type { Unsubscribe } from '@ancadeba/utilities'
 import type { SceneData } from './gameData.js'
 import type {
   CharacterProfileDefinition,
+  ChoiceDefinition,
   InventoryDefinition,
   GameTranslation,
 } from '@ancadeba/schemas'
@@ -12,6 +13,7 @@ export interface GameLanguagePreferences {
 }
 
 export interface LocalizedGameContent {
+  readonly choices?: ReadonlyMap<string, ChoiceDefinition> | undefined
   readonly characterProfile?: CharacterProfileDefinition | undefined
   readonly ruleTranslation?: GameTranslation | undefined
   readonly language: string

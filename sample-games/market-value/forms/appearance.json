@@ -11,20 +11,20 @@
       ],
       [
         {
-          "type": "profile-field",
-          "field": "gender"
+          "type": "choice",
+          "choice": "gender"
         },
         {
-          "type": "profile-field",
-          "field": "skin-tone"
+          "type": "choice",
+          "choice": "skin-tone"
         },
         {
-          "type": "profile-field",
-          "field": "hairstyle"
+          "type": "choice",
+          "choice": "hairstyle"
         },
         {
-          "type": "profile-field",
-          "field": "hair-color"
+          "type": "choice",
+          "choice": "hair-color"
         }
       ]
     ]

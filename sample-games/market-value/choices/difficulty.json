@@ -1,0 +1,21 @@
+{
+  "schema-version": "1.0.0",
+  "id": "difficulty",
+  "label": "Difficulty",
+  "path": ["settings", "difficulty"],
+  "default": "normal",
+  "options": [
+    {
+      "id": "easy",
+      "label": "Easy — collect both beach finds together"
+    },
+    {
+      "id": "normal",
+      "label": "Normal — collect each find separately"
+    },
+    {
+      "id": "hard",
+      "label": "Hard — use driftwood to free the rope"
+    }
+  ]
+}

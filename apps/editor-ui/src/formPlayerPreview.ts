@@ -1,7 +1,7 @@
 import type { ProjectView } from '@ancadeba/editor-core'
 import {
   formField,
-  localizeDefinitions,
+  localizeChoice,
   localizeForm,
   validFormValue,
   type FormDefinition,
@@ -48,15 +48,20 @@ export function formPlayerPreview(
         const translations = { messages, fallback: messages }
         const definition = localizeForm(form, translations)
 
-        const profile =
-          view.game?.characterProfile &&
-          localizeDefinitions(view.game, new Map(), translations).game.characterProfile
+        const profile = view.game?.characterProfile
+
+        const choices = new Map(
+          Object.values(view.choices ?? {}).map((choice) => [
+            choice.id,
+            localizeChoice(choice, translations),
+          ]),
+        )
 
         const fields = definition.rows.flat(2)
 
         const allowed = new Map(
           fields.flatMap((element) => {
-            const field = formField(element, profile)
+            const field = formField(element, choices)
 
             return field ? [[JSON.stringify(field.path), field] as const] : []
           }),
@@ -91,7 +96,7 @@ export function formPlayerPreview(
           definition,
           profile,
           { document: root.ownerDocument, assets: view.assets, graphics, formDrafts: answers },
-          { ...(view.rules && { rules: view.rules }), ruleTranslation: translations },
+          { choices, ...(view.rules && { rules: view.rules }), ruleTranslation: translations },
         )
         root.append(rendered.element)
       } catch (problem) {

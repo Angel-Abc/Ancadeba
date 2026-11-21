@@ -12,11 +12,10 @@ export interface FormSelection {
   row: number
   column: number
   element: number
-  option: number
 }
 
 export function firstFormSelection(form?: FormDefinition): FormSelection {
-  const selection = { row: 0, column: 0, element: 0, option: 0 }
+  const selection = { row: 0, column: 0, element: 0 }
   const locations = form ? formLocations(form) : []
 
   const first =
@@ -76,7 +75,6 @@ export function formLayoutEditor(
       row: next.row,
       column: next.column,
       element: next.element,
-      option: 0,
     })
     redraw('entry')
   }
@@ -123,7 +121,6 @@ export function formLayoutEditor(
   }
 
   function changed() {
-    selection.option = 0
     c.markEdited()
     redraw('entry')
   }

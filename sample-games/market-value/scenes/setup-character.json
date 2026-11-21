@@ -1,0 +1,46 @@
+{
+  "schema-version": "1.0.0",
+  "id": "setup-character",
+  "title": "Create character",
+  "description": "",
+  "type": "game",
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
+  "components": [
+    {
+      "id": "creator",
+      "type": "form",
+      "form": "appearance",
+      "submitLabel": "Continue",
+      "cancelLabel": "Back",
+      "placement": {
+        "row": 1,
+        "column": 2,
+        "rowSpan": 10,
+        "columnSpan": 14
+      },
+      "label": "Create character",
+      "continueScene": "adventure"
+    },
+    {
+      "id": "main-menu",
+      "type": "button",
+      "placement": {
+        "row": 11,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "label": "Back to main menu",
+      "action": {
+        "type": "main-menu",
+        "scene": "start"
+      }
+    }
+  ]
+}

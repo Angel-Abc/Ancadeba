@@ -1,4 +1,6 @@
 import {
+  choiceFile,
+  choiceSchema,
   formFile,
   formSchema,
   dialogueFile,
@@ -127,6 +129,14 @@ export class GameLoader implements IGameLoader {
       ),
     )
 
+    const choices = new Map(
+      await Promise.all(
+        (definition.choices ?? []).map(
+          async (id) => [id, await this.resources.load(choiceFile(id), choiceSchema)] as const,
+        ),
+      ),
+    )
+
     const forms = new Map(
       await Promise.all(
         (definition.forms ?? []).map(
@@ -174,6 +184,9 @@ export class GameLoader implements IGameLoader {
         ]),
         [...dialogues].map(([id, value]) => [id, gameplaySaveDefinition(dialogueSchema, value)]),
         [...quests].map(([id, value]) => [id, gameplaySaveDefinition(questSchema, value)]),
+        ...(choices.size
+          ? [[...choices].map(([id, choice]) => [id, gameplaySaveDefinition(choiceSchema, choice)])]
+          : []),
         ...(forms.size
           ? [[...forms].map(([id, form]) => [id, gameplaySaveDefinition(formSchema, form)])]
           : []),
@@ -223,6 +236,7 @@ export class GameLoader implements IGameLoader {
         dialogues,
         quests,
         forms,
+        choices,
       )
 
       return {
@@ -276,6 +290,7 @@ export class GameLoader implements IGameLoader {
           dialogues,
           quests,
           forms,
+          choices,
         ),
         ...styling,
         language: tag,
@@ -304,6 +319,9 @@ export class GameLoader implements IGameLoader {
       },
       get scenes() {
         return localization.current.scenes
+      },
+      get choices() {
+        return localization.current.choices
       },
       get forms() {
         return variants.get(localization.current.language)?.forms

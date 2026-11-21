@@ -1,3 +1,4 @@
+import { bindChoiceLibrary } from '../apps/editor-ui/src/choiceLibrary.js'
 import { bindCharacterProfileForm } from '../apps/editor-ui/src/characterProfileForm.js'
 import { bindFormLibrary } from '../apps/editor-ui/src/formLibrary.js'
 import { bindStoryEditor } from '../apps/editor-ui/src/storyEditor.js'
@@ -6976,20 +6977,11 @@ describe('editor draft workflows', () => {
     expect(ui.editor.hasDrafts()).toBe(false)
   })
 
-  it('recovers the selected profile field and its default option after reordering', () => {
+  it('recovers the selected library choice in the profile after reordering', () => {
     const ui = panel()
     const view = inspectProject(project())
     view.game!.characterProfile = characterProfileSchema.parse({
-      fields: ['gender', 'hair'].map((id) => ({
-        id,
-        label: id,
-        path: ['character', id],
-        default: 'first',
-        options: [
-          { id: 'first', label: 'First' },
-          { id: 'second', label: 'Second' },
-        ],
-      })),
+      fields: ['gender', 'hair'],
       portrait: { visual: 'portrait' },
     })
 
@@ -7001,21 +6993,27 @@ describe('editor draft workflows', () => {
         () => {},
       )
 
+    view.choices = Object.fromEntries(
+      ['gender', 'hair'].map((id) => [
+        id,
+        {
+          'schema-version': '1.0.0',
+          id,
+          label: id,
+          path: [id],
+          options: [{ id: 'first', label: 'First' }],
+          default: 'first',
+        },
+      ]),
+    )
     const profile = bind()
     profile.render(view, true)
-    ui.edit('Field option', '1')
-    ui.edit('Option label', 'Second wording')
-    ui.click('Use as default')
     ui.click('Move down')
     const restored = bind()
     restored.render(view, true)
     restored.restore(profile.snapshot(), structuredClone(profile.entries()))
-    expect(ui.field('Field ID').value).toBe('gender')
-    expect(ui.field('Option label').value).toBe('Second wording')
-    expect(restored.read().data?.fields.map(({ id, default: choice }) => [id, choice])).toEqual([
-      ['hair', 'first'],
-      ['gender', 'second'],
-    ])
+    expect(ui.field('Library choice').value).toBe('gender')
+    expect(restored.read().data?.fields).toEqual(['hair', 'gender'])
   })
 
   it('keeps both inventory edits and the selected entry through draft recovery', async () => {
@@ -7341,16 +7339,17 @@ describe('scene inspector registry', () => {
         state: [{ path: ['outfit'], value: 'plain' }],
         actions: {},
       }
+      manifest.choices = ['outfit']
+      documents['choices/outfit.json'] = {
+        'schema-version': '1.0.0',
+        id: 'outfit',
+        label: 'Outfit',
+        path: ['outfit'],
+        options: [{ id: 'plain', label: 'Plain' }],
+        default: 'plain',
+      }
       manifest.characterProfile = {
-        fields: [
-          {
-            id: 'outfit',
-            label: 'Outfit',
-            path: ['outfit'],
-            options: [{ id: 'plain', label: 'Plain' }],
-            default: 'plain',
-          },
-        ],
+        fields: ['outfit'],
         portrait: { visual: 'body' },
       }
     }
@@ -7406,7 +7405,7 @@ describe('scene inspector registry', () => {
     const mount = () => {
       const ui = panel()
 
-      const editor = bindFormLibrary(
+      const editor = bindChoiceLibrary(
         ui.root.asElement(),
         (command) => ui.commands.push(command),
         editorLocalization().t,
@@ -7419,11 +7418,10 @@ describe('scene inspector registry', () => {
     }
 
     const first = mount()
-    first.ui.click('New blank form')
-    first.ui.edit('ID', 'unfinished ID')
-    first.ui.edit('Element to add', 'choice')
-    first.ui.click('Add first element')
+    first.ui.click('Create choice')
+    first.ui.edit('Choice ID', 'unfinished ID')
     first.ui.edit('State field', '["outfit"]')
+    first.ui.edit('Option ID', 'plain')
     first.ui.click('Add option')
     first.ui.edit('Option ID', 'coat')
     first.ui.edit('Option wording', 'Winter coat')
@@ -7431,22 +7429,20 @@ describe('scene inspector registry', () => {
     const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(first.ui.root.asElement())))
     const { ui, editor } = mount()
     expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
-    expect(ui.field('ID').value).toBe('unfinished ID')
+    expect(ui.field('Choice ID').value).toBe('unfinished ID')
     expect(ui.field('Option wording').value).toBe('Winter coat')
     expect(ui.field('Default answer').value).toBe('coat')
-    ui.click('Create form')
+    ui.click('Save choice')
     expect(ui.commands).toHaveLength(0)
     expect(editor.hasDrafts()).toBe(true)
-    ui.edit('ID', 'wardrobe')
-    ui.click('Create form')
+    ui.edit('Choice ID', 'wardrobe')
+    ui.click('Save choice')
     const result = applyCommand(source, ui.commands[0]!)
-    expect(result.changedFiles.sort()).toEqual(['forms/wardrobe.json', 'game.json'])
-    expect(inspectProject(result.project).forms?.wardrobe?.rows[0]?.[0]?.[0]).toMatchObject({
+    expect(result.changedFiles.sort()).toEqual(['choices/wardrobe.json', 'game.json'])
+    expect(inspectProject(result.project).choices?.wardrobe).toMatchObject({
       default: 'coat',
-      options: [{ id: 'option' }, { id: 'coat', label: 'Winter coat' }],
+      options: [{ id: 'plain' }, { id: 'coat', label: 'Winter coat' }],
     })
-    first.editor.dispose()
-    editor.dispose()
   })
 
   it('keeps scene preview controls on refresh and returns a canceled creation to the library', async () => {
@@ -7531,51 +7527,53 @@ describe('scene inspector registry', () => {
     )
 
     const view = inspectProject(await sample('market-value'))
-    editor.render(
-      {
-        ...ui.initial,
-        view: {
-          ...view,
-          forms: {
-            survey: {
-              'schema-version': '1.0.0',
-              id: 'survey',
-              label: 'Survey',
-              rows: [
-                [
-                  [
-                    {
-                      type: 'choice',
-                      label: 'Weather',
-                      path: ['weather'],
-                      default: 'sun',
-                      options: [
-                        { id: 'sun', label: 'Sun' },
-                        { id: 'rain', label: 'Rain' },
-                      ],
-                    },
-                    { type: 'text', label: 'Name', path: ['name'], default: '' },
-                  ],
-                ],
-              ],
-            },
-          },
-        },
+    view.choices = {
+      ...view.choices,
+      weather: {
+        'schema-version': '1.0.0',
+        id: 'weather',
+        label: 'Weather',
+        path: ['weather'],
+        default: 'sun',
+        options: [
+          { id: 'sun', label: 'Sun' },
+          { id: 'rain', label: 'Rain' },
+        ],
       },
-      true,
-    )
+    }
+    view.forms = {
+      survey: {
+        'schema-version': '1.0.0',
+        id: 'survey',
+        label: 'Survey',
+        rows: [
+          [
+            [
+              { type: 'choice', choice: 'weather' },
+              { type: 'text', label: 'Name', path: ['name'], default: '' },
+            ],
+          ],
+        ],
+      },
+    }
+    editor.render({ ...ui.initial, view }, true)
     editor.open('survey')
 
     const answer = (key: string) =>
-      ui.root.all().find((node) => node.name === JSON.stringify([key]))!
+      ui.root.all().find((node) => node.name === (key === 'weather' ? key : JSON.stringify([key])))!
 
     answer('weather').value = 'rain'
     answer('weather').dispatchEvent(new Event('change'))
     answer('name').value = 'Robin'
     answer('name').dispatchEvent(new Event('input'))
-    ui.edit('Option', '1')
-    expect(answer('weather').value).toBe('rain')
-    ui.click('Remove option')
+    const weather = view.choices.weather!
+
+    const changed = {
+      ...view,
+      choices: { weather: { ...weather, options: weather.options.slice(0, 1) } },
+    }
+
+    editor.render({ ...ui.initial, view: changed }, true)
     expect(answer('weather').value).toBe('sun')
     expect(answer('name').value).toBe('Robin')
     editor.dispose()
@@ -7595,21 +7593,19 @@ describe('scene inspector registry', () => {
 
     editor.render(state, true)
     editor.open('appearance')
-    expect(ui.field('Character profile field').value).toBe('gender')
+    expect(ui.field('Library choice').value).toBe('gender')
     expect(
-      ui.root
-        .all()
-        .filter((node) => node.tagName === 'label' && node.ownText === 'Character profile field'),
+      ui.root.all().filter((node) => node.tagName === 'label' && node.ownText === 'Library choice'),
     ).toHaveLength(1)
     ui.edit('Selected element', '4')
     ui.click('Move up')
-    expect(ui.field('Character profile field').value).toBe('hair-color')
+    expect(ui.field('Library choice').value).toBe('hair-color')
     const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
     ui.click('Discard changes')
     expect(editor.hasDrafts()).toBe(false)
     expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
     expect(ui.field('Selected element').value).toBe('3')
-    ui.edit('Character profile field', 'gender')
+    ui.edit('Library choice', 'gender')
     ui.click('Save form')
     editor.render(
       {
@@ -7628,13 +7624,13 @@ describe('scene inspector registry', () => {
     )
     expect(ui.field('Selected element').value).toBe('3')
     expect(editor.hasDrafts()).toBe(true)
-    ui.edit('Character profile field', 'hair-color')
+    ui.edit('Library choice', 'hair-color')
     ui.click('Save form')
     const result = applyCommand(source, ui.commands.at(-1)!)
     expect(result.changedFiles).toEqual(['forms/appearance.json'])
     expect(inspectProject(result.project).forms?.appearance?.rows[0]?.[1]?.[2]).toEqual({
-      type: 'profile-field',
-      field: 'hair-color',
+      type: 'choice',
+      choice: 'hair-color',
     })
     editor.dispose()
   })

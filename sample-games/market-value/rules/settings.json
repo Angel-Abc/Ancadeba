@@ -1,0 +1,9 @@
+{
+  "state": [
+    {
+      "path": ["settings", "difficulty"],
+      "value": "normal"
+    }
+  ],
+  "actions": {}
+}

@@ -431,7 +431,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     'ancadeba_inspect_game',
     {
       description:
-        'Read game metadata, scene summaries, rules, inventory, maps, forms, combat, leveling, dialogues, quests, input, localization catalogs, stylesheet text, assets, diagnostics, and the current revision. Use this revision for an edit; inspect a scene for full component definitions.',
+        'Read game metadata, scene summaries, rules, inventory, maps, choices, forms, combat, leveling, dialogues, quests, input, localization catalogs, stylesheet text, assets, diagnostics, and the current revision. Use this revision for an edit; inspect a scene for full component definitions.',
       inputSchema: z.strictObject({}),
       outputSchema: resultSchema(advertisedGameSummarySchema),
       annotations: readAnnotations,
@@ -485,7 +485,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     commandTool,
     {
       description:
-        'Save one editor command to the active game using expectedRevision from inspection. Supports all shared editor commands, including forms, rules, inventory/items, maps/layers/tilesets, dialogue/quests, combat, leveling, shops, input, components and scene structure, localization, graphics and stylesheets. Discover available command types and examples with ancadeba_get_capabilities, and read the complete fields of a command with ancadeba_get_command_schema. The full command is validated before saving; failures list property paths. Edits save immediately. Project paths and server URLs cannot be supplied. Inspect after conflicts or uncertain outcomes; do not retry automatically.',
+        'Save one editor command to the active game using expectedRevision from inspection. Supports all shared editor commands, including choices, forms, rules, inventory/items, maps/layers/tilesets, dialogue/quests, combat, leveling, shops, input, components and scene structure, localization, graphics and stylesheets. Discover available command types and examples with ancadeba_get_capabilities, and read the complete fields of a command with ancadeba_get_command_schema. The full command is validated before saving; failures list property paths. Edits save immediately. Project paths and server URLs cannot be supplied. Inspect after conflicts or uncertain outcomes; do not retry automatically.',
       inputSchema: mcpCommandInputSchema,
       outputSchema: resultSchema(changeSummarySchema),
       annotations: writeAnnotations,

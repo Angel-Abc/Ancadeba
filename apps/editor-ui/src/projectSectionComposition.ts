@@ -5,6 +5,7 @@ import { type ProjectSectionDefinition } from './projectSectionRegistry.js'
 import { builtinSectionDefinitions } from './projectBuiltinSections.js'
 import { bindProjectForms } from './projectForms.js'
 import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
+import { bindChoiceLibrary } from './choiceLibrary.js'
 import { bindLevelingEditor } from './levelingEditor.js'
 import { bindLocalizationEditor } from './localizationEditor.js'
 import { bindMapEditor } from './mapEditor.js'
@@ -82,6 +83,19 @@ export function createProjectSections({
   const rulesElement = treeElement && root.querySelector<HTMLElement>('#rules-panel')
   const libraryElement = treeElement && root.querySelector<HTMLElement>('#form-library')
 
+  const choicesElement = treeElement && root.querySelector<HTMLElement>('#choice-library')
+
+  const choiceLibrary = choicesElement
+    ? bindChoiceLibrary(
+        choicesElement,
+        (command) => {
+          void controller.save(command)
+        },
+        t,
+        confirmDelete,
+      )
+    : undefined
+
   const formLibrary = libraryElement
     ? bindFormLibrary(
         libraryElement,
@@ -153,6 +167,7 @@ export function createProjectSections({
 
   const sections = [
     ...projectTreeSections,
+    ...(choiceLibrary ? [{ id: 'choices', labelKey: 'choices.heading', nodes: () => [] }] : []),
     ...(mapElement ? [{ id: 'maps', labelKey: 'maps.heading', nodes: mapFileNodes }] : []),
     ...(formLibrary
       ? [
@@ -697,6 +712,7 @@ export function createProjectSections({
     componentEditor,
     storyEditor,
     formLibrary,
+    choiceLibrary,
     mapEditor,
     repairEditor,
     sceneControls,

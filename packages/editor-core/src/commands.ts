@@ -1,5 +1,6 @@
 import {
   formSchema,
+  choiceSchema,
   dialogueSchema,
   questSchema,
   questLogComponentSchema,
@@ -283,6 +284,8 @@ export const commandSchema = z.discriminatedUnion('type', [
     sceneId: gameIdSchema,
     componentId: gameIdSchema,
   }),
+  z.strictObject({ type: z.literal('game.upsertChoice'), choice: choiceSchema }),
+  z.strictObject({ type: z.literal('game.removeChoice'), choiceId: gameIdSchema }),
   z.strictObject({ type: z.literal('game.upsertForm'), form: formSchema }),
   z.strictObject({ type: z.literal('game.removeForm'), formId: gameIdSchema }),
   z.strictObject({ type: z.literal('game.upsertDialogue'), dialogue: dialogueSchema }),
@@ -874,6 +877,21 @@ export const capabilities = {
         scenarioId: 'survive',
       },
     },
+    {
+      type: 'game.upsertChoice',
+      example: {
+        type: 'game.upsertChoice',
+        choice: {
+          'schema-version': '1.0.0',
+          id: 'difficulty',
+          label: 'Difficulty',
+          path: ['difficulty'],
+          options: [{ id: 'normal', label: 'Normal' }],
+          default: 'normal',
+        },
+      },
+    },
+    { type: 'game.removeChoice', example: { type: 'game.removeChoice', choiceId: 'difficulty' } },
     {
       type: 'game.upsertForm',
       example: {

@@ -1,3 +1,4 @@
+import type { ChoiceDefinition } from './choices.js'
 import { assertGraphicReference, type AssetCatalog } from './assets.js'
 import type { GameDefinition } from './game.js'
 import { ruleStateType, type GameRulesDefinition } from './rules.js'
@@ -9,6 +10,7 @@ export function characterProfileIssues(
   scenes: ReadonlyMap<string, SceneDefinition>,
   rules: GameRulesDefinition,
   assets: AssetCatalog | undefined,
+  choices: ReadonlyMap<string, ChoiceDefinition>,
 ): RuleIssue[] {
   const issues: RuleIssue[] = []
   const profile = game.characterProfile
@@ -19,19 +21,22 @@ export function characterProfileIssues(
   }
 
   if (profile) {
-    for (const [index, field] of profile.fields.entries()) {
-      const state = fields.get(JSON.stringify(field.path))
+    const paths = new Set<string>()
 
-      if (
-        !state ||
-        typeof state.value !== 'string' ||
-        !field.options.some(({ id }) => id === state.value)
-      )
-        add(
-          'game.json',
-          ['characterProfile', 'fields', index, 'path'],
-          'Choose a Rules text field initialized to a valid option ID',
-        )
+    for (const [index, id] of profile.fields.entries()) {
+      const choice = choices.get(id)
+      const location = ['characterProfile', 'fields', index]
+
+      if (!choice) {
+        add('game.json', location, `Unknown library choice: ${id}`)
+        continue
+      }
+
+      const path = JSON.stringify(choice.path)
+
+      if (paths.has(path))
+        add('game.json', location, 'Choose distinct Rules paths for profile fields')
+      paths.add(path)
     }
 
     try {

@@ -7,8 +7,8 @@
   "screen": {
     "type": "grid",
     "grid": {
-      "rows": 12,
-      "columns": 16
+      "rows": 32,
+      "columns": 32
     }
   },
   "components": [
@@ -16,7 +16,7 @@
       "id": "title",
       "type": "text",
       "placement": {
-        "row": 2,
+        "row": 3,
         "column": 2,
         "rowSpan": 3,
         "columnSpan": 10
@@ -25,52 +25,56 @@
       "presentation": {
         "variant": "heading",
         "align": "start"
-      }
+      },
+      "cssClasses": ["much-larger"]
     },
     {
       "id": "play",
       "type": "button",
       "placement": {
-        "row": 5,
+        "row": 8,
         "column": 2,
-        "rowSpan": 2,
-        "columnSpan": 5
+        "rowSpan": 3,
+        "columnSpan": 7
       },
       "label": "New game",
       "action": {
         "type": "enter-scene",
         "scene": "create-character"
-      }
+      },
+      "cssClasses": ["larger"]
     },
     {
       "id": "load",
       "type": "button",
       "placement": {
-        "row": 7,
+        "row": 12,
         "column": 2,
-        "rowSpan": 2,
-        "columnSpan": 5
+        "rowSpan": 3,
+        "columnSpan": 7
       },
       "label": "Load game",
       "action": {
         "type": "enter-scene",
         "scene": "load"
-      }
+      },
+      "cssClasses": ["larger"]
     },
     {
       "id": "settings",
       "type": "button",
       "placement": {
-        "row": 9,
+        "row": 16,
         "column": 2,
-        "rowSpan": 2,
-        "columnSpan": 5
+        "rowSpan": 3,
+        "columnSpan": 7
       },
       "label": "Settings",
       "action": {
         "type": "enter-scene",
         "scene": "settings"
-      }
+      },
+      "cssClasses": ["larger"]
     },
     {
       "id": "shoreline",
@@ -78,8 +82,8 @@
       "placement": {
         "row": 1,
         "column": 1,
-        "rowSpan": 12,
-        "columnSpan": 16
+        "rowSpan": 32,
+        "columnSpan": 32
       },
       "image": "shoreline-at-dawn",
       "fit": "cover"

@@ -1,0 +1,21 @@
+{
+  "schema-version": "1.0.0",
+  "id": "hairstyle",
+  "label": "Hairstyle",
+  "path": ["character", "hairstyle"],
+  "options": [
+    {
+      "id": "crop",
+      "label": "Cropped"
+    },
+    {
+      "id": "waves",
+      "label": "Wavy"
+    },
+    {
+      "id": "tied",
+      "label": "Tied back"
+    }
+  ],
+  "default": "crop"
+}

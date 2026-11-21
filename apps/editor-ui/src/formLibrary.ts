@@ -45,7 +45,6 @@ const selectionSchema = z.object({
   row: z.number(),
   column: z.number(),
   element: z.number(),
-  option: z.number(),
 })
 
 export function bindFormLibrary(
@@ -199,7 +198,7 @@ export function bindFormLibrary(
 
     if (key === 'id') return t('forms.invalidId')
 
-    if (key === 'field' || path.includes('path')) return t('forms.invalidBinding')
+    if (key === 'choice' || path.includes('path')) return t('forms.invalidBinding')
 
     if (key === 'default') return t('forms.invalidDefault')
 
@@ -208,8 +207,6 @@ export function bindFormLibrary(
     if (kind === 'portrait') return t('forms.invalidPortrait')
 
     if (typeof key === 'string' && key.endsWith('Key')) return t('forms.invalidKey')
-
-    if (key === 'options') return t('forms.invalidOption')
 
     return t('forms.invalidWording')
   }
@@ -232,28 +229,10 @@ export function bindFormLibrary(
         row: r,
         column: col,
         element: i,
-        option: path[4] === 'options' && typeof path[5] === 'number' ? path[5] : 0,
       })
 
-      if (
-        element.type === 'choice' &&
-        !element.options.length &&
-        (path[4] === 'default' || path[4] === 'options')
-      ) {
-        location.splice(4, location.length - 4, 'options')
-      }
-
       if (path.length === 4) {
-        if (element.type === 'choice' && reason === 'local') {
-          const duplicate = element.options.findIndex(
-            (o, n) => element.options.findIndex((v) => v.id === o.id) !== n,
-          )
-
-          if (duplicate >= 0) {
-            selection.option = duplicate
-            location.push('options', duplicate, 'id')
-          } else location.push('default')
-        } else if (kind === 'profile-field') location.push('field')
+        if (kind === 'choice') location.push('choice')
         else if (kind === 'graphic') location.push('visual')
         else if (kind !== 'portrait') location.push('path')
       }
@@ -441,7 +420,6 @@ export function bindFormLibrary(
         project,
         element,
         ['rows', selection.row, selection.column, selection.element],
-        selection,
         numberText,
         draw,
       )

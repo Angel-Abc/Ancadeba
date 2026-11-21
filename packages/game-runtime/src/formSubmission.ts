@@ -40,7 +40,7 @@ function prepareSubmission(
 
   const fields = definition.rows
     .flat(2)
-    .flatMap((element) => formField(element, game.data.characterProfile) ?? [])
+    .flatMap((element) => formField(element, game.data.choices) ?? [])
 
   if (fields.length !== answers.size) throw new Error(text('form.incomplete'))
 
