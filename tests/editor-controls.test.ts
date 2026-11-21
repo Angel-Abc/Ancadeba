@@ -45,6 +45,7 @@ import { buildProjectTree, flattenProjectTree } from '../apps/editor-ui/src/proj
 import { componentUnavailable, inspectorTypes } from '../apps/editor-ui/src/componentRegistry.js'
 import { bindComponentEditor } from '../apps/editor-ui/src/componentEditor.js'
 import { bindSceneControls } from '../apps/editor-ui/src/sceneControls.js'
+import { bindInspectorActions } from '../apps/editor-ui/src/sceneNavigation.js'
 import { bindComponentClipboard } from '../apps/editor-ui/src/componentClipboard.js'
 import { editorLocalization } from '../apps/editor-ui/src/localization.js'
 import { bindStatusPanelEditor } from '../apps/editor-ui/src/statusPanelEditor.js'
@@ -325,7 +326,9 @@ class Control extends EventTarget {
     return [this, ...this.children.flatMap((child) => child.all())]
   }
   querySelector(selector: string): Control | null {
-    return this.all().find((child) => child.tagName === selector) ?? null
+    return (
+      this.all().find((child) => child.tagName === selector || '#' + child.id === selector) ?? null
+    )
   }
   querySelectorAll(selector: string): Control[] {
     return this.all()
@@ -1104,6 +1107,58 @@ function sceneControlsPanel() {
 }
 
 describe('scene controls', () => {
+  it('reveals the selected component’s action fields after leaving the creation form', () => {
+    const { root, controls, state, confirm, commands, click } = sceneControlsPanel()
+    const document = root.ownerDocument
+    const disclosure = document.createElement('div')
+    const toggle = document.createElement('button')
+    const fields = document.createElement('div')
+    fields.id = 'inspector-action-fields'
+    fields.append(root)
+    disclosure.append(toggle, fields)
+    const t = editorLocalization().t
+    const actions = bindInspectorActions(disclosure.asElement(), t)
+    const view = state().view
+    const scene = view.scenes.find((entry) => entry.id === 'shop')!
+
+    const created = textComponentSchema.parse({
+      id: 'greeting',
+      type: 'text',
+      text: 'Hello',
+      placement: { row: 1, column: 1 },
+    })
+
+    scene.components.push(created)
+    const nodes = flattenProjectTree(buildProjectTree(view, t))
+    actions.render(nodes.find((node) => node.key === 'component-new:shop')!)
+    expect(disclosure.hidden).toBe(true)
+    controls.render(
+      { ...state(), view, preserveDrafts: true, lastCommand: 'scene.upsertComponent' },
+      true,
+    )
+    confirm(true)
+
+    for (const id of [created.id, 'description']) {
+      const node = nodes.find((entry) => entry.key === 'component:shop:' + id)!
+      controls.navigate(node.parentId, node.id)
+      actions.render(node)
+      expect(disclosure.hidden).toBe(false)
+      expect(fields.hidden).toBe(true)
+      toggle.dispatchEvent(new Event('click'))
+      expect(toggle.attributes.get('aria-expanded')).toBe('true')
+      actions.render(node)
+      expect(fields.hidden).toBe(false)
+      click('Delete component')
+      expect(commands.at(-1)).toEqual({
+        type: 'scene.removeComponent',
+        sceneId: 'shop',
+        componentId: id,
+      })
+    }
+
+    actions.dispose()
+  })
+
   it('duplicates and confirms component deletion through shortcuts, protecting unrelated and local drafts', () => {
     const { controls, commands, allow, confirm, persist, edit, click } = sceneControlsPanel()
     expect(controls.shortcut('delete')).toBe(false)

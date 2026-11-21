@@ -364,9 +364,6 @@ export function bindSceneControls(
       replacement = saved.replacement
       dirty = true
       render()
-      const disclosure = root.closest?.('details')
-
-      if (disclosure) disclosure.open = true
     },
     'scene-action-picker',
   )

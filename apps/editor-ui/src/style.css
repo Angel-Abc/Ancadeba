@@ -2268,7 +2268,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   background: transparent;
 }
 #component-editor summary,
-#inspector-actions > summary {
+#inspector-actions > button {
   cursor: pointer;
   font-weight: 600;
   padding: 0.35rem 0;
@@ -2399,6 +2399,18 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 #inspector-actions {
   margin-block: 1rem;
+}
+#inspector-actions > button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: start;
+}
+#inspector-actions > button::before {
+  content: '▸ ' / '';
+}
+#inspector-actions > button[aria-expanded='true']::before {
+  content: '▾ ' / '';
 }
 @container (max-width: 32rem) {
   #component-editor :is(.inspector-fields, .inspector-fields fieldset, .form-field-row) {

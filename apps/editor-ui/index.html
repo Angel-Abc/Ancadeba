@@ -465,11 +465,17 @@
                 <pre id="component-json"></pre>
               </section>
               <!-- Structural actions follow the selected editor so its fields come first. -->
-              <details id="inspector-actions" hidden>
-                <summary></summary>
-                <section id="scene-controls" hidden></section>
-                <section id="component-clipboard" hidden></section>
-              </details>
+              <div id="inspector-actions" hidden>
+                <button
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="inspector-action-fields"
+                ></button>
+                <div id="inspector-action-fields" hidden>
+                  <section id="scene-controls" hidden></section>
+                  <section id="component-clipboard" hidden></section>
+                </div>
+              </div>
             </div>
           </section>
           <div

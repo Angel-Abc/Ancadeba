@@ -6,7 +6,7 @@ import {
   type ProjectSectionDefinition,
 } from './projectSectionRegistry.js'
 import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
-import { renderSceneNavigation } from './sceneNavigation.js'
+import { bindInspectorActions, renderSceneNavigation } from './sceneNavigation.js'
 import { compactWorkspaceQuery } from './workspaceLayout.js'
 import { refreshSaveStatuses, saveActiveDraft } from './formSaveStatus.js'
 import { captureEditorDrafts, restoreEditorDrafts } from './editorDraftState.js'
@@ -273,6 +273,8 @@ export function bindProjectPanel(
   const repairPanel = treeElement && root.querySelector<HTMLElement>('#project-repair')
   const sceneList = treeElement && root.querySelector<HTMLElement>('#scene-list')
   const sceneActions = treeElement && root.querySelector<HTMLElement>('#scene-header-actions')
+  const operations = treeElement && root.querySelector<HTMLElement>('#inspector-actions')
+  const inspectorActions = operations && bindInspectorActions(operations, t)
   let rail: ReturnType<typeof bindSectionRail> | undefined
 
   const showSelection = (activate = true) => {
@@ -295,21 +297,7 @@ export function bindProjectPanel(
         busy,
         fields.disabled,
       )
-    const operations = root.querySelector<HTMLDetailsElement>('#inspector-actions')
-
-    if (operations) {
-      operations.hidden = node.kind !== 'component' && node.kind !== 'scene'
-
-      if (operations.dataset.selection !== node.key) {
-        operations.open = false
-        operations.dataset.selection = node.key
-      }
-
-      const summary = operations.querySelector('summary')
-
-      if (summary)
-        summary.textContent = t(node.kind === 'component' ? 'component.actions' : 'scene.actions')
-    }
+    inspectorActions?.render(node)
 
     const source = root.querySelector<HTMLDetailsElement>('#data-file-source')
 
@@ -911,6 +899,9 @@ export function bindProjectPanel(
       ) ?? { key: 'game', section: 'game', kind: 'section', label: t('project.properties') }
       showSelection()
       tree?.render(view, busy, selection.key)
+
+      if (draft.drafts['scene-controls'] || draft.drafts['component-clipboard'])
+        inspectorActions?.setExpanded(true)
       const failed = restoreEditorDrafts(root, draft.drafts)
       registry.afterRestore()
       renderHistoryControls()
@@ -1007,6 +998,7 @@ export function bindProjectPanel(
       controller.dispose()
 
       tree?.dispose()
+      inspectorActions?.dispose()
       rail?.dispose()
       unsubscribeLanguage?.()
 
