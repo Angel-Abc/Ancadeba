@@ -143,6 +143,7 @@ export function bindAppearanceLibrary(
     )
 
     if (!catalog || !visuals.length) {
+      disposeViews()
       root.append(t('graphic.artFirst'))
 
       return
@@ -167,8 +168,12 @@ export function bindAppearanceLibrary(
       }),
     )
 
-    root.append(art)
     const preset = library.presets[presetId]
+
+    previewCharacter()
+
+    if (preset) root.append(preview)
+    root.append(art)
 
     if (!preset) return
     art.append(
@@ -200,8 +205,7 @@ export function bindAppearanceLibrary(
     )?.bounds
 
     if (bounds) {
-      const crop = group(t('appearance.frame'))
-      crop.append(
+      art.append(
         select(
           t('appearance.frame'),
           preset.portraitCrop ? 'crop' : 'full',
@@ -217,7 +221,9 @@ export function bindAppearanceLibrary(
         ),
       )
 
-      if (preset.portraitCrop)
+      if (preset.portraitCrop) {
+        const crop = controls.row()
+
         for (const key of ['x', 'y', 'width', 'height'] as const)
           crop.append(
             input(
@@ -230,7 +236,8 @@ export function bindAppearanceLibrary(
               'number',
             ),
           )
-      art.append(crop)
+        art.append(crop)
+      }
     }
 
     const composition = catalog.compositions[preset.visual]
@@ -261,17 +268,20 @@ export function bindAppearanceLibrary(
     }
 
     art.append(
-      graphicAppearanceForm(
-        controls,
-        view,
-        catalog,
-        preset.visual,
-        preset.appearance,
-        true,
-        change,
-        refreshPreview,
-        artEntry,
-        draw,
+      controls.section(
+        'preset-appearance',
+        graphicAppearanceForm(
+          controls,
+          view,
+          catalog,
+          preset.visual,
+          preset.appearance,
+          true,
+          change,
+          refreshPreview,
+          artEntry,
+          draw,
+        ),
       ),
     )
 
@@ -286,12 +296,7 @@ export function bindAppearanceLibrary(
     root.append(people)
     const character = library.characters[characterId]
 
-    if (!character) {
-      root.append(preview)
-      previewCharacter()
-
-      return
-    }
+    if (!character) return
 
     people.append(
       select(
@@ -326,23 +331,24 @@ export function bindAppearanceLibrary(
 
     if (characterPreset)
       people.append(
-        personalAppearanceFields(
-          controls,
-          view,
-          catalog,
-          characterPreset,
-          character,
-          slotId,
-          (id) => {
-            slotId = id
-            draw()
-          },
-          change,
-          refreshPreview,
+        controls.section(
+          'character-overrides',
+          personalAppearanceFields(
+            controls,
+            view,
+            catalog,
+            characterPreset,
+            character,
+            slotId,
+            (id) => {
+              slotId = id
+              draw()
+            },
+            change,
+            refreshPreview,
+          ),
         ),
       )
-    root.append(preview)
-    previewCharacter()
   }
 
   return {
