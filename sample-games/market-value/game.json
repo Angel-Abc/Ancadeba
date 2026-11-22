@@ -84,7 +84,14 @@
               }
             }
           }
-        }
+        },
+        "portraitCrop": {
+          "x": 28,
+          "y": 4,
+          "width": 72,
+          "height": 72
+        },
+        "equipment": {}
       }
     },
     "characters": {

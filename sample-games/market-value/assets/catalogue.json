@@ -42,7 +42,7 @@
     },
     "portrait-hair-crop": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-crop-20f0b64b-5eb1-4b78-aca7-f9f1e8ccb3e8.svg",
+      "source": "assets/images/portrait-hair-crop-c289d966-3b2e-476c-b82c-2510ce66f1e1.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -57,7 +57,7 @@
     },
     "portrait-hair-waves": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-waves-275ef373-0e80-4fe6-b198-bf63a76c4854.svg",
+      "source": "assets/images/portrait-hair-waves-71d17592-e321-4f78-a8cf-da50df11fcc3.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -72,7 +72,7 @@
     },
     "portrait-hair-tied": {
       "format": "svg",
-      "source": "assets/images/portrait-hair-tied-9be5ab4f-306c-4450-bb74-c2e3aece6115.svg",
+      "source": "assets/images/portrait-hair-tied-8b29d69b-bb5a-411c-b64f-6f10280e51cb.svg",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -156,6 +156,33 @@
         "skin": "#be886c"
       },
       "palettes": {}
+    },
+    "castaway-shore": {
+      "format": "svg",
+      "source": "assets/images/castaway-shore-cc5899dd-9537-49d1-8a4c-7b6693e907a9.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 296
+      },
+      "colors": {},
+      "palettes": {}
+    },
+    "castaway-body": {
+      "format": "svg",
+      "source": "assets/images/castaway-body-21c74c77-aeff-44f1-bb5a-aa411cbcc4b3.svg",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 296
+      },
+      "colors": {
+        "skin": "#be886c",
+        "shadow": "#92614f"
+      },
+      "palettes": {}
     }
   },
   "parts": {
@@ -163,9 +190,27 @@
       "bounds": {
         "x": 0,
         "y": 0,
-        "width": 64,
-        "height": 64
+        "width": 128,
+        "height": 296
       },
+      "pieces": [
+        {
+          "id": "body",
+          "image": "castaway-body",
+          "layer": "body",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "skin": "skin",
+            "shadow": "shadow"
+          }
+        }
+      ],
       "colors": {
         "skin": "#be886c",
         "shadow": "#92614f"
@@ -191,18 +236,7 @@
           "skin": "#694535",
           "shadow": "#472e26"
         }
-      },
-      "pieces": [
-        {
-          "id": "body",
-          "image": "portrait-body",
-          "layer": "body",
-          "slots": {
-            "skin": "skin",
-            "shadow": "shadow"
-          }
-        }
-      ]
+      }
     },
     "crop": {
       "bounds": {
@@ -211,6 +245,24 @@
         "width": 64,
         "height": 64
       },
+      "pieces": [
+        {
+          "id": "crop",
+          "image": "portrait-hair-crop",
+          "layer": "hair",
+          "anchor": "head",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ],
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
@@ -232,18 +284,7 @@
           "hair": "#a37f4f",
           "highlight": "#d4b575"
         }
-      },
-      "pieces": [
-        {
-          "id": "crop",
-          "image": "portrait-hair-crop",
-          "layer": "hair",
-          "slots": {
-            "hair": "hair",
-            "highlight": "highlight"
-          }
-        }
-      ]
+      }
     },
     "waves": {
       "bounds": {
@@ -252,6 +293,24 @@
         "width": 64,
         "height": 64
       },
+      "pieces": [
+        {
+          "id": "waves",
+          "image": "portrait-hair-waves",
+          "layer": "hair",
+          "anchor": "head",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ],
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
@@ -273,18 +332,7 @@
           "hair": "#a37f4f",
           "highlight": "#d4b575"
         }
-      },
-      "pieces": [
-        {
-          "id": "waves",
-          "image": "portrait-hair-waves",
-          "layer": "hair",
-          "slots": {
-            "hair": "hair",
-            "highlight": "highlight"
-          }
-        }
-      ]
+      }
     },
     "tied": {
       "bounds": {
@@ -293,6 +341,24 @@
         "width": 64,
         "height": 64
       },
+      "pieces": [
+        {
+          "id": "tied",
+          "image": "portrait-hair-tied",
+          "layer": "hair",
+          "anchor": "head",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {
+            "hair": "hair",
+            "highlight": "highlight"
+          }
+        }
+      ],
       "colors": {
         "hair": "#342a28",
         "highlight": "#5a4339"
@@ -314,18 +380,7 @@
           "hair": "#a37f4f",
           "highlight": "#d4b575"
         }
-      },
-      "pieces": [
-        {
-          "id": "tied",
-          "image": "portrait-hair-tied",
-          "layer": "hair",
-          "slots": {
-            "hair": "hair",
-            "highlight": "highlight"
-          }
-        }
-      ]
+      }
     },
     "woman": {
       "bounds": {
@@ -339,7 +394,7 @@
           "id": "face",
           "image": "portrait-face-woman",
           "layer": "face",
-          "anchor": "origin",
+          "anchor": "head",
           "sourceAnchor": {
             "x": 0,
             "y": 0
@@ -391,7 +446,7 @@
           "id": "face",
           "image": "portrait-face-man",
           "layer": "face",
-          "anchor": "origin",
+          "anchor": "head",
           "sourceAnchor": {
             "x": 0,
             "y": 0
@@ -443,7 +498,7 @@
           "id": "face",
           "image": "portrait-face-nonbinary",
           "layer": "face",
-          "anchor": "origin",
+          "anchor": "head",
           "sourceAnchor": {
             "x": 0,
             "y": 0
@@ -495,7 +550,7 @@
           "id": "face",
           "image": "portrait-face-undisclosed",
           "layer": "face",
-          "anchor": "origin",
+          "anchor": "head",
           "sourceAnchor": {
             "x": 0,
             "y": 0
@@ -534,6 +589,31 @@
           "shadow": "#472e26"
         }
       }
+    },
+    "shore": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 128,
+        "height": 296
+      },
+      "pieces": [
+        {
+          "id": "shore",
+          "image": "castaway-shore",
+          "layer": "shore",
+          "anchor": "origin",
+          "sourceAnchor": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": 1,
+          "rotation": 0,
+          "slots": {}
+        }
+      ],
+      "colors": {},
+      "palettes": {}
     }
   },
   "compositions": {
@@ -541,14 +621,18 @@
       "bounds": {
         "x": 0,
         "y": 0,
-        "width": 64,
-        "height": 64
+        "width": 128,
+        "height": 296
       },
-      "layers": ["body", "face", "hair"],
+      "layers": ["shore", "body", "face", "hair"],
       "anchors": {
         "origin": {
           "x": 0,
           "y": 0
+        },
+        "head": {
+          "x": 32,
+          "y": 9
         }
       },
       "slots": {
@@ -558,11 +642,15 @@
         },
         "face": {
           "parts": ["woman", "man", "nonbinary", "undisclosed"],
-          "default": "undisclosed"
+          "default": "woman"
         },
         "hair": {
           "parts": ["crop", "waves", "tied"],
-          "default": "crop"
+          "default": "waves"
+        },
+        "shore": {
+          "parts": ["shore"],
+          "default": "shore"
         }
       }
     }

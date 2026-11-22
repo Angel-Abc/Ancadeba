@@ -17,9 +17,9 @@
       "type": "text",
       "placement": {
         "row": 1,
-        "column": 2,
-        "rowSpan": 3,
-        "columnSpan": 9
+        "column": 8,
+        "rowSpan": 22,
+        "columnSpan": 18
       },
       "text": "You wake on a beach with wet sand against your cheek. A blinding headache makes you squeeze your eyes shut. You try to remember how you got here, then try to remember your own name. Nothing comes. A few scraps of fabric cling to your skin. They’re all you have.",
       "presentation": {
@@ -32,10 +32,10 @@
       "type": "button",
       "label": "Edit appearance",
       "placement": {
-        "row": 13,
-        "column": 11,
-        "rowSpan": 1,
-        "columnSpan": 5
+        "row": 17,
+        "column": 1,
+        "rowSpan": 3,
+        "columnSpan": 7
       },
       "action": {
         "type": "enter-scene",
@@ -46,10 +46,10 @@
       "id": "menu",
       "type": "button",
       "placement": {
-        "row": 12,
-        "column": 11,
-        "rowSpan": 1,
-        "columnSpan": 5
+        "row": 13,
+        "column": 1,
+        "rowSpan": 3,
+        "columnSpan": 7
       },
       "label": "Game menu (Escape)",
       "action": {
@@ -61,16 +61,16 @@
       "id": "coast-map",
       "type": "map-view",
       "placement": {
-        "row": 4,
-        "column": 2,
-        "rowSpan": 8,
-        "columnSpan": 14
+        "row": 23,
+        "column": 1,
+        "rowSpan": 10,
+        "columnSpan": 7
       },
       "map": "coast",
       "label": "Coast",
       "viewport": {
-        "columns": 24,
-        "rows": 14,
+        "columns": 10,
+        "rows": 8,
         "x": 0,
         "y": 0
       },
@@ -85,27 +85,71 @@
       "type": "inventory",
       "placement": {
         "row": 1,
-        "column": 11,
-        "rowSpan": 3,
-        "columnSpan": 5
+        "column": 26,
+        "rowSpan": 12,
+        "columnSpan": 7
       },
       "label": "Inventory",
       "owners": ["player"],
+      "characterPreviews": {},
       "readOnly": true
     },
     {
       "id": "pickup-help",
       "type": "text",
       "placement": {
-        "row": 12,
-        "column": 2,
-        "rowSpan": 1,
-        "columnSpan": 9
+        "row": 1,
+        "column": 1,
+        "rowSpan": 12,
+        "columnSpan": 7
       },
       "text": "Use arrow keys to move. Select an item beside you to pick it up.",
       "presentation": {
         "variant": "body",
         "align": "start"
+      }
+    },
+    {
+      "id": "event-log",
+      "type": "text",
+      "placement": {
+        "row": 23,
+        "column": 26,
+        "rowSpan": 10,
+        "columnSpan": 7
+      },
+      "text": "TODO: event log",
+      "presentation": {
+        "variant": "body",
+        "align": "start"
+      }
+    },
+    {
+      "id": "action-bar",
+      "type": "action-bar",
+      "placement": {
+        "row": 23,
+        "column": 8,
+        "rowSpan": 10,
+        "columnSpan": 18
+      },
+      "slots": {
+        "1": {
+          "label": "Pick up driftwood",
+          "action": {
+            "type": "interact-map",
+            "mapView": "coast-map",
+            "object": "driftwood"
+          }
+        },
+        "2": {
+          "label": "Pick up rope",
+          "action": {
+            "type": "interact-map",
+            "mapView": "coast-map",
+            "object": "rope"
+          }
+        }
       }
     }
   ]

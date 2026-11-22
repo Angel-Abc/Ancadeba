@@ -6,6 +6,60 @@
     [
       [
         {
+          "type": "graphic",
+          "visual": "castaway",
+          "appearance": {
+            "colors": {},
+            "visible": true,
+            "slots": {
+              "body": {
+                "colors": {},
+                "visible": true,
+                "bindings": {
+                  "palette": {
+                    "source": "game.state",
+                    "path": ["character", "skin-tone"]
+                  },
+                  "colors": {}
+                }
+              },
+              "face": {
+                "colors": {},
+                "visible": true,
+                "bindings": {
+                  "palette": {
+                    "source": "game.state",
+                    "path": ["character", "skin-tone"]
+                  },
+                  "colors": {}
+                },
+                "partBinding": {
+                  "source": "game.state",
+                  "path": ["character", "gender"]
+                }
+              },
+              "hair": {
+                "colors": {},
+                "visible": true,
+                "bindings": {
+                  "palette": {
+                    "source": "game.state",
+                    "path": ["character", "hair-color"]
+                  },
+                  "colors": {}
+                },
+                "partBinding": {
+                  "source": "game.state",
+                  "path": ["character", "hairstyle"]
+                }
+              }
+            }
+          },
+          "alt": "Full-length castaway"
+        }
+      ],
+      [
+        {
           "type": "portrait"
         }
       ],

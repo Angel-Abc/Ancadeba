@@ -77,3 +77,46 @@
     grid-column: 2 / span 10;
   }
 } */
+
+/* The two artwork panels share one character composition. */
+.ancadeba-form[data-component-id='creator'] .ancadeba-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 0.85fr) minmax(0, 1fr);
+  align-items: start;
+}
+.ancadeba-form[data-component-id='creator'] .ancadeba-form-column .ancadeba-graphic {
+  justify-self: center;
+  height: auto;
+  width: 100%;
+}
+.ancadeba-form[data-component-id='creator'] .ancadeba-form-column:first-child .ancadeba-graphic {
+  aspect-ratio: 128 / 296;
+  max-width: min(13rem, 24vh);
+}
+.ancadeba-form[data-component-id='creator'] .ancadeba-form-column:nth-child(2) .ancadeba-graphic {
+  aspect-ratio: 1;
+  max-width: 15rem;
+}
+@container (max-width: 34rem) {
+  .ancadeba-form[data-component-id='creator'] .ancadeba-form-row {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  }
+  .ancadeba-form[data-component-id='creator'] .ancadeba-form-column:last-child {
+    grid-column: 1 / -1;
+  }
+  .ancadeba-form[data-component-id='creator'] .ancadeba-form-column:first-child .ancadeba-graphic {
+    max-width: 6rem;
+  }
+}
+
+@container ge-scene (max-width: 36rem) {
+  .ancadeba-form[data-component-id='creator'],
+  .ancadeba-scene[data-scene-id='character'] {
+    font-size: 1rem;
+  }
+  [data-scene-id='character'] [data-component-id='paper-doll'] {
+    align-self: start;
+    width: 100%;
+    aspect-ratio: 128 / 296;
+  }
+}

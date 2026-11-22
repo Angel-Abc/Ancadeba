@@ -3,19 +3,53 @@
   "id": "character",
   "title": "Character",
   "type": "stand-alone",
-  "screen": { "type": "grid", "grid": { "rows": 12, "columns": 16 } },
+  "screen": {
+    "type": "grid",
+    "grid": {
+      "rows": 12,
+      "columns": 16
+    }
+  },
   "components": [
     {
       "id": "sheet",
       "type": "character-sheet",
-      "placement": { "row": 1, "column": 2, "rowSpan": 10, "columnSpan": 14 }
+      "placement": {
+        "row": 1,
+        "column": 6,
+        "rowSpan": 10,
+        "columnSpan": 10
+      },
+      "label": "Character",
+      "rows": []
     },
     {
       "id": "back",
       "type": "button",
       "label": "Back to game menu",
-      "placement": { "row": 12, "column": 5, "rowSpan": 1, "columnSpan": 8 },
-      "action": { "type": "open-menu", "scene": "game-menu" }
+      "placement": {
+        "row": 12,
+        "column": 5,
+        "rowSpan": 1,
+        "columnSpan": 8
+      },
+      "action": {
+        "type": "open-menu",
+        "scene": "game-menu"
+      }
+    },
+    {
+      "id": "paper-doll",
+      "type": "character-view",
+      "placement": {
+        "row": 1,
+        "column": 2,
+        "rowSpan": 10,
+        "columnSpan": 4
+      },
+      "character": "castaway",
+      "view": "full-body",
+      "label": "Full-length castaway"
     }
   ]
 }
