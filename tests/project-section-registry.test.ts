@@ -116,6 +116,36 @@ describe('workspace section registry', () => {
     expect(activate).toHaveBeenCalledTimes(4)
   })
 
+  it('keeps the location of a hidden draft until it is saved, and clears old project routes', () => {
+    let dirty = true
+
+    const registry = new ProjectSectionRegistry([
+      definition({
+        id: 'items',
+        role: 'primary',
+        matches: ({ node }) => node.section === 'data',
+        hasDrafts: () => dirty,
+      }),
+    ])
+
+    registry.render(state, true)
+    registry.navigate(
+      projectSelection({
+        key: 'data-file:inventories:stock',
+        section: 'data',
+        kind: 'data-file',
+        label: 'stock',
+      }),
+    )
+    registry.navigate(selection('game'))
+    expect(registry.draftLocations()).toEqual([{ key: 'data-file:inventories:stock' }])
+    dirty = false
+    expect(registry.draftLocations()).toEqual([])
+    registry.render({ ...state, path: 'another' }, true)
+    dirty = true
+    expect(registry.draftLocations()).toEqual([{ key: 'items' }])
+  })
+
   it('reactivates the selected editor after a full field reset', () => {
     const activate = vi.fn()
     const refresh = vi.fn()

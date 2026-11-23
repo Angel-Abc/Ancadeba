@@ -117,6 +117,7 @@
   "export.dismiss": "Sluiten",
   "scene.new": "Nieuw scherm",
   "drafts.unsaved": "Niet-opgeslagen wijzigingen",
+  "drafts.locations": "Niet-opgeslagen wijzigingen ({count})",
   "drafts.clean": "Geen niet-opgeslagen wijzigingen",
   "export.button": "Exporteren",
   "repair.heading": "Project herstellen",

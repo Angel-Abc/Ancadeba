@@ -1,4 +1,4 @@
-import type { ProjectSelection } from './projectSectionRegistry.js'
+import type { DraftLocation, ProjectSelection } from './projectSectionRegistry.js'
 import { z } from 'zod'
 import { appearanceLibrarySchema, savingPolicySchema } from '@ancadeba/schemas'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
@@ -460,6 +460,24 @@ export function bindProjectForms(
     },
     selectedScene: () => scenes.value,
     hasDrafts: () => dirtyForms.size > 0,
+    draftLocations(): DraftLocation[] {
+      return [...dirtyForms].map((id) => {
+        if (id === metadata.id) return { key: 'game' }
+
+        if (id === create.id) return { key: 'scene-new' }
+        const grid = id === layout.id
+
+        return {
+          key: 'scene:' + scenes.value,
+          detail: t(grid ? 'scene.gridView' : 'scene.propertiesView'),
+          reveal() {
+            gridVisible = grid
+            showSceneView()
+            find(id).querySelector<HTMLButtonElement>('button[type="submit"]')?.focus()
+          },
+        }
+      })
+    },
     hasSceneDrafts: () => dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id),
     clear: () => dirtyForms.clear(),
     selectScene(id: string) {

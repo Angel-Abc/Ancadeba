@@ -117,6 +117,7 @@
   "export.dismiss": "Dismiss",
   "scene.new": "New scene",
   "drafts.unsaved": "Unsaved changes",
+  "drafts.locations": "Unsaved changes ({count})",
   "drafts.clean": "No unsaved changes",
   "export.button": "Export",
   "repair.heading": "Repair project",

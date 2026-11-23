@@ -45,6 +45,14 @@ class Node extends EventTarget {
   removeAttribute(name: string) {
     this.attributes.delete(name)
   }
+  get parentElement() {
+    return this.parent
+  }
+  toggleAttribute(name: string, force: boolean) {
+    if (force) this.attributes.set(name, '')
+    else this.attributes.delete(name)
+  }
+  focus() {}
   async decode() {}
   private storedValue = ''
   private text = ''
@@ -406,6 +414,7 @@ describe('asset draft save ownership', () => {
     }
 
     await loadImage(ui)
+    ui.controls.navigate('asset', 'cloth')
     select(ui, 'royal')
     await ui.edit('asset-preset-name', 'royal-review', 'asset-palettes')
     select(ui, 'ember')
@@ -416,13 +425,20 @@ describe('asset draft save ownership', () => {
     await loadImage(copy)
     const stored = JSON.parse(JSON.stringify(ui.drafts()))
     expect(restoreEditorDrafts(copy.root.asElement(), stored)).toEqual([])
+    expect(copy.controls.draftLocations?.('assets')).toMatchObject([
+      { key: 'asset:cloth', detail: 'Colors and presets › royal-review' },
+      { key: 'asset:cloth', detail: 'Colors and presets › ember' },
+    ])
     expect(copy.find('asset-preset').value).toBe('ember')
     await copy.submit('asset-palettes')
+    expect(copy.controls.draftLocations?.('assets')).toMatchObject([
+      { key: 'asset:cloth', detail: 'Colors and presets › royal-review' },
+    ])
     expect(copy.read().assets?.images.cloth).toMatchObject({
       colors: image.colors,
       palettes: { royal: definition.palettes.royal, ember: { fabric: '#ff2244' } },
     })
-    select(copy, 'royal')
+    copy.controls.draftLocations?.('assets')[0]?.reveal?.()
     expect(copy.find('asset-preset-name').value).toBe('royal-review')
     expect(copy.drafts()).toHaveProperty('asset-palettes')
   })

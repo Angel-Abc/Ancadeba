@@ -78,7 +78,9 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
   const add = (
     id: string,
     elementId: string | undefined,
-    binding: Pick<ProjectSectionParticipant, 'render' | 'hasDrafts' | 'dispose'> | undefined,
+    binding:
+      | Pick<ProjectSectionParticipant, 'render' | 'hasDrafts' | 'draftLocations' | 'dispose'>
+      | undefined,
     options: Partial<ProjectSectionParticipant> = {},
   ) => {
     if (!binding) return
@@ -121,7 +123,11 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
   add(
     'forms',
     undefined,
-    { hasDrafts: () => forms.hasDrafts(), dispose: () => forms.dispose() },
+    {
+      hasDrafts: () => forms.hasDrafts(),
+      draftLocations: () => forms.draftLocations(),
+      dispose: () => forms.dispose(),
+    },
     {
       setVisible: (visible) => forms.setVisible(visible),
       activate: (selection) => forms.activate(selection),
@@ -213,14 +219,11 @@ export function builtinSectionDefinitions(editors: BuiltinEditors): ProjectSecti
           : false,
     },
   })
-  let assetTarget = ''
   add('assets', 'assets-panel', editors.assetsPanel, {
     canNavigate: (selection) =>
       target(selection) !== 'assets' ||
-      assetTarget === selection.node.key ||
-      !editors.assetsPanel.hasDrafts(),
+      editors.assetsPanel.canNavigate(selection.node.kind, selection.node.id, selection.sceneId),
     activate: ({ node, sceneId }) => {
-      assetTarget = node.key
       editors.assetsPanel.navigate(node.kind, node.id, sceneId)
     },
   })

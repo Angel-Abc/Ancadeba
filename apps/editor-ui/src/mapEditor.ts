@@ -1055,6 +1055,7 @@ export function bindMapEditor(
     restoreDraft,
     currentMap: () => (creating ? undefined : selected),
     hasDrafts: () => dirty,
+    draftLocations: () => [{ key: creating ? 'map-new' : 'map:' + selected }],
     dispose: () => {
       board?.dispose()
       images?.dispose()

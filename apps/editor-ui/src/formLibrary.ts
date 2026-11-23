@@ -578,6 +578,12 @@ export function bindFormLibrary(
     canNavigate: (key?: string) =>
       !dirty || key === undefined || (original ? 'form:' + original : 'form-new') === key,
     hasDrafts: () => dirty,
+    draftLocations: (key: string) => [
+      {
+        key:
+          key === 'data-file:forms:' + original ? key : original ? 'form:' + original : 'form-new',
+      },
+    ],
     setVisible(visible: boolean) {
       if (root.hidden === !visible) return
       root.hidden = !visible

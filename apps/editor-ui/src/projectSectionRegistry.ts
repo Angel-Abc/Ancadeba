@@ -32,6 +32,13 @@ export interface SectionShortcuts {
   run(action: 'copy' | 'paste' | 'duplicate' | 'delete'): boolean
 }
 
+export interface DraftLocation {
+  /** Omitted for tools, such as project repair, that sit above every tree selection. */
+  key?: string
+  detail?: string
+  reveal?(): void
+}
+
 export interface ProjectSectionParticipant {
   readonly id: string
   readonly role: 'primary' | 'adjunct' | 'fallback'
@@ -46,6 +53,7 @@ export interface ProjectSectionParticipant {
   setVisible?(visible: boolean): void
   render?(state: ProjectEditorState, replaceFields: boolean): void
   hasDrafts?(): boolean
+  draftLocations?(key: string): DraftLocation[]
   reconcile?(
     selection: ProjectTreeNode,
     state: ProjectEditorState,
@@ -66,6 +74,7 @@ export class ProjectSectionRegistry {
   private readonly participants: ProjectSectionParticipant[]
   private active: ProjectSectionParticipant[] = []
   private selectedKey: string | undefined
+  private readonly lastSelection = new Map<string, string>()
   private path: string | undefined
   private disposed = false
   readonly sections: ProjectTreeSection[]
@@ -131,6 +140,8 @@ export class ProjectSectionRegistry {
       participant.setVisible?.(next.includes(participant))
 
     for (const participant of next) {
+      this.lastSelection.set(participant.id, selection.node.key)
+
       if (!explicitNavigation && !changed && previous.includes(participant) && participant.refresh)
         participant.refresh(selection)
       else participant.activate?.(selection)
@@ -142,8 +153,11 @@ export class ProjectSectionRegistry {
   render(state: ProjectEditorState, replaceFields: boolean) {
     if (this.disposed) return
 
-    if (this.path !== state.path || (replaceFields && !state.preserveDrafts))
+    if (this.path !== state.path || (replaceFields && !state.preserveDrafts)) {
       this.selectedKey = undefined
+      this.lastSelection.clear()
+    }
+
     this.path = state.path
 
     for (const participant of this.participants) participant.render?.(state, replaceFields)
@@ -155,6 +169,16 @@ export class ProjectSectionRegistry {
 
   hasDrafts(exclude: readonly string[] = []) {
     return this.participants.some((entry) => !exclude.includes(entry.id) && entry.hasDrafts?.())
+  }
+
+  draftLocations(): DraftLocation[] {
+    return this.participants.flatMap((entry) => {
+      if (!entry.hasDrafts?.()) return []
+
+      const key = this.lastSelection.get(entry.id) ?? entry.id
+
+      return entry.draftLocations?.(key) ?? [{ key }]
+    })
   }
 
   reconcile(node: ProjectTreeNode, state: ProjectEditorState, replaceFields: boolean) {

@@ -1,4 +1,5 @@
 import { bindFormSaveBar, refreshSaveStatuses } from './formSaveStatus.js'
+import type { DraftLocation } from './projectSectionRegistry.js'
 import { registerEditorDraft, registerFormDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import {
@@ -78,11 +79,15 @@ export function bindAssetsPanel(
   let appearance = graphicAppearanceSchema.parse({})
   const abort = new AbortController()
 
+  const route = (kind: string, id?: string, sceneId?: string) =>
+    `${kind}:${sceneId ?? ''}:${id ?? ''}`
+
   if (!panel)
     return {
       render: (_state: ProjectEditorState, _replace: boolean) => {},
       dispose: () => {},
       hasDrafts: () => false,
+      canNavigate: () => true,
       navigate: (_kind: string, _id?: string, _sceneId?: string) => {},
     }
   const document = panel.ownerDocument
@@ -302,6 +307,9 @@ export function bindAssetsPanel(
   )
 
   const updatePreview = () => preview?.setAppearance(appearance)
+
+  const hasDrafts = () =>
+    dirty.size > 0 || definitionsEditor.hasDrafts() || sceneGraphicEditor.hasDrafts()
 
   const paletteCaption = (key: string) => {
     const caption = key.startsWith('@')
@@ -748,7 +756,7 @@ export function bindAssetsPanel(
       imageView: z.enum(['colors', 'file']).optional(),
     }),
     () =>
-      dirty.size
+      hasDrafts()
         ? { selected, navigationKey, browsingKind, imageView, appearance, dirty: [...dirty] }
         : undefined,
     (saved) => {
@@ -809,10 +817,64 @@ export function bindAssetsPanel(
 
   return {
     createScenePreview,
-    hasDrafts: () =>
-      dirty.size > 0 || definitionsEditor.hasDrafts() || sceneGraphicEditor.hasDrafts(),
+    hasDrafts,
+    canNavigate: (kind: string, id?: string, sceneId?: string) =>
+      navigationKey === route(kind, id, sceneId) || !hasDrafts(),
+    draftLocations(fallback: string): DraftLocation[] {
+      const [kind, , id] = navigationKey.split(':')
+
+      const key =
+        kind === 'asset'
+          ? 'asset:' + id
+          : kind === 'import'
+            ? 'asset-import'
+            : kind === 'new-asset'
+              ? 'asset-new'
+              : fallback
+
+      const locations: DraftLocation[] = [...drafts].map(([preset, draft]) => ({
+        key,
+        detail:
+          t('assets.colors') +
+          ' › ' +
+          (draft.name || (preset ? t('assets.newPreset') : t('assets.defaults'))),
+        reveal() {
+          imageView = 'colors'
+          target = preset
+          renderColors()
+          find('asset-save-palette').focus()
+        },
+      }))
+
+      if (dirty.has('asset-image'))
+        locations.push({
+          key,
+          detail: t('assets.imageFile'),
+          reveal() {
+            imageView = 'file'
+            showImageView()
+            find('asset-image-id').focus()
+          },
+        })
+
+      if (dirty.has('asset-definition'))
+        locations.push({
+          key,
+          detail: t('assets.imageDefinition'),
+          reveal() {
+            const details = find('asset-definition').closest('details')
+
+            if (details) details.open = true
+            find('asset-definition-id').focus()
+          },
+        })
+
+      if (definitionsEditor.hasDrafts() || sceneGraphicEditor.hasDrafts()) locations.push({ key })
+
+      return locations
+    },
     navigate(kind: string, id?: string, sceneId?: string, preserveDefinitionSelection = false) {
-      const nextKey = `${kind}:${sceneId ?? ''}:${id ?? ''}`
+      const nextKey = route(kind, id, sceneId)
       const changing = nextKey !== navigationKey
       navigationKey = nextKey
 

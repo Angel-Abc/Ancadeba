@@ -1,4 +1,5 @@
 import { saveStatus } from './formSaveStatus.js'
+import { revealInspectorActions } from './sceneNavigation.js'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import { componentClipboardSchema } from '@ancadeba/editor-core'
@@ -276,6 +277,16 @@ export function bindComponentClipboard(
       return true
     },
     hasDrafts: () => dirty || copying,
+    draftLocations: () =>
+      dirty
+        ? [
+            {
+              key: componentId ? 'component:' + sceneId + ':' + componentId : 'scene:' + sceneId,
+              detail: t('clipboard.paste'),
+              reveal: () => revealInspectorActions(root),
+            },
+          ]
+        : [],
     canNavigate,
     navigate(nextScene?: string, nextComponent?: string) {
       if (!canNavigate(nextScene, nextComponent)) {

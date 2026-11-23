@@ -429,6 +429,9 @@ export function bindComponentEditor(
 
   return {
     hasDrafts: () => dirty,
+    draftLocations: () => [
+      { key: creating ? 'component-new:' + sceneId : 'component:' + sceneId + ':' + componentId },
+    ],
     canNavigate: (id?: string, component?: string, add = false) =>
       same(id, component, add) || !dirty,
     resumeDraft(entry: RecoveredComponent) {

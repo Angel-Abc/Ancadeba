@@ -44,6 +44,7 @@ interface SectionComposition {
   controller: ProjectEditorController
   confirmDelete: ConfirmAction
   confirmMapChange: ConfirmAction
+  refreshDrafts: () => void
   hasDrafts: (exclude?: readonly string[]) => boolean
   renderHistoryControls: () => void
   showSelection: () => void
@@ -59,13 +60,14 @@ export function createProjectSections({
   controller,
   confirmDelete,
   confirmMapChange,
+  refreshDrafts,
   hasDrafts,
   renderHistoryControls,
   showSelection,
   selectKey,
   renderTree,
   state,
-}: SectionComposition): ProjectSectionDefinition[] {
+}: SectionComposition) {
   const { fetcher } = dependencies
 
   const forms = bindProjectForms(
@@ -252,6 +254,7 @@ export function createProjectSections({
           host.remove()
         }
       },
+      refreshDrafts,
     )
 
   const copyButton =
@@ -720,7 +723,7 @@ export function createProjectSections({
     componentClipboard,
   })
 
-  return [
+  const definitions: ProjectSectionDefinition[] = [
     ...sections.map(
       (tree) =>
         registrations.find((entry) => entry.tree?.id === tree.id) ?? {
@@ -736,6 +739,12 @@ export function createProjectSections({
         role: 'adjunct',
         matches: () => false,
         hasDrafts: () => recovered?.hasDrafts() ?? false,
+        draftLocations: () => [
+          {
+            detail: t('inspector.recoveredComponents'),
+            reveal: () => recoveryRoot?.querySelector('button')?.focus(),
+          },
+        ],
         afterRestore() {
           if (recovered)
             recovered.add(
@@ -781,4 +790,14 @@ export function createProjectSections({
       }),
     },
   ]
+
+  return {
+    definitions,
+    openDraft(key: string) {
+      if (history.at(-1)?.origin === key) goBack()
+      else selectKey(key)
+
+      return state.selection.key === key
+    },
+  }
 }

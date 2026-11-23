@@ -1,6 +1,14 @@
 import type { Translate } from '@ancadeba/utilities'
 import type { ProjectTreeNode } from './projectTree.js'
 
+export function revealInspectorActions(panel: HTMLElement) {
+  panel
+    .closest('#inspector-actions')
+    ?.querySelector<HTMLButtonElement>(':scope > button[aria-expanded="false"]')
+    ?.click()
+  panel.querySelector<HTMLElement>('input, select, button')?.focus()
+}
+
 export function bindInspectorActions(root: HTMLElement, t: Translate) {
   const toggle = root.querySelector<HTMLButtonElement>('button')!
   const fields = root.querySelector<HTMLElement>('#inspector-action-fields')!

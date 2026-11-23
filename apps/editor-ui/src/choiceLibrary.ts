@@ -253,6 +253,12 @@ export function bindChoiceLibrary(
     },
     canOpen: (id?: string) => !dirty || !id || id === original,
     hasDrafts: () => dirty,
+    draftLocations: () => [
+      {
+        key: original ? 'data-file:choices:' + original : 'choices',
+        ...(!original && draft?.id && { detail: draft.id }),
+      },
+    ],
     render(state: ProjectEditorState, replace: boolean) {
       const changed = view !== state.view
       const switched = projectPath !== state.path

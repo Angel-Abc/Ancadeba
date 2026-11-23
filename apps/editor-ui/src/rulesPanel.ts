@@ -51,6 +51,14 @@ export function bindRulesPanel(
   let triggerView: RuleTriggerSection = 'buttons'
   let rulesDirty = false
   const dirtyTriggers = new Set<RuleTriggerSection>()
+
+  const triggerLabels = {
+    buttons: 'rules.sceneButtons',
+    nearby: 'tree.nearby',
+    inspection: 'rules.inspection',
+    actions: 'specialist.itemActions',
+  } as const
+
   const triggerRecovery = new Map<RuleTriggerSection, () => RecoveredComponent>()
   const placementScenes = new Map<RuleTriggerSection, string>()
   let triggerForms = new Map<RuleTriggerSection, HTMLElement>()
@@ -324,12 +332,10 @@ export function bindRulesPanel(
       triggerControls.select(
         t('specialist.trigger'),
         triggerView,
-        [
-          ['buttons', t('rules.sceneButtons')],
-          ['nearby', t('tree.nearby')],
-          ['inspection', t('rules.inspection')],
-          ['actions', t('specialist.itemActions')],
-        ],
+        (['buttons', 'nearby', 'inspection', 'actions'] as const).map((section) => [
+          section,
+          t(triggerLabels[section]),
+        ]),
         (value) => {
           triggerView = value
           showTask()
@@ -480,6 +486,27 @@ export function bindRulesPanel(
       }
     },
     hasDrafts: () => rulesDirty || dirtyTriggers.size > 0,
+    draftLocations: () => [
+      ...(rulesDirty
+        ? [
+            {
+              key: view?.game?.rules?.includes(ruleId) ? 'rule-file:' + ruleId : 'rules',
+              detail: t('rules.definitions'),
+              reveal: () => showTriggers(false),
+            },
+          ]
+        : []),
+      ...[...dirtyTriggers].map((section) => ({
+        key: 'rules',
+        detail: t(triggerLabels[section]),
+        reveal() {
+          triggerView = section
+
+          if (!openComponent) renderTriggers()
+          showTriggers(true)
+        },
+      })),
+    ],
     takeRecoveredComponents() {
       const drafts: RecoveredComponent[] = []
 

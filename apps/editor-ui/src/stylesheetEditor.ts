@@ -280,6 +280,7 @@ export function bindStylesheetEditor(
   return {
     selectedFile: () => (creating ? undefined : file),
     hasDrafts: () => dirty,
+    draftLocations: () => [{ key: creating ? 'stylesheet-new' : 'stylesheet:' + file }],
     canNavigate: (next?: string, create = false) =>
       create ? creating || !dirty : !next || next === file || !dirty,
     navigate(next?: string, create = false) {

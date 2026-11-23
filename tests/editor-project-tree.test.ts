@@ -150,6 +150,22 @@ function setup(accept: (node: ProjectTreeNode) => boolean = () => true) {
 }
 
 describe('extensible project explorer', () => {
+  it('marks ancestors of hidden drafts and keeps their full paths available through search', () => {
+    const { tree, row, search } = setup()
+    tree.markDrafts(['component:standard:health', 'game'])
+    expect(row('scenes').dataset.unsaved).toBe('true')
+    expect(row('scene:standard').dataset.unsaved).toBe('true')
+    expect(row('game').dataset.unsaved).toBe('true')
+    search.value = 'portrait'
+    search.dispatchEvent(new Event('input'))
+    expect(tree.pathLabel('component:standard:health')).toContain('Standard › ')
+    tree.markDrafts(['game'])
+    search.value = ''
+    search.dispatchEvent(new Event('input'))
+    expect(row('scenes').dataset.unsaved).toBe('false')
+    expect(row('game').dataset.unsaved).toBe('true')
+  })
+
   it('opens existing scenes from the overview and sends header actions through tree navigation', () => {
     const document = new TreeDocument()
     const list = document.createElement()

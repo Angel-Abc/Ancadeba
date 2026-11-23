@@ -384,6 +384,20 @@ export function bindActionBarPanel(
     canNavigate: (nextScene?: string) => !nextScene || nextScene === sceneId || !barDirty,
     navigate,
     hasDrafts: () => barDirty || inputDirty,
+    draftLocations: () => [
+      ...(barDirty
+        ? [
+            {
+              key: 'controls',
+              detail: t('controls.sceneActionBar'),
+              reveal: () => showInputs(false),
+            },
+          ]
+        : []),
+      ...(inputDirty
+        ? [{ key: 'controls', detail: t('controls.inputBindings'), reveal: () => showInputs(true) }]
+        : []),
+    ],
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()
       const projectChanged = state.path !== loadedPath

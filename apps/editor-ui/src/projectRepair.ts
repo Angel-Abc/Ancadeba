@@ -16,6 +16,7 @@ export function bindProjectRepair(
     save(request: RepairDraft): Promise<boolean>
   },
   validateCss?: (css: string) => void,
+  onDraftChange?: () => void,
 ) {
   const document = root.ownerDocument
   const heading = document.createElement('h3')
@@ -236,6 +237,7 @@ export function bindProjectRepair(
       if (await actions.save(request())) {
         if (disposed) return
         reset()
+        onDraftChange?.()
         notice = 'repair.saved'
       } else {
         checked = undefined
@@ -296,6 +298,9 @@ export function bindProjectRepair(
 
   return {
     hasDrafts: () => dirty,
+    draftLocations: () => [
+      { detail: t('repair.heading') + ' › ' + file, reveal: () => source.focus() },
+    ],
     render(next: ProjectEditorState, replaceFields: boolean) {
       const projectChanged = state?.path !== next.path
       const changed = state?.view !== next.view

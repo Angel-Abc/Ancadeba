@@ -472,6 +472,21 @@ export function bindStoryEditor(
 
   return {
     hasDrafts: () => dirty || journalDirty,
+    draftLocations() {
+      const [kind, id] = selection.split(':')
+      const file = kind === 'dialogue' ? 'dialogues' : 'quests'
+
+      return [
+        ...(dirty
+          ? [
+              id && view?.[file]?.[id]
+                ? { key: 'data-file:' + file + ':' + id }
+                : { key: 'story', detail: draft?.data.id ?? selection },
+            ]
+          : []),
+        ...(journalDirty ? [{ key: 'story', detail: t('story.journalPlacement') }] : []),
+      ]
+    },
     takeRecoveredComponents() {
       if (!journalDirty || !journal) return []
       const entry = recoveredComponent(view, journalScene, journal)

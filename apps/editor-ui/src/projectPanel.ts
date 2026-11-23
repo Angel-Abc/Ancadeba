@@ -9,6 +9,7 @@ import type { ProjectPanelDependencies } from './projectPanelDependencies.js'
 import { bindInspectorActions, renderSceneNavigation } from './sceneNavigation.js'
 import { compactWorkspaceQuery } from './workspaceLayout.js'
 import { refreshSaveStatuses, saveActiveDraft } from './formSaveStatus.js'
+import { bindPendingSaves } from './pendingSaves.js'
 import { captureEditorDrafts, restoreEditorDrafts } from './editorDraftState.js'
 import { type EditorDraftStorage } from './editorDraftStore.js'
 import { bindEditorDraftRecovery } from './editorDraftRecovery.js'
@@ -251,6 +252,20 @@ export function bindProjectPanel(
   }
 
   const treeElement = root.querySelector<HTMLElement>('#project-tree')
+  let pendingSaves: ReturnType<typeof bindPendingSaves> | undefined
+
+  const refreshPendingSaves = () => {
+    if (!tree) return
+    const locations = view ? registry.draftLocations() : []
+    tree.markDrafts(locations.flatMap(({ key }) => (key ? [key] : [])))
+    pendingSaves?.render(locations, busy)
+  }
+
+  const refreshDrafts = () => {
+    if (treeElement) refreshSaveStatuses(workspace)
+    refreshPendingSaves()
+  }
+
   const mapHistory = () => registry.history?.state()
 
   const renderHistoryControls = () => {
@@ -399,6 +414,7 @@ export function bindProjectPanel(
     const body = root.querySelector<HTMLElement>('.editor-pane-body')
 
     if (moved && body) body.scrollTop = 0
+    refreshDrafts()
 
     return true
   }
@@ -565,42 +581,45 @@ export function bindProjectPanel(
     draftRecovery?.beforeRender()
     render(state, replaceFields)
 
-    if (treeElement) refreshSaveStatuses(workspace)
+    refreshDrafts()
     draftRecovery?.afterRender(state)
   })
 
-  const registry = new ProjectSectionRegistry([
-    ...createProjectSections({
-      root,
-      dependencies,
-      t,
-      controller,
-      confirmDelete,
-      confirmMapChange: confirmation.ask,
-      hasDrafts: (exclude) => hasDrafts(exclude),
-      renderHistoryControls,
-      showSelection,
-      selectKey: (key) => {
-        tree?.select(key)
+  const builtins = createProjectSections({
+    root,
+    dependencies,
+    t,
+    controller,
+    confirmDelete,
+    confirmMapChange: confirmation.ask,
+    refreshDrafts,
+    hasDrafts: (exclude) => hasDrafts(exclude),
+    renderHistoryControls: () => {
+      renderHistoryControls()
+      refreshPendingSaves()
+    },
+    showSelection,
+    selectKey: (key) => {
+      tree?.select(key)
+    },
+    renderTree: (key) => tree?.render(view, busy, key),
+    state: {
+      get selection() {
+        return selection
       },
-      renderTree: (key) => tree?.render(view, busy, key),
-      state: {
-        get selection() {
-          return selection
-        },
-        set selection(value) {
-          selection = value
-        },
-        get preferredScene() {
-          return preferredScene
-        },
-        set preferredScene(value) {
-          preferredScene = value
-        },
+      set selection(value) {
+        selection = value
       },
-    }),
-    ...sectionDefinitions,
-  ])
+      get preferredScene() {
+        return preferredScene
+      },
+      set preferredScene(value) {
+        preferredScene = value
+      },
+    },
+  })
+
+  const registry = new ProjectSectionRegistry([...builtins.definitions, ...sectionDefinitions])
 
   const sections = registry.sections
 
@@ -644,12 +663,37 @@ export function bindProjectPanel(
       )
     tree.render(undefined, false)
     showSelection()
+
+    const pendingButton = root.querySelector<HTMLButtonElement>('#pending-saves')
+    const pendingList = root.querySelector<HTMLElement>('#pending-saves-list')
+
+    if (pendingButton && pendingList)
+      pendingSaves = bindPendingSaves(
+        pendingButton,
+        pendingList,
+        t,
+        (key) => tree?.pathLabel(key),
+        (location) => {
+          if (busy) return false
+
+          if (location.key && selection.key !== location.key) {
+            if (!builtins.openDraft(location.key)) return false
+          } else onNavigate?.()
+
+          if (compact?.matches) setExplorerExpanded(false)
+          find('workspace-heading').focus()
+          location.reveal?.()
+          refreshDrafts()
+
+          return true
+        },
+      )
   }
 
   const unsubscribeLanguage = subscribeLanguageChanges?.(() => {
     refreshLanguage()
 
-    if (treeElement) refreshSaveStatuses(workspace)
+    refreshDrafts()
     renderProjectChoices(folder.value)
     renderOpenControls()
     draftRecovery?.languageChanged()
@@ -675,7 +719,7 @@ export function bindProjectPanel(
 
     workspace.addEventListener('invalid', revealInvalid, true)
     listeners.push(() => workspace.removeEventListener('invalid', revealInvalid, true))
-    const refresh = () => queueMicrotask(() => refreshSaveStatuses(workspace))
+    const refresh = () => queueMicrotask(refreshDrafts)
 
     for (const event of ['input', 'change', 'click', 'keyup']) on(workspace, event, refresh)
   }
@@ -912,7 +956,7 @@ export function bindProjectPanel(
       registry.afterRestore()
       renderHistoryControls()
 
-      if (treeElement) refreshSaveStatuses(workspace)
+      refreshDrafts()
 
       return failed
     },
@@ -1006,6 +1050,7 @@ export function bindProjectPanel(
       tree?.dispose()
       inspectorActions?.dispose()
       rail?.dispose()
+      pendingSaves?.dispose()
       unsubscribeLanguage?.()
 
       for (const remove of listeners) remove()

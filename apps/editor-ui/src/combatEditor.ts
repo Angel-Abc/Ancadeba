@@ -661,6 +661,22 @@ export function bindCombatEditor(
       if (library) libraryEditor.navigate(library)
     },
     hasDrafts: () => dirty || libraryEditor.hasDrafts() || simulation.hasDrafts(),
+    draftLocations: () =>
+      pageIds
+        .filter((id) =>
+          id === 'encounter'
+            ? dirty
+            : id === 'simulation'
+              ? simulation.hasDrafts()
+              : libraryEditor.hasDrafts(),
+        )
+        .map((id) => ({
+          key: fileKey || 'combat',
+          detail: t(pageLabels[id]),
+          reveal: () => {
+            selectPage(id)
+          },
+        })),
     render(state: ProjectEditorState, replaceFields: boolean) {
       const translated = languageChanged()
       libraryEditor.render(state, replaceFields)

@@ -1,4 +1,5 @@
 import { registerEditorDraft } from './editorDraftState.js'
+import { revealInspectorActions } from './sceneNavigation.js'
 import { z } from 'zod'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
@@ -404,6 +405,13 @@ export function bindSceneControls(
       return true
     },
     hasDrafts: () => dirty,
+    draftLocations: () => [
+      {
+        key: componentId ? 'component:' + sceneId + ':' + componentId : 'scene:' + sceneId,
+        detail: t(componentId ? 'component.actions' : 'scene.actions'),
+        reveal: () => revealInspectorActions(root),
+      },
+    ],
     canNavigate,
     navigate(nextScene?: string, nextComponent?: string) {
       if (!canNavigate(nextScene, nextComponent)) {

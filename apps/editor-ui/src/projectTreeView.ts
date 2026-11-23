@@ -3,7 +3,6 @@ import type { Translate } from '@ancadeba/utilities'
 import {
   buildProjectTree,
   filterProjectTree,
-  flattenProjectTree,
   projectTreeSections,
   type ProjectTreeNode,
   type ProjectTreeSection,
@@ -20,10 +19,18 @@ export function bindProjectTree(
   const expanded = new Set(['scenes', 'assets', 'maps'])
   const abort = new AbortController()
   let nodes: ProjectTreeNode[] = []
+  const byKey = new Map<string, { node: ProjectTreeNode; path: string; parent: string }>()
+  let marked = new Set<string>()
   let selected = 'game'
   let busy = false
   let rows: { node: ProjectTreeNode; element: HTMLElement; parent: string | undefined }[] = []
   let focused = 'game'
+
+  const markRow = (row: HTMLElement, key: string) => {
+    const dirty = marked.has(key)
+    row.dataset.unsaved = String(dirty)
+    row.ariaDescription = dirty ? t('drafts.unsaved') : null
+  }
 
   const render = () => {
     rows = []
@@ -55,6 +62,7 @@ export function bindProjectTree(
         row.dataset.treeKey = node.key
         row.style.setProperty('--tree-depth', String(level - 1))
         row.title = node.id ?? node.label
+        markRow(row, node.key)
 
         if (branch) row.setAttribute('aria-expanded', String(open))
         const toggle = document.createElement('span')
@@ -224,6 +232,22 @@ export function bindProjectTree(
   }
 
   return {
+    pathLabel: (key: string) => byKey.get(key)?.path,
+    markDrafts(keys: string[]) {
+      const next = new Set<string>()
+
+      for (let key of keys) {
+        while (key && !next.has(key)) {
+          next.add(key)
+          key = byKey.get(key)?.parent ?? ''
+        }
+      }
+
+      if (next.size === marked.size && [...next].every((key) => marked.has(key))) return
+      marked = next
+
+      for (const row of rows) markRow(row.element, row.node.key)
+    },
     focusSelection() {
       revealSelected()
       render()
@@ -235,7 +259,7 @@ export function bindProjectTree(
     },
     /** `expand` opens the selected branch and brings it to the top, as the section rail does. */
     select(key: string, { expand = false } = {}) {
-      const node = flattenProjectTree(nodes).find((node) => node.key === key)
+      const node = byKey.get(key)?.node
 
       if (node) {
         select(node)
@@ -252,13 +276,24 @@ export function bindProjectTree(
       selected = selection
       busy = working
       nodes = view ? buildProjectTree(view, t, sections) : []
-      const all = flattenProjectTree(nodes)
+      byKey.clear()
+
+      const index = (entries: ProjectTreeNode[], parent = '', prefix = '') => {
+        for (const node of entries) {
+          const path = prefix ? prefix + ' › ' + node.label : node.label
+          byKey.set(node.key, { node, path, parent })
+
+          if (node.children) index(node.children, node.key, path)
+        }
+      }
+
+      index(nodes)
 
       // A selection made outside the tree, such as a restored draft, may sit in a closed branch.
       if (moved) revealSelected()
 
-      if (!all.some((node) => node.key === selected)) {
-        const fallback = all.find((node) => node.key === 'game')
+      if (!byKey.has(selected)) {
+        const fallback = byKey.get('game')?.node
 
         if (fallback && !busy && onSelect(fallback, false)) selected = fallback.key
       }
