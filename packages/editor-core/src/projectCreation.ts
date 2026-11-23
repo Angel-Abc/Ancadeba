@@ -7,22 +7,30 @@ export const createProjectRequestSchema = z.strictObject({
   path: gameIdSchema.max(64),
   title: z.string().trim().min(1).max(200),
   description: z.string().default(''),
+  template: z.enum(['starter', 'empty']).optional(),
 })
 
 export type CreateProjectRequest = z.infer<typeof createProjectRequestSchema>
 
-/** A playable starting point, independent of filesystem and browser services. */
+/** Create the initial files for the selected template. Existing callers get the playable starter. */
 export function createStarterProject(request: CreateProjectRequest): ProjectDocuments {
-  const { path, title, description } = createProjectRequestSchema.parse(request)
+  const { path, title, description, template } = createProjectRequestSchema.parse(request)
+
+  const manifest = {
+    'schema-version': '1.0.0',
+    id: path,
+    title,
+    ...(description && { description }),
+    version: '1.0.0',
+  }
+
+  if (template === 'empty') return { 'game.json': { ...manifest, scenes: [] } }
+
   const screen = { type: 'grid', grid: { rows: 12, columns: 16 } }
 
   const documents = {
     'game.json': gameSchema.parse({
-      'schema-version': '1.0.0',
-      id: path,
-      title,
-      description,
-      version: '1.0.0',
+      ...manifest,
       stylesheet: 'theme.css',
       'initial-scene': 'start',
       'menu-scene': 'game-menu',

@@ -144,6 +144,46 @@ describe('new project creation', () => {
     expect(await readFile(join(root, 'exported/index.html'), 'utf8')).toContain('<!doctype html>')
   })
 
+  it('opens a manifest-only project and lets the author add the first scene', async () => {
+    const { path, title } = request
+    const response = await post({ path, title, template: 'empty' })
+    expect(response.status).toBe(201)
+    const view = projectViewSchema.parse(await response.json())
+    expect(view.diagnostics).toEqual([])
+    expect(view.scenes).toEqual([])
+    expect(await readdir(join(root, path))).toEqual(['game.json'])
+    expect(JSON.parse(await readFile(join(root, path, 'game.json'), 'utf8'))).toEqual({
+      'schema-version': '1.0.0',
+      id: path,
+      title,
+      version: '1.0.0',
+      scenes: [],
+    })
+    await expect(service.inspect(path)).resolves.toEqual(view)
+    await expect((await fetch(`${base}/api/editor/projects`)).json()).resolves.toEqual({
+      projects: [{ path, title }],
+    })
+
+    const scene = {
+      'schema-version': '1.0.0',
+      id: 'first',
+      title: 'First scene',
+      type: 'game',
+      screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
+      components: [],
+    }
+
+    const result = await service.apply({
+      path,
+      expectedRevision: view.revision,
+      command: { type: 'scene.create', scene },
+    })
+
+    expect(result.view.game?.scenes).toEqual(['first'])
+    expect(result.view.scenes).toMatchObject([scene])
+    expect(result.view.diagnostics).toEqual([])
+  })
+
   it.each([
     '',
     '../escape',
@@ -168,6 +208,7 @@ describe('new project creation', () => {
       createProjectRequestSchema.safeParse({ ...request, title: 'x'.repeat(201) }).success,
     ).toBe(false)
     expect((await post({ ...request, overwrite: true })).status).toBe(400)
+    expect((await post({ ...request, template: 'unknown' })).status).toBe(400)
     expect(
       (
         await fetch(`${base}/api/editor/projects`, {

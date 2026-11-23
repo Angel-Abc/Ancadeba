@@ -442,9 +442,9 @@ The path must be a new, single folder using 1–64 letters, digits, underscores 
 hyphens. The trimmed title must contain 1–200 characters; description defaults
 to an empty string. Existing folders, including empty ones, are protected by
 exclusive creation. Competing requests for the same folder cannot overwrite
-one another. The shared editor generates `game.json`, start/adventure scenes
-and `theme.css`, returning the complete project view and revision. The starter
-can be played through the normal runtime loader.
+one another. Set `"template": "empty"` to generate only `game.json` with an
+empty scene list. Omitting `template` or setting it to `"starter"` creates a
+playable six-scene game with `theme.css`. Both return the project view and revision.
 
 The result's `gamePath` identifies the new project. The existing
 `configuredGamePath` field records the active binding captured at creation's

@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   commandRequestSchema,
   createProjectRequestSchema,
+  createStarterProject,
+  inspectProject,
   duplicateProjectRequestSchema,
   historyRequestSchema,
   renameProjectRequestSchema,
@@ -124,6 +126,8 @@ function panel(
 
     if (!result) {
       result = new Control(id)
+
+      if (id === 'project-new-template') result.value = 'starter'
       result.hidden = [
         'project-create-controls',
         'project-recover-controls',
@@ -288,9 +292,7 @@ function panel(
       creations.push(request)
 
       if (createResponse) return createResponse()
-      latest = project('created')
-      latest.game!.title = request.title
-      latest.game!.id = request.path
+      latest = inspectProject({ revision: 'created', documents: createStarterProject(request) })
       choices.push({ path: request.path, title: request.title })
 
       return Response.json(latest, { status: 201 })
@@ -1116,6 +1118,7 @@ describe('project panel form reconciliation', () => {
       expect(control('project-create-error').hidden).toBe(false)
       control('project-new-folder').value = 'new-adventure'
       control('project-new-description').value = 'A story'
+      control('project-new-template').value = 'empty'
       setLanguage('nl')
       expect(control('project-new-title').value).toBe('  New adventure  ')
       expect(control('project-create-submit').textContent).toBe('Project maken')
@@ -1123,13 +1126,20 @@ describe('project panel form reconciliation', () => {
       expect(control('project-create-fields').disabled).toBe(true)
       await vi.waitFor(() => expect(onProjectChange.mock.calls).toEqual([['new-adventure']]))
       expect(creations).toEqual([
-        { path: 'new-adventure', title: 'New adventure', description: 'A story' },
+        {
+          path: 'new-adventure',
+          title: 'New adventure',
+          description: 'A story',
+          template: 'empty',
+        },
       ])
       expect(control('project-create-controls').hidden).toBe(true)
       expect(control('editor-workspace').hidden).toBe(false)
       expect(control('editor-folder').value).toBe('new-adventure')
       expect(control('editor-folder').children.map(({ value }) => value)).toEqual(['new-adventure'])
       expect(control('editor-title').value).toBe('New adventure')
+      expect(control('editor-description').value).toBe('A story')
+      expect(control('editor-scenes').children).toHaveLength(0)
     } finally {
       dispose()
     }

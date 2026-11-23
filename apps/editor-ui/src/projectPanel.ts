@@ -775,6 +775,7 @@ export function bindProjectPanel(
       path: value('project-new-folder').trim(),
       title: value('project-new-title'),
       description: value('project-new-description'),
+      template: value('project-new-template'),
     })
 
     if (!request.success) {

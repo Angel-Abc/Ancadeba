@@ -572,9 +572,6 @@
         <form id="project-create-controls" hidden>
           <fieldset id="project-create-fields">
             <legend data-i18n="project.new">New project</legend>
-            <p class="help" data-i18n="project.createHelp">
-              Create a game with a start screen and an adventure scene.
-            </p>
             <label for="project-new-title" data-i18n="game.title">Game title</label>
             <input id="project-new-title" maxlength="200" required />
             <label for="project-new-folder" data-i18n="project.newFolder">New folder name</label>
@@ -594,6 +591,15 @@
               >Description</label
             >
             <textarea id="project-new-description"></textarea>
+            <label for="project-new-template" data-i18n="project.template">Starting content</label>
+            <select id="project-new-template">
+              <option value="starter" data-i18n="project.templateStarter">
+                Starter game (six scenes)
+              </option>
+              <option value="empty" data-i18n="project.templateEmpty">
+                Empty project (no scenes)
+              </option>
+            </select>
             <div class="editor-actions">
               <button
                 id="project-create-submit"

@@ -1,6 +1,6 @@
 # Shared editor layer v1
 
-The visual editor creates starter games and edits projects through a
+The visual editor creates games and edits projects through a
 revision-checked HTTP API. External agents use the same API for supported edits;
 the MCP adapter exposes all shared editor commands known to its installed version,
 filtered by the connected server's capabilities. The editor core depends on the schemas and
@@ -310,11 +310,14 @@ Choose **New project** beside **Open project** to create a game, including when 
 workspace is empty. Enter a title, a new folder name, and an optional description.
 Folder names contain up to 64 letters, digits, underscores, or hyphens; the folder
 is created directly beneath the configured workspace and is also the game's ID.
-Existing folders and files are never reused. Creation opens the project with a
-start screen, a New game button, and an editable adventure scene with a Main menu
-button. The starter game can be previewed and exported immediately. Its initial
-content is English, independently of the editor language. Its `theme.css` file
-sets readable text sizes for both editor previews and standalone exports.
+Under **Starting content**, choose **Empty project (no scenes)** to create only
+`game.json`. The manifest contains the schema version, game ID, title, version,
+an empty scene list, and any description you entered. After the project opens,
+choose **Scenes → Add scene** to create your first scene.
+
+The default **Starter game (six scenes)** includes a start screen, an adventure
+scene, a game menu, and save, load, and settings screens. It opens ready to
+preview and export, with English content and a `theme.css` stylesheet.
 
 Opening or creating a project asks before discarding unsaved edits. Cancelling
 or a failed creation preserves the current project and its drafts. Failed storage
@@ -437,8 +440,9 @@ discard buttons. Conflicts and unrelated saves retain pending trigger edits.
 "description": "" }` and returns the new project view with a revision and HTTP 201.
 Invalid input returns 400, an existing destination returns 409, and links remain
 inaccessible. Creation reserves a new folder exclusively and publishes `game.json`
-after both scene files. MCP clients can list workspace projects and create a
-starter project with `ancadeba_list_projects` and `ancadeba_create_project`.
+last. Pass `"template": "empty"` for a manifest-only project. Omitting
+`template` or passing `"starter"` creates the six-scene game. MCP clients can
+use the same option with `ancadeba_create_project`.
 `ancadeba_duplicate_project` duplicates the active saved project with its inspected
 revision, a new `destination` and `title`.
 Creation leaves the active project unchanged. Use `ancadeba_switch_project` to

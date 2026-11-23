@@ -140,7 +140,8 @@ base64 SVG/PNG/JPEG/WebP bytes and use the same bounded import and history flow
 as the editor. Capability discovery reports live operation availability.
 
 Use `ancadeba_list_projects` to discover workspace games and
-`ancadeba_create_project` to create a playable starter in a new folder. Creation
+`ancadeba_create_project` to create a playable starter in a new folder, or pass
+`"template": "empty"` to start with only `game.json`. Creation
 returns its revision and leaves the active project unchanged. Select a discovered
 or newly created game with `ancadeba_switch_project` to edit it without restarting
 or reconfiguring the connection. To start with a project selected, pass
