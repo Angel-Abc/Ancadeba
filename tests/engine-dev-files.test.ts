@@ -45,7 +45,10 @@ describe('engine development game files', () => {
     temp = await mkdtemp(fileURLToPath(new URL('./.tmp-engine-dev-', import.meta.url)))
     app = join(temp, 'app')
     games = join(temp, 'games')
+    const myGames = join(temp, 'my-games')
     await mkdir(app)
+    await mkdir(join(myGames, 'basic'), { recursive: true })
+    await writeFile(join(myGames, 'basic/game.json'), JSON.stringify(gameDefinition('My game')))
     await mkdir(join(games, 'basic/assets'), { recursive: true })
     await mkdir(join(games, 'basic/.git'))
     await writeFile(join(app, 'index.html'), '<!doctype html><title>Engine fallback</title>')
@@ -64,7 +67,10 @@ describe('engine development game files', () => {
       root: app,
       base: '/nested/',
       logLevel: 'silent',
-      plugins: [gameFilesPlugin(games), engineRuntimeConfigPlugin('./sample-games/basic/')],
+      plugins: [
+        gameFilesPlugin(games, myGames),
+        engineRuntimeConfigPlugin('./sample-games/basic/'),
+      ],
       server: { host: '127.0.0.1', port: 0, strictPort: true, hmr: false },
     })
     await server.listen()
@@ -120,6 +126,12 @@ describe('engine development game files', () => {
     const response = await fetch(`${origin}/sample-games/basic/game.json`)
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual(game)
+  })
+
+  it.each(['/my-games/', '/nested/my-games/'])('serves a personal game from %s', async (mount) => {
+    const response = await fetch(`${origin}${mount}basic/game.json`)
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual(gameDefinition('My game'))
   })
 
   it('serves binary assets, content types, and HEAD requests', async () => {

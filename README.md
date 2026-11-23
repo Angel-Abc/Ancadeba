@@ -192,14 +192,14 @@ Engine (`apps/engine/config.json`):
 It accepts an HTTP(S) URL or a relative web path. Relative paths resolve against
 the engine application's base URL, and a missing trailing slash is added. For
 example, `./game` under `/engine/` resolves to `/engine/game/`. During `pnpm dev`,
-the engine serves the repository's `sample-games` folder at `/sample-games/`, so
-the example configuration loads `sample-games/basic/game.json` directly. The
-route also supports a nested Vite base, returns real 404 responses for missing
-files, and reads saved changes without caching. Links, traversal paths, local
-environment files, source-control metadata, and `node_modules` are inaccessible.
-This route is only for development; use `export:game` to package a standalone
-game. You can also put static files under `apps/engine/public/` and configure
-their URL, or point to an existing HTTP(S) server with suitable cross-origin access.
+the engine serves the repository folders `sample-games` at `/sample-games/` and
+`my-games` at `/my-games/`. For a project in `my-games/my-adventure`, set
+`gameUrl` to `/my-games/my-adventure/`. Both routes support a nested Vite base,
+return 404 for missing files, and read saved changes without caching. Links,
+traversal paths, local environment files, source-control metadata, and `node_modules`
+are inaccessible. Use `export:game` to package a standalone game. You can also
+put static files under `apps/engine/public/` and configure their URL, or point
+to an existing HTTP(S) server with suitable cross-origin access.
 The engine's injected `gameResources` service reads text and bytes beneath that
 directory and reports HTTP/network failures. Startup loads and validates
 `game.json` and its referenced scene files through `JsonResourceLoader` and

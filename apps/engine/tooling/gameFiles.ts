@@ -7,6 +7,7 @@ import { lookup } from 'mrmime'
 import type { Plugin } from 'vite-plus'
 
 const sampleGamesDirectory = fileURLToPath(new URL('../../../sample-games/', import.meta.url))
+const myGamesDirectory = fileURLToPath(new URL('../../../my-games/', import.meta.url))
 const excludedNames = new Set(['.git', '.hg', '.svn', 'node_modules', '.ds_store', 'thumbs.db'])
 
 class GameFileError extends Error {
@@ -173,16 +174,23 @@ function gameFilesMiddleware(root: string) {
   }
 }
 
-export function gameFilesPlugin(directory = sampleGamesDirectory): Plugin {
-  const middleware = gameFilesMiddleware(resolve(directory))
-
+export function gameFilesPlugin(
+  sampleGames = sampleGamesDirectory,
+  myGames = myGamesDirectory,
+): Plugin {
   return {
     name: 'engine-local-game-files',
     apply: 'serve',
     configureServer(server) {
-      const mounts = new Set(['/sample-games/', `${server.config.base}sample-games/`])
+      for (const [folder, directory] of Object.entries({
+        'sample-games': sampleGames,
+        'my-games': myGames,
+      })) {
+        const middleware = gameFilesMiddleware(resolve(directory))
+        const mounts = new Set([`/${folder}/`, `${server.config.base}${folder}/`])
 
-      for (const mount of mounts) server.middlewares.use(mount, middleware)
+        for (const mount of mounts) server.middlewares.use(mount, middleware)
+      }
     },
   }
 }
