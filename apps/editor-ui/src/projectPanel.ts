@@ -283,7 +283,7 @@ export function bindProjectPanel(
     const node = selection
 
     const context = projectSelection(node, view)
-    const { component, resource: dataFile } = context
+    const { scene, component, resource: dataFile } = context
 
     if (activate) registry.show(context)
 
@@ -367,15 +367,7 @@ export function bindProjectPanel(
     rail?.render(view ? node.section : undefined)
     renderHistoryControls()
 
-    const selectedScene = view?.scenes.find(
-      (scene) => scene.id === (node.kind === 'scene' ? node.id : node.parentId),
-    )
-
-    onSceneSelect?.(
-      selectedScene && view
-        ? { id: selectedScene.id, title: sceneTitle(view, selectedScene) }
-        : undefined,
-    )
+    onSceneSelect?.(scene && view ? { id: scene.id, title: sceneTitle(view, scene) } : undefined)
   }
 
   const navigate = (node: ProjectTreeNode) => {

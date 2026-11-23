@@ -156,6 +156,7 @@
   "preview.error": "Preview starten mislukt: {message}",
   "preview.scene": "Previewscherm",
   "preview.noScene": "Geen actief scherm",
+  "preview.activeScene": "Actief in preview",
   "project.heading": "Spelproject",
   "project.help": "Bewerk opgeslagen spelbestanden. Herstart de preview om wijzigingen te zien.",
   "project.available": "Beschikbare spellen",

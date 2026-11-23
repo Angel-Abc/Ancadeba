@@ -16,6 +16,7 @@ export class EditorPreviewHost implements IEngineHost {
     private readonly resources?: IResourceSource,
     /** The scene being edited; the preview opens there instead of the game's start scene. */
     private readonly startScene?: () => string | undefined,
+    private readonly onActiveSceneChange?: (id: string | undefined) => void,
   ) {}
 
   mount(game: GameData, session: EngineHostSession): () => void {
@@ -26,7 +27,21 @@ export class EditorPreviewHost implements IEngineHost {
         )
       : undefined
 
-    let unmount: () => void
+    let unmount: (() => void) | undefined
+    let unsubscribeScene: (() => void) | undefined
+    let unsubscribeLanguage: (() => void) | undefined
+
+    const cleanup = () => {
+      unsubscribeLanguage?.()
+      unsubscribeScene?.()
+
+      try {
+        unmount?.()
+      } finally {
+        graphics?.dispose()
+        this.onActiveSceneChange?.(undefined)
+      }
+    }
 
     try {
       unmount = mountGameView(this.element, game, session, {
@@ -40,32 +55,34 @@ export class EditorPreviewHost implements IEngineHost {
         bindingMode: 'editor',
       })
       this.enterStartScene(game, session)
+      const reportScene = this.onActiveSceneChange
+
+      if (reportScene) {
+        reportScene(session.lifecycle.activeScene?.data.id)
+        unsubscribeScene = session.lifecycle.subscribeSceneChanges(({ current }) =>
+          reportScene(current?.data.id),
+        )
+      }
+
+      unsubscribeLanguage = this.subscribeLanguageChanges?.(() => this.translatePicker())
+
+      return cleanup
     } catch (error) {
-      graphics?.dispose()
+      cleanup()
       throw error
     }
+  }
 
-    const unsubscribe = this.subscribeLanguageChanges?.(() => {
-      const picker = this.element.querySelector('.ancadeba-scene-picker')
-      const caption = picker?.querySelector('span')
-      const select = picker?.querySelector('select')
-      const empty = select?.querySelector('option[value=""]')
+  private translatePicker(): void {
+    const picker = this.element.querySelector('.ancadeba-scene-picker')
+    const caption = picker?.querySelector('span')
+    const select = picker?.querySelector('select')
+    const empty = select?.querySelector('option[value=""]')
 
-      if (caption) caption.textContent = this.t('scene.label')
-      select?.setAttribute('aria-label', this.t('preview.scene'))
+    if (caption) caption.textContent = this.t('scene.label')
+    select?.setAttribute('aria-label', this.t('preview.scene'))
 
-      if (empty) empty.textContent = this.t('preview.noScene')
-    })
-
-    return () => {
-      unsubscribe?.()
-
-      try {
-        unmount()
-      } finally {
-        graphics?.dispose()
-      }
-    }
+    if (empty) empty.textContent = this.t('preview.noScene')
   }
 
   private enterStartScene(game: GameData, session: EngineHostSession): void {

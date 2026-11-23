@@ -10,7 +10,7 @@ import {
 } from '@ancadeba/ui-components'
 import { EditorPreviewHost } from './previewHost'
 import { ContainerBuilder } from './ioc/containerBuilder'
-import type { Translate } from '@ancadeba/utilities'
+import type { IResourceSource, Translate } from '@ancadeba/utilities'
 import { editorLocalization } from './localization.js'
 import type { ExportState } from './exportController.js'
 import { bindWorkspaceLayout } from './workspaceLayout.js'
@@ -61,6 +61,7 @@ const start = element<HTMLButtonElement>('#preview-start')
 const stop = element<HTMLButtonElement>('#preview-stop')
 const panel = element<HTMLElement>('#preview-pane')
 const status = element<HTMLElement>('#preview-status')
+const activeSceneLabel = element<HTMLElement>('#preview-active-scene')
 const error = element<HTMLElement>('#preview-error')
 const content = element<HTMLElement>('#preview-content')
 const empty = element<HTMLElement>('#preview-empty')
@@ -91,6 +92,12 @@ let exportState: ExportState = 'idle'
 let exportMessage: string | undefined
 let previewMessage: string | undefined
 let selectedScene: { id: string; title: string } | undefined
+let activeSceneId: string | undefined
+
+function renderSceneHighlight(): void {
+  activeSceneLabel.hidden =
+    previewState !== 'running' || !selectedScene || selectedScene.id !== activeSceneId
+}
 
 function renderExportState(): void {
   exportButton.textContent = t(exporting ? 'export.exporting' : 'export.button')
@@ -133,17 +140,23 @@ function clearDownload(): void {
 
 const projectSaveKeys = new Map<string, string>()
 
-const container = new ContainerBuilder({
-  fetcher: fetch,
-  host: new EditorPreviewHost(
+const createPreviewHost = (source?: IResourceSource) =>
+  new EditorPreviewHost(
     content,
     t,
     subscribeLanguageChanges,
-    undefined,
+    source,
     () => selectedScene?.id,
-  ),
-  createHost: (source) =>
-    new EditorPreviewHost(content, t, subscribeLanguageChanges, source, () => selectedScene?.id),
+    (id) => {
+      activeSceneId = id
+      renderSceneHighlight()
+    },
+  )
+
+const container = new ContainerBuilder({
+  fetcher: fetch,
+  host: createPreviewHost(),
+  createHost: createPreviewHost,
   gameLanguagePreferences: new BrowserGameLanguagePreferences(() => window.localStorage),
   getPreferredGameLanguages: () => {
     return gameLanguage.value.trim() ? [gameLanguage.value.trim()] : []
@@ -183,6 +196,7 @@ const container = new ContainerBuilder({
     previewMessage = message
     panel.dataset.state = state
     renderPreviewState()
+    renderSceneHighlight()
     updateControls()
     content.setAttribute('aria-busy', String(state === 'starting'))
     empty.hidden = state === 'running'
@@ -260,6 +274,7 @@ const projectPanel = bindProjectPanel(
     onSceneSelect(scene) {
       selectedScene = scene
       renderStartLabel()
+      renderSceneHighlight()
     },
   },
 )

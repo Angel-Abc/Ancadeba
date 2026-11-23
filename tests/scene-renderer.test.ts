@@ -3226,13 +3226,21 @@ describe('scene renderer', () => {
     },
   )
 
-  it('opens the editor preview at the scene being edited instead of the start screen', async () => {
+  it('opens at the edited scene and reports the active scene until the preview stops', async () => {
     const game = await new GameLoader(new JsonResourceLoader(source, logger), ['en']).load()
     const { target } = setup(game)
+    const reportScene = vi.fn<(id: string | undefined) => void>()
 
     const engine = new Engine(
       { load: async () => game },
-      new EditorPreviewHost(target.asElement(), undefined, undefined, undefined, () => 'shop'),
+      new EditorPreviewHost(
+        target.asElement(),
+        undefined,
+        undefined,
+        undefined,
+        () => 'shop',
+        reportScene,
+      ),
       logger,
       () => new MessageBus<EngineMessages>(),
       timing,
@@ -3243,6 +3251,14 @@ describe('scene renderer', () => {
 
     expect(target.find((node) => node.dataset.componentId === 'merchant-items')).toBeDefined()
     expect(target.find((node) => node.dataset.componentId === 'new-game')).toBeUndefined()
+    expect(reportScene.mock.calls).toEqual([['shop']])
+
+    engine.lifecycle!.enterScene('inventory')
+    engine.lifecycle!.leaveScene()
+    engine.lifecycle!.enterScene('shop')
+    expect(reportScene.mock.calls).toEqual([['shop'], ['inventory'], [undefined], ['shop']])
+    engine.stop()
+    expect(reportScene).toHaveBeenLastCalledWith(undefined)
   })
 
   it.each([

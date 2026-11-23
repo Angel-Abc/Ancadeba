@@ -156,6 +156,7 @@
   "preview.error": "Unable to start preview: {message}",
   "preview.scene": "Preview scene",
   "preview.noScene": "No active scene",
+  "preview.activeScene": "Active in preview",
   "project.heading": "Game project",
   "project.help": "Edit saved game files. Restart the preview to see changes.",
   "project.available": "Available games",
