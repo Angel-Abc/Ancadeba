@@ -59,8 +59,8 @@ export function createStarterProject(request: CreateProjectRequest): ProjectDocu
       ],
     }),
     'theme.css': `.ancadeba-scene {
-  --ge-scene-font-size: clamp(14px, 3cqw, 22px);
-  --ge-scene-heading-size: clamp(20px, 5cqw, 36px);
+  --ge-scene-font-size: calc(22 * var(--ge-scene-unit-size));
+  --ge-scene-heading-size: calc(36 * var(--ge-scene-unit-size));
   --ge-scene-text-padding: 0.5em;
 }
 

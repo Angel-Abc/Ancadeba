@@ -814,9 +814,9 @@ through 10. The values stay local to each element so separate previews can have
 different grid dimensions without overwriting each other.
 
 The scene fills its host's available width and height. The standalone host fills
-`#app`, whose height follows the browser viewport. The editor sizes the preview
-canvas from its pane width and caps its height at 66% of the viewport. The scene
-selector takes its own space above the scene. Rows divide the remaining height
+`#app`, whose height follows the browser viewport. The editor fits a 16:10 scene
+canvas into the space below the scene selector. A 320×200 preview therefore shows
+the same composition as a 1280×800 standalone game. Rows divide the scene height
 equally and columns divide the width equally. The engine keeps one layout at
 every size and shape; a game that wants a different arrangement on some shapes
 can add container queries on the `ge-scene` container to its own stylesheet.
@@ -828,7 +828,7 @@ rather than repeated as `var()` fallbacks: a 4-row/3-column grid, one-based
 component positions, one-cell spans, and start-aligned text. Loaded scene data
 overrides the applicable variables on its own elements.
 
-Text has no default margin, 7 scene units of inner padding, wrapping, preserved line
+Text has no default margin, 6 scene units of inner padding, wrapping, preserved line
 breaks, zero minimum component sizes, and `overflow: auto` so long content scrolls
 inside its assigned rectangle. Components are ordinary grid items, without
 absolute positioning. Default gap and outer padding are zero. Text and heading
@@ -874,7 +874,7 @@ A scene unit (`--ge-scene-unit-size`) depends only on the scene viewport: it is
 1/1000 of the scene width or 1/740 of its height, whichever is smaller. The
 browser window size does not enter into it, so a scene looks the same in the
 standalone engine, the editor preview, and an exported game whenever the scene
-has the same shape. Body text uses 20 scene units and headings use 28, without a
+has the same shape. Body text uses 16 scene units and headings use 22, without a
 minimum, so text keeps its proportion to the grid at every size.
 
 The unit is `min(0.1cqw, 0.135cqh)`. Its container units resolve on the element
@@ -882,8 +882,10 @@ that uses the variable, against that element's nearest size container. Use it on
 the scene and on component roots, whose container is the scene viewport; inside a
 component that is itself a size container, such as the map view, it would follow
 that component instead. Sizes inside components use `em`, which follows the scene
-font size, so they scale with the same unit. Grid tracks fill the available scene
-without rearranging components at breakpoints.
+font size, so artwork, controls and spacing scale together. For a form layout
+that depends on how many fields fit side by side, use an `em` width in its
+container query. The threshold then scales with the form's own font. For a
+layout that depends on scene shape, query the `ge-scene` aspect ratio.
 
 The shared game theme is `--ge-game-font-family`, `--ge-game-color`, and
 `--ge-game-background` on `.ancadeba-game`; the standalone page uses the same

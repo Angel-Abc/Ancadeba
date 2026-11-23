@@ -5,8 +5,8 @@
 }
 
 .ancadeba-map-view:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: -2px;
+  outline: 0.125em solid currentColor;
+  outline-offset: -0.125em;
 }
 
 .ancadeba-map-window {
@@ -33,7 +33,7 @@
   position: relative;
   background: var(--ge-map-tile-color);
   image-rendering: pixelated;
-  box-shadow: inset 0 0 0 0.5px #0003;
+  box-shadow: inset 0 0 0 0.03125em #0003;
 }
 
 .ancadeba-map-layer-tile {
@@ -53,10 +53,10 @@
   box-sizing: border-box;
   width: calc(var(--ge-map-tile-size) * 0.55);
   height: calc(var(--ge-map-tile-size) * 0.55);
-  border: max(1px, calc(var(--ge-map-tile-size) * 0.035)) solid white;
+  border: calc(var(--ge-map-tile-size) * 0.035) solid white;
   border-radius: 50%;
   background: #145ad0;
-  box-shadow: 0 0 0 1px #132d50;
+  box-shadow: 0 0 0 0.0625em #132d50;
 }
 
 .ancadeba-map-object {
@@ -67,12 +67,12 @@
   min-height: 0;
   margin: 8%;
   padding: 0;
-  border: 1px solid #fff;
+  border: 0.0625em solid #fff;
   border-radius: 0.15em;
   color: white;
   font-weight: bold;
   font-size: calc(var(--ge-map-tile-size) * 0.35);
-  text-shadow: 0 1px 2px black;
+  text-shadow: 0 0.0625em 0.125em black;
   image-rendering: pixelated;
 }
 
@@ -85,6 +85,6 @@
   display: none;
 }
 .ancadeba-map-object:focus-visible {
-  outline: 3px solid #ffdc73;
-  outline-offset: 1px;
+  outline: 0.1875em solid #ffdc73;
+  outline-offset: 0.0625em;
 }

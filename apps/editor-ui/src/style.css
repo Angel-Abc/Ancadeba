@@ -1567,11 +1567,22 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 
 .preview-content > .ancadeba-game {
+  min-width: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.preview-content .ancadeba-scene-frame {
+  container-type: size;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-content .ancadeba-scene-viewport {
+  flex: none;
   width: min(100cqw, 160cqh);
-  height: min(100cqh, 62.5cqw);
-  padding: 0.75rem;
-  overflow: auto;
-  border-radius: 0.375rem;
+  aspect-ratio: 16 / 10;
+  background: var(--ge-game-background);
   box-shadow:
     0 0 0 1px var(--ed-border),
     0 0.75rem 2rem rgb(0 0 0 / 45%);

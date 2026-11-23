@@ -238,10 +238,12 @@ export function mountGameView(
       cleanups.push(() => select.removeEventListener('change', onChange))
       cleanups.push(session.lifecycle.subscribeSceneChanges(syncSelection))
       label.append(caption, select)
-      root.append(label)
-    }
+      const frame = document.createElement('div')
+      frame.className = 'ancadeba-scene-frame'
+      frame.append(viewport)
+      root.append(label, frame)
+    } else root.append(viewport)
 
-    root.append(viewport)
     target.append(root)
 
     if (game.stylesheet !== undefined) mountGameStylesheet(viewport, game.stylesheet)

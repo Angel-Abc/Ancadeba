@@ -124,7 +124,7 @@ describe('new project creation', () => {
 
     expect(game.initialScene).toBe('start')
     expect(game.scenes.get('adventure')?.type).toBe('game')
-    expect(game.stylesheet).toContain('--ge-scene-font-size: clamp(14px, 3cqw, 22px)')
+    expect(game.stylesheet).toContain('--ge-scene-font-size: calc(22 * var(--ge-scene-unit-size))')
     await expect(
       service.apply({
         path: request.path,
