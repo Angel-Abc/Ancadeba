@@ -38,6 +38,12 @@ export interface ProjectPanelBinding {
   dispose(): void
 }
 
+export interface EditorSceneSelection {
+  id: string
+  title: string
+  componentId?: string
+}
+
 export function bindProjectPanel(
   root: HTMLElement,
   dependencies: ProjectPanelDependencies,
@@ -56,8 +62,8 @@ export function bindProjectPanel(
     sectionDefinitions?: readonly ProjectSectionDefinition[]
     onProjectChange?: (path: string, storageKey?: string) => void
     onProjectClose?: () => void
-    /** Reports the scene of the explorer selection, or undefined outside the scenes section. */
-    onSceneSelect?: (scene: { id: string; title: string } | undefined) => void
+    /** Reports the containing scene and, when selected, its component. */
+    onSceneSelect?: (scene: EditorSceneSelection | undefined) => void
     onNavigate?: () => void
     confirmDiscardDrafts?: () => boolean | Promise<boolean>
     confirmDelete?: ConfirmAction
@@ -367,7 +373,15 @@ export function bindProjectPanel(
     rail?.render(view ? node.section : undefined)
     renderHistoryControls()
 
-    onSceneSelect?.(scene && view ? { id: scene.id, title: sceneTitle(view, scene) } : undefined)
+    onSceneSelect?.(
+      scene && view
+        ? {
+            id: scene.id,
+            title: sceneTitle(view, scene),
+            ...(component && { componentId: component.id }),
+          }
+        : undefined,
+    )
   }
 
   const navigate = (node: ProjectTreeNode) => {

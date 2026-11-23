@@ -1,7 +1,7 @@
 import { createProjectPanelDependencies } from './projectPanelDependencies.js'
 import './style.css'
 import '@ancadeba/ui-components/game.css'
-import { bindProjectPanel } from './projectPanel.js'
+import { bindProjectPanel, type EditorSceneSelection } from './projectPanel.js'
 import type { EngineState } from '@ancadeba/game-runtime'
 import {
   createBrowserTiming,
@@ -71,6 +71,9 @@ const exportDismiss = element<HTMLButtonElement>('#export-dismiss')
 const exportStatus = element<HTMLElement>('#export-status')
 const exportError = element<HTMLElement>('#export-error')
 const exportDownload = element<HTMLAnchorElement>('#export-download')
+const componentHighlightStyle = document.createElement('style')
+
+document.head.append(componentHighlightStyle)
 
 const layout = bindWorkspaceLayout(
   {
@@ -91,12 +94,29 @@ let downloadUrl: string | undefined
 let exportState: ExportState = 'idle'
 let exportMessage: string | undefined
 let previewMessage: string | undefined
-let selectedScene: { id: string; title: string } | undefined
+let selectedScene: EditorSceneSelection | undefined
 let activeSceneId: string | undefined
 
 function renderSceneHighlight(): void {
   activeSceneLabel.hidden =
     previewState !== 'running' || !selectedScene || selectedScene.id !== activeSceneId
+
+  let rule = ''
+
+  if (!activeSceneLabel.hidden && selectedScene?.componentId) {
+    const scene = CSS.escape(selectedScene.id)
+    const component = CSS.escape(selectedScene.componentId)
+    const target = `.ancadeba-scene[data-scene-id="${scene}"] > [data-component-id="${component}"]`
+    rule = `#preview-content ${target} {
+      anchor-name: --ed-selected-component;
+      @supports not (position-anchor: --ed-selected-component) {
+        outline: 2px dashed var(--ed-accent);
+        outline-offset: -4px;
+      }
+    }`
+  }
+
+  if (componentHighlightStyle.textContent !== rule) componentHighlightStyle.textContent = rule
 }
 
 function renderExportState(): void {
@@ -302,4 +322,5 @@ import.meta.hot?.dispose(() => {
   exportController.dispose()
   clearDownload()
   controller.dispose()
+  componentHighlightStyle.remove()
 })

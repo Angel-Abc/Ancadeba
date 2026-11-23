@@ -1597,6 +1597,28 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   outline: 2px solid var(--ed-accent);
 }
 
+/* Draw above game content so the selected component keeps its own focus and hover styles. */
+@supports (position-anchor: --ed-selected-component) {
+  .preview-content {
+    position: relative;
+  }
+
+  .preview-pane:has(#preview-active-scene:not([hidden])) .preview-content::after {
+    content: '';
+    position: absolute;
+    position-anchor: --ed-selected-component;
+    position-visibility: anchors-visible;
+    top: anchor(top, 100%);
+    left: anchor(left, 100%);
+    width: anchor-size(width, 0px);
+    height: anchor-size(height, 0px);
+    pointer-events: none;
+    outline: 2px dashed var(--ed-accent);
+    outline-offset: -4px;
+    clip-path: inset(0);
+  }
+}
+
 .status-bar {
   display: flex;
   flex-wrap: wrap;
