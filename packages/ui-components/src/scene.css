@@ -177,7 +177,8 @@
   min-height: 0;
 }
 
-.ancadeba-action-bar-button[hidden],
+.ancadeba-button[hidden],
+.ancadeba-save-import[hidden],
 .ancadeba-action-bar-empty[hidden] {
   display: none;
 }

@@ -1422,6 +1422,7 @@ describe('adding scene components', () => {
     editor.navigate('shop', undefined, true)
     edit('Component type', 'button')
     edit('Description', 'Travel to the next location.\nYour progress is kept.')
+    edit('Show only when active', 'true')
     edit('Unavailable explanation (optional override)', 'Finish your conversation first.')
     edit('Action', 'enter-scene')
     expect(field('Description').value).toContain('Your progress is kept.')
@@ -1429,6 +1430,7 @@ describe('adding scene components', () => {
     const button = persist().scenes[0]!.components.find((component) => component.type === 'button')!
     expect(button).toMatchObject({
       description: 'Travel to the next location.\nYour progress is kept.',
+      showOnlyWhenActive: true,
       unavailableText: 'Finish your conversation first.',
     })
   })
@@ -2608,6 +2610,7 @@ describe('action bar editor controls', () => {
     expect(root.all().filter((node) => node.className === 'action-bar-slot')).toHaveLength(15)
     edit('Slot label', 'Changed')
     edit('Description', 'Perform the selected action.')
+    edit('Show only when active', 'true')
     edit('Unavailable explanation (optional override)', 'Select a target first.')
     edit('Virtual input', 'slot-2')
     expect(controls.hasDrafts()).toBe(true)
@@ -2628,6 +2631,7 @@ describe('action bar editor controls', () => {
           '1': {
             label: 'Changed',
             description: 'Perform the selected action.',
+            showOnlyWhenActive: true,
             unavailableText: 'Select a target first.',
             inputBinding: { input: 'slot-2' },
           },
@@ -6830,6 +6834,7 @@ describe('editor draft workflows', () => {
     ui.click('Trigger links')
     ui.edit('Button', 'one')
     ui.edit('Label', 'Changed label')
+    ui.edit('Show only when active', 'true')
     ui.edit('Button', 'two')
     expect(ui.field('Button').value).toBe('one')
     expect(ui.field('Label').value).toBe('Changed label')
@@ -6846,6 +6851,7 @@ describe('editor draft workflows', () => {
     expect(ui.editor.hasDrafts()).toBe(false)
     ui.edit('Button', 'one')
     expect(ui.field('Label').value).toBe('Changed label')
+    expect(ui.field('Show only when active').value).toBe('true')
     ui.edit('Game scene', 'other')
     expect(ui.field('Game scene').value).toBe('other')
   })

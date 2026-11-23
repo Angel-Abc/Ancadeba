@@ -444,16 +444,16 @@ function withSaveComponents(resources: IResourceSource): IResourceSource {
 
 const saveLoader = new GameLoader(new JsonResourceLoader(withSaveComponents(source), logger))
 
-describe('character creation and stat discovery', () => {
-  const market: IResourceSource = {
-    readText: (path) =>
-      readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url), 'utf8'),
-    readBytes: async (path) =>
-      new Uint8Array(
-        await readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url)),
-      ),
-  }
+const market: IResourceSource = {
+  readText: (path) =>
+    readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url), 'utf8'),
+  readBytes: async (path) =>
+    new Uint8Array(
+      await readFile(new URL(`../sample-games/market-value/${path}`, import.meta.url)),
+    ),
+}
 
+describe('character creation and stat discovery', () => {
   const stat = (id: string) => ({ source: 'game.state', path: ['stats', id] }) as const
 
   async function launch(preview: boolean, sceneKeys?: InputDefinition['scene-keys']) {
@@ -4132,6 +4132,7 @@ describe('scene renderer', () => {
                   id: 'read-sign',
                   type: 'button',
                   label: 'Read sign',
+                  showOnlyWhenActive: true,
                   placement: { row: 2, column: 1 },
                   action: { type: 'interact-map', mapView: 'coast-map', object: 'sign' },
                 })
@@ -4179,6 +4180,7 @@ describe('scene renderer', () => {
       expect(object.style.getPropertyValue('grid-row')).toBe('5 / span 1')
       expect(object.unavailable).toBe(false)
       expect(button.unavailable).toBe(false)
+      expect(button.hidden).toBe(false)
       object.dispatchEvent(new Event('click'))
       flush(engine)
       button.dispatchEvent(new Event('click'))
@@ -4191,17 +4193,65 @@ describe('scene renderer', () => {
       movement.move(engine.lifecycle!.activeScene!, 'coast-map', 'west')
       expect(object.unavailable).toBe(true)
       expect(button.unavailable).toBe(true)
+      expect(button.hidden).toBe(true)
       object.dispatchEvent(new Event('click'))
       flush(engine)
       tasks.shift()!()
       flush(engine)
       expect(object.unavailable).toBe(true)
       expect(applied).toHaveLength(2)
+      movement.move(engine.lifecycle!.activeScene!, 'coast-map', 'east')
+      tasks.shift()!()
+      expect(button.hidden).toBe(false)
       engine.lifecycle!.enterScene('village')
       object.dispatchEvent(new Event('click'))
       button.dispatchEvent(new Event('click'))
       flush(engine)
       expect(applied).toHaveLength(2)
+    },
+  )
+
+  it.each(['preview', 'standalone'])(
+    'shows each Market Value beach pickup only while it can be used in the %s host',
+    async (host) => {
+      const game = await new GameLoader(new JsonResourceLoader(market, logger)).load()
+      const { target, document } = setup(game)
+
+      const engine = new Engine(
+        { load: async () => game },
+        host === 'preview'
+          ? new EditorPreviewHost(target.asElement())
+          : new DomEngineHost(target.asElement()),
+        logger,
+        () => new MessageBus<EngineMessages>(),
+        timing,
+      )
+
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      const lifecycle = engine.lifecycle!
+      lifecycle.startGame()
+      const scene = lifecycle.enterScene('adventure')
+      const movement = lifecycle.currentGame!.mapMovement!
+      const slot = (id: string) => target.find((node) => node.dataset.actionBarSlot === id)!
+      const wood = slot('1')
+      const rope = slot('2')
+      const cell = wood.parent!
+      const empty = cell.find((node) => node.className === 'ancadeba-action-bar-empty')!
+      expect([wood.hidden, rope.hidden, empty.hidden]).toEqual([true, true, false])
+      movement.place(scene, 'coast-map', { x: 7, y: 9 })
+      expect([wood.hidden, rope.hidden, empty.hidden]).toEqual([false, true, true])
+      movement.place(scene, 'coast-map', { x: 7, y: 10 })
+      expect([wood.hidden, rope.hidden, empty.hidden]).toEqual([true, false, false])
+      movement.place(scene, 'coast-map', { x: 7, y: 9 })
+      wood.focus()
+      wood.click()
+      flush(engine)
+      expect(wood.hidden).toBe(true)
+      expect(empty.hidden).toBe(false)
+      expect(cell.parent!.children[0]).toBe(cell)
+      expect(document.activeElement).toBe(target.find((node) => node.className === 'ancadeba-game'))
+      expect(target.find((node) => node.dataset.mapObject === 'driftwood')!.hidden).toBe(true)
     },
   )
 

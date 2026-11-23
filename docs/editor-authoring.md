@@ -1329,10 +1329,16 @@ requested action or scene navigation, boolean enable condition, and context/inpu
 binding. Choose **Empty slot** to clear a position. Bars can be added to game
 scenes and removed using the panel's controls.
 
+Set **Show only when active** to **Yes** on a scene button or action-bar slot to
+hide it whenever the player cannot use it. For example, a pickup targeting a
+specific map object appears when the player stands beside it and disappears
+when the player moves away or the object becomes hidden. Action-bar slots
+keep their grid positions as pickups appear and disappear.
+
 To show contextual action help, use **Add component → Action information** in a
 scene. Set its label, empty selection text, translations, and grid placement.
 It automatically observes regular scene buttons and action-bar slots in that
-scene on mouse hover or keyboard focus. Unavailable buttons remain focusable
+scene on mouse hover or keyboard focus. Visible unavailable buttons remain focusable
 for inspection and cannot be activated.
 
 The button and slot forms include **Description**, **Description translation**,

@@ -319,6 +319,7 @@
   "tree.action-info": "Action information",
   "actionInfo.help": "Shows the description and unavailable reason for the action currently hovered or focused in this scene. Combat move descriptions are used automatically when the slot has no description.",
   "actionInfo.unavailableText": "Unavailable explanation (optional override)",
+  "controls.showOnlyWhenActive": "Show only when active",
   "actionInfo.unavailableTranslation": "Unavailable explanation translation",
   "tree.language-select": "Language selector",
   "tree.graphic": "Graphic",

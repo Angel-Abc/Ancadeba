@@ -136,6 +136,7 @@
       "slots": {
         "1": {
           "label": "Pick up driftwood",
+          "showOnlyWhenActive": true,
           "action": {
             "type": "interact-map",
             "mapView": "coast-map",
@@ -144,6 +145,7 @@
         },
         "2": {
           "label": "Pick up rope",
+          "showOnlyWhenActive": true,
           "action": {
             "type": "interact-map",
             "mapView": "coast-map",

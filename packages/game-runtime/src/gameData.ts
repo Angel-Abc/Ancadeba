@@ -87,6 +87,7 @@ export interface TextComponentData extends TextTemplate, PlacedComponentData {
 
 export interface ButtonComponentData extends PlacedComponentData {
   readonly type: 'button'
+  readonly showOnlyWhenActive?: boolean | undefined
   readonly label: string
   readonly description?: string | undefined
   readonly unavailableText?: string | undefined

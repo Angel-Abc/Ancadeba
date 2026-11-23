@@ -318,6 +318,7 @@
   "tree.action-info": "Actie-informatie",
   "actionInfo.help": "Toont de beschrijving en reden van onbeschikbaarheid voor de actie onder de muis of met toetsenbordfocus in deze scène. Beschrijvingen van gevechtsacties worden automatisch gebruikt als het actievak geen beschrijving heeft.",
   "actionInfo.unavailableText": "Uitleg bij onbeschikbaarheid (optioneel vervangen)",
+  "controls.showOnlyWhenActive": "Alleen tonen wanneer actief",
   "actionInfo.unavailableTranslation": "Vertaling van uitleg bij onbeschikbaarheid",
   "tree.language-select": "Taalkeuze",
   "tree.graphic": "Afbeelding",

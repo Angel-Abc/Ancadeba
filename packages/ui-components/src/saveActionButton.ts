@@ -55,7 +55,13 @@ export function renderSaveActionButton(
               ? saves?.canImport
               : saves?.canLoad
 
+    const focused = document.activeElement === element
     element.disabled = reading || !allowed
+    element.hidden = Boolean(component.showOnlyWhenActive && element.disabled)
+
+    if (root !== element) root.hidden = element.hidden
+
+    if (focused && element.hidden) context.onActionBarFocusLost?.()
     information.update({
       label: component.label,
       description: component.description ?? '',

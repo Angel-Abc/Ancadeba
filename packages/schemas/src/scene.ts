@@ -151,6 +151,7 @@ export const buttonComponentSchema = z
     id: gameIdSchema,
     type: z.literal('button'),
     ...componentLayoutFields,
+    showOnlyWhenActive: z.boolean().optional(),
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
     description: z.string().optional(),
@@ -167,6 +168,7 @@ export const buttonComponentSchema = z
 
 export const actionBarSlotSchema = z
   .object({
+    showOnlyWhenActive: z.boolean().optional(),
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
     description: z.string().optional(),

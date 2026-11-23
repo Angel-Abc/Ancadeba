@@ -98,6 +98,7 @@ describe('action information authoring and localization', () => {
       slots: {
         '1': {
           label: 'Travel',
+          showOnlyWhenActive: true,
           description: 'Return to the menu.',
           unavailableText: 'Finish the conversation first.',
           action: { type: 'enter-scene', scene: 'start' },
@@ -112,6 +113,7 @@ describe('action information authoring and localization', () => {
       type: 'button',
       placement,
       label: 'Travel',
+      showOnlyWhenActive: true,
       description: 'Return to the menu.',
       unavailableText: 'Finish the conversation first.',
       action: { type: 'enter-scene', scene: 'start' },
@@ -122,13 +124,20 @@ describe('action information authoring and localization', () => {
     expect(inspectProject(project).scenes.find(({ id }) => id === 'adventure')?.components).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ type: 'action-info' }),
-        expect.objectContaining({ type: 'button', description: button.description }),
+        expect.objectContaining({
+          type: 'button',
+          description: button.description,
+          showOnlyWhenActive: true,
+        }),
+        expect.objectContaining({ type: 'action-bar', slots: bar.slots }),
       ]),
     )
     delete bar.slots['1']!.description
+    delete bar.slots['1']!.showOnlyWhenActive
     delete bar.slots['1']!.unavailableText
     save({ type: 'scene.setActionBar', sceneId: 'adventure', component: bar })
     delete button.description
+    delete button.showOnlyWhenActive
     delete button.unavailableText
     save({ type: 'scene.upsertComponent', sceneId: 'adventure', component: button })
 
@@ -136,9 +145,15 @@ describe('action information authoring and localization', () => {
       ({ id }) => id === 'adventure',
     )!.components
 
-    expect(components.find(({ id }) => id === 'travel')).toHaveProperty('description', undefined)
+    const savedButton = components.find(
+      (component) => component.type === 'button' && component.id === 'travel',
+    )
+
+    expect(savedButton).toHaveProperty('description', undefined)
+    expect(savedButton).toHaveProperty('showOnlyWhenActive', undefined)
     const savedBar = components.find((component) => component.type === 'action-bar')!
     expect(savedBar.slots['1']?.description).toBeUndefined()
+    expect(savedBar.slots['1']?.showOnlyWhenActive).toBeUndefined()
     expect(savedBar.slots['1']?.unavailableText).toBeUndefined()
   })
 

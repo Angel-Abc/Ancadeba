@@ -91,7 +91,11 @@ export class ButtonComponentRenderer implements IComponentRenderer<ButtonCompone
     }
 
     const update = () => {
+      const focused = context.document.activeElement === element
       updateAvailability()
+      element.hidden = Boolean(component.showOnlyWhenActive && element.disabled)
+
+      if (focused && element.hidden) context.onActionBarFocusLost?.()
       information.update({
         label: component.label,
         description: component.description ?? '',

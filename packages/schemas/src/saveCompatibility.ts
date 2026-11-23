@@ -24,6 +24,7 @@ const presentationFields = new Set([
   'speaker',
   'unavailableText',
   'unavailableTextKey',
+  'showOnlyWhenActive',
   'messages',
   'messageKeys',
   'equipmentSlotKeys',

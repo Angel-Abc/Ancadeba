@@ -16,6 +16,7 @@ import {
 import { inventoryActionsForm } from './inventoryActionsForm.js'
 import { nearbyForm } from './nearbyForm.js'
 import { sceneChoices } from './choiceLabels.js'
+import { actionVisibilityField } from './actionDescriptionFields.js'
 
 const binding = (path: string): GameBindingDefinition => ({
   source: 'game.state',
@@ -93,6 +94,7 @@ function buttonTriggers(
       )
 
       const current = available.find(({ id }) => id === target)
+      const visibility = { showOnlyWhenActive: current?.showOnlyWhenActive }
       let id = current?.id ?? ''
       let label = current?.label ?? ''
       let labelKey = current?.labelKey ?? ''
@@ -171,6 +173,7 @@ function buttonTriggers(
             enabled = next
           },
         ),
+        actionVisibilityField(controls, visibility),
       )
 
       const readButton = (): Extract<
@@ -181,6 +184,7 @@ function buttonTriggers(
         type: 'button',
         label,
         placement,
+        ...visibility,
         ...(labelKey ? { labelKey } : {}),
         ...(action
           ? {

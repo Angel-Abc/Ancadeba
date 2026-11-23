@@ -118,6 +118,7 @@ export function editControls(
             {
               ...previousSlot,
               ...slot,
+              showOnlyWhenActive: slot.showOnlyWhenActive,
               labelKey: slot.labelKey,
               description: slot.description,
               descriptionKey: slot.descriptionKey,

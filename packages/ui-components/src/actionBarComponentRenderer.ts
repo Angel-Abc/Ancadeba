@@ -44,23 +44,20 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
 
       for (const [id, { button, label, badge, lock, empty, information }] of buttons) {
         const focused = document.activeElement === button
+        const slot = component.slots[id]!
+        const action = slot.action
 
         const available =
-          !['inventory-action', 'nearby-action', 'dialogue-action'].includes(
-            component.slots[id]!.action.type,
-          ) ||
-          (component.slots[id]!.action.type === 'dialogue-action' &&
-            component.slots[id]!.action.command.type !== 'choose') ||
+          !['inventory-action', 'nearby-action', 'dialogue-action'].includes(action.type) ||
+          (action.type === 'dialogue-action' && action.command.type !== 'choose') ||
           Boolean(scene && actionBar?.getSlot(scene, component.id, id))
 
         button.disabled = !scene || !actionBar?.isEnabled(scene, component.id, id)
-        button.hidden = !available
+        button.hidden = !available || Boolean(slot.showOnlyWhenActive && button.disabled)
         label.textContent =
-          component.slots[id]!.action.type === 'dialogue-action'
-            ? ((scene && actionBar?.getSlot(scene, component.id, id)?.label) ??
-              component.slots[id]!.label)
-            : component.slots[id]!.label
-        const action = component.slots[id]!.action
+          action.type === 'dialogue-action'
+            ? ((scene && actionBar?.getSlot(scene, component.id, id)?.label) ?? slot.label)
+            : slot.label
 
         const definition =
           action.type === 'combat-action' && scene?.type === 'game'
@@ -150,8 +147,6 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
             ? definition?.moves[action.command.move]
             : undefined
 
-        const slot = component.slots[id]!
-
         const reason = button.disabled
           ? slot.unavailableText || button.title || actionUnavailableReason(action, context)
           : ''
@@ -164,12 +159,12 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
           reason,
         })
 
-        if (empty) empty.hidden = available
+        if (empty) empty.hidden = !button.hidden
 
-        const binding = component.slots[id]!.inputBinding
+        const binding = slot.inputBinding
 
         const codes =
-          available && binding && binding.context === input?.context
+          !button.hidden && binding && binding.context === input?.context
             ? (input.getKeyboardCodes?.(binding.context, binding.input) ?? [])
             : []
 
@@ -233,6 +228,7 @@ export class ActionBarComponentRenderer implements IComponentRenderer<ActionBarC
         let empty: HTMLElement | undefined
 
         if (
+          slot.showOnlyWhenActive ||
           slot.action.type === 'inventory-action' ||
           slot.action.type === 'nearby-action' ||
           (slot.action.type === 'dialogue-action' && slot.action.command.type === 'choose')

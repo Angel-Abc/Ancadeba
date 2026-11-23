@@ -67,6 +67,8 @@ describe('gameplay save compatibility', () => {
     const text = scene.components.find((component) => component.type === 'text')!
     text.textKey = 'translation.replacement'
     text.text = 'Revised literal fallback'
+    const bar = scene.components.find((component) => component.type === 'action-bar')!
+    bar.slots['1']!.showOnlyWhenActive = true
     inventory.owners.player!.labelKey = 'translation.replacement'
     inventory.owners.player!.label = 'Another fallback'
     inventory.owners.player!.equipmentSlots.charm = 'Renamed slot'
