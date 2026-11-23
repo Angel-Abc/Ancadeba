@@ -149,7 +149,6 @@ export class AuthoredPlaythrough {
       this.rules.state
         .filter(
           (field) =>
-            ('type' in field || typeof field.value !== 'number') &&
             ![this.rules.log?.path, this.rules.clock?.path].some(
               (path) => JSON.stringify(path) === JSON.stringify(field.path),
             ),

@@ -58,6 +58,7 @@
   "choices.exists": "A choice with this ID already exists.",
   "choices.options": "Options",
   "forms.portrait": "Profile portrait",
+  "forms.full-body": "Full-length character",
   "forms.alt": "Alternative text",
   "forms.default": "Default answer",
   "forms.id": "ID",
@@ -2382,7 +2383,7 @@
   "forms.invalidBinding": "Choose a writable state field of the matching type that this form uses only once.",
   "forms.invalidDefault": "Choose a valid default answer for this field.",
   "forms.invalidGraphic": "Choose an existing graphic and valid appearance settings.",
-  "forms.invalidPortrait": "Configure a character portrait in the character profile.",
+  "forms.invalidPortrait": "Choose a character in the character profile.",
   "forms.invalidKey": "Choose a saved translation key or clear it to use the literal wording.",
   "forms.invalidWording": "Enter the wording for this field."
 }

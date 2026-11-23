@@ -66,6 +66,7 @@ export class GameActionBar implements IGameActionBar {
       lifecycle.currentGame?.dialogue,
     private readonly quests: () => IGameQuests | undefined = () => lifecycle.currentGame?.quests,
     private readonly mapObjects: IGameMapObjects | undefined = lifecycle.currentGame?.mapObjects,
+    private readonly requestSceneAction?: (action: string, payload: unknown) => void,
   ) {
     this.ownedContext = selection ? undefined : new GameInventoryContext(lifecycle, inventory)
     this.inventoryContext = selection ?? this.ownedContext!
@@ -397,6 +398,7 @@ export class GameActionBar implements IGameActionBar {
 
     if (action.type === 'request-action') {
       if (request) request(action.action, resolved.payload)
+      else if (this.requestSceneAction) this.requestSceneAction(action.action, resolved.payload)
       else scene.game.actions?.request(action.action, resolved.payload)
 
       return

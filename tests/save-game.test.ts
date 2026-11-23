@@ -304,6 +304,23 @@ describe('persistent player progress', () => {
     expect(engine.lifecycle!.activeScene!.data.id).toBe('gallery')
   })
 
+  it('restores nearby and inventory selections after saving from a stand-alone scene', async () => {
+    const store = new MemorySaves()
+    const { engine, start } = await launch(store)
+    const game = start()
+    const scene = engine.lifecycle!.activeScene!
+    game.nearby!.select(scene, 'nearby', 'curator')
+    game.inventorySelection!.select(scene, 'items', 'healing-potion-one')
+    engine.lifecycle!.enterScene('settings')
+
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    const restored = engine.lifecycle!.activeScene!
+    const current = engine.lifecycle!.currentGame!
+    expect(current.nearby!.getSelection(restored, 'nearby')?.entry).toBe('curator')
+    expect(current.inventorySelection!.get(restored, 'items')?.item).toBe('healing-potion-one')
+  })
+
   it('loads the gameplay snapshot from a menu and releases the suspended playthrough', async () => {
     const { engine, start } = await launch(
       new MemorySaves(),

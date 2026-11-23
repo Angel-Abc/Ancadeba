@@ -214,10 +214,9 @@ export function bindGraphicDefinitionsEditor(
         }),
     )
 
-    // A definition chosen in the explorer needs no kind, definition or new-ID pickers.
+    // Keep the pickers visible so related definitions can be edited in the same draft.
     if (selected && Object.hasOwn(catalog[kind], selected))
-      for (const control of [type, picker, newDefinition, add])
-        control.setAttribute('data-explorer-chosen', '')
+      for (const control of [newDefinition, add]) control.setAttribute('data-explorer-chosen', '')
     const help = document.createElement('p')
     help.className = 'help'
     help.textContent = t('definitions.help')

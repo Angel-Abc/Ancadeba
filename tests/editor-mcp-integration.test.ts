@@ -816,7 +816,7 @@ describe('MCP and shared editor integration', () => {
 
   it('uploads binary PNG bytes and rejects invalid images or stale uploads without publishing files', async () => {
     const png = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jlyIAAAAASUVORK5CYII=',
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADElEQVQImWMwTpsJAAICATMDms/iAAAAAElFTkSuQmCC',
       'base64',
     )
 
@@ -857,8 +857,8 @@ describe('MCP and shared editor integration', () => {
       arguments: {
         expectedRevision: saved.revision,
         id: 'invalid',
-        format: 'jpeg',
-        dataBase64: png.toString('base64'),
+        format: 'png',
+        dataBase64: png.subarray(0, 33).toString('base64'),
       },
     })
 

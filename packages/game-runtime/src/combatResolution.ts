@@ -792,7 +792,12 @@ export function resolveCombatRound(
   }
 
   mechanics.start()
-  mechanics.emit({ type: 'round-start' })
+  outcome ??= combatOutcome(definition, health)
+
+  if (!outcome) {
+    mechanics.emit({ type: 'round-start' })
+    outcome ??= combatOutcome(definition, health)
+  }
 
   for (const actor of actors) {
     if (outcome) break
@@ -802,6 +807,7 @@ export function resolveCombatRound(
     if (health[actor.id]! > 0) {
       guard[actor.id] = 0
       mechanics.emit({ type: 'turn-start', actor: actor.id })
+      outcome ??= combatOutcome(definition, health)
       const starting = [...(statuses[actor.id] ?? [])]
       turnActor = actor.id
       refreshedThisTurn.clear()
@@ -1215,8 +1221,10 @@ export function resolveCombatRound(
         cursors[actor.id] = actor.ai ? decision.cursor : current.enemies[actor.id]!.cursor
 
       mechanics.emit({ type: 'turn-end', actor: actor.id })
+      outcome ??= combatOutcome(definition, health)
 
       for (const active of starting) {
+        if (outcome) break
         const list = statuses[actor.id] ?? []
         const index = list.findIndex((entry) => entry.id === active.id)
 
@@ -1239,6 +1247,8 @@ export function resolveCombatRound(
             status: active.id,
           })
         }
+
+        outcome ??= combatOutcome(definition, health)
       }
 
       turnActor = undefined
@@ -1251,6 +1261,7 @@ export function resolveCombatRound(
   }
 
   mechanics.emit({ type: 'round-end' })
+  outcome ??= combatOutcome(definition, health)
 
   if (outcome) entries.push({ type: outcome })
 

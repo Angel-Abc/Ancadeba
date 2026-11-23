@@ -27,7 +27,7 @@ import {
   projectExportRequestSchema,
 } from '@ancadeba/editor-core'
 import { gameIdSchema, gameSchema, assetCatalogSchema, assetCatalogFile } from '@ancadeba/schemas'
-import { inspectImageSource } from '@ancadeba/game-runtime'
+import { inspectProjectImage } from './projectImageSource.js'
 import { randomUUID } from 'node:crypto'
 import { applyCommand as editProject } from '@ancadeba/editor-core'
 import type { EditorProjectRepository } from './editorProjectRepository.js'
@@ -585,14 +585,10 @@ export class EditorProjectService {
 
       if (!this.features.assetImport || !this.repository.createAsset)
         throw new EditorError(503, 'unsupported_import', 'Asset import is unavailable')
-      let info: ReturnType<typeof inspectImageSource>
+      let info: Awaited<ReturnType<typeof inspectProjectImage>>
 
       try {
-        info = inspectImageSource(
-          request.format,
-          bytes,
-          request.format === 'svg' ? Buffer.from(bytes).toString('utf8') : '',
-        )
+        info = await inspectProjectImage(request.format, bytes)
       } catch (error) {
         throw new EditorError(
           422,

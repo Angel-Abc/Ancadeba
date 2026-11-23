@@ -114,6 +114,30 @@ const traces = (sim: CombatSimulation) =>
   sim.trace().flatMap((frame) => (frame.mechanicsEvent ? [frame.mechanicsEvent] : []))
 
 describe('trigger priorities and activation limits', () => {
+  it.each(['encounter-start', 'round-start', 'turn-start', 'turn-end', 'round-end'] as const)(
+    'recognizes a lethal %s trigger in the same round',
+    (event) => {
+      const definition = fixture({
+        event,
+        target: undefined,
+        effects: [{ type: 'damage', actor: 'eel', source: 'player', amount: 160 }],
+      })
+
+      const result = resolveCombatRound(definition, {
+        health: { player: 160, eel: 160 },
+        maximumHealth: { player: 160, eel: 160 },
+        guard: {},
+        seed: 1,
+        escape: false,
+        plan: [],
+        enemies: { eel: { moves: [], cursor: 0 } },
+      })
+
+      expect(result.health.eel).toBe(0)
+      expect(result.outcome).toBe('victory')
+    },
+  )
+
   it('validates bounded optional controls without adding defaults to legacy triggers', () => {
     for (const patch of [
       { priority: 10001 },

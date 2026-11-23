@@ -9,6 +9,10 @@ export const assetIdSchema = baseIdSchema.refine(
 
 const gameIdSchema = assetIdSchema
 
+export function assetEntry<T>(entries: Readonly<Record<string, T>>, id: string): T | undefined {
+  return Object.hasOwn(entries, id) ? entries[id] : undefined
+}
+
 export const assetPathSchema = z
   .string()
   .min(1)
@@ -129,7 +133,7 @@ export const assetCatalogSchema = z
 
         if (pieceIds.has(piece.id)) issue([...path, 'id'], 'Piece IDs must be unique within a part')
         pieceIds.add(piece.id)
-        const image = catalog.images[piece.image]
+        const image = assetEntry(catalog.images, piece.image)
 
         if (!image) issue([...path, 'image'], 'Missing image')
 
@@ -157,7 +161,7 @@ export const assetCatalogSchema = z
           issue([...path, 'default'], 'Default must be an allowed part')
 
         for (const partId of selection.parts) {
-          const part = catalog.parts[partId]
+          const part = assetEntry(catalog.parts, partId)
 
           if (!part) issue([...path, 'parts'], `Missing part ${partId}`)
 
@@ -240,9 +244,9 @@ export function assertGraphicReference(
   visual: string,
   appearance: GraphicAppearance,
 ): void {
-  const image = catalog.images[visual]
-  const part = catalog.parts[visual]
-  const composition = catalog.compositions[visual]
+  const image = assetEntry(catalog.images, visual)
+  const part = assetEntry(catalog.parts, visual)
+  const composition = assetEntry(catalog.compositions, visual)
 
   if (!image && !part && !composition) throw new Error(`Unknown visual: ${visual}`)
 
@@ -274,7 +278,7 @@ export function assertGraphicReference(
     throw new Error('Composition colors belong to its slots')
 
   for (const [slot, selection] of Object.entries(appearance.slots)) {
-    const definition = composition?.slots[slot]
+    const definition = composition && assetEntry(composition.slots, slot)
 
     if (!definition) throw new Error(`Unknown composition slot: ${slot}`)
     const selected = selection.part === undefined ? definition.default : selection.part
@@ -282,7 +286,11 @@ export function assertGraphicReference(
     if (selected !== null && !definition.parts.includes(selected))
       throw new Error(`Part ${selected} is not allowed in slot ${slot}`)
 
-    for (const id of selected === null || selection.partBinding ? definition.parts : [selected])
-      check(catalog.parts[id]!, selection)
+    for (const id of selected === null || selection.partBinding ? definition.parts : [selected]) {
+      const part = assetEntry(catalog.parts, id)
+
+      if (!part) throw new Error(`Unknown part: ${id}`)
+      check(part, selection)
+    }
   }
 }

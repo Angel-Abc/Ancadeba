@@ -23,6 +23,28 @@ interface AuthoredSaveDependencies {
   onObserverError: (error: unknown) => void
 }
 
+function sceneSelections(
+  scene: Extract<SceneInstance, { type: 'game' }>,
+  runtime: GameActionRuntime,
+): Pick<GameSave, 'nearby' | 'inventorySelection'> {
+  const nearby: GameSave['nearby'] = {}
+  const inventorySelection: GameSave['inventorySelection'] = {}
+
+  for (const { id, type } of scene.data.components) {
+    if (type === 'nearby') {
+      const selected = runtime.nearby?.getSelection(scene, id)
+
+      if (selected) nearby[id] = selected.entry
+    } else if (type === 'inventory') {
+      const selected = runtime.inventorySelection?.get(scene, id)
+
+      if (selected) inventorySelection[id] = selected.item
+    }
+  }
+
+  return { nearby, inventorySelection }
+}
+
 /** Coordinates snapshots of the built-in authored runtime; custom runtime state is never silently omitted. */
 export function bindAuthoredGameSaves({
   game,
@@ -38,6 +60,15 @@ export function bindAuthoredGameSaves({
 }: AuthoredSaveDependencies) {
   let lastScene: string | undefined
   let lastGame: GameInstance | undefined
+  let lastSelections: ReturnType<typeof sceneSelections> = { nearby: {}, inventorySelection: {} }
+
+  const captureSelections = () => {
+    const current = lifecycle.activeScene
+    const runtime = current?.type === 'game' ? runtimeFor(current.game) : undefined
+
+    if (current?.type === 'game' && runtime && !current.disposed)
+      lastSelections = sceneSelections(current, runtime)
+  }
 
   const prepare = (save: GameSave, instance: GameInstance) => {
     const playthrough = playthroughFor(instance)
@@ -87,24 +118,7 @@ export function bindAuthoredGameSaves({
         ),
         progression: { ...runtime.actions.progression },
         ...runtime.save(),
-        nearby: Object.fromEntries(
-          scene?.type === 'game'
-            ? scene.data.components.flatMap((component) => {
-                const selection = runtime.nearby?.getSelection(scene, component.id)
-
-                return selection ? [[component.id, selection.entry]] : []
-              })
-            : [],
-        ),
-        inventorySelection: Object.fromEntries(
-          scene?.type === 'game'
-            ? scene.data.components.flatMap((component) => {
-                const selection = runtime.inventorySelection?.get(scene, component.id)
-
-                return selection ? [[component.id, selection.item]] : []
-              })
-            : [],
-        ),
+        ...(scene?.type === 'game' ? sceneSelections(scene, runtime) : lastSelections),
         activeDialogue: runtime.dialogue?.activePanel(),
       }
     },
@@ -225,15 +239,19 @@ export function bindAuthoredGameSaves({
     if (policyGame !== lifecycle.currentGame) {
       for (const release of policySubscriptions) release()
       policyGame = lifecycle.currentGame
+      lastSelections = { nearby: {}, inventorySelection: {} }
       policySubscriptions = [
         policyGame?.mapMovement?.subscribeChanges(() => saves.notify()),
         policyGame?.bindings?.subscribeChanges(() => saves.notify()),
+        policyGame?.nearby?.subscribeChanges(captureSelections),
+        policyGame?.inventorySelection?.subscribe(captureSelections),
       ].filter((release) => release !== undefined)
     }
 
     if (current?.type === 'game') {
       lastScene = current.data.id
       lastGame = current.game
+      captureSelections()
     } else if (!lifecycle.currentGame) {
       lastScene = undefined
       lastGame = undefined

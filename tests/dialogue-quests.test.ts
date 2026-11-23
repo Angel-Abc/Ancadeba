@@ -455,6 +455,40 @@ describe('branching dialogue and quest transactions', () => {
       expect(game().quests!.snapshot('delivery')?.status).not.toBe('completed')
     },
   )
+  it('writes a negative fractional value to an inferred number and then restores an integer', async () => {
+    const source = dialogueSchema.parse({
+      ...dialogue,
+      nodes: {
+        ...dialogue.nodes,
+        greeting: {
+          ...dialogue.nodes.greeting,
+          choices: [
+            {
+              id: 'decrease',
+              label: 'Decrease',
+              next: 'greeting',
+              effects: [{ type: 'set-state', path: ['gold'], value: -0.5 }],
+            },
+            {
+              id: 'restore',
+              label: 'Restore',
+              end: true,
+              effects: [{ type: 'set-state', path: ['gold'], value: 2 }],
+            },
+          ],
+        },
+      },
+    })
+
+    const { select, command, value } = await setup({ dialogue: source })
+    select()
+    command('start')
+    command('choose', 1)
+    expect(value('gold')).toMatchObject({ value: -0.5 })
+    command('choose', 2)
+    expect(value('gold')).toMatchObject({ value: 2 })
+  })
+
   it('requires the scalar/log adapter for an atomic choice even when numeric transactions are supported', async () => {
     const { game, active, select, command, value } = await setup({ host: true })
     select()

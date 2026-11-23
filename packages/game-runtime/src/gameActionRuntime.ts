@@ -300,6 +300,7 @@ export class GameActionRuntime implements IGameRuntime {
           () => this.dialogue,
           () => this.quests,
           this.mapObjects,
+          (action, payload) => this.actions.requestSceneAction(action, payload),
         )
       : undefined
 

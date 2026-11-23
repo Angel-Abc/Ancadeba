@@ -1,4 +1,5 @@
 import {
+  assetEntry,
   characterAppearance,
   inventoryColors,
   type AppearanceLibrary,
@@ -49,9 +50,9 @@ export function resolveCharacterAppearance(
   }
 
   const bounds = (
-    assets.images[preset.visual] ??
-    assets.parts[preset.visual] ??
-    assets.compositions[preset.visual]
+    assetEntry(assets.images, preset.visual) ??
+    assetEntry(assets.parts, preset.visual) ??
+    assetEntry(assets.compositions, preset.visual)
   )?.bounds
 
   return {

@@ -11,7 +11,7 @@ import {
   combatFile,
   combatLibraryFile,
 } from '@ancadeba/schemas'
-import { validateImageSource } from '@ancadeba/game-runtime'
+import { validateProjectImage } from './projectImageSource.js'
 import {
   EditorError,
   type CommandResult,
@@ -165,10 +165,14 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
   async duplicate(request: DuplicateProjectRequest): Promise<void> {
     const files = await readProjectCopyFiles(this.workspace, request.path)
 
+    const manifestFile = Object.hasOwn(files, 'game.json')
+      ? 'game.json'
+      : Object.keys(files).find((file) => file.toLowerCase() === 'game.json')
+
     let source: unknown
 
     try {
-      source = JSON.parse(Buffer.from(files['game.json'] ?? []).toString('utf8'))
+      source = JSON.parse(Buffer.from(manifestFile ? files[manifestFile]! : []).toString('utf8'))
     } catch {
       throw new EditorError(
         409,
@@ -183,6 +187,8 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
     )
 
     const text = manifest.toString('utf8')
+
+    if (manifestFile && manifestFile !== 'game.json') delete files[manifestFile]
     files['game.json'] = manifest
     await createWorkspaceProjectFiles(this.workspace, request.destination, files, async () => {
       const source = await this.load(
@@ -414,11 +420,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
             try {
               const bytes = await this.workspace.read(projectPath(folder, image.source))
               sources.push([image.source, createHash('sha256').update(bytes).digest('hex')])
-              validateImageSource(
-                image,
-                bytes,
-                image.format === 'svg' ? Buffer.from(bytes).toString('utf8') : '',
-              )
+              await validateProjectImage(image, bytes)
             } catch (error) {
               sources.push([image.source, null])
               sourceDiagnostics.push({
@@ -714,11 +716,7 @@ export class WorkspaceProjectRepository implements EditorProjectRepository {
           overrides.get(image.source) ??
           (await this.workspace.read(projectPath(folder, image.source)))
 
-        validateImageSource(
-          image,
-          bytes,
-          image.format === 'svg' ? Buffer.from(bytes).toString('utf8') : '',
-        )
+        await validateProjectImage(image, bytes)
       } catch (error) {
         diagnostics.push({
           code: 'invalid_asset_source',

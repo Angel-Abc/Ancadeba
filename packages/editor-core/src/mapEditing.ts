@@ -37,10 +37,18 @@ export function editMap(
     throw new EditorError(409, 'map_exists', 'Choose an unused map ID')
   const previous = object(documents[file])
   const terrain = object(previous.terrain)
+  const tilesets = object(previous.tilesets)
   documents[file] = {
     ...previous,
     ...command.map,
-    tilesets: command.map.tilesets,
+    tilesets:
+      command.map.tilesets &&
+      Object.fromEntries(
+        Object.entries(command.map.tilesets).map(([id, tileset]) => [
+          id,
+          { ...object(tilesets[id]), ...tileset },
+        ]),
+      ),
     objects: command.map.objects?.map((entry) => ({
       ...object(
         Array.isArray(previous.objects)
@@ -100,7 +108,7 @@ export function editMap(
           ...object(terrain[id]),
           ...definition,
           color: definition.color,
-          tile: definition.tile,
+          tile: definition.tile && { ...object(object(terrain[id]).tile), ...definition.tile },
           walkable: definition.walkable,
           movementCostMs: definition.movementCostMs,
         },

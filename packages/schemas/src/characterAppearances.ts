@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   assetIdSchema as id,
+  assetEntry,
   assertGraphicReference,
   boundsSchema,
   colorsSchema,
@@ -131,7 +132,8 @@ export function appearanceIssues(
 
     for (const [slot, selection] of Object.entries(appearance.slots)) {
       const location = [...path, 'slots', slot]
-      const allowed = assets.compositions[visual]?.slots[slot]?.parts
+      const composition = assetEntry(assets.compositions, visual)
+      const allowed = composition && assetEntry(composition.slots, slot)?.parts
 
       if (selection.part && allowed && !allowed.includes(selection.part))
         add([...location, 'part'], 'Part ' + selection.part + ' is not allowed in slot ' + slot)
@@ -153,10 +155,13 @@ export function appearanceIssues(
     }
 
     check([...path, 'appearance'], preset.visual, preset.appearance)
-    const composition = assets?.compositions[preset.visual]
+    const composition = assetEntry(assets.compositions, preset.visual)
 
-    const bounds = (composition ?? assets?.parts[preset.visual] ?? assets?.images[preset.visual])
-      ?.bounds
+    const bounds = (
+      composition ??
+      assetEntry(assets.parts, preset.visual) ??
+      assetEntry(assets.images, preset.visual)
+    )?.bounds
 
     const crop = preset.portraitCrop
 
@@ -173,7 +178,7 @@ export function appearanceIssues(
 
     for (const [slot, target] of Object.entries(preset.equipment)) {
       const location = [...path, 'equipment', slot]
-      const mapped = composition?.slots[target]
+      const mapped = composition && assetEntry(composition.slots, target)
 
       if (!mapped) add(location, 'Unknown composition slot: ' + target)
 
@@ -215,7 +220,8 @@ export function appearanceIssues(
     for (const [slot, target] of Object.entries(preset.equipment)) {
       if (!Object.hasOwn(owner.equipmentSlots, slot))
         add([...path, 'owner'], 'Unknown equipment slot: ' + slot)
-      const allowed = assets?.compositions[preset.visual]?.slots[target]?.parts
+      const composition = assets && assetEntry(assets.compositions, preset.visual)
+      const allowed = composition && assetEntry(composition.slots, target)?.parts
 
       for (const item of Object.values(inventory!.itemTypes)) {
         if (

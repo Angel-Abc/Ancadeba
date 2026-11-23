@@ -17,7 +17,7 @@ function logMessage(
       console.debug('\x1B[37m' + finalMessage + '\x1B[0m', ...extraArgs)
       break
     case LogLevel.info:
-      console.info('\x1B[30m' + finalMessage + '\x1B[0m', ...extraArgs)
+      console.info(finalMessage, ...extraArgs)
       break
     case LogLevel.warning:
       console.warn('\x1B[1m\x1B[33m' + finalMessage + '\x1B[0m', ...extraArgs)

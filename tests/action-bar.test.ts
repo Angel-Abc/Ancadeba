@@ -15,6 +15,7 @@ import {
   GameActionBar,
   type EngineMessages,
   type GameActionHandler,
+  type ActionTurnPolicy,
   type ActionRequest,
 } from '@ancadeba/game-runtime'
 import { MessageBus } from '@ancadeba/utilities'
@@ -85,9 +86,10 @@ function scenes() {
   )
 }
 
-async function setup() {
+async function setup(actorAction = false) {
   const game = assembleGameData(manifest, scenes(), input)
   const requests: ActionRequest[] = []
+  const ids = ['first', 'second', 'fallback', 'spare', 'disable']
 
   const handler =
     (id: string): GameActionHandler =>
@@ -117,9 +119,7 @@ async function setup() {
           createSceneState: () => undefined,
         }),
       createGameRules: () => ({
-        handlers: new Map(
-          ['first', 'second', 'fallback', 'spare', 'disable'].map((id) => [id, handler(id)]),
-        ),
+        handlers: new Map(ids.map((id) => [id, handler(id)])),
         inputBindings: [
           ...(['pressed', 'released', 'cancelled'] as const).map((phase) => ({
             context: 'gameplay',
@@ -130,6 +130,15 @@ async function setup() {
           { context: 'gameplay', input: 'spare', action: 'spare' },
           { context: 'menu', input: 'menu', action: 'fallback' },
         ],
+        ...(actorAction && {
+          turns: {
+            actors: ['hero'],
+            phases: ['play'],
+            actionPolicies: new Map<string, ActionTurnPolicy>(
+              ids.map((id) => [id, { scope: id === 'first' ? 'actor' : 'global' }]),
+            ),
+          },
+        }),
       }),
     },
   )
@@ -271,6 +280,20 @@ describe('action bar configuration', () => {
 })
 
 describe('action bar runtime routing', () => {
+  it('attributes a slot action to the current actor for both keyboard and click activation', async () => {
+    const { engine, requests, press, flush } = await setup(true)
+    const scene = engine.lifecycle!.activeScene!
+    const bar = engine.lifecycle!.currentGame!.actionBar!
+    press()
+    bar.activate(scene, 'commands', '1')
+    flush()
+
+    expect(requests.map(({ action, actor }) => [action, actor?.actorId])).toEqual([
+      ['first', 'hero'],
+      ['first', 'hero'],
+    ])
+  })
+
   it('claims all gesture phases and aggregates alternate physical bindings into one activation', async () => {
     const { engine, requests, flush, press } = await setup()
     engine.input!.pressKey('KeyQ')

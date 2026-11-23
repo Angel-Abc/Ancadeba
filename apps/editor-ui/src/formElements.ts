@@ -5,7 +5,15 @@ import { graphicAppearanceForm } from './graphicAppearanceForm.js'
 import { fieldPath } from './specialistEntries.js'
 import { translationChoices, type RuleFormControls } from './ruleFormControls.js'
 
-export const formKinds = ['choice', 'text', 'number', 'checkbox', 'graphic', 'portrait'] as const
+export const formKinds = [
+  'choice',
+  'text',
+  'number',
+  'checkbox',
+  'graphic',
+  'portrait',
+  'full-body',
+] as const
 
 type Wording = { label: string; labelKey?: string | undefined }
 
@@ -45,7 +53,7 @@ export function elementName(view: ProjectView, t: Translate, element: FormElemen
       t('forms.graphic')
     )
 
-  return t('forms.portrait')
+  return t(element.type === 'full-body' ? 'forms.full-body' : 'forms.portrait')
 }
 
 function visuals(view: ProjectView) {
@@ -61,7 +69,7 @@ export function newFormElement(
   kind: FormElement['type'],
   t: Translate,
 ): FormElement {
-  if (kind === 'portrait') return { type: kind }
+  if (kind === 'portrait' || kind === 'full-body') return { type: kind }
 
   if (kind === 'graphic')
     return {

@@ -445,11 +445,19 @@ export class GameQuests implements IGameQuests {
     const transfers: { item: string; destination: { type: 'carried'; owner: string } }[] = []
     const logs: string[] = []
 
-    const assign = (path: readonly string[], value: BindingValue) => {
+    const isCounter = (value: BindingValue | undefined): value is number =>
+      typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+
+    const assign = (
+      path: readonly string[],
+      value: BindingValue,
+      operation: 'set-state' | 'reward',
+    ) => {
       const key = JSON.stringify(path)
       const field = this.game.data.rules?.state.find((entry) => JSON.stringify(entry.path) === key)
       const before = this.bindings.read({ source: 'game.state', path })
       const stat = field && 'type' in field
+      const original = before.status === 'resolved' ? before.value : undefined
 
       if (
         !field ||
@@ -459,13 +467,13 @@ export class GameQuests implements IGameQuests {
         [this.game.data.rules?.clock?.path, this.game.data.rules?.log?.path].some(
           (reserved) => reserved && JSON.stringify(reserved) === key,
         ) ||
-        (typeof value === 'number' &&
-          (stat ? !Number.isFinite(value) : !Number.isSafeInteger(value) || value < 0))
+        (typeof value === 'number' && !Number.isFinite(value)) ||
+        (operation === 'reward' && !stat && (!isCounter(original) || !isCounter(value)))
       )
         return false
 
       if (stat) stats.add(key)
-      originals.set(key, before.status === 'resolved' ? before.value : undefined)
+      originals.set(key, original)
       paths.set(key, [...path])
       values.set(key, value)
 
@@ -478,6 +486,7 @@ export class GameQuests implements IGameQuests {
           !assign(
             effect.path,
             typeof effect.value === 'object' ? this.resolveText(effect.value) : effect.value,
+            'set-state',
           )
         )
           return
@@ -542,7 +551,7 @@ export class GameQuests implements IGameQuests {
           if (
             reward.field.source !== 'game.state' ||
             typeof current !== 'number' ||
-            !assign(reward.field.path.map(String), current + reward.amount)
+            !assign(reward.field.path.map(String), current + reward.amount, 'reward')
           )
             return
         }
@@ -566,14 +575,17 @@ export class GameQuests implements IGameQuests {
       }
     }
 
+    const usesNumericAdapter = (key: string, value: number) =>
+      !stats.has(key) && isCounter(originals.get(key)) && isCounter(value)
+
     const numeric = [...values].flatMap(([key, value]) =>
-      paths.has(key) && typeof value === 'number' && !stats.has(key)
+      paths.has(key) && typeof value === 'number' && usesNumericAdapter(key, value)
         ? [{ path: paths.get(key)!, expected: Number(originals.get(key)), value }]
         : [],
     )
 
     const scalars: StoryStateWrite[] = [...values].flatMap(([key, value]) =>
-      paths.has(key) && (typeof value !== 'number' || stats.has(key))
+      paths.has(key) && (typeof value !== 'number' || !usesNumericAdapter(key, value))
         ? [{ path: paths.get(key)!, expected: originals.get(key), value }]
         : [],
     )

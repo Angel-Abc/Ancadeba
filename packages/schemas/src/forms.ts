@@ -24,6 +24,7 @@ export const formElementSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('number'), ...field, default: z.number().finite().default(0) }),
   z.strictObject({ type: z.literal('checkbox'), ...field, default: z.boolean().default(false) }),
   z.strictObject({ type: z.literal('portrait') }),
+  z.strictObject({ type: z.literal('full-body') }),
   z.strictObject({
     type: z.literal('graphic'),
     visual: assetIdSchema,
@@ -146,8 +147,11 @@ export function formIssues(
           const path = ['rows', r, c, e]
           const add = (message: string) => issues.push({ file, path, message })
 
-          if (element.type === 'portrait' && !game.characterProfile)
-            add('Choose a character profile for the portrait')
+          if (
+            (element.type === 'portrait' || element.type === 'full-body') &&
+            !game.characterProfile
+          )
+            add('Choose a character profile for the appearance preview')
 
           if (element.type === 'graphic') {
             try {

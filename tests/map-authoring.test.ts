@@ -454,10 +454,25 @@ describe('map authoring persistence', () => {
     tiled.tilesets = { nature: { image: 'tiles', tileWidth: 32, tileHeight: 32 } }
     tiled.terrain.grass!.tile = { tileset: 'nature', column: 1, row: 0 }
     await apply({ type: 'game.upsertMap', mapId: 'garden', map: tiled })
+
+    const extended = JSON.parse(
+      Buffer.from(await workspace.read('game/maps/garden.json')).toString(),
+    )
+
+    extended.tilesets.nature.extension = 'tileset'
+    extended.terrain.grass.tile.extension = 'terrain tile'
+    await workspace.write('game/maps/garden.json', Buffer.from(JSON.stringify(extended)))
     const original = await workspace.read('game/maps/garden.json')
     delete tiled.terrain.grass!.color
     await apply({ type: 'game.upsertMap', mapId: 'garden', map: tiled })
     expect((await service.inspect('game')).maps!.garden!.terrain.grass!.color).toBeUndefined()
+
+    const persisted = JSON.parse(
+      Buffer.from(await workspace.read('game/maps/garden.json')).toString(),
+    )
+
+    expect(persisted.tilesets.nature.extension).toBe('tileset')
+    expect(persisted.terrain.grass.tile.extension).toBe('terrain tile')
     await restore('undo')
     expect(await workspace.read('game/maps/garden.json')).toEqual(original)
     await restore('redo')

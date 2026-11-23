@@ -158,8 +158,23 @@ function failure(response: ServerResponse, error: unknown): void {
   response.end(JSON.stringify({ error: message }))
 }
 
+function gameFilesMiddleware(root: string) {
+  return (request: IncomingMessage, response: ServerResponse) => {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      response.setHeader('Allow', 'GET, HEAD')
+      failure(response, new GameFileError(405, 'Method not allowed'))
+
+      return
+    }
+
+    void checkFile(root, request.url ?? '')
+      .then((path) => serveFile(path, request, response))
+      .catch((error: unknown) => failure(response, error))
+  }
+}
+
 export function gameFilesPlugin(directory = sampleGamesDirectory): Plugin {
-  const root = resolve(directory)
+  const middleware = gameFilesMiddleware(resolve(directory))
 
   return {
     name: 'engine-local-game-files',
@@ -167,20 +182,18 @@ export function gameFilesPlugin(directory = sampleGamesDirectory): Plugin {
     configureServer(server) {
       const mounts = new Set(['/sample-games/', `${server.config.base}sample-games/`])
 
-      for (const mount of mounts) {
-        server.middlewares.use(mount, (request, response) => {
-          if (request.method !== 'GET' && request.method !== 'HEAD') {
-            response.setHeader('Allow', 'GET, HEAD')
-            failure(response, new GameFileError(405, 'Method not allowed'))
+      for (const mount of mounts) server.middlewares.use(mount, middleware)
+    },
+  }
+}
 
-            return
-          }
-
-          void checkFile(root, request.url ?? '')
-            .then((path) => serveFile(path, request, response))
-            .catch((error: unknown) => failure(response, error))
-        })
-      }
+/** Serve exported game resources from their literal filenames before Vite's static middleware. */
+export function previewGameFilesPlugin(): Plugin {
+  return {
+    name: 'engine-preview-game-files',
+    configurePreviewServer(server) {
+      const root = resolve(server.config.root, server.config.build.outDir, 'game')
+      server.middlewares.use(`${server.config.base}game/`, gameFilesMiddleware(root))
     },
   }
 }

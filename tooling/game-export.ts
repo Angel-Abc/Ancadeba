@@ -11,7 +11,8 @@ import {
 } from 'node:fs/promises'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { GameLoader, validateImageSource } from '@ancadeba/game-runtime'
+import { GameLoader } from '@ancadeba/game-runtime'
+import { validateProjectImage } from '../apps/editor-server/src/projectImageSource.js'
 import { JsonResourceLoader, type ILogger } from '@ancadeba/utilities'
 import { isPrivateProjectEntry } from '@ancadeba/editor-core'
 import { build } from 'vite-plus'
@@ -154,11 +155,7 @@ export async function exportGame(options: GameExportOptions): Promise<GameExport
 
       for (const image of Object.values(game.assets?.images ?? {})) {
         const bytes = await source.readBytes(image.source)
-        validateImageSource(
-          image,
-          bytes,
-          image.format === 'svg' ? Buffer.from(bytes).toString('utf8') : '',
-        )
+        await validateProjectImage(image, bytes)
       }
     } catch (error) {
       throw new Error(

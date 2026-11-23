@@ -154,7 +154,8 @@ export function bindAppearanceLibrary(
 
     if (!presets.includes(presetId)) presetId = presets[0] ?? ''
 
-    if (!characters.includes(characterId)) characterId = characters[0] ?? ''
+    if (!characters.includes(characterId) || library.characters[characterId]?.preset !== presetId)
+      characterId = characters.find((id) => library.characters[id]!.preset === presetId) ?? ''
 
     const art = group(
       t('appearance.presets'),
@@ -183,7 +184,6 @@ export function bindAppearanceLibrary(
         presets,
         (id) => {
           presetId = id
-          characterId = characters.find((key) => library.characters[key]!.preset === id) ?? ''
           draw()
         },
         false,
@@ -294,22 +294,25 @@ export function bindAppearanceLibrary(
     )
 
     root.append(people)
+    people.append(
+      select(
+        t('appearance.character'),
+        characterId,
+        characterId ? characters : [['', t('form.none')], ...characters],
+        (id) => {
+          characterId = id
+
+          if (id) presetId = library.characters[id]!.preset
+          draw()
+        },
+        false,
+      ),
+    )
     const character = library.characters[characterId]
 
     if (!character) return
 
     people.append(
-      select(
-        t('appearance.character'),
-        characterId,
-        characters,
-        (id) => {
-          characterId = id
-          presetId = library.characters[id]!.preset
-          draw()
-        },
-        false,
-      ),
       select(t('appearance.characterPreset'), character.preset, presets, (id) =>
         change(() => {
           character.preset = id

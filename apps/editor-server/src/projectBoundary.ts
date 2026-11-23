@@ -107,6 +107,7 @@ export async function inspectProjectDirectory(
 
   if (marker) {
     manifest = await readJson(reader, path, marker.name)
+    const projectManifest = gameSchema.safeParse(manifest).success
     const ids = Array.isArray(reference) ? reference : [reference]
     const referenced = ids.some((id) => typeof id === 'string' && id.toLowerCase() === 'game')
 
@@ -117,10 +118,9 @@ export async function inspectProjectDirectory(
       Object.keys(object(manifest)).some(
         (key) => !Object.hasOwn(gameSchema.shape, key) && Object.hasOwn(resource[2].shape, key),
       ) &&
-      resource[2].safeParse(manifest).success &&
-      !gameSchema.safeParse(manifest).success
+      resource[2].safeParse(manifest).success
 
-    if (!referenced && !resourceDocument) kind = 'project'
+    if (projectManifest || (!referenced && !resourceDocument)) kind = 'project'
   } else if (directories.some((child) => recoveryDirectories.has(child))) {
     if (
       owner === undefined ||

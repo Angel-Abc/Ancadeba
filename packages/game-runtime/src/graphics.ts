@@ -1,5 +1,6 @@
 import {
   assertGraphicReference,
+  assetEntry,
   colorSchema,
   type AssetCatalog,
   type GraphicBounds,
@@ -117,12 +118,14 @@ export function resolveGraphic(
     const colors = palette(part, selection, target)
 
     for (const piece of part.pieces) {
-      const image = catalog.images[piece.image]!
+      const image = assetEntry(catalog.images, piece.image)
+
+      if (!image) throw new Error(`Unknown image asset: ${piece.image}`)
       const mapped = { ...image.colors }
 
       for (const [imageSlot, partSlot] of Object.entries(piece.slots))
         mapped[imageSlot] = colors[partSlot]!
-      const anchor = anchors?.[piece.anchor] ?? piece.sourceAnchor
+      const anchor = (anchors && assetEntry(anchors, piece.anchor)) ?? piece.sourceAnchor
       pieces.push({
         imageId: piece.image,
         image,
@@ -133,9 +136,9 @@ export function resolveGraphic(
     }
   }
 
-  const image = catalog.images[visual]
-  const part = catalog.parts[visual]
-  const composition = catalog.compositions[visual]
+  const image = assetEntry(catalog.images, visual)
+  const part = assetEntry(catalog.parts, visual)
+  const composition = assetEntry(catalog.compositions, visual)
   const shown = visible(appearance, visual)
 
   if (shown) {
@@ -150,7 +153,7 @@ export function resolveGraphic(
     else if (part) appendPart(part, appearance, undefined, visual)
     else if (composition) {
       for (const [slot, definition] of Object.entries(composition.slots)) {
-        const selection = appearance.slots[slot] ?? { visible: true, colors: {} }
+        const selection = assetEntry(appearance.slots, slot) ?? { visible: true, colors: {} }
         const fallback = selection.part === undefined ? definition.default : selection.part
 
         const selected = read(
@@ -161,7 +164,12 @@ export function resolveGraphic(
           `${slot}.part`,
         )
 
-        if (selected) appendPart(catalog.parts[selected]!, selection, composition.anchors, slot)
+        if (selected) {
+          const part = assetEntry(catalog.parts, selected)
+
+          if (!part) throw new Error(`Unknown part: ${selected}`)
+          appendPart(part, selection, composition.anchors, slot)
+        }
       }
 
       pieces.sort(

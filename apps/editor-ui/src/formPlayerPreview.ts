@@ -75,7 +75,11 @@ export function formPlayerPreview(
           if (!field || !validFormValue(field, value)) values?.delete(key)
         }
 
-        if (fields.some((e) => e.type === 'graphic' || e.type === 'portrait'))
+        if (
+          fields.some(
+            (e) => e.type === 'graphic' || e.type === 'portrait' || e.type === 'full-body',
+          )
+        )
           graphics ??= createGraphics(path)
         const text = (key: string | undefined, literal: string) => (key && messages[key]) || literal
         rendered = renderForm(

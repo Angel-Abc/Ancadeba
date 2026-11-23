@@ -90,6 +90,19 @@ describe('graphics definitions and source profile', () => {
     ).toThrow()
   })
 
+  it('requires own catalogue entries for visuals and part images', () => {
+    const empty = assetCatalogSchema.parse({ 'schema-version': '1.0.0' })
+    expect(() => resolveGraphic(empty, 'toString', graphicAppearanceSchema.parse({}))).toThrow(
+      'Unknown visual',
+    )
+
+    const invalid = structuredClone(catalog)
+    const piece = invalid.parts.cloak!.pieces[0]!
+    piece.image = 'toString'
+    piece.slots = {}
+    expect(assetCatalogSchema.safeParse(invalid).success).toBe(false)
+  })
+
   it('inspects PNG, JPEG, lossless WebP, and extended WebP bounds and rejects format mismatches', () => {
     const png = new Uint8Array(33)
     png.set([137, 80, 78, 71, 13, 10, 26, 10])

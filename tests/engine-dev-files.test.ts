@@ -2,9 +2,9 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { request } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { build, createServer, type ViteDevServer } from 'vite-plus'
+import { build, createServer, preview, type ViteDevServer } from 'vite-plus'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
-import { gameFilesPlugin } from '../apps/engine/tooling/gameFiles.js'
+import { gameFilesPlugin, previewGameFilesPlugin } from '../apps/engine/tooling/gameFiles.js'
 import { engineRuntimeConfigPlugin } from '../apps/engine/tooling/config.js'
 import { ContainerBuilder } from '../apps/engine/src/ioc/containerBuilder.js'
 import { HttpGameResources } from '../apps/engine/src/gameResources.js'
@@ -230,5 +230,40 @@ describe('engine development game files', () => {
       'code',
       'ENOENT',
     )
+  })
+
+  it('serves literal reserved filenames from an exported game in Vite preview', async () => {
+    const outDir = join(temp, 'preview-export')
+    await mkdir(join(outDir, 'game'), { recursive: true })
+    await writeFile(join(outDir, 'index.html'), '<!doctype html><title>Engine</title>')
+    await writeFile(join(outDir, 'game/scene#1.txt'), 'literal hash')
+    await writeFile(join(outDir, 'game/scene%231.txt'), 'literal percent')
+
+    const exported = await preview({
+      configFile: false,
+      root: app,
+      base: '/export/',
+      logLevel: 'silent',
+      build: { outDir },
+      plugins: [previewGameFilesPlugin()],
+      preview: { host: '127.0.0.1', port: 0, strictPort: true },
+    })
+
+    try {
+      const address = exported.httpServer.address()
+
+      if (!address || typeof address === 'string') throw new Error('Expected a TCP address')
+
+      const resources = new HttpGameResources(
+        './game/',
+        `http://127.0.0.1:${address.port}/export/`,
+        fetch,
+      )
+
+      await expect(resources.readText('scene#1.txt')).resolves.toBe('literal hash')
+      await expect(resources.readText('scene%231.txt')).resolves.toBe('literal percent')
+    } finally {
+      await exported.close()
+    }
   })
 })

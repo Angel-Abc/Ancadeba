@@ -730,9 +730,14 @@ describe('character creation and stat discovery', () => {
       outputDirectory: output,
     })
     const target = new TestDocument().createElement('main')
+    const manifest = JSON.parse(await readFile(join(output, 'game/game.json'), 'utf8'))
+    manifest.appearances.presets.castaway.appearance.slots.face.visible = false
 
     const source: IResourceSource = {
-      readText: (path) => readFile(join(output, 'game', path), 'utf8'),
+      readText: (path) =>
+        path === 'game.json'
+          ? Promise.resolve(JSON.stringify(manifest))
+          : readFile(join(output, 'game', path), 'utf8'),
       readBytes: (path) => readFile(join(output, 'game', path)),
     }
 
@@ -756,14 +761,26 @@ describe('character creation and stat discovery', () => {
     choose(target, 'difficulty', 'hard')
     confirm(target)
 
-    const previewHair = (style: string) =>
-      target.find(
-        (node) => node.attributes.get('href')?.includes('portrait-hair-' + style + '-') ?? false,
+    const previews = (style: string) => {
+      const images = target.querySelectorAll('image')
+
+      const hair = images.filter((node) =>
+        node.attributes.get('href')?.includes(`portrait-hair-${style}-`),
       )
 
-    await vi.waitFor(() => expect(previewHair('crop')).toBeDefined())
+      expect(hair).toHaveLength(2)
+      expect(images.some((node) => node.attributes.get('href')?.includes('portrait-face-'))).toBe(
+        false,
+      )
+      expect(target.querySelectorAll('svg').map((node) => node.attributes.get('viewBox'))).toEqual([
+        '0 0 128 296',
+        '28 4 72 72',
+      ])
+    }
+
+    await vi.waitFor(() => previews('crop'))
     choose(target, 'hairstyle', 'waves')
-    await vi.waitFor(() => expect(previewHair('waves')).toBeDefined())
+    await vi.waitFor(() => previews('waves'))
     confirm(target)
     click(target, 'Edit appearance')
     expect(target.find((node) => node.name === 'hairstyle')?.value).toBe('waves')

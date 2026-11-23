@@ -222,8 +222,8 @@ export function inspectImageSource(
   if (
     format === 'png' &&
     bytes.length >= 33 &&
-    ascii(1, 3) === 'PNG' &&
-    bytes[0] === 137 &&
+    view.getUint32(0) === 0x89504e47 &&
+    view.getUint32(4) === 0x0d0a1a0a &&
     ascii(12, 4) === 'IHDR'
   ) {
     width = view.getUint32(16)

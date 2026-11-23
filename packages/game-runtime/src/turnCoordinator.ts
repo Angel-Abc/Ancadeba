@@ -98,6 +98,10 @@ export class TurnCoordinator {
     return this.roster.current
   }
 
+  isActorAction(action: string): boolean {
+    return this.policies.get(action)?.scope === 'actor'
+  }
+
   captureActor(actorId: string): ActorAttribution {
     return Object.freeze({
       actorId,

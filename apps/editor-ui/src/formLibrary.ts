@@ -204,7 +204,7 @@ export function bindFormLibrary(
 
     if (key === 'visual' || path.includes('appearance')) return t('forms.invalidGraphic')
 
-    if (kind === 'portrait') return t('forms.invalidPortrait')
+    if (kind === 'portrait' || kind === 'full-body') return t('forms.invalidPortrait')
 
     if (typeof key === 'string' && key.endsWith('Key')) return t('forms.invalidKey')
 
@@ -234,7 +234,7 @@ export function bindFormLibrary(
       if (path.length === 4) {
         if (kind === 'choice') location.push('choice')
         else if (kind === 'graphic') location.push('visual')
-        else if (kind !== 'portrait') location.push('path')
+        else if (kind !== 'portrait' && kind !== 'full-body') location.push('path')
       }
     }
 
@@ -242,7 +242,7 @@ export function bindFormLibrary(
     previewing = false
     draw()
 
-    if (kind === 'portrait') focus('entry')
+    if (kind === 'portrait' || kind === 'full-body') focus('entry')
     else focusIssue(root, location)
     const input = document.activeElement
 

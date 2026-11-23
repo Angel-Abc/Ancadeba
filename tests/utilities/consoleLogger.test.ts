@@ -15,7 +15,7 @@ function createConsole() {
 describe('ConsoleLogger', () => {
   it.each([
     ['debug', '\x1B[37m'],
-    ['info', '\x1B[30m'],
+    ['info', ''],
     ['warn', '\x1B[1m\x1B[33m'],
     ['error', '\x1B[1m\x1B[31m'],
   ] as const)('routes %s messages to the injected console', (level, color) => {
@@ -25,7 +25,7 @@ describe('ConsoleLogger', () => {
 
     expect(logger[level]('Loader', 'Object {0}', details)).toBe('[Loader] Object %o')
     expect(console[level]).toHaveBeenCalledExactlyOnceWith(
-      `${color}[Loader] Object %o\x1B[0m`,
+      color ? `${color}[Loader] Object %o\x1B[0m` : '[Loader] Object %o',
       details,
     )
 
@@ -52,19 +52,16 @@ describe('ConsoleLogger', () => {
 
     logger.info('100% %s', 'Loaded {0}', 'scene', 'details')
 
-    expect(console.info).toHaveBeenCalledExactlyOnceWith(
-      '\x1B[30m[100%% %%s] Loaded scene\x1B[0m',
-      'details',
-    )
+    expect(console.info).toHaveBeenCalledExactlyOnceWith('[100%% %%s] Loaded scene', 'details')
     const call = console.info.mock.calls[0]!
-    expect(format(...call)).toBe('\x1B[30m[100% %s] Loaded scene\x1B[0m details')
+    expect(format(...call)).toBe('[100% %s] Loaded scene details')
   })
 
   it('omits the category prefix when the category is empty', () => {
     const console = createConsole()
 
     expect(new ConsoleLogger(console).info('', 'Ready')).toBe('Ready')
-    expect(console.info).toHaveBeenCalledExactlyOnceWith('\x1B[30mReady\x1B[0m')
+    expect(console.info).toHaveBeenCalledExactlyOnceWith('Ready')
   })
 
   it('resolves the logger factory using the injected console', () => {
@@ -77,6 +74,6 @@ describe('ConsoleLogger', () => {
 
     container.resolve('logger').info('Engine', 'Ready')
 
-    expect(console.info).toHaveBeenCalledExactlyOnceWith('\x1B[30m[Engine] Ready\x1B[0m')
+    expect(console.info).toHaveBeenCalledExactlyOnceWith('[Engine] Ready')
   })
 })

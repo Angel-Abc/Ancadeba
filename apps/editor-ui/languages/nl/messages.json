@@ -58,6 +58,7 @@
   "choices.exists": "Er bestaat al een keuze met deze ID.",
   "choices.options": "Opties",
   "forms.portrait": "Profielportret",
+  "forms.full-body": "Personage ten voeten uit",
   "forms.alt": "Alternatieve tekst",
   "forms.default": "Standaardantwoord",
   "forms.id": "ID",
@@ -2382,7 +2383,7 @@
   "forms.invalidBinding": "Kies een beschrijfbaar statusveld van het juiste type dat maar één keer in dit formulier voorkomt.",
   "forms.invalidDefault": "Kies een geldig standaardantwoord voor dit veld.",
   "forms.invalidGraphic": "Kies een bestaande illustratie en geldige weergave-instellingen.",
-  "forms.invalidPortrait": "Stel een personageportret in bij het personageprofiel.",
+  "forms.invalidPortrait": "Kies een personage in het personageprofiel.",
   "forms.invalidKey": "Kies een opgeslagen vertaalsleutel of wis deze om de letterlijke tekst te gebruiken.",
   "forms.invalidWording": "Vul de tekst voor dit veld in."
 }

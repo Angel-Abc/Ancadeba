@@ -405,4 +405,42 @@ describe('project duplication', () => {
       await readFile(join(root, 'source/scenes/game.json'), 'utf8'),
     )
   })
+
+  it('publishes one canonical manifest when the source listing uses Windows filename casing', async () => {
+    const aliased = withWorkspace({
+      async list(path) {
+        const listing = await workspace.list(path)
+
+        return path === 'source'
+          ? {
+              ...listing,
+              entries: listing.entries.map((entry) =>
+                entry.name === 'game.json' ? { ...entry, name: 'GAME.JSON' } : entry,
+              ),
+            }
+          : listing
+      },
+      read: (path) => workspace.read(path === 'source/GAME.JSON' ? 'source/game.json' : path),
+    })
+
+    const result = await aliased.duplicate(await request())
+    expect(result.diagnostics).toEqual([])
+    expect(
+      (await readdir(join(root, 'copy'))).filter((name) => name.toLowerCase() === 'game.json'),
+    ).toEqual(['game.json'])
+  })
+
+  it('excludes a nested game even when the parent references its manifest as an asset catalogue', async () => {
+    const manifest = JSON.parse(await readFile(join(root, 'source/game.json'), 'utf8'))
+    await mkdir(join(root, 'source/assets'), { recursive: true })
+    await writeFile(join(root, 'source/game.json'), JSON.stringify({ ...manifest, assets: 'game' }))
+    await writeFile(
+      join(root, 'source/assets/game.json'),
+      JSON.stringify({ ...manifest, id: 'nested' }),
+    )
+
+    const files = await readProjectCopyFiles(workspace, 'source')
+    expect(Object.hasOwn(files, 'game.json')).toBe(true)
+    expect(Object.hasOwn(files, 'assets/game.json')).toBe(false)
+  })
 })

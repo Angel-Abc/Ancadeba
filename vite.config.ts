@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite-plus'
+import { previewGameFilesPlugin } from './apps/engine/tooling/gameFiles.js'
 
 export default defineConfig({
+  plugins: [previewGameFilesPlugin()],
   run: {
     tasks: {
       'dev:with-mcp': {

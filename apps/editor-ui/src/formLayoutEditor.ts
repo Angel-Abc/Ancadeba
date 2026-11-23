@@ -19,8 +19,9 @@ export function firstFormSelection(form?: FormDefinition): FormSelection {
   const locations = form ? formLocations(form) : []
 
   const first =
-    locations.find((e) => e.field && e.field.type !== 'graphic' && e.field.type !== 'portrait') ??
-    locations.find((e) => e.field)
+    locations.find(
+      (e) => e.field && ['choice', 'text', 'number', 'checkbox'].includes(e.field.type),
+    ) ?? locations.find((e) => e.field)
 
   if (first)
     Object.assign(selection, { row: first.row, column: first.column, element: first.element })

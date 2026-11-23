@@ -235,6 +235,12 @@ export class ActionProcessor implements IGameActions {
     )
   }
 
+  requestSceneAction(action: string, payload?: unknown): ActionRequestId | undefined {
+    const actorId = this.sceneActionActor(action)
+
+    return this.request(action, payload, actorId === undefined ? undefined : { actorId })
+  }
+
   schedule(
     action: string,
     delayMs: number,
@@ -337,21 +343,25 @@ export class ActionProcessor implements IGameActions {
 
   private onInput(event: VirtualInput): void {
     if (this.disposed || !this.isRunning()) return
+    const binding = this.bindings.get(bindingKey(event.context, event.input, event.phase))
+    const origin = Object.freeze({ type: 'input' as const, event: Object.freeze({ ...event }) })
 
     if (
       this.routeSceneInput?.(event, (action, payload) => {
+        const actorId =
+          binding?.action === action && binding.actor?.type === 'fixed'
+            ? binding.actor.actorId
+            : this.sceneActionActor(action)
+
         this.enqueue(
           action,
           payload,
-          Object.freeze({
-            type: 'input',
-            event: Object.freeze({ ...event }),
-          }),
+          origin,
+          this.captureActor(actorId === undefined ? undefined : { actorId }),
         )
       })
     )
       return
-    const binding = this.bindings.get(bindingKey(event.context, event.input, event.phase))
 
     if (binding === undefined) return
 
@@ -365,9 +375,13 @@ export class ActionProcessor implements IGameActions {
     this.enqueue(
       binding.action,
       undefined,
-      Object.freeze({ type: 'input', event: Object.freeze({ ...event }) }),
+      origin,
       this.captureActor(actorId === undefined ? undefined : { actorId }),
     )
+  }
+
+  private sceneActionActor(action: string): string | undefined {
+    return this.turns?.isActorAction(action) ? this.turnState?.actorId : undefined
   }
 
   private onTimer(event: TimerWakeup): void {

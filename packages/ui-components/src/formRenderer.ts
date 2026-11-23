@@ -194,14 +194,17 @@ export function renderForm(
           }
 
           const image =
-            element.type === 'portrait' && profile
+            (element.type === 'portrait' || element.type === 'full-body') && profile
               ? new CharacterViewRenderer(graphics).render(
                   {
                     ...common,
                     type: 'character-view',
                     character: profile.character,
-                    view: 'portrait',
-                    label: runtimeText(context.game, 'character.portrait'),
+                    view: element.type,
+                    label: runtimeText(
+                      context.game,
+                      element.type === 'portrait' ? 'character.portrait' : 'character.fullBody',
+                    ),
                   },
                   options,
                 )

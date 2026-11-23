@@ -7077,6 +7077,19 @@ describe('editor draft workflows', () => {
         'assets/doll.png',
       ])
     })
+    ui.edit('New preset ID', 'civilian')
+    ui.click('Add preset')
+    expect(ui.field('Character').value).toBe('')
+    expect(ui.root.all().some((node) => node.ownText === 'Character preset')).toBe(false)
+    await vi.waitFor(() => {
+      const images = ui.root.all().filter((node) => node.tagName === 'svg')
+      expect(images.map((image) => image.attributes.get('viewBox'))).toEqual([
+        '0 0 100 180',
+        '0 0 100 180',
+      ])
+    })
+    ui.edit('Character', 'captain')
+    expect(ui.field('Edit preset').value).toBe('uniform')
     editor.dispose()
   })
 
@@ -7684,7 +7697,28 @@ describe('scene inspector registry', () => {
 
   it('keeps the selected Appearance field after reordering, recovery and a failed save', async () => {
     const ui = panel()
-    const source = await sample('market-value')
+    const sampleSource = await sample('market-value')
+
+    const source = {
+      ...sampleSource,
+      documents: {
+        ...sampleSource.documents,
+        'forms/appearance.json': {
+          'schema-version': '1.0.0',
+          id: 'appearance',
+          label: 'Appearance',
+          rows: [
+            [
+              ['gender', 'skin-tone', 'hairstyle', 'hair-color'].map((choice) => ({
+                type: 'choice',
+                choice,
+              })),
+            ],
+          ],
+        },
+      },
+    }
+
     const state = { ...ui.initial, view: inspectProject(source) }
 
     const editor = bindFormLibrary(
@@ -7700,14 +7734,14 @@ describe('scene inspector registry', () => {
     expect(
       ui.root.all().filter((node) => node.tagName === 'label' && node.ownText === 'Library choice'),
     ).toHaveLength(1)
-    ui.edit('Selected element', '4')
+    ui.edit('Selected element', '3')
     ui.click('Move up')
     expect(ui.field('Library choice').value).toBe('hair-color')
     const recovery = JSON.parse(JSON.stringify(captureEditorDrafts(ui.root.asElement())))
     ui.click('Discard changes')
     expect(editor.hasDrafts()).toBe(false)
     expect(restoreEditorDrafts(ui.root.asElement(), recovery)).toEqual([])
-    expect(ui.field('Selected element').value).toBe('3')
+    expect(ui.field('Selected element').value).toBe('2')
     ui.edit('Library choice', 'gender')
     ui.click('Save form')
     editor.render(
@@ -7718,20 +7752,20 @@ describe('scene inspector registry', () => {
           {
             code: 'invalid_form',
             file: 'forms/appearance.json',
-            path: ['rows', 0, 1, 2],
+            path: ['rows', 0, 0, 2],
             message: 'Duplicate state binding',
           },
         ],
       },
       true,
     )
-    expect(ui.field('Selected element').value).toBe('3')
+    expect(ui.field('Selected element').value).toBe('2')
     expect(editor.hasDrafts()).toBe(true)
     ui.edit('Library choice', 'hair-color')
     ui.click('Save form')
     const result = applyCommand(source, ui.commands.at(-1)!)
     expect(result.changedFiles).toEqual(['forms/appearance.json'])
-    expect(inspectProject(result.project).forms?.appearance?.rows[0]?.[1]?.[2]).toEqual({
+    expect(inspectProject(result.project).forms?.appearance?.rows[0]?.[0]?.[2]).toEqual({
       type: 'choice',
       choice: 'hair-color',
     })
