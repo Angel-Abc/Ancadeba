@@ -14,6 +14,7 @@
 
 - Reserve ports 5173 (engine), 5174 (editor UI), and 3000 (editor server) for the user's instances.
 - Use separate free ports for agent instances, such as 5273, 5274, and 3100.
+- For every agent editor server, set `EDITOR_WORK_FOLDER` to the absolute path of this checkout's `.agent-games/` directory. Create it if needed. Point the agent editor UI's `EDITOR_SERVER_URL` at that server.
 - Scope temporary environment overrides to agent processes; do not write shared `.env` files.
 - Never stop or restart user processes. Clean up only processes started by the agent.
 

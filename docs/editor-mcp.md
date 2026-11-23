@@ -39,10 +39,12 @@ Configure `apps/editor-server/config.json` with the workspace directory containi
 the games you want to edit. See [the shared editor guide](editor-authoring.md).
 The adapter never starts, stops, or restarts this server.
 
-For an agent instance, use a process-scoped port override:
+For an agent instance, start the server from the repository root with its own
+project directory and port:
 
 ```powershell
 $env:PORT = '3100'
+$env:EDITOR_WORK_FOLDER = (New-Item -ItemType Directory -Force .agent-games).FullName
 pnpm --filter @ancadeba/editor-server dev
 ```
 

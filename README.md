@@ -243,6 +243,7 @@ override JSON settings, which override defaults:
 | Engine        | `ENGINE_PORT`        | `port`            |
 | Editor UI     | `EDITOR_UI_PORT`     | `port`            |
 | Editor UI     | `EDITOR_SERVER_URL`  | `editorServerUrl` |
+| Editor server | `EDITOR_WORK_FOLDER` | `workFolder`      |
 | Editor server | `HOST`               | `host`            |
 | Editor server | `PORT`               | `port`            |
 
@@ -4553,19 +4554,23 @@ pnpm exec vp preview --outDir dist/games/basic --port 5273
 ## Separate development instances
 
 Ports 5173, 5174, and 3000 are reserved for the user's development instances.
-Use other free ports for temporary instances, without changing the defaults:
-
-```powershell
-pnpm --filter @ancadeba/engine dev --port 5273
-pnpm --filter @ancadeba/editor-ui dev --port 5274
-```
-
-For the server, in a separate terminal:
+From the repository root, start the agent server with its own persistent,
+Git-ignored project directory:
 
 ```powershell
 $env:PORT = '3100'
+$env:EDITOR_WORK_FOLDER = (New-Item -ItemType Directory -Force .agent-games).FullName
 pnpm --filter @ancadeba/editor-server dev
 ```
+
+Point the agent editor UI at that server in a second terminal:
+
+```powershell
+$env:EDITOR_SERVER_URL = 'http://127.0.0.1:3100'
+pnpm --filter @ancadeba/editor-ui dev --port 5274
+```
+
+To start the engine separately, run `pnpm --filter @ancadeba/engine dev --port 5273`.
 
 To start the entire workspace on alternate ports from one PowerShell terminal:
 
@@ -4573,6 +4578,7 @@ To start the entire workspace on alternate ports from one PowerShell terminal:
 $env:ENGINE_PORT = '5273'
 $env:EDITOR_UI_PORT = '5274'
 $env:PORT = '3100'
+$env:EDITOR_WORK_FOLDER = (New-Item -ItemType Directory -Force .agent-games).FullName
 $env:EDITOR_SERVER_URL = 'http://127.0.0.1:3100'
 pnpm dev
 ```

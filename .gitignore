@@ -9,5 +9,6 @@ coverage/
 !.env.example
 *.log
 apps/*/config.json
+/.agent-games/
 tests/.tmp-*/
 .claude/

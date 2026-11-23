@@ -106,7 +106,7 @@ export function parseEditorServerConfig(
   const config = object(value)
 
   return {
-    workFolder: text(config.workFolder, 'workFolder'),
+    workFolder: text(env.EDITOR_WORK_FOLDER ?? config.workFolder, 'workFolder'),
     host: text(env.HOST ?? config.host ?? '127.0.0.1', 'host'),
     port: port(env.PORT ?? config.port ?? 3000),
   }

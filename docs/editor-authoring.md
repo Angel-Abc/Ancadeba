@@ -1503,10 +1503,11 @@ compatibility checks, and limitations.
 
 Use an independent worktree. Install its dependencies and copy each app's
 `config.example.json` to its local ignored `config.json`. For agent instances,
-scope port overrides to each process:
+set the project directory and port in the server's terminal from the repository root:
 
 ```powershell
 $env:PORT = '3100'
+$env:EDITOR_WORK_FOLDER = (New-Item -ItemType Directory -Force .agent-games).FullName
 pnpm --filter @ancadeba/editor-server dev
 ```
 

@@ -111,7 +111,7 @@ export class FileWorkspace implements WorkspaceService {
       return new FileWorkspace(await realpath(workFolder), publishing)
     } catch (error) {
       throw new Error(
-        'Cannot open workFolder. Configure an existing, accessible directory in editor-server/config.json.',
+        'Cannot open workFolder. Set EDITOR_WORK_FOLDER or workFolder in editor-server/config.json to an existing, accessible directory.',
         { cause: error },
       )
     }

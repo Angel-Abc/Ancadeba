@@ -87,6 +87,9 @@ describe('configuration validation', () => {
     expect(() => parseEngineConfig({})).toThrow('gameUrl')
     expect(() => parseEditorServerConfig({})).toThrow('workFolder')
     expect(() => parseEditorServerConfig({ workFolder: ' ' })).toThrow('workFolder')
+    expect(() =>
+      parseEditorServerConfig({ workFolder: './user' }, { EDITOR_WORK_FOLDER: '' }),
+    ).toThrow('workFolder')
     expect(() => parseEditorUiConfig({ editorServerUrl: 'file:///tmp' })).toThrow('editorServerUrl')
     expect(() => parseEditorUiConfig({ editorServerUrl: 'http://' })).toThrow('editorServerUrl')
     expect(() => parseEditorServerConfig({ workFolder: './work' }, { PORT: '' })).toThrow('port')
@@ -122,6 +125,18 @@ describe('app-local configuration files', () => {
     )
     await mkdir(config.workFolder)
     await expect(FileWorkspace.open(config.workFolder)).resolves.toBeInstanceOf(FileWorkspace)
+  })
+
+  it('keeps the agent workspace independent of changes to the user workspace', async () => {
+    const file = pathToFileURL(join(temp, 'shared-server.json'))
+    const agentFolder = join(temp, 'agent games')
+    const agentEnv = { EDITOR_WORK_FOLDER: agentFolder }
+
+    for (const userFolder of ['user-games', 'other-games']) {
+      await writeFile(file, JSON.stringify({ workFolder: userFolder }))
+      expect((await loadEditorServerConfig(file, {})).workFolder).toBe(join(temp, userFolder))
+      expect((await loadEditorServerConfig(file, agentEnv)).workFolder).toBe(agentFolder)
+    }
   })
 
   it('reads web configuration through the same parsers with explicit overrides', async () => {
