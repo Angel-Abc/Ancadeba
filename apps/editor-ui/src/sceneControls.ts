@@ -229,6 +229,8 @@ export function bindSceneControls(
       return
     }
 
+    const isStartup = view?.game?.['initial-scene'] === current.id
+
     const tasks = {
       rename: form(
         'scene.rename',
@@ -253,13 +255,9 @@ export function bindSceneControls(
         }),
       ),
       setStartup: controls.button(
-        t(
-          (view?.game?.['initial-scene'] ?? view?.game?.scenes[0]) === current.id
-            ? 'scene.isStartup'
-            : 'scene.setStartup',
-        ),
+        t(isStartup ? 'scene.isStartup' : 'scene.setStartup'),
         () => submit({ type: 'game.setInitialScene', sceneId: current.id }),
-        (view?.game?.['initial-scene'] ?? view?.game?.scenes[0]) === current.id,
+        isStartup,
       ),
       delete: controls.group(
         t('scene.delete'),

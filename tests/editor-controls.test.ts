@@ -618,7 +618,7 @@ function panel(withInput = true, document = new ControlDocument()) {
     form.dispatchEvent(new Event('submit', { cancelable: true }))
   }
 
-  return { controls, commands, root, initial, field, edit, click, submit }
+  return { controls, commands, root, initial, field, edit, button, click, submit }
 }
 
 describe('folded form sections', () => {
@@ -1311,6 +1311,15 @@ describe('scene controls', () => {
     expect(persist().game?.scenes).toEqual(['market', 'other', 'market-copy'])
     expect(field('New scene ID').value).toBe('market-copy')
     expect(saved).toEqual(['scene.rename', 'scene.duplicate'])
+  })
+
+  it('lets the first scene be explicitly saved as the startup scene', () => {
+    const { edit, button, click, persist } = sceneControlsPanel()
+    edit('Scene operation', 'setStartup')
+    expect(button('Use as startup scene').disabled).toBe(false)
+    click('Use as startup scene')
+    expect(persist().game?.['initial-scene']).toBe('shop')
+    expect(button('Startup scene').disabled).toBe(true)
   })
 
   it('sets the startup scene and confirms deletion with an optional replacement', () => {
