@@ -1,13 +1,10 @@
 import { lstat, open, realpath } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { pipeline } from 'node:stream/promises'
 import { lookup } from 'mrmime'
 import type { Plugin } from 'vite-plus'
 
-const sampleGamesDirectory = fileURLToPath(new URL('../../../sample-games/', import.meta.url))
-const myGamesDirectory = fileURLToPath(new URL('../../../my-games/', import.meta.url))
 const excludedNames = new Set(['.git', '.hg', '.svn', 'node_modules', '.ds_store', 'thumbs.db'])
 
 class GameFileError extends Error {
@@ -174,23 +171,25 @@ function gameFilesMiddleware(root: string) {
   }
 }
 
-export function gameFilesPlugin(
-  sampleGames = sampleGamesDirectory,
-  myGames = myGamesDirectory,
-): Plugin {
+export function gameFilesPlugin(gameMounts: Readonly<Record<string, string>>): Plugin {
   return {
     name: 'engine-local-game-files',
     apply: 'serve',
     configureServer(server) {
-      for (const [folder, directory] of Object.entries({
-        'sample-games': sampleGames,
-        'my-games': myGames,
-      })) {
-        const middleware = gameFilesMiddleware(resolve(directory))
-        const mounts = new Set([`/${folder}/`, `${server.config.base}${folder}/`])
+      const baseMounts = Object.fromEntries(
+        Object.entries(gameMounts).map(([prefix, directory]) => [
+          server.config.base.toLowerCase() + prefix.slice(1),
+          directory,
+        ]),
+      )
 
-        for (const mount of mounts) server.middlewares.use(mount, middleware)
-      }
+      // An explicit route wins over a base alias, and a child route wins over its parent.
+      const mounts = Object.entries({ ...baseMounts, ...gameMounts }).sort(
+        ([left], [right]) => right.length - left.length,
+      )
+
+      for (const [mount, directory] of mounts)
+        server.middlewares.use(mount, gameFilesMiddleware(directory))
     },
   }
 }

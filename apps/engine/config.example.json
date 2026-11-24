@@ -1,4 +1,8 @@
 {
   "gameUrl": "/sample-games/basic/",
+  "gameMounts": {
+    "/sample-games/": "../../sample-games",
+    "/my-games/": "../../my-games"
+  },
   "port": 5173
 }

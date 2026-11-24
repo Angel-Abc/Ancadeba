@@ -5,7 +5,11 @@ import { gameFilesPlugin, previewGameFilesPlugin } from './tooling/gameFiles.js'
 const config = loadEngineConfig()
 
 export default defineConfig({
-  plugins: [engineRuntimeConfigPlugin(config.gameUrl), gameFilesPlugin(), previewGameFilesPlugin()],
+  plugins: [
+    engineRuntimeConfigPlugin(config.gameUrl),
+    gameFilesPlugin(config.gameMounts),
+    previewGameFilesPlugin(),
+  ],
   server: {
     port: config.port,
     strictPort: true,

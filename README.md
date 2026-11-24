@@ -184,6 +184,10 @@ Engine (`apps/engine/config.json`):
 ```json
 {
   "gameUrl": "/sample-games/basic/",
+  "gameMounts": {
+    "/sample-games/": "../../sample-games",
+    "/my-games/": "../../my-games"
+  },
   "port": 5173
 }
 ```
@@ -191,11 +195,19 @@ Engine (`apps/engine/config.json`):
 `gameUrl` is required and refers to a directory of browser-accessible game files.
 It accepts an HTTP(S) URL or a relative web path. Relative paths resolve against
 the engine application's base URL, and a missing trailing slash is added. For
-example, `./game` under `/engine/` resolves to `/engine/game/`. During `pnpm dev`,
-the engine serves the repository folders `sample-games` at `/sample-games/` and
-`my-games` at `/my-games/`. For a project in `my-games/my-adventure`, set
-`gameUrl` to `/my-games/my-adventure/`. Both routes support a nested Vite base,
-return 404 for missing files, and read saved changes without caching. Links,
+example, `./game` under `/engine/` resolves to `/engine/game/`.
+
+`gameMounts` maps URL prefixes to local folders during `pnpm dev`. For example,
+if your game's manifest is `D:/Games/market-value/game.json`, add
+`"/library/": "D:/Games"` to `gameMounts` and set `gameUrl` to `/library/market-value/`.
+Relative folder paths resolve from the directory containing the engine config.
+Omitting `gameMounts` uses the two mappings shown above. An explicit object
+replaces those defaults, and an empty object disables local game routes.
+Restart the engine dev server after editing its config.
+
+Each route is available at the origin root and under the Vite base. The longest
+matching prefix takes priority. Routes return 404 for missing files and read
+saved changes without caching. Links,
 traversal paths, local environment files, source-control metadata, and `node_modules`
 are inaccessible. Use `export:game` to package a standalone game. You can also
 put static files under `apps/engine/public/` and configure their URL, or point

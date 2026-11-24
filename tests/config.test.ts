@@ -17,9 +17,16 @@ describe('configuration validation', () => {
   it('supplies defaults and keeps only public engine settings at runtime', () => {
     expect(parseEngineConfig({ gameUrl: '/games/demo' })).toEqual({
       gameUrl: '/games/demo',
+      gameMounts: { '/sample-games/': '../../sample-games', '/my-games/': '../../my-games' },
       port: 5173,
     })
-    expect(parseEngineRuntimeConfig({ gameUrl: '/games/', port: 5273 })).toEqual({
+    expect(
+      parseEngineRuntimeConfig({
+        gameUrl: '/games/',
+        gameMounts: { '/games/': './private' },
+        port: 5273,
+      }),
+    ).toEqual({
       gameUrl: '/games/',
     })
     expect(parseEditorUiConfig({})).toEqual({
@@ -31,6 +38,31 @@ describe('configuration validation', () => {
       host: '127.0.0.1',
       port: 3000,
     })
+  })
+
+  it('uses exactly the configured game mounts and allows an empty mapping', () => {
+    expect(
+      parseEngineConfig({ gameUrl: '/games/demo', gameMounts: { '/games': 'D:/Local Games' } })
+        .gameMounts,
+    ).toEqual({ '/games/': 'D:/Local Games' })
+    expect(
+      parseEngineConfig({ gameUrl: 'https://example.com/demo', gameMounts: {} }).gameMounts,
+    ).toEqual({})
+  })
+
+  it.each([
+    null,
+    [],
+    'games',
+    { '/': './work' },
+    { games: './work' },
+    { '/games/../other': './work' },
+    { '/games?key': './work' },
+    { '/games': '' },
+    { '/games': 4 },
+    { '/Games': './one', '/games/': './two' },
+  ])('rejects invalid gameMounts %j', (gameMounts) => {
+    expect(() => parseEngineConfig({ gameUrl: '/games', gameMounts })).toThrow('gameMounts')
   })
 
   it('uses environment overrides before JSON settings', () => {
@@ -144,6 +176,10 @@ describe('app-local configuration files', () => {
     await writeFile(engine, JSON.stringify({ gameUrl: 'https://games.example/demo', port: 6000 }))
     expect(loadEngineConfig(engine, { ENGINE_PORT: '5273' })).toEqual({
       gameUrl: 'https://games.example/demo',
+      gameMounts: {
+        '/sample-games/': resolve(temp, '../../sample-games'),
+        '/my-games/': resolve(temp, '../../my-games'),
+      },
       port: 5273,
     })
     const ui = pathToFileURL(join(temp, 'ui.json'))

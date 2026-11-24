@@ -1,3 +1,5 @@
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseEngineConfig, type ConfigOverrides } from '@ancadeba/schemas'
 import type { Plugin } from 'vite-plus'
 import { loadAppConfig } from '../../../tooling/app-config.js'
@@ -16,7 +18,16 @@ export function loadEngineConfig(file = engineConfigFile, env: ConfigOverrides =
         throw new Error('gameUrl must not contain credentials')
       }
 
-      return config
+      const configDirectory = dirname(fileURLToPath(file))
+
+      const gameMounts = Object.fromEntries(
+        Object.entries(config.gameMounts).map(([prefix, directory]) => [
+          prefix,
+          resolve(configDirectory, directory),
+        ]),
+      )
+
+      return { ...config, gameMounts }
     },
     env,
   )

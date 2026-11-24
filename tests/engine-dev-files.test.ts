@@ -1,11 +1,11 @@
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { request } from 'node:http'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, preview, type ViteDevServer } from 'vite-plus'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import { gameFilesPlugin, previewGameFilesPlugin } from '../apps/engine/tooling/gameFiles.js'
-import { engineRuntimeConfigPlugin } from '../apps/engine/tooling/config.js'
+import { engineRuntimeConfigPlugin, loadEngineConfig } from '../apps/engine/tooling/config.js'
 import { ContainerBuilder } from '../apps/engine/src/ioc/containerBuilder.js'
 import { HttpGameResources } from '../apps/engine/src/gameResources.js'
 import { loadRuntimeConfig } from '../apps/engine/src/config.js'
@@ -62,15 +62,26 @@ describe('engine development game files', () => {
       join(games, 'basic/linked'),
       process.platform === 'win32' ? 'junction' : 'dir',
     )
+    const configFile = pathToFileURL(join(app, 'config.json'))
+    await writeFile(
+      configFile,
+      JSON.stringify({
+        gameUrl: './library/demos/basic/',
+        gameMounts: {
+          '/library/': '../my-games',
+          '/library/demos/': '../games',
+          '/sample-games/': games,
+          '/my-games/': myGames,
+        },
+      }),
+    )
+    const config = loadEngineConfig(configFile, {})
     server = await createServer({
       configFile: false,
       root: app,
       base: '/nested/',
       logLevel: 'silent',
-      plugins: [
-        gameFilesPlugin(games, myGames),
-        engineRuntimeConfigPlugin('./sample-games/basic/'),
-      ],
+      plugins: [gameFilesPlugin(config.gameMounts), engineRuntimeConfigPlugin(config.gameUrl)],
       server: { host: '127.0.0.1', port: 0, strictPort: true, hmr: false },
     })
     await server.listen()
@@ -87,7 +98,7 @@ describe('engine development game files', () => {
   })
 
   it('serves actual JSON and starts the engine from the development game directory', async () => {
-    const response = await fetch(`${origin}/nested/sample-games/basic/game.json`)
+    const response = await fetch(`${origin}/nested/library/demos/basic/game.json`)
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toContain('application/json')
     expect(response.headers.get('cache-control')).toBe('no-store')
@@ -128,11 +139,14 @@ describe('engine development game files', () => {
     await expect(response.json()).resolves.toEqual(game)
   })
 
-  it.each(['/my-games/', '/nested/my-games/'])('serves a personal game from %s', async (mount) => {
-    const response = await fetch(`${origin}${mount}basic/game.json`)
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual(gameDefinition('My game'))
-  })
+  it.each(['/my-games/', '/nested/my-games/', '/library/', '/nested/library/'])(
+    'serves a personal game from %s',
+    async (mount) => {
+      const response = await fetch(`${origin}${mount}basic/game.json`)
+      expect(response.status).toBe(200)
+      await expect(response.json()).resolves.toEqual(gameDefinition('My game'))
+    },
+  )
 
   it('serves binary assets, content types, and HEAD requests', async () => {
     const url = `${origin}/nested/sample-games/basic/assets/my%20sprite.png`
@@ -236,7 +250,7 @@ describe('engine development game files', () => {
       configFile: false,
       root: app,
       logLevel: 'silent',
-      plugins: [gameFilesPlugin(games)],
+      plugins: [gameFilesPlugin({ '/sample-games/': games })],
     })
     await expect(readFile(join(app, 'dist/sample-games/basic/game.json'))).rejects.toHaveProperty(
       'code',

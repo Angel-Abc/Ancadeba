@@ -1,5 +1,6 @@
 export interface EngineConfig {
   gameUrl: string
+  gameMounts: Readonly<Record<string, string>>
   port: number
 }
 
@@ -20,9 +21,9 @@ export interface EditorServerConfig {
 
 export type ConfigOverrides = Readonly<Record<string, string | undefined>>
 
-function object(value: unknown): Record<string, unknown> {
+function object(value: unknown, key = 'Configuration'): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error('Configuration must be a JSON object')
+    throw new Error(`${key} must be a JSON object`)
   }
 
   // SAFETY: the checks above exclude null, primitives, and arrays; config fields remain unknown.
@@ -78,11 +79,35 @@ export function parseEngineRuntimeConfig(value: unknown): EngineRuntimeConfig {
   return { gameUrl }
 }
 
+const defaultGameMounts = {
+  '/sample-games/': '../../sample-games',
+  '/my-games/': '../../my-games',
+}
+
+function parseGameMounts(value: unknown = defaultGameMounts) {
+  const mounts: Record<string, string> = {}
+
+  for (const [prefix, directory] of Object.entries(object(value, 'gameMounts'))) {
+    if (!/^(?:\/[a-z0-9_-][a-z0-9._~-]*)+\/?$/i.test(prefix)) {
+      throw new Error(`gameMounts requires a URL prefix such as /games/. Received: ${prefix}`)
+    }
+
+    const route = prefix.endsWith('/') ? prefix : `${prefix}/`
+    const key = route.toLowerCase()
+
+    if (Object.hasOwn(mounts, key)) throw new Error(`Duplicate gameMounts prefix: ${prefix}`)
+    mounts[key] = text(directory, `gameMounts[${prefix}]`)
+  }
+
+  return mounts
+}
+
 export function parseEngineConfig(value: unknown, env: ConfigOverrides = {}): EngineConfig {
   const config = object(value)
 
   return {
     ...parseEngineRuntimeConfig(config),
+    gameMounts: parseGameMounts(config.gameMounts),
     port: port(env.ENGINE_PORT ?? config.port ?? 5173),
   }
 }
