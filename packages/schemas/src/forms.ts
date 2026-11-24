@@ -20,7 +20,12 @@ const field = { ...wording, path: z.array(assetIdSchema).min(1) }
 
 export const formElementSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('choice'), choice: gameIdSchema }),
-  z.strictObject({ type: z.literal('text'), ...field, default: z.string().default('') }),
+  z.strictObject({
+    type: z.literal('text'),
+    ...field,
+    default: z.string().default(''),
+    trim: z.boolean().default(true),
+  }),
   z.strictObject({ type: z.literal('number'), ...field, default: z.number().finite().default(0) }),
   z.strictObject({ type: z.literal('checkbox'), ...field, default: z.boolean().default(false) }),
   z.strictObject({ type: z.literal('portrait') }),

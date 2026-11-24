@@ -26,7 +26,7 @@ function prepareSubmission(
   game: GameInstance,
   scene: SceneInstance,
   component: Placement,
-  answers: ReadonlyMap<string, FormValue>,
+  submitted: ReadonlyMap<string, FormValue>,
   state: AuthoredPlaythrough,
   runtime: GameActionRuntime,
   current: () => boolean,
@@ -42,13 +42,21 @@ function prepareSubmission(
     .flat(2)
     .flatMap((element) => formField(element, game.data.choices) ?? [])
 
-  if (fields.length !== answers.size) throw new Error(text('form.incomplete'))
+  if (fields.length !== submitted.size) throw new Error(text('form.incomplete'))
+
+  const answers = new Map<string, FormValue>()
 
   const writes = fields.map((field) => {
-    const value = answers.get(JSON.stringify(field.path))
+    const key = JSON.stringify(field.path)
+    const answer = submitted.get(key)
 
-    if (!validFormValue(field, value))
+    if (!validFormValue(field, answer))
       throw new Error(text('form.invalidField', { field: field.label }))
+
+    const value =
+      field.type === 'text' && field.trim && typeof answer === 'string' ? answer.trim() : answer
+
+    answers.set(key, value)
 
     return { type: 'set-state' as const, path: field.path, value }
   })

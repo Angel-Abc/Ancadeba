@@ -3,7 +3,7 @@ import type { ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import { graphicAppearanceForm } from './graphicAppearanceForm.js'
 import { fieldPath } from './specialistEntries.js'
-import { translationChoices, type RuleFormControls } from './ruleFormControls.js'
+import { translationChoices, yesNoChoices, type RuleFormControls } from './ruleFormControls.js'
 
 export const formKinds = [
   'choice',
@@ -88,7 +88,7 @@ export function newFormElement(
 
   if (kind === 'number') return { ...common, type: kind, default: 0 }
 
-  return { ...common, type: kind, default: '' }
+  return { ...common, type: kind, default: '', trim: false }
 }
 
 export function formWording(
@@ -252,6 +252,13 @@ export function formElementFields(
           }),
           ...path,
           'default',
+        ),
+        fieldPath(
+          c.select(t('forms.trim'), String(element.trim), yesNoChoices(t), (v) => {
+            element.trim = v === 'true'
+          }),
+          ...path,
+          'trim',
         ),
       )
   }

@@ -7521,6 +7521,8 @@ describe('scene inspector registry', () => {
     ui.click('Add first element')
     ui.edit('State field', '["outfit"]')
     ui.edit('Default answer', 'Designer')
+    expect(ui.field('Trim leading and trailing spaces').value).toBe('false')
+    ui.edit('Trim leading and trailing spaces', 'true')
     const preview = ui.root.all().find((node) => node.name === '["outfit"]')!
     preview.value = 'Player'
     preview.dispatchEvent(new Event('input'))
@@ -7530,9 +7532,18 @@ describe('scene inspector registry', () => {
     expect(reopened.forms?.form?.rows[0]?.[0]?.[0]).toMatchObject({
       type: 'text',
       default: 'Designer',
+      trim: true,
     })
     editor.render({ ...ui.initial, lastCommand: 'game.upsertForm', view: reopened }, true)
     expect(editor.hasDrafts()).toBe(false)
+    editor.open('form')
+    expect(ui.field('Trim leading and trailing spaces').value).toBe('true')
+    ui.edit('Trim leading and trailing spaces', 'false')
+    ui.click('Save form')
+    const updated = applyCommand(saved.project, ui.commands[1]!)
+    expect(inspectProject(updated.project).forms?.form?.rows[0]?.[0]?.[0]).toMatchObject({
+      trim: false,
+    })
     editor.dispose()
   })
 
@@ -7688,7 +7699,7 @@ describe('scene inspector registry', () => {
           [
             [
               { type: 'choice', choice: 'weather' },
-              { type: 'text', label: 'Name', path: ['name'], default: '' },
+              { type: 'text', label: 'Name', path: ['name'], default: '', trim: true },
             ],
           ],
         ],

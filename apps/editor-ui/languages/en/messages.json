@@ -61,6 +61,7 @@
   "forms.full-body": "Full-length character",
   "forms.alt": "Alternative text",
   "forms.default": "Default answer",
+  "forms.trim": "Trim leading and trailing spaces",
   "forms.id": "ID",
   "forms.addOption": "Add option",
   "forms.blank": "New blank form",

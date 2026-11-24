@@ -807,7 +807,7 @@ describe('character creation and stat discovery', () => {
   })
 
   it.each([false, true])(
-    'submits four ordinary inputs atomically through localization and rejection, with quest effects %s',
+    'submits form inputs atomically through localization and rejection, with quest effects %s',
     async (withQuest) => {
       const target = new TestDocument().createElement('main')
 
@@ -900,6 +900,7 @@ describe('character creation and stat discovery', () => {
             [
               [
                 { type: 'text', label: 'Name', labelKey: 'name', path: ['name'], default: '' },
+                { type: 'text', label: 'Note', path: ['note'], trim: false },
                 { type: 'choice', choice: 'route' },
               ],
               [
@@ -912,6 +913,8 @@ describe('character creation and stat discovery', () => {
         'rules/main.json': {
           state: [
             { path: ['name'], value: 'Initial' },
+            { path: ['note'], value: '' },
+            { path: ['feedback'], value: '' },
             { path: ['route'], value: 'short' },
             { path: ['pace'], type: 'number' },
             { path: ['ready'], value: false },
@@ -926,6 +929,10 @@ describe('character creation and stat discovery', () => {
                 effects: withQuest
                   ? [{ type: 'start-quest', quest: 'welcome' }]
                   : [{ type: 'enter-scene', scene: 'play' }],
+              },
+              {
+                when: [{ type: 'state-is', path: ['name'], value: '' }],
+                effects: [{ type: 'set-state', path: ['feedback'], value: 'Enter a name' }],
               },
               {
                 when: [{ type: 'state-is', path: ['ready'], value: true }],
@@ -991,7 +998,7 @@ describe('character creation and stat discovery', () => {
         confirm(target)
         expect(engine.lifecycle!.currentGame).toBeUndefined()
         expect(control('name').value).toBe('Guest')
-        change('name', 'Player')
+        change('name', '  Player  ')
       }
 
       confirm(target)
@@ -1003,14 +1010,21 @@ describe('character creation and stat discovery', () => {
       expect(binding('pace')).toEqual({ status: 'resolved', value: 3.5 })
       expect(control('route').value).toBe('long')
       change('ready', false)
-      change('name', 'Replacement')
+      change('name', 'Ada Lovelace')
       confirm(target)
       expect(binding('name')).toEqual({ status: 'resolved', value: 'Player' })
       expect(binding('ready')).toEqual({ status: 'resolved', value: true })
       change('ready', true)
+      change('name', ' \t\u00a0')
+      confirm(target)
+      expect(binding('feedback')).toEqual({ status: 'resolved', value: 'Enter a name' })
+      expect(binding('name')).toEqual({ status: 'resolved', value: '' })
+      change('name', '  Ada  Lovelace  ')
+      change('note', '  Keep  spacing  ')
       confirm(target)
       confirm(target)
-      expect(binding('name')).toEqual({ status: 'resolved', value: 'Replacement' })
+      expect(binding('name')).toEqual({ status: 'resolved', value: 'Ada  Lovelace' })
+      expect(binding('note')).toEqual({ status: 'resolved', value: '  Keep  spacing  ' })
       expect(binding('log')).toEqual({ status: 'resolved', value: 'Survey saved' })
 
       if (withQuest)

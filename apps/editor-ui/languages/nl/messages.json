@@ -61,6 +61,7 @@
   "forms.full-body": "Personage ten voeten uit",
   "forms.alt": "Alternatieve tekst",
   "forms.default": "Standaardantwoord",
+  "forms.trim": "Spaties aan het begin en einde verwijderen",
   "forms.id": "ID",
   "forms.addOption": "Optie toevoegen",
   "forms.blank": "Nieuw leeg formulier",

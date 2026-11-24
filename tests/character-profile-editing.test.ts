@@ -154,7 +154,13 @@ describe('shared choices', () => {
       }),
     )
     const duplicate = form('duplicate', 'appearance')
-    duplicate.rows[0]![0]!.push({ type: 'text', label: 'Other', path: choice.path, default: '' })
+    duplicate.rows[0]![0]!.push({
+      type: 'text',
+      label: 'Other',
+      path: choice.path,
+      default: '',
+      trim: true,
+    })
     expect(() => applyCommand(source, { type: 'game.upsertForm', form: duplicate })).toThrow(
       expect.objectContaining({
         diagnostics: expect.arrayContaining([
