@@ -450,7 +450,7 @@ code {
 
 .workbench {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: auto auto auto minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -467,7 +467,7 @@ code {
 
 .editor-workspace,
 .welcome {
-  grid-column: 3;
+  grid-column: 4;
   grid-row: 1;
 }
 
@@ -523,13 +523,9 @@ code {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 15rem;
-  min-width: 12rem;
-  max-width: 28rem;
+  width: var(--explorer-size, 15rem);
   padding: 0.75rem;
   overflow: auto;
-  resize: horizontal;
-  border-right: 1px solid var(--ed-border);
   background: var(--ed-sunken);
 }
 
@@ -719,7 +715,7 @@ code {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  min-width: 20rem;
+  min-width: min(20rem, calc(50% - 0.5rem));
   min-height: 0;
 }
 
@@ -1363,9 +1359,9 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   gap: 0.5rem;
 }
 
-/* Preview: the game sits in a letterboxed 16:10 frame like a standalone window. */
-.preview-splitter {
-  flex: 0 0 0.5rem;
+.pane-splitter {
+  width: 0.5rem;
+  flex: none;
   position: relative;
   border-inline: 1px solid var(--ed-border);
   background: var(--ed-panel);
@@ -1373,7 +1369,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   touch-action: none;
 }
 
-.preview-splitter::after {
+.pane-splitter::after {
   content: '';
   position: absolute;
   inset: 50% auto auto 50%;
@@ -1384,17 +1380,21 @@ input[aria-invalid='true'] + datalist + .translation-preview {
   translate: -50% -50%;
 }
 
-.preview-splitter:hover::after,
-.preview-splitter:focus-visible::after,
-.preview-splitter[data-dragging]::after {
+.pane-splitter:is(:hover, :focus-visible, [data-dragging])::after {
   background: var(--ed-accent);
 }
 
+#explorer-splitter {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Preview: the game sits in a letterboxed 16:10 frame like a standalone window. */
 .preview-pane {
   display: flex;
-  flex: 0 0 var(--preview-size, 40%);
+  flex: 0 1 var(--preview-size, 40%);
   flex-direction: column;
-  min-width: 17rem;
+  min-width: min(17rem, 50%);
   min-height: 0;
   background: var(--ed-stage);
 }
@@ -1584,11 +1584,11 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 }
 
 /* Layout modes hide one side of the editor and preview split. */
-[data-layout='edit'] :is(.preview-splitter, .preview-pane) {
+[data-layout='edit'] .editor-workspace > :is(.pane-splitter, .preview-pane) {
   display: none;
 }
 
-[data-layout='preview'] :is(.editor-pane, .preview-splitter) {
+[data-layout='preview'] .editor-workspace > :is(.editor-pane, .pane-splitter) {
   display: none;
 }
 
@@ -1679,11 +1679,8 @@ input[aria-invalid='true'] + datalist + .translation-preview {
 
   .project-sidebar {
     width: 100%;
-    max-width: none;
     max-height: 40vh;
-    resize: none;
     grid-column: 1 / -1;
-    border-right: 0;
     border-bottom: 1px solid var(--ed-border);
   }
 
@@ -1711,7 +1708,7 @@ input[aria-invalid='true'] + datalist + .translation-preview {
     top: 2.65rem;
   }
 
-  .preview-splitter {
+  .pane-splitter {
     display: none;
   }
 

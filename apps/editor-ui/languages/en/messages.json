@@ -373,6 +373,7 @@
   "layout.split": "Split",
   "layout.preview": "Preview",
   "layout.resize": "Resize preview",
+  "layout.resizeExplorer": "Resize project explorer",
   "rail.label": "Sections",
   "rail.game": "Project",
   "rail.scenes": "Scenes",

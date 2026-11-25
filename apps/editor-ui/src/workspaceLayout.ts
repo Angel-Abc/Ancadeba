@@ -1,3 +1,5 @@
+import { bindPaneSplitter, clampPaneSize, type PaneSizeRange } from './paneSplitter.js'
+
 export const workspaceLayouts = ['edit', 'split', 'preview'] as const
 export const compactWorkspaceQuery = '(max-width: 960px)'
 
@@ -10,24 +12,27 @@ export interface WorkspaceLayoutElements {
   modes: HTMLElement
   workbench: HTMLElement
   workspace: HTMLElement
-  splitter: HTMLElement
+  explorer: HTMLElement
+  explorerSplitter: HTMLElement
+  previewSplitter: HTMLElement
   preview: HTMLElement
 }
 
 export interface WorkspaceLayoutPreferences {
   layout: WorkspaceLayout
+  explorerSize: number
   previewSize: number
 }
 
 const layoutKey = 'ancadeba.editor.layout'
+const explorerSizeKey = 'ancadeba.editor.explorerSize'
 const previewSizeKey = 'ancadeba.editor.previewSize'
+
+/** Project explorer width in rem. */
+export const explorerSizeRange = { minimum: 12, maximum: 28, initial: 15, step: 1 }
 
 /** Preview width as a percentage of the editor workspace; forms get the larger share by default. */
 export const previewSizeRange = { minimum: 25, maximum: 80, initial: 40, step: 5 }
-
-export function clampPreviewSize(size: number): number {
-  return Math.min(previewSizeRange.maximum, Math.max(previewSizeRange.minimum, size))
-}
 
 /** Stored values are per-viewer conveniences; anything unreadable falls back to defaults. */
 export function readLayoutPreferences(storage: () => LayoutStorage): WorkspaceLayoutPreferences {
@@ -40,40 +45,37 @@ export function readLayoutPreferences(storage: () => LayoutStorage): WorkspaceLa
   }
 
   const storedLayout = read(layoutKey)
-  const storedSize = Number(read(previewSizeKey))
+
+  const readSize = (key: string, range: PaneSizeRange) => {
+    const stored = Number(read(key))
+
+    return Number.isFinite(stored) && stored > 0 ? clampPaneSize(stored, range) : range.initial
+  }
 
   return {
     layout: workspaceLayouts.find((layout) => layout === storedLayout) ?? 'split',
-    previewSize:
-      Number.isFinite(storedSize) && storedSize > 0
-        ? clampPreviewSize(storedSize)
-        : previewSizeRange.initial,
-  }
-}
-
-/** The splitter sits left of the preview, so moving it left widens the preview. */
-export function previewSizeAfterKey(size: number, key: string): number | undefined {
-  switch (key) {
-    case 'ArrowLeft':
-      return clampPreviewSize(size + previewSizeRange.step)
-    case 'ArrowRight':
-      return clampPreviewSize(size - previewSizeRange.step)
-    case 'Home':
-      return previewSizeRange.minimum
-    case 'End':
-      return previewSizeRange.maximum
-    default:
-      return undefined
+    explorerSize: readSize(explorerSizeKey, explorerSizeRange),
+    previewSize: readSize(previewSizeKey, previewSizeRange),
   }
 }
 
 export function bindWorkspaceLayout(
-  { shell, modes, workbench, workspace, splitter, preview }: WorkspaceLayoutElements,
+  {
+    shell,
+    modes,
+    workbench,
+    workspace,
+    explorer,
+    explorerSplitter,
+    previewSplitter,
+    preview,
+  }: WorkspaceLayoutElements,
   storage: () => LayoutStorage,
 ) {
   const abort = new AbortController()
   const signal = abort.signal
-  let { layout, previewSize } = readLayoutPreferences(storage)
+  const preferences = readLayoutPreferences(storage)
+  let layout = preferences.layout
   const compact = shell.ownerDocument.defaultView?.matchMedia(compactWorkspaceQuery)
   let beforePlayback: { layout: WorkspaceLayout; scrollTop: number } | undefined
 
@@ -90,8 +92,6 @@ export function bindWorkspaceLayout(
 
     for (const button of modes.querySelectorAll<HTMLElement>('[data-layout-mode]'))
       button.setAttribute('aria-pressed', String(button.dataset.layoutMode === layout))
-    preview.style.setProperty('--preview-size', `${previewSize}%`)
-    splitter.setAttribute('aria-valuenow', String(Math.round(previewSize)))
   }
 
   const setLayout = (next: WorkspaceLayout) => {
@@ -101,15 +101,35 @@ export function bindWorkspaceLayout(
     apply()
   }
 
-  const setPreviewSize = (next: number) => {
-    previewSize = clampPreviewSize(next)
-    apply()
-  }
-
-  const savePreviewSize = () => write(previewSizeKey, String(Math.round(previewSize)))
-
-  splitter.setAttribute('aria-valuemin', String(previewSizeRange.minimum))
-  splitter.setAttribute('aria-valuemax', String(previewSizeRange.maximum))
+  bindPaneSplitter(
+    explorerSplitter,
+    {
+      pane: explorer,
+      range: explorerSizeRange,
+      size: preferences.explorerSize,
+      side: 'left',
+      property: '--explorer-size',
+      unit: 'rem',
+      pixelsPerUnit: () =>
+        Number.parseFloat(getComputedStyle(explorer.ownerDocument.documentElement).fontSize),
+      save: (size) => write(explorerSizeKey, String(size)),
+    },
+    signal,
+  )
+  bindPaneSplitter(
+    previewSplitter,
+    {
+      pane: preview,
+      range: previewSizeRange,
+      size: preferences.previewSize,
+      side: 'right',
+      property: '--preview-size',
+      unit: '%',
+      pixelsPerUnit: () => workspace.getBoundingClientRect().width / 100,
+      save: (size) => write(previewSizeKey, String(size)),
+    },
+    signal,
+  )
 
   modes.addEventListener(
     'click',
@@ -122,56 +142,6 @@ export function bindWorkspaceLayout(
       const next = workspaceLayouts.find((layout) => layout === button?.dataset.layoutMode)
 
       if (next) setLayout(next)
-    },
-    { signal },
-  )
-
-  splitter.addEventListener(
-    'pointerdown',
-    (event) => {
-      if (event.button !== 0) return
-
-      event.preventDefault()
-      splitter.setPointerCapture(event.pointerId)
-      splitter.dataset.dragging = ''
-    },
-    { signal },
-  )
-  splitter.addEventListener(
-    'pointermove',
-    (event) => {
-      if (!splitter.hasPointerCapture(event.pointerId)) return
-
-      const bounds = workspace.getBoundingClientRect()
-
-      if (bounds.width > 0) setPreviewSize(((bounds.right - event.clientX) / bounds.width) * 100)
-    },
-    { signal },
-  )
-
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) {
-    splitter.addEventListener(
-      type,
-      () => {
-        if (!('dragging' in splitter.dataset)) return
-
-        delete splitter.dataset.dragging
-        savePreviewSize()
-      },
-      { signal },
-    )
-  }
-
-  splitter.addEventListener(
-    'keydown',
-    (event) => {
-      const next = previewSizeAfterKey(previewSize, event.key)
-
-      if (next === undefined) return
-
-      event.preventDefault()
-      setPreviewSize(next)
-      savePreviewSize()
     },
     { signal },
   )
