@@ -22,9 +22,7 @@ function within(root: string, target: string): boolean {
   return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path))
 }
 
-async function checkFile(directory: string, url: string): Promise<string> {
-  const path = (url.split('?')[0] ?? '').replace(/^\//, '')
-
+async function checkFile(directory: string, path: string): Promise<string> {
   if (!path || path.endsWith('/')) throw new GameFileError(404, 'Game resource not found')
   let parts: string[]
 
@@ -156,8 +154,15 @@ function failure(response: ServerResponse, error: unknown): void {
   response.end(JSON.stringify({ error: message }))
 }
 
-function gameFilesMiddleware(root: string) {
-  return (request: IncomingMessage, response: ServerResponse) => {
+function gameFilesMiddleware(mount: string, root: string) {
+  const prefix = mount.toLowerCase().replace(/\/$/, '')
+
+  return (request: IncomingMessage, response: ServerResponse, next: () => void) => {
+    const path = request.url?.split('?', 1)[0] ?? ''
+    const route = path.toLowerCase()
+
+    if (route !== prefix && !route.startsWith(prefix + '/')) return next()
+
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       response.setHeader('Allow', 'GET, HEAD')
       failure(response, new GameFileError(405, 'Method not allowed'))
@@ -165,7 +170,7 @@ function gameFilesMiddleware(root: string) {
       return
     }
 
-    void checkFile(root, request.url ?? '')
+    void checkFile(root, path.slice(prefix.length + 1))
       .then((path) => serveFile(path, request, response))
       .catch((error: unknown) => failure(response, error))
   }
@@ -189,7 +194,7 @@ export function gameFilesPlugin(gameMounts: Readonly<Record<string, string>>): P
       )
 
       for (const [mount, directory] of mounts)
-        server.middlewares.use(mount, gameFilesMiddleware(directory))
+        server.middlewares.use(gameFilesMiddleware(mount, directory))
     },
   }
 }
@@ -200,7 +205,7 @@ export function previewGameFilesPlugin(): Plugin {
     name: 'engine-preview-game-files',
     configurePreviewServer(server) {
       const root = resolve(server.config.root, server.config.build.outDir, 'game')
-      server.middlewares.use(`${server.config.base}game/`, gameFilesMiddleware(root))
+      server.middlewares.use(gameFilesMiddleware(`${server.config.base}game/`, root))
     },
   }
 }

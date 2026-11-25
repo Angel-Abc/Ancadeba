@@ -159,6 +159,21 @@ describe('engine development game files', () => {
     expect(await head.text()).toBe('')
   })
 
+  it('routes dotted siblings to the app or the enclosing game mount', async () => {
+    await writeFile(join(app, 'library.txt'), 'app asset')
+    await writeFile(join(temp, 'my-games/demos.txt'), 'parent mount asset')
+
+    for (const [path, contents] of [
+      ['/nested/library.txt', 'app asset'],
+      ['/library/demos.txt', 'parent mount asset'],
+      ['/nested/library/demos.txt', 'parent mount asset'],
+    ]) {
+      const response = await fetch(origin + path)
+      expect(response.status).toBe(200)
+      expect(await response.text()).toBe(contents)
+    }
+  })
+
   it('serves distinct literal filenames with reserved characters through the game resource loader', async () => {
     const resources = new HttpGameResources('./sample-games/basic/', `${origin}/nested/`, fetch)
     const files = ['review#art.svg', 'review%23art.svg', '100%.svg', 'literal%2f.svg']

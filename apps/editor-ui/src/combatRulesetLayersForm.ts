@@ -112,10 +112,11 @@ export function combatRulesetLayersForm(
         button(
           text('remove'),
           edit(() => {
-            if (layers.length === 1) detach()
-            else layers.splice(index, 1)
+            if (layers.length === 1 && canDetach) return detach()
+            layers.splice(index, 1)
+
+            if (!layers.length) draft.mechanicsOverrides = undefined
           }),
-          layers.length === 1 && !canDetach,
         ),
       ),
     ),

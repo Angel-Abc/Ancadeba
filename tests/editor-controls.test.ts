@@ -5839,6 +5839,31 @@ describe('editor draft workflows', () => {
     })
   })
 
+  it('removes an unresolved final ruleset and saves the remaining encounter edits', async () => {
+    const source = applyCommand(combatProject(), {
+      type: 'game.upsertCombatLibrary',
+      library: combatLibrarySchema.parse({
+        'schema-version': '1.0.0',
+        id: 'common',
+        rulesets: { expedition: { actors: ['player', 'opponent', 'guide'], mechanics: {} } },
+      }),
+    }).project
+
+    const ui = await connected(bindCombatEditor, source)
+    ui.click('Add encounter')
+    ui.edit('Encounter name', 'Expedition')
+    ui.edit('Ruleset to add', 'common/expedition')
+    ui.click('Add ruleset layer')
+    expect(ui.root.textContent).toContain('Bind actor role guide')
+    expect(ui.button('Detach composition to inline mechanics').disabled).toBe(true)
+    expect(ui.button('Remove ruleset layer').disabled).toBe(false)
+    ui.click('Remove ruleset layer')
+    ui.submit('Save combat encounter')
+    await ui.flush()
+    expect(ui.read().combatSources?.training).toMatchObject({ label: 'Expedition', rulesets: [] })
+    expect(ui.read().diagnostics).toEqual([])
+  })
+
   it('authors shared rulesets, binds roles, preserves sparse fight overrides and inherits later library edits', async () => {
     const ui = await connected(bindCombatEditor, combatProject())
     ui.click('Add combat library')
