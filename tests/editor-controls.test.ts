@@ -1519,7 +1519,8 @@ describe('adding scene components', () => {
       if (type === 'map-view') {
         expect(field('Columns', 'Visible area').value).toBe('3')
         expect(field('Rows', 'Visible area').value).toBe('2')
-        edit('Show player', 'true')
+        edit('Map source', 'player')
+        expect(field('Show player').value).toBe('true')
         edit('Player column', '1')
         edit('Player row', '1')
       }
@@ -2942,21 +2943,24 @@ describe('editor draft workflows', () => {
   })
 
   function entranceProject() {
-    let source = applyCommand(project(), {
-      type: 'game.upsertMap',
-      mapId: 'entrances',
-      map: {
-        'schema-version': '1.0.0',
-        type: 'square-grid',
-        width: 2,
-        height: 2,
-        terrain: { ground: { color: '#ffffff' } },
-        tiles: [
-          ['ground', 'ground'],
-          ['ground', 'ground'],
-        ],
-      },
-    }).project
+    let source = project()
+
+    for (const mapId of ['entrances', 'village'])
+      source = applyCommand(source, {
+        type: 'game.upsertMap',
+        mapId,
+        map: {
+          'schema-version': '1.0.0',
+          type: 'square-grid',
+          width: 2,
+          height: 2,
+          terrain: { ground: { color: '#ffffff' } },
+          tiles: [
+            ['ground', 'ground'],
+            ['ground', 'ground'],
+          ],
+        },
+      }).project
 
     for (const sceneId of ['shop', 'other'])
       source = applyCommand(source, {
@@ -2967,6 +2971,7 @@ describe('editor draft workflows', () => {
           type: 'map-view',
           label: 'World',
           map: 'entrances',
+          followPlayer: sceneId === 'other',
           placement: { row: 1, column: 1, rowSpan: 1, columnSpan: 1 },
           viewport: { columns: 2, rows: 2, x: 0, y: 0 },
           playerSpawn: { x: 0, y: 0 },
@@ -2998,6 +3003,7 @@ describe('editor draft workflows', () => {
     const first = await connected(bindRulesPanel, entranceProject())
     first.edit('Charge time from map view', 'world')
     first.edit('Place player at destination tile', 'yes')
+    first.edit('Destination map', 'village')
     first.edit('Destination tile X', '1')
     first.edit('Destination tile Y', '1')
     const recovered = await connected(bindRulesPanel, entranceProject())
@@ -3011,7 +3017,13 @@ describe('editor draft workflows', () => {
     recovered.submit('Save rules')
     await recovered.flush()
     expect(recovered.read().rules?.actions.travel?.[0]?.effects).toEqual([
-      { type: 'enter-scene', scene: 'other', mapView: 'world', position: { x: 1, y: 1 } },
+      {
+        type: 'enter-scene',
+        scene: 'other',
+        mapView: 'world',
+        map: 'village',
+        position: { x: 1, y: 1 },
+      },
     ])
     recovered.edit('Place player at destination tile', 'no')
     recovered.submit('Save rules')

@@ -3,17 +3,13 @@
   "actions": {
     "enter-village": [
       {
-        "when": [
-          {
-            "type": "scene-is",
-            "scene": "coast"
-          }
-        ],
+        "when": [],
         "effects": [
           {
             "type": "enter-scene",
-            "scene": "village",
-            "mapView": "village-map",
+            "scene": "exploration",
+            "mapView": "world-map",
+            "map": "village",
             "position": {
               "x": 1,
               "y": 4
@@ -24,17 +20,13 @@
     ],
     "return-coast": [
       {
-        "when": [
-          {
-            "type": "scene-is",
-            "scene": "village"
-          }
-        ],
+        "when": [],
         "effects": [
           {
             "type": "enter-scene",
-            "scene": "coast",
-            "mapView": "coast-map",
+            "scene": "exploration",
+            "mapView": "world-map",
+            "map": "coast",
             "position": {
               "x": 8,
               "y": 3

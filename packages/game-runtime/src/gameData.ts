@@ -137,6 +137,7 @@ export type GraphicComponentData = GraphicComponentDefinition
 export type InventoryComponentData = InventoryComponentDefinition
 
 export interface MapViewComponentData extends Omit<MapViewComponentDefinition, 'map'> {
+  readonly mapId: string
   readonly map: MapDefinition
 }
 
@@ -164,6 +165,7 @@ export interface SceneData {
 }
 
 export interface GameData {
+  readonly maps?: ReadonlyMap<string, MapDefinition>
   /** Content fingerprint supplied by the loader, independent of the selected language. */
   readonly saveCompatibility?: string
   readonly choices?: ReadonlyMap<string, ChoiceDefinition> | undefined
@@ -569,6 +571,7 @@ export function assembleGameData(
             placement: { ...component.placement },
             viewport: { ...component.viewport },
             ...(component.playerSpawn && { playerSpawn: { ...component.playerSpawn } }),
+            mapId: component.map,
             map: resolveMapView(maps, component.map, component.viewport, component.playerSpawn),
           }
 
@@ -636,7 +639,13 @@ export function assembleGameData(
         const view = scene.components.find((entry) => entry.id === component.location?.mapView)
         const { x, y } = component.location.position
 
-        if (view?.type !== 'map-view' || x >= view.map.width || y >= view.map.height)
+        const map =
+          view?.type === 'map-view' &&
+          (component.location.map
+            ? view.followPlayer && maps.get(component.location.map)
+            : view.map)
+
+        if (!map || x >= map.width || y >= map.height)
           throw new Error(`Save point ${component.id} is outside its map`)
       }
     }
@@ -745,6 +754,7 @@ export function assembleGameData(
   }
 
   return {
+    ...(maps.size && { maps }),
     ...(choices.size && {
       choices: new Map(
         [...choices].map(([id, choice]) => [id, localizeChoice(choice, ruleTranslation)]),

@@ -28,6 +28,7 @@ export function sceneEntranceFields(
       (next) => {
         if (next) action.mapView = next
         else delete action.mapView
+        delete action.map
         delete action.position
         render()
       },
@@ -48,13 +49,25 @@ export function sceneEntranceFields(
 
         if (next === 'yes')
           action.position = map?.type === 'map-view' ? { ...map.playerSpawn! } : { x: 0, y: 0 }
-        else delete action.position
+        else {
+          delete action.position
+          delete action.map
+        }
+
         render()
       },
     ),
   )
 
   if (action.position) {
+    const target = maps.find(({ id }) => id === action.mapView)
+
+    if (target?.type === 'map-view' && target.followPlayer)
+      fields.push(
+        select(t('entrance.map'), action.map ?? target.map, view.game?.maps ?? [], (value) => {
+          action.map = value
+        }),
+      )
     const position = action.position
 
     const coordinates = (['x', 'y'] as const).map((coordinate) => {

@@ -3878,14 +3878,14 @@ describe('scene renderer', () => {
                 'utf8',
               )
 
-              if (path !== 'scenes/coast.json') return text
+              if (path !== 'scenes/exploration.json') return text
               const scene = JSON.parse(text)
               scene.components.push({
                 id: 'east-button',
                 type: 'button',
                 label: 'East',
                 placement: { row: 2, column: 1 },
-                action: { type: 'move-map', mapView: 'coast-map', direction: 'east' },
+                action: { type: 'move-map', mapView: 'world-map', direction: 'east' },
               })
 
               return JSON.stringify(scene)
@@ -3950,7 +3950,7 @@ describe('scene renderer', () => {
       flush(engine)
       expect(tasks).toHaveLength(3)
       engine.lifecycle!.leaveScene()
-      engine.lifecycle!.enterScene('coast')
+      engine.lifecycle!.enterScene('exploration')
       expect(tasks[2]!.cancelled).toBe(true)
       tasks[2]!.callback()
       expect(column()).toBe('10')
@@ -3970,8 +3970,9 @@ describe('scene renderer', () => {
         placement: { row: 2, column: 1 },
         action: {
           type: 'enter-scene',
-          scene: 'village',
-          mapView: 'village-map',
+          scene: 'exploration',
+          map: 'village',
+          mapView: 'world-map',
           position: { x: 2, y: 3 },
         },
       }
@@ -4016,7 +4017,7 @@ describe('scene renderer', () => {
                 })
               }
 
-              if (path === 'scenes/coast.json') {
+              if (path === 'scenes/exploration.json') {
                 const scene = JSON.parse(text)
                 scene.components.push(entrance)
                 scene.components.find(
@@ -4051,7 +4052,7 @@ describe('scene renderer', () => {
       expect(button().unavailable).toBe(true)
       expect(engine.lifecycle!.currentGame).toBeUndefined()
       engine.lifecycle!.startGame()
-      const coast = engine.lifecycle!.enterScene('coast')
+      const coast = engine.lifecycle!.enterScene('exploration')
       const instance = engine.lifecycle!.currentGame!
       const state = instance.state
 
@@ -4086,8 +4087,8 @@ describe('scene renderer', () => {
       expect(button().unavailable).toBe(false)
       button().dispatchEvent(new Event('click'))
       const village = engine.lifecycle!.activeScene!
-      expect(village.data.id).toBe('village')
-      expect(instance.mapMovement!.getPosition(village, 'village-map')).toEqual({ x: 2, y: 3 })
+      expect(instance.mapMovement!.playerMap).toBe('village')
+      expect(instance.mapMovement!.getPosition(village, 'world-map')).toEqual({ x: 2, y: 3 })
     },
   )
 
@@ -4104,7 +4105,7 @@ describe('scene renderer', () => {
                 'utf8',
               )
 
-              if (path !== 'scenes/coast.json') return text
+              if (path !== 'scenes/exploration.json') return text
               const scene = JSON.parse(text)
               scene.components.push({
                 id: 'entrance',
@@ -4113,8 +4114,8 @@ describe('scene renderer', () => {
                 placement: { row: 2, column: 1 },
                 action: {
                   type: 'enter-scene',
-                  scene: 'coast',
-                  mapView: 'coast-map',
+                  scene: 'exploration',
+                  mapView: 'world-map',
                   position: { x: 12, y: 0 },
                 },
               })
@@ -4144,7 +4145,7 @@ describe('scene renderer', () => {
         .find((element) => element.dataset.componentId === 'entrance')!
         .dispatchEvent(new Event('click'))
       const scene = engine.lifecycle!.activeScene!
-      expect(engine.lifecycle!.currentGame!.mapMovement!.getPosition(scene, 'coast-map')).toEqual({
+      expect(engine.lifecycle!.currentGame!.mapMovement!.getPosition(scene, 'world-map')).toEqual({
         x: 12,
         y: 0,
       })
@@ -4195,14 +4196,14 @@ describe('scene renderer', () => {
                   },
                 ]
 
-              if (path === 'scenes/coast.json')
+              if (path === 'scenes/exploration.json')
                 value.components.push({
                   id: 'read-sign',
                   type: 'button',
                   label: 'Read sign',
                   showOnlyWhenActive: true,
                   placement: { row: 2, column: 1 },
-                  action: { type: 'interact-map', mapView: 'coast-map', object: 'sign' },
+                  action: { type: 'interact-map', mapView: 'world-map', object: 'sign' },
                 })
 
               return JSON.stringify(value)
@@ -4258,7 +4259,7 @@ describe('scene renderer', () => {
         engine.lifecycle!.currentGame!.bindings!.read({ source: 'game.state', path: ['readSign'] }),
       ).toEqual({ status: 'resolved', value: true })
       const movement = engine.lifecycle!.currentGame!.mapMovement!
-      movement.move(engine.lifecycle!.activeScene!, 'coast-map', 'west')
+      movement.move(engine.lifecycle!.activeScene!, 'world-map', 'west')
       expect(object.unavailable).toBe(true)
       expect(button.unavailable).toBe(true)
       expect(button.hidden).toBe(true)
@@ -4268,10 +4269,14 @@ describe('scene renderer', () => {
       flush(engine)
       expect(object.unavailable).toBe(true)
       expect(applied).toHaveLength(2)
-      movement.move(engine.lifecycle!.activeScene!, 'coast-map', 'east')
+      movement.move(engine.lifecycle!.activeScene!, 'world-map', 'east')
       tasks.shift()!()
       expect(button.hidden).toBe(false)
-      engine.lifecycle!.enterScene('village')
+      engine.lifecycle!.enterScene('exploration', {
+        map: 'village',
+        mapView: 'world-map',
+        position: { x: 1, y: 4 },
+      })
       object.dispatchEvent(new Event('click'))
       button.dispatchEvent(new Event('click'))
       flush(engine)
@@ -4438,11 +4443,15 @@ describe('scene renderer', () => {
       onTestFinished(() => engine.stop())
       await engine.start()
       const lifecycle = engine.lifecycle!
-      lifecycle.enterScene('village', { mapView: 'village-map', position: { x: 4, y: 4 } })
+      lifecycle.enterScene('exploration', {
+        map: 'village',
+        mapView: 'world-map',
+        position: { x: 4, y: 4 },
+      })
       const basket = target.find((element) => element.dataset.mapObject === 'village-berries')!
       const backpack = () => target.find((element) => element.dataset.componentId === 'backpack')!
       expect(backpack().textContent).not.toContain('Wild berry')
-      const mapView = target.find((element) => element.dataset.componentId === 'village-map')!
+      const mapView = target.find((element) => element.dataset.componentId === 'world-map')!
       let hidden = basket.hidden
       // A real browser blurs a focused element when it becomes hidden.
       Object.defineProperty(basket, 'hidden', {
@@ -4469,14 +4478,26 @@ describe('scene renderer', () => {
       basket.dispatchEvent(new Event('click'))
       flush(engine)
       expect(applied).toEqual(['collect-berries'])
-      lifecycle.enterScene('coast')
-      lifecycle.enterScene('village')
+      lifecycle.enterScene('exploration', {
+        map: 'coast',
+        mapView: 'world-map',
+        position: { x: 8, y: 3 },
+      })
+      lifecycle.enterScene('exploration', {
+        map: 'village',
+        mapView: 'world-map',
+        position: { x: 1, y: 4 },
+      })
       expect(
         target.find((element) => element.dataset.mapObject === 'village-berries')!.hidden,
       ).toBe(true)
       expect(backpack().textContent.match(/Wild berry/g)).toHaveLength(3)
       lifecycle.startGame()
-      lifecycle.enterScene('village')
+      lifecycle.enterScene('exploration', {
+        map: 'village',
+        mapView: 'world-map',
+        position: { x: 1, y: 4 },
+      })
       expect(
         target.find((element) => element.dataset.mapObject === 'village-berries')!.hidden,
       ).toBe(false)
@@ -4506,7 +4527,11 @@ describe('scene renderer', () => {
     onTestFinished(() => engine.stop())
     await engine.start()
     const lifecycle = engine.lifecycle!
-    lifecycle.enterScene('village', { mapView: 'village-map', position: { x: 2, y: 4 } })
+    lifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 2, y: 4 },
+    })
     const chest = target.find((element) => element.dataset.mapObject === 'village-chest')!
     expect(chest.attributes.get('aria-label')).toBe('Chest')
     leases[0]!({ url: 'blob:closed-sheet', release: releases })
@@ -4518,15 +4543,23 @@ describe('scene renderer', () => {
     expect(chest.attributes.get('aria-label')).toBe('Open chest')
     expect(chest.style.backgroundPosition).toBe('100% 0%')
     expect(chest.textContent).toBe('')
-    lifecycle.currentGame!.mapMovement!.place(lifecycle.activeScene!, 'village-map', { x: 4, y: 4 })
+    lifecycle.currentGame!.mapMovement!.place(lifecycle.activeScene!, 'world-map', { x: 4, y: 4 })
     engine.input!.pressKey('KeyE')
     engine.input!.releaseKey('KeyE')
     flush(engine)
     expect(target.find((element) => element.dataset.mapObject === 'village-berries')!.hidden).toBe(
       true,
     )
-    lifecycle.enterScene('coast')
-    lifecycle.enterScene('village')
+    lifecycle.enterScene('exploration', {
+      map: 'coast',
+      mapView: 'world-map',
+      position: { x: 8, y: 3 },
+    })
+    lifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 1, y: 4 },
+    })
     const revisited = target.find((element) => element.dataset.mapObject === 'village-chest')!
     expect(revisited.attributes.get('aria-label')).toBe('Open chest')
     leases.at(-1)!({ url: 'blob:late-sheet', release: releases })
@@ -4563,7 +4596,7 @@ describe('scene renderer', () => {
     const { lifecycle, target, document } = setup(game)
     const dispose = mountGameView(target.asElement(), game, { lifecycle, input: undefined })
     const surface = target.find((element) => element.className === 'ancadeba-game')!
-    const view = target.find((element) => element.dataset.componentId === 'coast-map')!
+    const view = target.find((element) => element.dataset.componentId === 'world-map')!
     const grid = view.children[0]!.children[0]!
     const player = grid.find((element) => element.className === 'ancadeba-map-player')!
 

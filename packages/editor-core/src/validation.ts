@@ -252,7 +252,12 @@ export function validateProject(
 
       if (component.type === 'save-point' && component.location) {
         const view = scene.components.find((entry) => entry.id === component.location?.mapView)
-        const map = view?.type === 'map-view' ? maps.get(view.map) : undefined
+
+        const map =
+          view?.type === 'map-view' &&
+          (!component.location.map || view.followPlayer) &&
+          maps.get(component.location.map ?? view.map)
+
         const { x, y } = component.location.position
 
         if (!map || x >= map.width || y >= map.height)

@@ -303,6 +303,8 @@ export function basicComponentFields(
             component.interactive !== false,
         ) ?? []
 
+    const pointView = mapViews.find(({ id }) => id === draft.location?.mapView)
+
     return behavior.push(
       select(
         t('saving.saveMenu'),
@@ -333,6 +335,18 @@ export function basicComponentFields(
       ),
       ...(draft.location
         ? [
+            ...(pointView?.type === 'map-view' && pointView.followPlayer
+              ? [
+                  select(
+                    t('maps.map'),
+                    draft.location.map ?? pointView.map,
+                    view.game?.maps ?? [],
+                    (value) => {
+                      draft.location!.map = value
+                    },
+                  ),
+                ]
+              : []),
             ...(['y', 'x'] as const).map((axis) =>
               input(
                 axis === 'x' ? t('component.playerColumn') : t('component.playerRow'),
@@ -360,17 +374,44 @@ export function basicComponentFields(
     const viewport = draft.viewport
 
     main.push(
-      select(t('maps.map'), draft.map, view.game?.maps ?? [], (value) => {
-        draft.map = value
-        const map = view.maps?.[value]
+      ...(view.scenes.find(({ id }) => id === sceneId)?.type === 'game'
+        ? [
+            select(
+              t('maps.source'),
+              draft.followPlayer ? 'player' : 'fixed',
+              [
+                ['fixed', t('maps.fixed')],
+                ['player', t('maps.followPlayer')],
+              ],
+              (value) => {
+                draft.followPlayer = value === 'player' || undefined
 
-        if (map) {
-          viewport.columns = Math.min(viewport.columns, map.width)
-          viewport.rows = Math.min(viewport.rows, map.height)
-        }
+                if (draft.followPlayer) {
+                  draft.interactive = undefined
+                  draft.playerSpawn ??= { x: 0, y: 0 }
+                }
 
-        render()
-      }),
+                render()
+              },
+            ),
+          ]
+        : []),
+      select(
+        t(draft.followPlayer ? 'maps.startingMap' : 'maps.map'),
+        draft.map,
+        view.game?.maps ?? [],
+        (value) => {
+          draft.map = value
+          const map = view.maps?.[value]
+
+          if (map) {
+            viewport.columns = Math.min(viewport.columns, map.width)
+            viewport.rows = Math.min(viewport.rows, map.height)
+          }
+
+          render()
+        },
+      ),
       link('maps', draft.map, 'inspector.openMap'),
     )
 
@@ -407,6 +448,9 @@ export function basicComponentFields(
         ],
         (value) => {
           draft.interactive = value === 'true' ? undefined : false
+
+          if (draft.interactive === false) draft.followPlayer = undefined
+          render()
         },
       ),
       controls.group(
@@ -420,6 +464,8 @@ export function basicComponentFields(
           ],
           (value) => {
             draft.playerSpawn = value === 'true' ? { x: 0, y: 0 } : undefined
+
+            if (!draft.playerSpawn) draft.followPlayer = undefined
             render()
           },
         ),
@@ -549,6 +595,7 @@ export function basicComponentFields(
 
               if (action.type === 'enter-scene') {
                 delete action.mapView
+                delete action.map
                 delete action.position
                 render()
               }

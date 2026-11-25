@@ -8,7 +8,16 @@ export function isAtSavePoint(
   if (scene.type !== 'game' || scene.disposed) return false
 
   if (!point.location) return true
-  const current = scene.game.mapMovement?.getPosition(scene, point.location.mapView)
+  const movement = scene.game.mapMovement
+  const current = movement?.getPosition(scene, point.location.mapView)
+  const view = scene.data.components.find(({ id }) => id === point.location!.mapView)
+
+  if (
+    view?.type === 'map-view' &&
+    view.followPlayer &&
+    movement?.playerMap !== (point.location.map ?? view.mapId)
+  )
+    return false
 
   return Boolean(
     current &&

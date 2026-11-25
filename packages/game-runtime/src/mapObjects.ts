@@ -28,10 +28,7 @@ export class GameMapObjects implements IGameMapObjects {
       scene.type !== 'game'
     )
       return
-    const view = scene.data.components.find(({ id }) => id === mapView)
-
-    const entry =
-      view?.type === 'map-view' ? view.map.objects?.find(({ id }) => id === object) : undefined
+    const entry = this.movement.getMap(scene, mapView)?.objects?.find(({ id }) => id === object)
 
     return entry && resolveMapObject(entry, this.readState)
   }
@@ -47,17 +44,16 @@ export class GameMapObjects implements IGameMapObjects {
     const position = this.movement.getPosition(scene, mapView)
 
     if (!position || this.movement.isMoving(scene, mapView)) return
-    const view = scene.data.components.find(({ id }) => id === mapView)
-
-    if (view?.type !== 'map-view') return
 
     const targets =
-      view.map.objects?.filter(
-        (entry) =>
-          (!object || entry.id === object) &&
-          resolveMapObject(entry, this.readState).visible !== false &&
-          Math.abs(entry.x - position.x) + Math.abs(entry.y - position.y) === 1,
-      ) ?? []
+      this.movement
+        .getMap(scene, mapView)
+        ?.objects?.filter(
+          (entry) =>
+            (!object || entry.id === object) &&
+            resolveMapObject(entry, this.readState).visible !== false &&
+            Math.abs(entry.x - position.x) + Math.abs(entry.y - position.y) === 1,
+        ) ?? []
 
     return targets.length === 1 ? targets[0] : undefined
   }

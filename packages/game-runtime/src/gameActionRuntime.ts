@@ -62,7 +62,14 @@ export class GameActionRuntime implements IGameRuntime {
 
   save(): Pick<
     GameSave,
-    'combat' | 'rewards' | 'quests' | 'dialogue' | 'mapPositions' | 'leveling' | 'messageHistory'
+    | 'combat'
+    | 'rewards'
+    | 'quests'
+    | 'dialogue'
+    | 'mapPositions'
+    | 'playerLocation'
+    | 'leveling'
+    | 'messageHistory'
   > {
     return {
       combat: this.combat?.save() ?? {},
@@ -70,7 +77,7 @@ export class GameActionRuntime implements IGameRuntime {
       quests: this.quests?.save() ?? { records: {} },
       dialogue: this.dialogue?.save() ?? {},
       messageHistory: this.history?.entries.slice() ?? [],
-      mapPositions: this.mapMovement?.savePositions(this.paused) ?? {},
+      ...(this.mapMovement?.saveLocations(this.paused) ?? { mapPositions: {} }),
       leveling: this.leveling.save(),
     }
   }
@@ -89,7 +96,7 @@ export class GameActionRuntime implements IGameRuntime {
       if (!this.leveling.snapshot(id)?.available)
         throw new Error('Invalid saved character progression')
 
-    this.mapMovement?.restorePositions(game.data, save.mapPositions)
+    this.mapMovement?.restoreLocations(game.data, save)
 
     if (
       (!this.quests && (Object.keys(save.quests.records).length || save.quests.tracked)) ||
@@ -143,12 +150,14 @@ export class GameActionRuntime implements IGameRuntime {
       return result.status === 'resolved' ? result.value : undefined
     }
 
-    const dynamicObjects = [...game.data.scenes.values()].some((scene) =>
-      scene.components.some(
-        (component) =>
-          component.type === 'map-view' &&
-          component.map.objects?.some((object) => object.states?.length),
-      ),
+    const maps =
+      game.data.maps?.values() ??
+      Array.from(game.data.scenes.values()).flatMap((scene) =>
+        scene.components.flatMap((view) => (view.type === 'map-view' ? [view.map] : [])),
+      )
+
+    const dynamicObjects = Array.from(maps).some((map) =>
+      map.objects?.some((object) => object.states?.length),
     )
 
     const prepareProgression = (cost: number): PreparedProgression => {
@@ -169,6 +178,7 @@ export class GameActionRuntime implements IGameRuntime {
           lifecycle,
           scheduler,
           (scene, mapView, trigger) => {
+            const sourceMap = this.mapMovement?.getMap(scene, mapView)
             this.actions.requestScoped(
               trigger.action,
               Object.freeze({
@@ -178,7 +188,10 @@ export class GameActionRuntime implements IGameRuntime {
                 x: trigger.x,
                 y: trigger.y,
               }),
-              () => !scene.disposed && lifecycle.activeScene === scene,
+              () =>
+                !scene.disposed &&
+                lifecycle.activeScene === scene &&
+                this.mapMovement?.getMap(scene, mapView) === sourceMap,
             )
           },
           dynamicObjects

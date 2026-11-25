@@ -22,7 +22,7 @@
     "collect-berries": [
       {
         "when": [
-          { "type": "scene-is", "scene": "village" },
+          { "type": "scene-is", "scene": "exploration" },
           { "type": "payload-is-target", "target": "village-berries" },
           { "type": "state-is", "path": ["berriesCollected"], "value": false }
         ],
@@ -46,7 +46,7 @@
         "when": [
           {
             "type": "scene-is",
-            "scene": "coast"
+            "scene": "exploration"
           },
           {
             "type": "payload-is-target",
@@ -72,7 +72,7 @@
         "when": [
           {
             "type": "scene-is",
-            "scene": "village"
+            "scene": "exploration"
           },
           {
             "type": "payload-is-target",
@@ -106,7 +106,7 @@
         "when": [
           {
             "type": "scene-is",
-            "scene": "village"
+            "scene": "exploration"
           },
           {
             "type": "payload-is-target",

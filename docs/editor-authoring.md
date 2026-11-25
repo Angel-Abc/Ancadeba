@@ -855,13 +855,19 @@ them. Cancelled steps and requests from a scene that has been left do not activa
 them either. Trigger edits support draft recovery and map undo/redo. When shrinking
 a map, move or remove any triggers that fall outside its new bounds before saving.
 
+To travel between maps in a single scene, set the map view's **Map source** to
+**Follow player**. Choose its **Starting map** and player spawn. On an exit's
+**Enter scene** effect, select the same scene and view, enable **Place player at
+destination tile**, and choose the **Destination map** and tile coordinates.
+The movement controls, action bar, and other scene components stay in place.
+
 To connect an exit to a particular entrance, edit its **Enter scene** effect in
 **Rules**, select the **Destination scene** and its map under **Charge time from
 map view**, then set **Place player at destination tile → Yes** and enter
 **Destination tile X/Y**. Coordinates start at zero and must identify a walkable
 tile on an interactive map with a player spawn. The selected view arrives at that
-tile even if the player previously visited a different location there; other map
-views keep their remembered positions. Arrival does not activate a tile trigger,
+tile even if the player previously visited a different location there. Fixed map
+views keep their independent positions. Arrival does not activate a tile trigger,
 so opposing exits do not automatically bounce the player between scenes. Rules
 travel time uses the destination tile's terrain. Choose **No** to preserve normal
 resume/spawn behavior; existing Rules effects with a map selected still charge
@@ -927,7 +933,7 @@ inspect in the editor.
 The sample also places a signpost north of the coast spawn and a chest north of
 `(2, 4)` in Pine Village. Press **E** at the coast spawn to read the sign; from the
 village entrance, move east once and press E for the chest's one-time 25-coin
-reward. Both scenes expose an **Interact** slot and bound feedback text. Inspect
+reward. The shared scene has an **Interact** slot and bound feedback text. Inspect
 `rules/interactions.json` for the object-target conditions, collected flag, and
 empty-chest branch, and `input/movement.json` for the shared E binding. The chest's
 **Object states** entry uses `chestOpened` to select an open sprite and allow

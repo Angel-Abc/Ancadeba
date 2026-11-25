@@ -15,7 +15,12 @@ import type { IGameInventorySelection } from './inventoryContext.js'
 import type { IGameEquipment } from './equipment.js'
 import type { IGameTrading } from './trading.js'
 import type { IGameCombat } from './combat.js'
-import type { MessageHistoryEntry, SceneEntrance, SceneTransition } from '@ancadeba/schemas'
+import {
+  sceneEntrance,
+  type MessageHistoryEntry,
+  type SceneEntrance,
+  type SceneTransition,
+} from '@ancadeba/schemas'
 import { canEnterScene } from './sceneNavigation.js'
 import { runtimeText } from './runtimeText.js'
 
@@ -486,7 +491,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
 
       if (data.type === 'game' && !game) throw new Error(`Scene ${id} requires a current game`)
 
-      const arrival = entrance && { mapView: entrance.mapView, position: { ...entrance.position } }
+      const arrival = entrance && { ...entrance, position: { ...entrance.position } }
 
       if (arrival) {
         if (
@@ -501,7 +506,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
       }
 
       if (this.scene?.context.data.id === id) {
-        if (arrival) game!.mapMovement!.place(this.scene.context, arrival.mapView, arrival.position)
+        if (arrival) this.placeArrival(this.scene.context, arrival)
 
         return this.scene.context
       }
@@ -536,13 +541,22 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
     return { instance, context }
   }
 
+  private placeArrival(scene: SceneInstance, arrival: SceneEntrance) {
+    const view = scene.data.components.find(({ id }) => id === arrival.mapView)
+
+    const map =
+      arrival.map ?? (view?.type === 'map-view' && view.followPlayer ? view.mapId : undefined)
+
+    this.game!.mapMovement!.place(scene, arrival.mapView, arrival.position, map)
+  }
+
   private activateScene(next: NonNullable<typeof this.scene>, arrival?: SceneEntrance) {
     const previous = this.scene
     this.releaseMenu()
     this.scene = next
 
     try {
-      if (arrival) this.game!.mapMovement!.place(next.context, arrival.mapView, arrival.position)
+      if (arrival) this.placeArrival(next.context, arrival)
     } finally {
       if (previous !== next) release(previous?.instance)
     }
@@ -582,13 +596,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
           }
         }
 
-        if (next)
-          this.activateScene(
-            next,
-            destination?.position && destination.mapView
-              ? { mapView: destination.mapView, position: destination.position }
-              : undefined,
-          )
+        if (next) this.activateScene(next, destination && sceneEntrance(destination))
       } finally {
         release(
           next !== this.scene ? next?.instance : undefined,

@@ -486,6 +486,7 @@ export function actionBarForm(
 
             if (action.type === 'enter-scene') {
               delete action.mapView
+              delete action.map
               delete action.position
               render()
             }

@@ -105,6 +105,38 @@ async function launch(store: GameSaveStore = new SampleSaves()) {
 }
 
 describe('Coast Road and Pine Village interactions', () => {
+  it('checks entrances on the destination map and cancels an unfinished step when switching', async () => {
+    const { engine, advance } = await launch()
+    const lifecycle = engine.lifecycle!
+    const scene = lifecycle.activeScene!
+    const movement = lifecycle.currentGame!.mapMovement!
+    expect(movement.playerMap).toBe('coast')
+    expect(movement.move(scene, 'world-map', 'east')).toBe(true)
+
+    for (const map of ['missing', 'village']) {
+      expect(() =>
+        lifecycle.enterScene('exploration', {
+          mapView: 'world-map',
+          map,
+          position: { x: 2, y: 3 },
+        }),
+      ).toThrow('Invalid destination map position')
+      expect(movement.isMoving(scene, 'world-map')).toBe(true)
+      expect(movement.playerMap).toBe('coast')
+    }
+
+    lifecycle.enterScene('exploration', {
+      mapView: 'world-map',
+      map: 'village',
+      position: { x: 1, y: 4 },
+    })
+    advance(1000)
+    expect(lifecycle.activeScene).toBe(scene)
+    expect(movement.getPosition(scene, 'world-map')).toEqual({ x: 1, y: 4 })
+    expect(movement.playerMap).toBe('village')
+    expect(movement.isMoving(scene, 'world-map')).toBe(false)
+  })
+
   it('collects the berry basket once, keeps it hidden across visits and save/load on its tile, and resets for a new game', async () => {
     const store = new SampleSaves()
     const first = await launch(store)
@@ -115,8 +147,8 @@ describe('Coast Road and Pine Village interactions', () => {
     const game = lifecycle.currentGame!
     const scene = lifecycle.activeScene!
     expect(playerBerries(first.engine)).toHaveLength(0)
-    expect(game.mapObjects!.getTarget(scene, 'village-map')?.id).toBe('village-berries')
-    expect(game.mapMovement!.canMove(scene, 'village-map', 'south')).toBe(false)
+    expect(game.mapObjects!.getTarget(scene, 'world-map')?.id).toBe('village-berries')
+    expect(game.mapMovement!.canMove(scene, 'world-map', 'south')).toBe(false)
     first.press('KeyE')
     expect(playerBerries(first.engine).map(({ id }) => id)).toEqual([
       'berry-1',
@@ -128,21 +160,29 @@ describe('Coast Road and Pine Village interactions', () => {
       status: 'resolved',
       value: 'You collect 3 berries. The basket is gone.',
     })
-    expect(game.mapObjects!.getAppearance(scene, 'village-map', 'village-berries')?.visible).toBe(
+    expect(game.mapObjects!.getAppearance(scene, 'world-map', 'village-berries')?.visible).toBe(
       false,
     )
-    expect(game.mapObjects!.getTarget(scene, 'village-map')).toBeUndefined()
+    expect(game.mapObjects!.getTarget(scene, 'world-map')).toBeUndefined()
     expect(game.actionBar!.isEnabled(scene, 'movement-bar', '12')).toBe(false)
-    expect(game.mapMovement!.canMove(scene, 'village-map', 'south')).toBe(true)
+    expect(game.mapMovement!.canMove(scene, 'world-map', 'south')).toBe(true)
     first.press('KeyE')
     expect(first.applied.filter((action) => action === 'collect-berries')).toHaveLength(1)
     first.press('KeyS')
     first.advance(200)
-    expect(game.mapMovement!.getPosition(scene, 'village-map')).toEqual({ x: 4, y: 5 })
-    lifecycle.enterScene('coast')
-    lifecycle.enterScene('village')
+    expect(game.mapMovement!.getPosition(scene, 'world-map')).toEqual({ x: 4, y: 5 })
+    lifecycle.enterScene('exploration', {
+      map: 'coast',
+      mapView: 'world-map',
+      position: { x: 8, y: 3 },
+    })
+    lifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 4, y: 5 },
+    })
     expect(
-      game.mapObjects!.getAppearance(lifecycle.activeScene!, 'village-map', 'village-berries')
+      game.mapObjects!.getAppearance(lifecycle.activeScene!, 'world-map', 'village-berries')
         ?.visible,
     ).toBe(false)
     expect(first.engine.saves!.save()).toBe(true)
@@ -152,13 +192,14 @@ describe('Coast Road and Pine Village interactions', () => {
     restored.advance()
     const loadedLifecycle = restored.engine.lifecycle!
     const loadedGame = loadedLifecycle.currentGame!
-    expect(
-      loadedGame.mapMovement!.getPosition(loadedLifecycle.activeScene!, 'village-map'),
-    ).toEqual({ x: 4, y: 5 })
+    expect(loadedGame.mapMovement!.getPosition(loadedLifecycle.activeScene!, 'world-map')).toEqual({
+      x: 4,
+      y: 5,
+    })
     expect(
       loadedGame.mapObjects!.getAppearance(
         loadedLifecycle.activeScene!,
-        'village-map',
+        'world-map',
         'village-berries',
       )?.visible,
     ).toBe(false)
@@ -167,11 +208,15 @@ describe('Coast Road and Pine Village interactions', () => {
     expect(playerBerries(restored.engine)).toHaveLength(3)
     expect(restored.applied).not.toContain('collect-berries')
     loadedLifecycle.startGame()
-    loadedLifecycle.enterScene('village')
+    loadedLifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 1, y: 4 },
+    })
     expect(
       loadedLifecycle.currentGame!.mapObjects!.getAppearance(
         loadedLifecycle.activeScene!,
-        'village-map',
+        'world-map',
         'village-berries',
       )?.visible,
     ).not.toBe(false)
@@ -188,7 +233,11 @@ describe('Coast Road and Pine Village interactions', () => {
     async (mode) => {
       const run = await launch()
       const lifecycle = run.engine.lifecycle!
-      lifecycle.enterScene('village', { mapView: 'village-map', position: { x: 4, y: 4 } })
+      lifecycle.enterScene('exploration', {
+        map: 'village',
+        mapView: 'world-map',
+        position: { x: 4, y: 4 },
+      })
       const game = lifecycle.currentGame!
       const inventory = game.inventory!
       const token = { encounter: 'test' }
@@ -221,10 +270,10 @@ describe('Coast Road and Pine Village interactions', () => {
         value: 'Press E beside an object to interact.',
       })
       expect(
-        game.mapObjects!.getAppearance(lifecycle.activeScene!, 'village-map', 'village-berries')
+        game.mapObjects!.getAppearance(lifecycle.activeScene!, 'world-map', 'village-berries')
           ?.visible,
       ).not.toBe(false)
-      expect(game.mapObjects!.getTarget(lifecycle.activeScene!, 'village-map')?.id).toBe(
+      expect(game.mapObjects!.getTarget(lifecycle.activeScene!, 'world-map')?.id).toBe(
         'village-berries',
       )
       expect(commit).not.toHaveBeenCalled()
@@ -244,7 +293,11 @@ describe('Coast Road and Pine Village interactions', () => {
   it('commits the full pickup and collected state before notifying inventory observers, including failing observers', async () => {
     const run = await launch()
     const lifecycle = run.engine.lifecycle!
-    lifecycle.enterScene('village', { mapView: 'village-map', position: { x: 4, y: 4 } })
+    lifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 4, y: 4 },
+    })
     let notifications = 0
 
     const unsubscribe = lifecycle.currentGame!.inventory!.subscribeChanges(() => {
@@ -270,7 +323,7 @@ describe('Coast Road and Pine Village interactions', () => {
     const lifecycle = engine.lifecycle!
     const game = lifecycle.currentGame!
     const scene = lifecycle.activeScene!
-    expect(game.mapObjects!.getTarget(scene, 'coast-map')?.id).toBe('coast-signpost')
+    expect(game.mapObjects!.getTarget(scene, 'world-map')?.id).toBe('coast-signpost')
     expect(game.actionBar!.isEnabled(scene, 'movement-bar', '12')).toBe(true)
     press('KeyE')
     expect(read('signRead')).toEqual({ status: 'resolved', value: true })
@@ -279,19 +332,19 @@ describe('Coast Road and Pine Village interactions', () => {
       value: 'Signpost: Pine Village is through the gold gate at (8, 2).',
     })
     expect(read('coins')).toEqual({ status: 'resolved', value: 0 })
-    expect(game.mapMovement!.canMove(scene, 'coast-map', 'north')).toBe(false)
+    expect(game.mapMovement!.canMove(scene, 'world-map', 'north')).toBe(false)
     press('KeyD')
-    expect(game.mapMovement!.isMoving(scene, 'coast-map')).toBe(true)
+    expect(game.mapMovement!.isMoving(scene, 'world-map')).toBe(true)
     expect(game.actionBar!.isEnabled(scene, 'movement-bar', '12')).toBe(false)
     press('KeyE')
     advance(150)
     press('KeyE')
     expect(applied).toEqual(['read-signpost'])
-    expect(game.mapObjects!.getTarget(scene, 'coast-map')).toBeUndefined()
+    expect(game.mapObjects!.getTarget(scene, 'world-map')).toBeUndefined()
     walk('KeyA')
     visitVillage()
-    expect(lifecycle.activeScene!.data.id).toBe('village')
-    expect(game.mapMovement!.getPosition(lifecycle.activeScene!, 'village-map')).toEqual({
+    expect(lifecycle.currentGame!.mapMovement!.playerMap).toBe('village')
+    expect(game.mapMovement!.getPosition(lifecycle.activeScene!, 'world-map')).toEqual({
       x: 1,
       y: 4,
     })
@@ -299,8 +352,9 @@ describe('Coast Road and Pine Village interactions', () => {
     press('KeyE')
     expect(read('chestOpened')).toEqual({ status: 'resolved', value: false })
     walk('KeyA')
-    expect(lifecycle.activeScene!.data.id).toBe('coast')
-    expect(game.mapMovement!.getPosition(lifecycle.activeScene!, 'coast-map')).toEqual({
+    expect(lifecycle.activeScene).toBe(scene)
+    expect(game.mapMovement!.playerMap).toBe('coast')
+    expect(game.mapMovement!.getPosition(lifecycle.activeScene!, 'world-map')).toEqual({
       x: 8,
       y: 3,
     })
@@ -312,19 +366,19 @@ describe('Coast Road and Pine Village interactions', () => {
     walk('KeyD')
     const lifecycle = engine.lifecycle!
     const scene = lifecycle.activeScene!
-    expect(lifecycle.currentGame!.mapMovement!.getPosition(scene, 'village-map')).toEqual({
+    expect(lifecycle.currentGame!.mapMovement!.getPosition(scene, 'world-map')).toEqual({
       x: 2,
       y: 4,
     })
-    expect(lifecycle.currentGame!.mapMovement!.canMove(scene, 'village-map', 'north')).toBe(false)
+    expect(lifecycle.currentGame!.mapMovement!.canMove(scene, 'world-map', 'north')).toBe(false)
     expect(
-      lifecycle.currentGame!.mapObjects!.getAppearance(scene, 'village-map', 'village-chest'),
+      lifecycle.currentGame!.mapObjects!.getAppearance(scene, 'world-map', 'village-chest'),
     ).toMatchObject({ terrain: 'chest', label: 'Chest', blocking: true })
     press('KeyE')
     expect(
-      lifecycle.currentGame!.mapObjects!.getAppearance(scene, 'village-map', 'village-chest'),
+      lifecycle.currentGame!.mapObjects!.getAppearance(scene, 'world-map', 'village-chest'),
     ).toMatchObject({ terrain: 'chest-open', label: 'Open chest', blocking: false })
-    expect(lifecycle.currentGame!.mapMovement!.canMove(scene, 'village-map', 'north')).toBe(true)
+    expect(lifecycle.currentGame!.mapMovement!.canMove(scene, 'world-map', 'north')).toBe(true)
     expect(read('chestOpened')).toEqual({ status: 'resolved', value: true })
     expect(read('coins')).toEqual({ status: 'resolved', value: 25 })
     expect(read('interactionMessage')).toEqual({
@@ -345,11 +399,15 @@ describe('Coast Road and Pine Village interactions', () => {
     expect(read('coins')).toEqual({ status: 'resolved', value: 25 })
     expect(read('chestOpened')).toEqual({ status: 'resolved', value: true })
     lifecycle.startGame()
-    lifecycle.enterScene('village')
+    lifecycle.enterScene('exploration', {
+      map: 'village',
+      mapView: 'world-map',
+      position: { x: 1, y: 4 },
+    })
     expect(
       lifecycle.currentGame!.mapObjects!.getAppearance(
         lifecycle.activeScene!,
-        'village-map',
+        'world-map',
         'village-chest',
       ),
     ).toMatchObject({ terrain: 'chest', blocking: true })
@@ -371,16 +429,16 @@ describe('Coast Road and Pine Village interactions', () => {
     expect(restored.engine.saves!.load()).toBe(true)
     restored.advance()
     const lifecycle = restored.engine.lifecycle!
-    expect(lifecycle.activeScene!.data.id).toBe('village')
+    expect(lifecycle.currentGame!.mapMovement!.playerMap).toBe('village')
     expect(
-      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'village-map'),
+      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'world-map'),
     ).toEqual({ x: 2, y: 4 })
     expect(restored.read('signRead')).toEqual({ status: 'resolved', value: true })
     expect(restored.read('chestOpened')).toEqual({ status: 'resolved', value: true })
     expect(
       lifecycle.currentGame!.mapObjects!.getAppearance(
         lifecycle.activeScene!,
-        'village-map',
+        'world-map',
         'village-chest',
       ),
     ).toMatchObject({ terrain: 'chest-open', label: 'Open chest', blocking: false })
@@ -403,7 +461,7 @@ describe('Coast Road and Pine Village interactions', () => {
     expect(
       first.engine.lifecycle!.currentGame!.mapMovement!.getPosition(
         first.engine.lifecycle!.activeScene!,
-        'village-map',
+        'world-map',
       ),
     ).toEqual({ x: 2, y: 3 })
     expect(first.engine.saves!.save()).toBe(true)
@@ -413,18 +471,18 @@ describe('Coast Road and Pine Village interactions', () => {
     restored.advance()
     const lifecycle = restored.engine.lifecycle!
     expect(
-      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'village-map'),
+      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'world-map'),
     ).toEqual({ x: 2, y: 3 })
     expect(
       lifecycle.currentGame!.mapObjects!.getAppearance(
         lifecycle.activeScene!,
-        'village-map',
+        'world-map',
         'village-chest',
       )?.terrain,
     ).toBe('chest-open')
     restored.walk('KeyS')
     expect(
-      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'village-map'),
+      lifecycle.currentGame!.mapMovement!.getPosition(lifecycle.activeScene!, 'world-map'),
     ).toEqual({ x: 2, y: 4 })
     restored.press('KeyE')
     expect(restored.read('coins')).toEqual({ status: 'resolved', value: 25 })

@@ -197,7 +197,7 @@ describe('persistent player progress', () => {
 
     const coast = JSON.parse(
       await readFile(
-        new URL('../sample-games/square-map/scenes/coast.json', import.meta.url),
+        new URL('../sample-games/square-map/scenes/exploration.json', import.meta.url),
         'utf8',
       ),
     )
@@ -225,7 +225,7 @@ describe('persistent player progress', () => {
           screen: { type: 'grid', grid: { rows: 2, columns: 2 } },
           components: [],
         },
-        'scenes/coast.json': {
+        'scenes/exploration.json': {
           ...coast,
           components: [
             ...coast.components,
@@ -241,14 +241,14 @@ describe('persistent player progress', () => {
       'square-map',
     )
 
-    const game = start('coast')
+    const game = start('exploration')
     const scene = engine.lifecycle!.activeScene!
     expect(engine.saves!.canSave).toBe(true)
     advance(500)
     expect(store.read(game.data.id, 'autosave')).toBeDefined()
     engine.lifecycle!.openMenu!('menu')
     expect(engine.saves!.save()).toBe(true)
-    expect(JSON.parse(store.read(game.data.id)!).scene).toBe('coast')
+    expect(JSON.parse(store.read(game.data.id)!).scene).toBe('exploration')
     engine.lifecycle!.resumeGame!()
     const changes = vi.fn()
     engine.saves!.subscribe(changes)
@@ -263,9 +263,7 @@ describe('persistent player progress', () => {
     advance(5000)
     expect(game.mapMovement!.isMoving(scene, view.id)).toBe(true)
     expect(engine.saves!.save()).toBe(true)
-    expect(JSON.parse(store.read(game.data.id)!).mapPositions.coast[view.id]).toEqual(
-      view.playerSpawn,
-    )
+    expect(JSON.parse(store.read(game.data.id)!).playerLocation.position).toEqual(view.playerSpawn)
     engine.lifecycle!.resumeGame!()
     advance(1000)
     expect(changes).toHaveBeenCalled()
@@ -515,7 +513,7 @@ describe('persistent player progress', () => {
       'square-map',
     )
 
-    const game = start('coast')
+    const game = start('exploration')
     advance(500)
 
     const original = store.read(engine.game!.id, 'autosave')!
@@ -535,7 +533,7 @@ describe('persistent player progress', () => {
     advance(500)
     advance(500)
     const saved = gameSaveSchema.parse(JSON.parse(store.read(engine.game!.id, 'autosave')!))
-    expect(saved.mapPositions[scene.data.id]?.[map.id]).toEqual(movement.getPosition(scene, map.id))
+    expect(saved.playerLocation?.position).toEqual(movement.getPosition(scene, map.id))
     expect(store.read(engine.game!.id)).toBeUndefined()
   })
 
@@ -754,15 +752,22 @@ describe('persistent player progress', () => {
     const coast = sceneSchema.parse(
       JSON.parse(
         await readFile(
-          new URL('../sample-games/square-map/scenes/coast.json', import.meta.url),
+          new URL('../sample-games/square-map/scenes/exploration.json', import.meta.url),
           'utf8',
         ),
       ),
     )
 
     const overrides = {
-      'game.json': { ...manifest, scenes: [...manifest.scenes, 'inland', 'menu'] },
-      'scenes/inland.json': { ...coast, id: 'inland' },
+      'game.json': { ...manifest, scenes: [...manifest.scenes, 'inland', 'overlook', 'menu'] },
+      'scenes/overlook.json': { ...coast, id: 'overlook' },
+      'scenes/inland.json': {
+        ...coast,
+        id: 'inland',
+        components: coast.components.map((component) =>
+          component.type === 'map-view' ? { ...component, followPlayer: false } : component,
+        ),
+      },
       'scenes/menu.json': {
         'schema-version': '1.0.0',
         id: 'menu',
@@ -775,20 +780,25 @@ describe('persistent player progress', () => {
 
     const store = new MemorySaves()
     const first = await launch(store, overrides, 'square-map')
-    const game = first.start('coast')
+    const game = first.start('exploration')
     const movement = game.mapMovement!
     const positions: Record<string, { x: number; y: number }> = {}
+    first.engine.lifecycle!.enterScene('exploration', {
+      mapView: 'world-map',
+      map: 'village',
+      position: { x: 2, y: 4 },
+    })
 
-    for (const id of ['coast', 'inland']) {
+    for (const id of ['exploration', 'inland']) {
       const scene = first.engine.lifecycle!.enterScene(id)
 
       const direction = (['north', 'east', 'south', 'west'] as const).find((direction) =>
-        movement.canMove(scene, 'coast-map', direction),
+        movement.canMove(scene, 'world-map', direction),
       )!
 
-      expect(movement.move(scene, 'coast-map', direction)).toBe(true)
+      expect(movement.move(scene, 'world-map', direction)).toBe(true)
       first.advance(1000)
-      positions[id] = { ...movement.getPosition(scene, 'coast-map')! }
+      positions[id] = { ...movement.getPosition(scene, 'world-map')! }
     }
 
     first.engine.lifecycle!.enterScene('menu')
@@ -798,11 +808,16 @@ describe('persistent player progress', () => {
     expect(second.engine.saves!.load()).toBe(true)
     expect(second.engine.lifecycle!.activeScene!.data.id).toBe('inland')
 
-    for (const id of ['inland', 'coast']) {
+    positions.overlook = positions.exploration!
+
+    for (const id of ['inland', 'exploration', 'overlook']) {
       const scene = second.engine.lifecycle!.enterScene(id)
       expect(
-        second.engine.lifecycle!.currentGame!.mapMovement!.getPosition(scene, 'coast-map'),
+        second.engine.lifecycle!.currentGame!.mapMovement!.getPosition(scene, 'world-map'),
       ).toEqual(positions[id])
+      expect(second.engine.lifecycle!.currentGame!.mapMovement!.getMap(scene, 'world-map')).toBe(
+        scene.type === 'game' && scene.game.data.maps!.get(id === 'inland' ? 'coast' : 'village'),
+      )
     }
   })
 
@@ -846,7 +861,7 @@ describe('persistent player progress', () => {
   it('restores map position, rejects saving during movement, and keeps the previous slot intact', async () => {
     const store = new MemorySaves()
     const { engine, start, advance } = await launch(store, {}, 'square-map')
-    start('coast')
+    start('exploration')
     const scene = engine.lifecycle!.activeScene!
     const movement = scene.type === 'game' ? scene.game.mapMovement! : undefined
     expect(movement).toBeDefined()
@@ -869,7 +884,7 @@ describe('persistent player progress', () => {
     expect(progression.worldTimeMs).toBeGreaterThan(0)
     expect(engine.saves!.save()).toBe(true)
     engine.lifecycle!.startGame()
-    engine.lifecycle!.enterScene('coast')
+    engine.lifecycle!.enterScene('exploration')
     expect(engine.saves!.load()).toBe(true)
     const restored = engine.lifecycle!.activeScene!
     expect(engine.lifecycle!.currentGame!.actions!.progression).toEqual(progression)
@@ -881,7 +896,7 @@ describe('persistent player progress', () => {
   it('rejects a step whose turn would overflow without publishing a new position', async () => {
     const store = new MemorySaves()
     const { engine, start, advance, logError } = await launch(store, {}, 'square-map')
-    start('coast')
+    start('exploration')
     expect(engine.saves!.save()).toBe(true)
     const saved = gameSaveSchema.parse(JSON.parse(store.read(engine.game!.id)!))
     saved.progression.turn = Number.MAX_SAFE_INTEGER
@@ -890,15 +905,15 @@ describe('persistent player progress', () => {
     const scene = engine.lifecycle!.activeScene!
     const game = engine.lifecycle!.currentGame!
     const movement = game.mapMovement!
-    const position = movement.getPosition(scene, 'coast-map')
+    const position = movement.getPosition(scene, 'world-map')
 
     const direction = (['north', 'east', 'south', 'west'] as const).find((direction) =>
-      movement.canMove(scene, 'coast-map', direction),
+      movement.canMove(scene, 'world-map', direction),
     )!
 
-    movement.move(scene, 'coast-map', direction)
+    movement.move(scene, 'world-map', direction)
     advance(1000)
-    expect(movement.getPosition(scene, 'coast-map')).toEqual(position)
+    expect(movement.getPosition(scene, 'world-map')).toEqual(position)
     expect(game.actions!.progression).toEqual(saved.progression)
     expect(logError).toHaveBeenCalledWith(
       'MapMovement',

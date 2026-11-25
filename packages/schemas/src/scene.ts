@@ -139,6 +139,7 @@ export const savePointComponentSchema = z.object({
   location: z
     .object({
       mapView: gameIdSchema,
+      map: gameIdSchema.optional(),
       position: mapPositionSchema,
       radius: z.number().int().nonnegative().default(0),
     })
@@ -329,6 +330,7 @@ export const mapViewComponentSchema = z
     type: z.literal('map-view'),
     ...componentLayoutFields,
     map: gameIdSchema,
+    followPlayer: z.boolean().optional(),
     label: z.string().trim().default(''),
     labelKey: translationKeySchema.optional(),
     viewport: mapViewportSchema,
@@ -721,6 +723,17 @@ export const sceneSchema = z
     let hasCombat = false
     const descriptionTargets = new Set<string>()
     scene.components.forEach((component, index) => {
+      if (
+        component.type === 'map-view' &&
+        component.followPlayer &&
+        (scene.type !== 'game' || !component.playerSpawn || component.interactive === false)
+      )
+        context.addIssue({
+          code: 'custom',
+          path: ['components', index, 'followPlayer'],
+          message: 'Following the player requires an interactive game map view with a player spawn',
+        })
+
       if (component.type === 'save-point') {
         const target =
           component.location &&

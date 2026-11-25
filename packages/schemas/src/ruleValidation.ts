@@ -125,9 +125,17 @@ export function validateRuleSources(
       for (const { action, path } of actions) {
         if (action.type !== 'interact-map' || !action.object) continue
         const view = scene.components.find((component) => component.id === action.mapView)
-        const map = view?.type === 'map-view' ? maps.get(view.map) : undefined
 
-        if (!map?.objects?.some((object) => object.id === action.object))
+        const candidates =
+          view?.type === 'map-view' && view.followPlayer
+            ? maps.values()
+            : [view?.type === 'map-view' ? maps.get(view.map) : undefined]
+
+        if (
+          !Array.from(candidates).some((map) =>
+            map?.objects?.some((object) => object.id === action.object),
+          )
+        )
           merged.issues.push({
             file: `scenes/${id}.json`,
             path: [...path, 'object'],

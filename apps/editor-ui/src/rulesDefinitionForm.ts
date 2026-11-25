@@ -697,6 +697,7 @@ export function rulesDefinitionForm(
             select(t('rules.destinationScene'), entry.scene, sceneChoices(view, 'game'), (next) => {
               entry.scene = next
               delete entry.mapView
+              delete entry.map
               delete entry.position
               rerender()
             }),

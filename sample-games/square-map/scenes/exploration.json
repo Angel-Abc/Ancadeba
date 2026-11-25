@@ -1,7 +1,7 @@
 {
   "schema-version": "1.0.0",
-  "id": "coast",
-  "title": "Coast Road",
+  "id": "exploration",
+  "title": "Coast Road and Pine Village",
   "type": "game",
   "screen": {
     "type": "grid",
@@ -26,7 +26,7 @@
         "row": 1,
         "column": 1
       },
-      "text": "Coast Road",
+      "text": "Coast Road and Pine Village",
       "presentation": {
         "variant": "heading",
         "align": "center"
@@ -39,13 +39,13 @@
         "row": 2,
         "column": 1
       },
-      "text": "Move with WASD, arrow keys or the direction buttons. Press E to read the signpost just north of the start. Go west once, then north twice to the gold gate for Pine Village.",
+      "text": "Move with WASD, arrow keys or the direction buttons. Press E beside an object to interact. Step onto a gold gate to travel between Coast Road and Pine Village.",
       "presentation": {
         "align": "center"
       }
     },
     {
-      "id": "coast-map",
+      "id": "world-map",
       "type": "map-view",
       "placement": {
         "row": 3,
@@ -53,7 +53,8 @@
         "rowSpan": 7
       },
       "map": "coast",
-      "label": "Coast Road map",
+      "followPlayer": true,
+      "label": "World map",
       "viewport": {
         "columns": 9,
         "rows": 6
@@ -101,7 +102,7 @@
           "label": "North",
           "action": {
             "type": "move-map",
-            "mapView": "coast-map",
+            "mapView": "world-map",
             "direction": "north"
           },
           "inputBinding": {
@@ -113,7 +114,7 @@
           "label": "West",
           "action": {
             "type": "move-map",
-            "mapView": "coast-map",
+            "mapView": "world-map",
             "direction": "west"
           },
           "inputBinding": {
@@ -125,7 +126,7 @@
           "label": "South",
           "action": {
             "type": "move-map",
-            "mapView": "coast-map",
+            "mapView": "world-map",
             "direction": "south"
           },
           "inputBinding": {
@@ -137,7 +138,7 @@
           "label": "East",
           "action": {
             "type": "move-map",
-            "mapView": "coast-map",
+            "mapView": "world-map",
             "direction": "east"
           },
           "inputBinding": {
@@ -149,7 +150,7 @@
           "label": "Interact",
           "action": {
             "type": "interact-map",
-            "mapView": "coast-map"
+            "mapView": "world-map"
           },
           "inputBinding": {
             "context": "explore",

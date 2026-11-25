@@ -1,5 +1,5 @@
 import type { MapViewComponentData, MapDirection } from '@ancadeba/game-runtime'
-import { getMapMovementCostMs, type MapPosition } from '@ancadeba/schemas'
+import { getMapMovementCostMs, type MapDefinition, type MapPosition } from '@ancadeba/schemas'
 import { createBrowserTiming } from './browserTiming.js'
 import { mapTileImages } from './mapTileAppearance.js'
 import { applyMapCellAppearance } from './mapCellAppearance.js'
@@ -23,11 +23,59 @@ function clampCoordinate(value: number, maximum: number): number {
 }
 
 export class MapViewComponentRenderer implements IComponentRenderer<MapViewComponentData> {
-  render(
+  render(component: MapViewComponentData, context: ComponentRenderContext): RenderedComponent {
+    const { document, scene } = context
+    const movement = scene?.type === 'game' ? scene.game.mapMovement : undefined
+    const root = document.createElement('div')
+    root.className = 'ancadeba-map-view'
+
+    if (component.interactive !== false) root.tabIndex = 0
+    root.setAttribute('role', 'region')
+    root.setAttribute('aria-label', component.label)
+
+    let map = (scene && movement?.getMap(scene, component.id)) ?? component.map
+    let contents = this.renderMap(root, component, map, context)
+
+    const unsubscribe =
+      component.followPlayer && scene && movement
+        ? movement.subscribeChanges(() => {
+            const next = movement.getMap(scene, component.id)
+
+            if (!next || next === map || scene.disposed) return
+            const focused = root.contains(document.activeElement)
+            contents.dispose()
+            delete root.dataset.mapDiagnostics
+            map = next
+            contents = this.renderMap(root, component, map, context)
+
+            if (focused) root.focus()
+          })
+        : undefined
+
+    return {
+      element: root,
+      moveMap:
+        component.interactive !== false ? (direction) => contents.moveMap(direction) : undefined,
+      dispose() {
+        unsubscribe?.()
+        contents.dispose()
+        root.remove()
+      },
+    }
+  }
+
+  private renderMap(
+    root: HTMLElement,
     component: MapViewComponentData,
+    map: MapDefinition,
     { document, scene, assets, graphics }: ComponentRenderContext,
-  ): RenderedComponent {
-    const { map, viewport } = component
+  ) {
+    const viewport = {
+      ...component.viewport,
+      columns: Math.min(component.viewport.columns, map.width),
+      rows: Math.min(component.viewport.rows, map.height),
+    }
+
     const movement = scene?.type === 'game' ? scene.game.mapMovement : undefined
     const objects = scene?.type === 'game' ? scene.game.mapObjects : undefined
     let active = true
@@ -35,12 +83,6 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
     const sharedMovement =
       movement && scene && movement.getPosition(scene, component.id) !== undefined
 
-    const root = document.createElement('div')
-    root.className = 'ancadeba-map-view'
-
-    if (component.interactive !== false) root.tabIndex = 0
-    root.setAttribute('role', 'region')
-    root.setAttribute('aria-label', component.label)
     root.style.setProperty('--ge-map-view-columns', String(viewport.columns))
     root.style.setProperty('--ge-map-view-rows', String(viewport.rows))
 
@@ -221,8 +263,7 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
     }
 
     return {
-      element: root,
-      moveMap: component.interactive !== false ? moveMap : undefined,
+      moveMap,
       dispose() {
         active = false
 
@@ -232,7 +273,7 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
         cancelStep?.()
         unsubscribeMovement?.()
         unsubscribeObjects?.()
-        root.remove()
+        clip.remove()
       },
     }
   }

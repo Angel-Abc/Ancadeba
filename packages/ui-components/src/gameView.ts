@@ -11,7 +11,7 @@ import { canEnterScene, runtimeText } from '@ancadeba/game-runtime'
 import { bindKeyboardInput, type KeyboardInputSink } from './keyboardInput.js'
 import { SceneRenderer, type SceneRendererOptions } from './sceneRenderer.js'
 import { mountGameStylesheet } from './gameStylesheet.js'
-import type { SceneEntrance } from '@ancadeba/schemas'
+import { sceneEntrance, type SceneEntrance } from '@ancadeba/schemas'
 import { GameConfirmationDialog } from './gameConfirmationDialog.js'
 
 export interface GameViewSession {
@@ -308,12 +308,7 @@ export function mountGameView(
         }
 
         if (action.type === 'new-game') session.lifecycle.startGame()
-        enter(
-          scene,
-          action.type === 'enter-scene' && action.position && action.mapView
-            ? { mapView: action.mapView, position: action.position }
-            : undefined,
-        )
+        enter(scene, action.type === 'enter-scene' ? sceneEntrance(action) : undefined)
       },
     })
 

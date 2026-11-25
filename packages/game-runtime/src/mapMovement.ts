@@ -7,7 +7,7 @@ import {
   type MapObjectStateReader,
   type MapPosition,
   type ButtonComponentDefinition,
-  type SavedMapPositions,
+  type GameSave,
   type MapEntryTrigger,
 } from '@ancadeba/schemas'
 import type { ITaskScheduler } from '@ancadeba/utilities'
@@ -22,12 +22,14 @@ export type MapDirection = Extract<
 >['direction']
 
 export interface IGameMapMovement {
+  readonly playerMap: string | undefined
+  getMap(scene: SceneInstance, mapView: string): MapDefinition | undefined
   getTileCost(map: MapDefinition, position: MapPosition): number | undefined
   getPosition(scene: SceneInstance, mapView: string): Readonly<MapPosition> | undefined
   canMove(scene: SceneInstance, mapView: string, direction: MapDirection): boolean
   isMoving(scene: SceneInstance, mapView: string): boolean
   move(scene: SceneInstance, mapView: string, direction: MapDirection): boolean
-  place(scene: SceneInstance, mapView: string, position: Readonly<MapPosition>): void
+  place(scene: SceneInstance, mapView: string, position: Readonly<MapPosition>, map?: string): void
   subscribeChanges(listener: () => void): () => void
 }
 
@@ -46,6 +48,7 @@ interface MapState {
 
 /** Owns each scene's map-view positions for the lifetime of a playthrough. */
 export class GameMapMovement implements IGameMapMovement {
+  private player: (MapState & { map: string }) | undefined
   private scene: SceneInstance | undefined
   private readonly maps = new Map<string, Map<string, MapState>>()
   private readonly listeners = new Set<() => void>()
@@ -54,26 +57,44 @@ export class GameMapMovement implements IGameMapMovement {
   private disposed = false
 
   /** Paused menus may capture committed tiles without changing the unfinished live step. */
-  savePositions(allowPending = false): SavedMapPositions {
+  saveLocations(allowPending = false): Pick<GameSave, 'mapPositions' | 'playerLocation'> {
     if (
       !allowPending &&
-      [...this.maps.values()].some((maps) => [...maps.values()].some((state) => state.pending))
+      (this.player?.pending ||
+        [...this.maps.values()].some((maps) => [...maps.values()].some((state) => state.pending)))
     )
       throw new GameSaveError('busy')
 
-    return Object.fromEntries(
+    const mapPositions = Object.fromEntries(
       [...this.maps].map(([scene, maps]) => [
         scene,
         Object.fromEntries([...maps].map(([id, state]) => [id, { ...state.position }])),
       ]),
     )
+
+    return {
+      mapPositions,
+      ...(this.player && {
+        playerLocation: { map: this.player.map, position: { ...this.player.position } },
+      }),
+    }
   }
 
   /** Validate all locations before publishing them, including scenes that are not active. */
-  restorePositions(data: GameData, positions: SavedMapPositions): void {
+  restoreLocations(
+    data: GameData,
+    { mapPositions, playerLocation }: Pick<GameSave, 'mapPositions' | 'playerLocation'>,
+  ): void {
+    if (playerLocation) {
+      const map = data.maps?.get(playerLocation.map)
+
+      if (!map || getMapPotentialMovementCostMs(map, playerLocation.position) === undefined)
+        throw new Error('Invalid saved player location')
+    }
+
     const restored = new Map<string, Map<string, MapState>>()
 
-    for (const [sceneId, maps] of Object.entries(positions)) {
+    for (const [sceneId, maps] of Object.entries(mapPositions)) {
       const scene = data.scenes.get(sceneId)
 
       if (scene?.type !== 'game') throw new Error('Invalid saved map scene')
@@ -84,6 +105,7 @@ export class GameMapMovement implements IGameMapMovement {
 
         if (
           component?.type !== 'map-view' ||
+          component.followPlayer ||
           !component.playerSpawn ||
           component.interactive === false ||
           getMapPotentialMovementCostMs(component.map, position) === undefined
@@ -97,6 +119,10 @@ export class GameMapMovement implements IGameMapMovement {
 
     this.cancelSteps()
     this.maps.clear()
+    this.player = playerLocation && {
+      map: playerLocation.map,
+      position: Object.freeze({ ...playerLocation.position }),
+    }
 
     for (const [scene, maps] of restored) this.maps.set(scene, maps)
   }
@@ -119,6 +145,14 @@ export class GameMapMovement implements IGameMapMovement {
       if (current === this.scene) return
       const changed = this.scene !== undefined
       this.cancelSteps()
+
+      if (!this.player && current?.type === 'game') {
+        const first = current.data.components.find(
+          (view) => view.type === 'map-view' && view.followPlayer,
+        )
+
+        if (first) this.resolve(current, first.id)
+      }
 
       if (changed) this.notify()
     })
@@ -149,6 +183,18 @@ export class GameMapMovement implements IGameMapMovement {
       this.scene = scene
     }
 
+    if (component.followPlayer) {
+      this.player ??= {
+        map: component.mapId,
+        position: Object.freeze({ ...component.playerSpawn }),
+      }
+      const map = scene.game.data.maps?.get(this.player.map)
+
+      if (!map) return
+
+      return { state: this.player, component, map }
+    }
+
     let maps = this.maps.get(scene.data.id)
 
     if (!maps) {
@@ -163,7 +209,22 @@ export class GameMapMovement implements IGameMapMovement {
       maps.set(mapView, state)
     }
 
-    return { component, state }
+    return { component, state, map: component.map }
+  }
+
+  get playerMap(): string | undefined {
+    return this.player?.map
+  }
+
+  getMap(scene: SceneInstance, mapView: string): MapDefinition | undefined {
+    if (this.disposed || scene.disposed || scene !== this.lifecycle.activeScene) return
+    const view = scene.data.components.find((entry) => entry.id === mapView)
+
+    if (view?.type !== 'map-view') return
+
+    return view.followPlayer && this.player && scene.type === 'game'
+      ? scene.game.data.maps?.get(this.player.map)
+      : view.map
   }
 
   getPosition(scene: SceneInstance, mapView: string): Readonly<MapPosition> | undefined {
@@ -175,14 +236,28 @@ export class GameMapMovement implements IGameMapMovement {
   }
 
   /** Place an arriving player without walking, charging a delay, or firing entry triggers. */
-  place(scene: SceneInstance, mapView: string, position: Readonly<MapPosition>): void {
+  place(
+    scene: SceneInstance,
+    mapView: string,
+    position: Readonly<MapPosition>,
+    mapId?: string,
+  ): void {
     const resolved = this.resolve(scene, mapView)
 
-    if (!resolved || this.getTileCost(resolved.component.map, position) === undefined)
+    const map =
+      mapId === undefined
+        ? resolved?.map
+        : scene.type === 'game' &&
+          resolved?.component.followPlayer &&
+          scene.game.data.maps?.get(mapId)
+
+    if (!resolved || !map || this.getTileCost(map, position) === undefined)
       throw new Error('Invalid destination map position')
     resolved.state.cancel?.()
     resolved.state.cancel = undefined
     resolved.state.pending = undefined
+
+    if (mapId && this.player) this.player.map = mapId
     resolved.state.position = Object.freeze({ ...position })
     this.notify()
   }
@@ -198,11 +273,11 @@ export class GameMapMovement implements IGameMapMovement {
       y: resolved.state.position.y + step.y,
     }
 
-    const duration = this.getTileCost(resolved.component.map, position)
+    const duration = this.getTileCost(resolved.map, position)
 
     return duration === undefined
       ? undefined
-      : { state: resolved.state, component: resolved.component, position, duration }
+      : { state: resolved.state, map: resolved.map, position, duration }
   }
 
   canMove(scene: SceneInstance, mapView: string, direction: MapDirection): boolean {
@@ -213,7 +288,7 @@ export class GameMapMovement implements IGameMapMovement {
     const destination = this.destination(scene, mapView, direction)
 
     if (!destination) return false
-    const { state, component, position, duration } = destination
+    const { state, map, position, duration } = destination
 
     const arrive = () => {
       const progression = this.prepareProgression?.(duration)
@@ -232,8 +307,14 @@ export class GameMapMovement implements IGameMapMovement {
         () => progression?.notify(),
         () => this.notify(),
         () => {
-          if (!this.disposed && !scene.disposed && this.lifecycle.activeScene === scene) {
-            const trigger = component.map.entryTriggers?.find(
+          if (
+            !this.disposed &&
+            !scene.disposed &&
+            this.lifecycle.activeScene === scene &&
+            state.position === position &&
+            this.getMap(scene, mapView) === map
+          ) {
+            const trigger = map.entryTriggers?.find(
               (entry) => entry.x === position.x && entry.y === position.y,
             )
 
@@ -270,7 +351,7 @@ export class GameMapMovement implements IGameMapMovement {
         state.pending = undefined
         state.cancel = undefined
 
-        if (this.getTileCost(component.map, position) === undefined) {
+        if (this.getTileCost(map, position) === undefined) {
           this.notify()
 
           return
@@ -313,13 +394,16 @@ export class GameMapMovement implements IGameMapMovement {
   }
 
   private cancelSteps(): void {
-    for (const maps of this.maps.values())
-      for (const state of maps.values()) {
-        state.pending = undefined
-        const cancel = state.cancel
-        state.cancel = undefined
-        cancel?.()
-      }
+    const cancelStep = (state: MapState) => {
+      state.pending = undefined
+      const cancel = state.cancel
+      state.cancel = undefined
+      cancel?.()
+    }
+
+    if (this.player) cancelStep(this.player)
+
+    for (const maps of this.maps.values()) for (const state of maps.values()) cancelStep(state)
 
     this.scene = undefined
   }
@@ -331,6 +415,7 @@ export class GameMapMovement implements IGameMapMovement {
     this.unsubscribeState?.()
     this.cancelSteps()
     this.maps.clear()
+    this.player = undefined
     this.listeners.clear()
   }
 }

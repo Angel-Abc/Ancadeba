@@ -14,8 +14,7 @@ map shows the interaction result and coin balance.
 1. Start on Coast Road at `(9, 4)`. Press **E** to read the signpost directly
    north at `(9, 3)`; it gives directions to Pine Village.
 2. Move west once, then north twice, onto the gold gate at `(8, 2)`.
-3. You enter Pine Village at `(1, 4)`, beside its west gate. This overrides the
-   village's default spawn at `(6, 4)` and any remembered position there.
+3. The same map view switches to Pine Village and places you at `(1, 4)`, beside its west gate.
 4. Move east once to `(2, 4)` and press **E** to open the chest north of you at
    `(2, 3)`. You receive **25 coins**. Press E again: the chest is empty and the
    balance stays at 25. Its reward stays collected across scene visits and saves.
@@ -32,14 +31,12 @@ and saves, including when saving while standing on its tile. A new game restores
 
 Coordinates start at zero. Arriving at an entrance does not activate a tile-entry
 trigger. The exits run only when the player finishes a step onto their tiles, so
-the round trip never bounces automatically between scenes.
+each return trip begins with another step.
 
 ## How the exits are authored
 
-`game.json` declares both scenes, both maps, and the `travel` and `interactions`
-Rules files. Each
-scene has its own map view and directional action bar using the shared
-`input/movement.json` bindings.
+The `exploration` scene has one map view, `world-map`, with `followPlayer: true`.
+It starts on `coast`. Both maps use the same action bar and `input/movement.json` bindings.
 
 `maps/coast.json` defines the departure tile:
 
@@ -49,32 +46,32 @@ scene has its own map view and directional action bar using the shared
 ]
 ```
 
-`rules/travel.json` connects that trigger to an entrance in the next scene:
+`rules/travel.json` connects that trigger to the village entrance in the exploration scene.
 
 ```json
 "enter-village": [{
-  "when": [{ "type": "scene-is", "scene": "coast" }],
+  "when": [],
   "effects": [{
     "type": "enter-scene",
-    "scene": "village",
-    "mapView": "village-map",
+    "scene": "exploration",
+    "mapView": "world-map",
+    "map": "village",
     "position": { "x": 1, "y": 4 }
   }]
 }]
 ```
 
 `maps/village.json` defines the reverse trigger, `coast-exit`, at `(0, 4)`.
-Its `return-coast` action enters the `coast` scene's `coast-map` at `(8, 3)`.
-Both actions check their source scene. Each entrance is a walkable tile adjacent
+Its `return-coast` action switches the view back to `coast` at `(8, 3)`.
+Each entrance is a walkable tile adjacent
 to its return exit.
 
 In the editor, the gates have **T** badges on the Maps grid. Choose **Edit
 tile-entry triggers**, then click a gate to open its trigger fields or click
 another walkable tile to add a trigger. Under
-**Rules**, inspect each **Enter scene** effect: its destination map appears in
-**Charge time from map view**, and **Place player at destination tile** enables
-the X/Y coordinates. Transitions without coordinates resume remembered positions
-or use the authored spawn on a first visit.
+**Rules**, open either **Enter scene** effect. **Charge time from map view** selects
+`world-map`. With **Place player at destination tile** enabled, **Destination map**
+and the X/Y coordinates specify where the player arrives.
 
 ## How the interactions are authored
 
@@ -87,8 +84,7 @@ or use the authored spawn on a first visit.
 Both maps declare initially blocking objects in their `objects` array. The sign
 uses a brown color, the chest uses a closed sprite tile, and the berry basket uses
 a purple color. Their authored actions are `read-signpost`, `open-chest`, and
-`collect-berries`. Each scene's action-bar slot **12** runs an `interact-map` action
-for its own map view. It uses the `explore/interact` binding, mapped to `KeyE`
+`collect-berries`. Action-bar slot **12** runs `interact-map` on `world-map`. It uses the `explore/interact` binding, mapped to `KeyE`
 in `input/movement.json`. Automatic targeting requires exactly one cardinally
 adjacent object, so neither a diagonal approach nor a distant E press activates
 the chest. Interaction is also unavailable while a step is pending.
@@ -97,8 +93,8 @@ the chest. Interaction is also unavailable while a step is pending.
 conditions. Reading the sign sets `signRead` and an instruction message. The
 chest's first branch checks `chestOpened: false`, sets it to true, sets `coins`
 to 25, and displays the reward message. Subsequent interactions use an empty-chest
-branch that changes only the message. The `interaction-result` text component in
-each scene displays the shared message and coin balance through state bindings.
+branch that changes only the message. The `interaction-result` text component
+displays the shared message and coin balance through state bindings.
 The chest's `open` object state matches `chestOpened: true`, switches its label
 to **Open chest**, uses the `chest-open` appearance terrain, and sets `blocking`
 to false. The chest tile can then be crossed using the underlying grass movement
@@ -126,8 +122,7 @@ The transfer and state change complete together before inventory observers run.
 If any berry is unavailable, the entire pickup is rejected and the map basket
 stays visible. These are finite inventory instances, so repeat interactions cannot
 duplicate them. In Rules, choose **Collect inventory items** to configure the
-recipient and item list without JSON editing. Both scenes show a player-only
-**Backpack** inventory view; village supplies remain outside that view.
+recipient and item list without JSON editing. The **Backpack** panel shows items carried by the player on either map.
 
 Saving and loading preserves these flags, coins, feedback, and map positions.
 Starting a new game resets them, allowing the chest to be collected again. In

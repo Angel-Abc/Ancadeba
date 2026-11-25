@@ -1,7 +1,7 @@
 import type { IGameDialogue } from './dialogue.js'
 import type { IGameQuests, StoryCapture } from './quests.js'
 import type { IGameItemUse, ItemUseCapture } from './itemUse.js'
-import { inventoryEntry, type ActionBarSlotDefinition } from '@ancadeba/schemas'
+import { inventoryEntry, sceneEntrance, type ActionBarSlotDefinition } from '@ancadeba/schemas'
 import type { IGameLifecycle, SceneInstance } from './gameLifecycle.js'
 import type { VirtualInput } from './input.js'
 import {
@@ -12,7 +12,7 @@ import {
 import type { EquipmentSelection, IGameEquipment } from './equipment.js'
 import type { IGameMapMovement } from './mapMovement.js'
 import type { IGameMapObjects } from './mapObjects.js'
-import type { MapObject } from '@ancadeba/schemas'
+import type { MapDefinition, MapObject } from '@ancadeba/schemas'
 import type { IGameNearby, NearbySelection } from './nearbyContext.js'
 import type { IGameTrading, TradeSelection } from './trading.js'
 import type { IGameCombat, CombatCapture } from './combat.js'
@@ -29,6 +29,7 @@ export interface IGameActionBar {
 }
 
 interface CapturedSlot {
+  readonly mapCapture?: MapDefinition | undefined
   readonly objectCapture?: MapObject | undefined
   readonly storyCapture?: StoryCapture | undefined
   readonly itemCapture?: ItemUseCapture | undefined
@@ -121,6 +122,7 @@ export class GameActionBar implements IGameActionBar {
   ):
     | {
         definition: ActionBarSlotDefinition
+        mapCapture?: MapDefinition | undefined
         objectCapture?: MapObject | undefined
         storyCapture?: StoryCapture | undefined
         itemCapture?: ItemUseCapture | undefined
@@ -136,6 +138,9 @@ export class GameActionBar implements IGameActionBar {
     const definition = this.definition(scene, bar, slot)
 
     if (!definition) return
+
+    if (definition.action.type === 'move-map')
+      return { definition, mapCapture: this.mapMovement?.getMap(scene, definition.action.mapView) }
 
     if (definition.action.type === 'interact-map')
       return {
@@ -320,6 +325,7 @@ export class GameActionBar implements IGameActionBar {
       combatCapture: resolved?.combatCapture,
       itemCapture: resolved?.itemCapture,
       storyCapture: resolved?.storyCapture,
+      mapCapture: resolved?.mapCapture,
       objectCapture: resolved?.objectCapture,
     })
   }
@@ -334,7 +340,12 @@ export class GameActionBar implements IGameActionBar {
     if (!this.isEnabled(scene, bar, slot) || scene.type !== 'game') return
     const resolved = this.resolve(scene, bar, slot)
 
-    if (!resolved || resolved.selection !== target.selection) return
+    if (
+      !resolved ||
+      resolved.selection !== target.selection ||
+      resolved.mapCapture !== target.mapCapture
+    )
+      return
     const action = resolved.definition.action
 
     if (action.type === 'interact-map') {
@@ -409,9 +420,7 @@ export class GameActionBar implements IGameActionBar {
     if (action.type === 'new-game') this.lifecycle.startGame()
     this.lifecycle.enterScene(
       action.scene,
-      action.type === 'enter-scene' && action.position && action.mapView
-        ? { mapView: action.mapView, position: action.position }
-        : undefined,
+      action.type === 'enter-scene' ? sceneEntrance(action) : undefined,
     )
   }
 
@@ -447,6 +456,7 @@ export class GameActionBar implements IGameActionBar {
             combatCapture: resolved?.combatCapture,
             itemCapture: resolved?.itemCapture,
             storyCapture: resolved?.storyCapture,
+            mapCapture: resolved?.mapCapture,
             objectCapture: resolved?.objectCapture,
           }
       }

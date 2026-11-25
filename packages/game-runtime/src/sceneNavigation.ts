@@ -15,7 +15,7 @@ export function canEnterScene(
   action: SceneTransition,
   movement?: Pick<IGameMapMovement, 'getTileCost'>,
 ): boolean {
-  if (!action.position) return game.scenes.has(action.scene)
+  if (!action.position) return !action.map && game.scenes.has(action.scene)
 
   return sceneEntranceCost(game, action, movement) !== undefined
 }
@@ -45,11 +45,14 @@ export function sceneEntranceCost(
   const readInitialState = (path: readonly string[]) =>
     game.rules?.state.find((field) => JSON.stringify(field.path) === JSON.stringify(path))?.value
 
+  const map = action.map ? view.followPlayer && game.maps?.get(action.map) : view.map
+
+  if (!map || (action.map && !action.position)) return
   const position = action.position ?? view.playerSpawn
 
   return movement && !proposedState
-    ? movement.getTileCost(view.map, position)
-    : getMapMovementCostMs(view.map, position, (object) =>
+    ? movement.getTileCost(map, position)
+    : getMapMovementCostMs(map, position, (object) =>
         isBlockingMapObject(resolveMapObject(object, proposedState ?? readInitialState)),
       )
 }

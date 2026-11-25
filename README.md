@@ -471,8 +471,8 @@ From the initial coast position, move west once and north twice to visit the
 village, then west once to return. Each entrance sits beside its return gate.
 Press **E** at the coast spawn to read the adjacent signpost. In the village,
 move east once from the entrance and press E to open the chest for 25 coins;
-subsequent interactions report it empty. Both scenes show feedback and the coin
-balance, and include an E-bound **Interact** action-bar slot. The sample's
+subsequent interactions report it empty. The exploration scene keeps the feedback, coin
+balance, and E-bound **Interact** slot visible across map switches. The sample's
 `rules/interactions.json` demonstrates object-target conditions and a reward
 that stays collected across visits and saves.
 Inspect `maps/coast.json`, `maps/village.json`, and `rules/travel.json` to see how
@@ -512,13 +512,15 @@ beach. A `map-view` scene component references the map by ID and sets
 `viewport.columns` and `viewport.rows`. Its optional `viewport.x` and `viewport.y` start at zero and
 identify the top-left visible tile when panning manually. Set `playerSpawn` to
 zero-based map coordinates to place a player and make the viewport follow them.
-The player and viewport both stop at the map edges.
+The player and viewport both stop at the map edges. Choose **Map source → Follow player**
+(`followPlayer: true`) to use the view's map and spawn as the starting location.
+During play, all following views show the same player location. Saves record its map ID and tile.
 
 In a game scene, regular buttons and action-bar slots can move a specific map
 view with an action such as:
 
 ```json
-{ "type": "move-map", "mapView": "coast-map", "direction": "north" }
+{ "type": "move-map", "mapView": "world-map", "direction": "north" }
 ```
 
 Directions are `north`, `east`, `south`, and `west`. The target is a component ID
@@ -544,7 +546,7 @@ steps. Actor roster turns and phases remain independent, as with combat rounds.
 A tile-entry Rules action can charge its own additional scene-travel time.
 Leaving the scene cancels pending
 steps and retains the last completed tile. Returning to the same scene resumes
-each view's position; an unvisited view starts at its authored spawn. New games
+each fixed view's position and the shared location for following views. New games
 reset these positions. Display-only maps and standalone maps retain their existing
 behavior.
 
@@ -582,9 +584,10 @@ An `enter-scene` effect or navigation action can choose an entrance tile:
 ```json
 {
   "type": "enter-scene",
-  "scene": "village",
-  "mapView": "village-map",
-  "position": { "x": 2, "y": 8 }
+  "scene": "exploration",
+  "mapView": "world-map",
+  "map": "village",
+  "position": { "x": 1, "y": 4 }
 }
 ```
 
@@ -592,7 +595,8 @@ An `enter-scene` effect or navigation action can choose an entrance tile:
 destination game scene. The zero-based `position` must be an in-bounds, walkable
 tile, including collisions from visible layers. An explicit position overrides
 that view's remembered location before the destination renders, without running
-tile-entry triggers or waiting for movement. Other map views keep their positions.
+tile-entry triggers or waiting for movement. For a following view, set `map` to switch
+to that map in the same scene. Coordinates without a map target the view's starting map.
 Without `position`, transitions retain their existing resume/spawn behavior.
 For Rules effects with `mapView`, travel charges world time from the entrance
 terrain. When coordinates are omitted, the spawn tile supplies the terrain.
@@ -698,7 +702,7 @@ contain one inventory operation or scene transition, plus state/log effects.
 
 The sample defines three berry instances in `inventory/supplies.json`, initially
 inside a village-owned basket. Collection moves them into the player's **Backpack**,
-shown in both scenes. Inventory ownership and pickup visibility survive save/load.
+shown on both maps. Inventory ownership and pickup visibility survive save/load.
 
 Both browser hosts use `mountGameView` and `SceneRenderer` from
 `@ancadeba/ui-components`. The engine opens the scene selected by `initial-scene`
@@ -1434,7 +1438,7 @@ input context, and nearby/inventory selections. Loading reconstructs fresh runti
 instances and subscriptions without replaying rewards or level gains. Pending
 message batches settle before saving. If a map step is still running, saving
 reports that the player should wait for movement to finish; the existing slot is
-preserved. Each interactive map view remembers its last completed tile for the
+preserved. Each fixed interactive map view remembers its last completed tile for the
 current playthrough, keyed by scene ID and component ID. Leaving for another scene,
 an inventory screen, or a stand-alone menu and returning resumes that location.
 Leaving during a timed step cancels the step and keeps the last completed tile.

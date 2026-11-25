@@ -547,7 +547,7 @@ describe('standalone game export', () => {
       await engine.start()
       const scene = engine.lifecycle!.activeScene!
       const movement = engine.lifecycle!.currentGame!.mapMovement!
-      expect(movement.getPosition(scene, 'coast-map')).toEqual({ x: 9, y: 4 })
+      expect(movement.getPosition(scene, 'world-map')).toEqual({ x: 9, y: 4 })
       engine.input!.pressKey('KeyE')
       engine.input!.releaseKey('KeyE')
 
@@ -561,7 +561,7 @@ describe('standalone game export', () => {
       for (let batch = 0; batch < 4; batch++) engine.flushMessages()
       expect(steps).toHaveLength(1)
       steps.shift()!()
-      expect(movement.getPosition(scene, 'coast-map')).toEqual({ x: 10, y: 4 })
+      expect(movement.getPosition(scene, 'world-map')).toEqual({ x: 10, y: 4 })
 
       const flush = () => {
         for (let batch = 0; batch < 6; batch++) engine!.flushMessages()
@@ -577,13 +577,13 @@ describe('standalone game export', () => {
       }
 
       for (const code of ['KeyA', 'KeyA', 'KeyW', 'KeyW']) walk(code)
-      expect(engine.lifecycle!.activeScene!.data.id).toBe('village')
-      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'village-map')).toEqual({
+      expect(movement.playerMap).toBe('village')
+      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'world-map')).toEqual({
         x: 1,
         y: 4,
       })
       flush()
-      expect(engine.lifecycle!.activeScene!.data.id).toBe('village')
+      expect(movement.playerMap).toBe('village')
       walk('KeyD')
 
       const interact = () => {
@@ -602,11 +602,11 @@ describe('standalone game export', () => {
       expect(
         engine.lifecycle!.currentGame!.mapObjects!.getAppearance(
           engine.lifecycle!.activeScene!,
-          'village-map',
+          'world-map',
           'village-chest',
         ),
       ).toMatchObject({ terrain: 'chest-open', label: 'Open chest', blocking: false })
-      expect(movement.canMove(engine.lifecycle!.activeScene!, 'village-map', 'north')).toBe(true)
+      expect(movement.canMove(engine.lifecycle!.activeScene!, 'world-map', 'north')).toBe(true)
       interact()
       expect(
         engine.lifecycle!.currentGame!.bindings!.read({ source: 'game.state', path: ['coins'] }),
@@ -622,21 +622,21 @@ describe('standalone game export', () => {
       })
       walk('KeyA')
       walk('KeyA')
-      expect(engine.lifecycle!.activeScene!.data.id).toBe('coast')
-      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'coast-map')).toEqual({
+      expect(movement.playerMap).toBe('coast')
+      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'world-map')).toEqual({
         x: 8,
         y: 3,
       })
       walk('KeyW')
-      expect(engine.lifecycle!.activeScene!.data.id).toBe('village')
-      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'village-map')).toEqual({
+      expect(movement.playerMap).toBe('village')
+      expect(movement.getPosition(engine.lifecycle!.activeScene!, 'world-map')).toEqual({
         x: 1,
         y: 4,
       })
       expect(
         engine.lifecycle!.currentGame!.mapObjects!.getAppearance(
           engine.lifecycle!.activeScene!,
-          'village-map',
+          'world-map',
           'village-chest',
         )?.terrain,
       ).toBe('chest-open')
@@ -644,7 +644,7 @@ describe('standalone game export', () => {
       for (let step = 0; step < 3; step++) walk('KeyD')
       const game = engine.lifecycle!.currentGame!
       const village = engine.lifecycle!.activeScene!
-      expect(game.mapObjects!.getTarget(village, 'village-map')?.id).toBe('village-berries')
+      expect(game.mapObjects!.getTarget(village, 'world-map')?.id).toBe('village-berries')
       interact()
 
       const berries = () =>
@@ -656,11 +656,11 @@ describe('standalone game export', () => {
         )
 
       expect(berries()).toHaveLength(3)
-      expect(
-        game.mapObjects!.getAppearance(village, 'village-map', 'village-berries')?.visible,
-      ).toBe(false)
-      expect(game.mapObjects!.getTarget(village, 'village-map')).toBeUndefined()
-      expect(movement.canMove(village, 'village-map', 'south')).toBe(true)
+      expect(game.mapObjects!.getAppearance(village, 'world-map', 'village-berries')?.visible).toBe(
+        false,
+      )
+      expect(game.mapObjects!.getTarget(village, 'world-map')).toBeUndefined()
+      expect(movement.canMove(village, 'world-map', 'south')).toBe(true)
       interact()
       expect(berries()).toHaveLength(3)
     } finally {

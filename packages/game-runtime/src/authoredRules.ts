@@ -1,5 +1,5 @@
 import {
-  getMapMovementCostMs,
+  sceneEntrance,
   ruleStateType,
   type GameRulesDefinition,
   type RuleText,
@@ -7,6 +7,7 @@ import {
 } from '@ancadeba/schemas'
 import type { ILogger } from '@ancadeba/utilities'
 import type { ActionOutcome, GameRules } from './actions.js'
+import { sceneEntranceCost } from './sceneNavigation.js'
 import type { GameData } from './gameData.js'
 import type { GameInstance, IGameLifecycle } from './gameLifecycle.js'
 import type { IGameInventory } from './inventory.js'
@@ -342,23 +343,9 @@ export class AuthoredPlaythrough {
               if (destination?.type !== 'game') return rejected('Invalid destination scene')
 
               if (external.mapView !== undefined) {
-                const view = destination.components.find(({ id }) => id === external.mapView)
+                const tileCost = sceneEntranceCost(data, external, game.mapMovement)
 
-                const tileCost =
-                  view?.type === 'map-view' && view.playerSpawn
-                    ? game.mapMovement
-                      ? game.mapMovement.getTileCost(
-                          view.map,
-                          external.position ?? view.playerSpawn,
-                        )
-                      : getMapMovementCostMs(view.map, external.position ?? view.playerSpawn)
-                    : undefined
-
-                if (
-                  tileCost === undefined ||
-                  (external.position && view?.type === 'map-view' && view.interactive === false)
-                )
-                  return rejected('The destination is not reachable')
+                if (tileCost === undefined) return rejected('The destination is not reachable')
                 cost = tileCost
               }
             }
@@ -391,14 +378,21 @@ export class AuthoredPlaythrough {
               if (result?.status === 'rejected') return result
             } else if (external?.type === 'enter-scene') {
               completeCommittedEffect(
-                () =>
-                  lifecycle.enterScene(
-                    external.scene,
-                    external.position && external.mapView
-                      ? { mapView: external.mapView, position: external.position }
-                      : undefined,
-                  ),
-                () => lifecycle.activeScene?.data.id === external.scene,
+                () => lifecycle.enterScene(external.scene, sceneEntrance(external)),
+                () => {
+                  const scene = lifecycle.activeScene
+
+                  if (scene?.data.id !== external.scene) return false
+
+                  if (!external.position || !external.mapView) return true
+                  const position = game.mapMovement?.getPosition(scene, external.mapView)
+
+                  return (
+                    position?.x === external.position.x &&
+                    position.y === external.position.y &&
+                    (!external.map || game.mapMovement?.playerMap === external.map)
+                  )
+                },
                 logger,
               )
             }

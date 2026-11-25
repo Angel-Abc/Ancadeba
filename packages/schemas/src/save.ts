@@ -196,6 +196,7 @@ export const gameSaveSchema = z.strictObject({
   dialogue: z.record(z.string(), savedDialogueSchema),
   /** Per-playthrough positions keyed by scene ID, then map-view component ID. */
   mapPositions: record(record(mapPositionSchema)),
+  playerLocation: z.strictObject({ map: gameIdSchema, position: mapPositionSchema }).optional(),
   nearby: record(id),
   inventorySelection: record(id),
   activeDialogue: id.optional(),

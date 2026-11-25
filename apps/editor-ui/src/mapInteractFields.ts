@@ -18,7 +18,18 @@ export function mapInteractFields(
       ) ?? []
 
   const map = maps.find(({ id }) => id === action.mapView)
-  const objects = map?.type === 'map-view' ? (view.maps?.[map.map]?.objects ?? []) : []
+
+  const definitions =
+    map?.type === 'map-view' && map.followPlayer
+      ? Object.values(view.maps ?? {})
+      : [map?.type === 'map-view' ? view.maps?.[map.map] : undefined]
+
+  const objects = new Map(
+    definitions.flatMap((definition) =>
+      (definition?.objects ?? []).map((object) => [object.id, object.label] as const),
+    ),
+  )
+
   const help = controls.create('p')
   help.className = 'help'
   help.textContent = controls.t('maps.interactHelp')
@@ -37,10 +48,7 @@ export function mapInteractFields(
     controls.select(
       controls.t('maps.interactTarget'),
       action.object ?? '',
-      [
-        ['', controls.t('maps.onlyAdjacent')],
-        ...objects.map((object) => [object.id, object.label] as const),
-      ],
+      [['', controls.t('maps.onlyAdjacent')], ...objects],
       (value) => {
         if (value) action.object = value
         else delete action.object

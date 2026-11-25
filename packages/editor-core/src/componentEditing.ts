@@ -65,6 +65,7 @@ export function editComponent(
           location: {
             ...object(previous.location),
             ...component.location,
+            map: component.location.map,
             position: {
               ...object(object(previous.location).position),
               ...component.location.position,
