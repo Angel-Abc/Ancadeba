@@ -1,4 +1,4 @@
-import type { PreparedTradeState } from './tradeState.js'
+import type { PreparedStateWrites } from './stateTransactions.js'
 
 export interface StoryStateWrite {
   readonly path: readonly string[]
@@ -11,11 +11,11 @@ export interface IStoryStateTransactions {
   prepare(
     writes: readonly StoryStateWrite[],
     log: readonly string[],
-  ): PreparedTradeState | undefined
+  ): PreparedStateWrites | undefined
 }
 
 export interface StoryLogAdapter {
-  prepare(entries: readonly string[]): PreparedTradeState | undefined
+  prepare(entries: readonly string[]): PreparedStateWrites | undefined
 }
 
 /** Writes declared story fields while keeping bindings read-only. */
@@ -29,7 +29,7 @@ export class MapStoryState implements IStoryStateTransactions {
   prepare(
     writes: readonly StoryStateWrite[],
     entries: readonly string[],
-  ): PreparedTradeState | undefined {
+  ): PreparedStateWrites | undefined {
     const destinations: { node: Map<string, unknown>; key: string; write: StoryStateWrite }[] = []
 
     const locate = (path: readonly string[]) => {

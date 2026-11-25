@@ -6,7 +6,7 @@ import { readExportArchive } from '../apps/editor-mcp/src/exportArchive.js'
 import { maxExportBytes, mcpOperations } from '../apps/editor-mcp/src/operationSupport.js'
 
 const config = { editorServerUrl: 'http://127.0.0.1:3100', game: 'nested/My game', timeoutMs: 200 }
-const available = { ...capabilities, features: { gameExport: true } }
+const available = { ...capabilities, features: { ...capabilities.features, gameExport: true } }
 const zip = zipSync({ 'index.html': strToU8('<h1>Playable</h1>') })
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status })
 
@@ -54,25 +54,23 @@ describe('MCP game export HTTP adapter', () => {
   })
 
   it('advertises limits and gates export independently of authoring capabilities', async () => {
-    expect(mcpOperations().gameExport).toMatchObject({ supported: false })
-    expect(mcpOperations().gameExport.requestSchema.required ?? []).not.toContain('timeoutMs')
+    expect(mcpOperations(capabilities.features).gameExport).toMatchObject({ supported: false })
     expect(
-      mcpOperations({ history: false, assetImport: false, gameExport: true }).gameExport,
-    ).toMatchObject({
+      mcpOperations(capabilities.features).gameExport.requestSchema.required ?? [],
+    ).not.toContain('timeoutMs')
+    expect(mcpOperations(available.features).gameExport).toMatchObject({
       tool: 'ancadeba_export_game',
       supported: true,
       maxArchiveBytes: maxExportBytes,
       defaultTimeoutMs: 120000,
     })
 
-    for (const features of [undefined, {}, { gameExport: false }]) {
-      const fetcher = vi.fn(async () => json({ ...capabilities, features }))
-      await expect(new EditorApiClient(config, fetcher).exportGame({})).rejects.toMatchObject({
-        code: 'unsupported_export',
-        outcome: 'not_applied',
-      })
-      expect(fetcher).toHaveBeenCalledTimes(1)
-    }
+    const fetcher = vi.fn(async () => json(capabilities))
+    await expect(new EditorApiClient(config, fetcher).exportGame({})).rejects.toMatchObject({
+      code: 'unsupported_export',
+      outcome: 'not_applied',
+    })
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it.each([
@@ -98,7 +96,15 @@ describe('MCP game export HTTP adapter', () => {
       const fetcher = vi.fn(async (url) =>
         requestUrl(url).endsWith('capabilities')
           ? json(available)
-          : json({ error: 'Export failed' }, status),
+          : json(
+              {
+                error: 'Export failed',
+                code: 'export_failed',
+                diagnostics: [],
+                outcome: 'not_applied',
+              },
+              status,
+            ),
       )
 
       await expect(new EditorApiClient(config, fetcher).exportGame({})).rejects.toMatchObject({

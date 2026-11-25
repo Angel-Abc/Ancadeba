@@ -1,5 +1,10 @@
 # Agents Guide
 
+## Backward compatibility
+
+- During this development phase, breaking changes to APIs, game data, and save formats are acceptable. Skip compatibility shims and migrations unless explicitly requested.
+- When a change affects a sample game, update its files in `sample-games/` directly so it stays playable with the current engine.
+
 ## Code conventions
 
 - Use single quotes and omit semicolons.

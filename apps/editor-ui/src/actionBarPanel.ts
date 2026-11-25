@@ -1,4 +1,3 @@
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { rememberEntryFocus } from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -323,18 +322,16 @@ export function bindActionBarPanel(
       barDirty: z.boolean(),
       inputDirty: z.boolean(),
       inputId: z.string(),
-      inputSelection: z
-        .object({
-          view: z.enum(['keyboard', 'contexts', 'keys', 'scene']),
-          context: z.string(),
-          entries: z.record(z.string(), z.number()),
-        })
-        .optional(),
-      showInput: z.boolean().optional(),
+      inputSelection: z.object({
+        view: z.enum(['keyboard', 'contexts', 'keys', 'scene']),
+        context: z.string(),
+        entries: z.record(z.string(), z.number()),
+      }),
+      showInput: z.boolean(),
       inputDraft: z
         .object({
           virtualKeys: z.string(),
-          sceneKeys: z.partialRecord(sceneControlSchema, z.string()).default({}),
+          sceneKeys: z.partialRecord(sceneControlSchema, z.string()),
           keyboard: z.array(z.object({ code: z.string(), key: z.string() })),
           contexts: z.record(z.string(), z.array(z.object({ key: z.string(), input: z.string() }))),
           initialContext: z.string(),
@@ -365,8 +362,8 @@ export function bindActionBarPanel(
       inputId = saved.inputId
       inputDraft = saved.inputDraft
 
-      if (saved.inputSelection) inputSelection = saved.inputSelection
-      showInputs(saved.showInput ?? saved.inputDirty)
+      inputSelection = saved.inputSelection
+      showInputs(saved.showInput)
       renderBar()
       renderInput()
     },
@@ -374,13 +371,6 @@ export function bindActionBarPanel(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (!barDirty || !barDraft) return []
-      const entry = { ...recoveredComponent(view, sceneId, barDraft), slot: selectedSlot }
-      resetBar()
-
-      return [entry]
-    },
     canNavigate: (nextScene?: string) => !nextScene || nextScene === sceneId || !barDirty,
     navigate,
     hasDrafts: () => barDirty || inputDirty,

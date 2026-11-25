@@ -271,6 +271,16 @@ export const actionInfoComponentSchema = z.object({
 
 export type ActionInfoComponentDefinition = z.infer<typeof actionInfoComponentSchema>
 
+export const messageHistoryComponentSchema = z.object({
+  id: gameIdSchema,
+  type: z.literal('message-history'),
+  ...componentLayoutFields,
+  label: z.string().trim().min(1).default('Message history'),
+  labelKey: translationKeySchema.optional(),
+})
+
+export type MessageHistoryComponentDefinition = z.infer<typeof messageHistoryComponentSchema>
+
 export const languageSelectComponentSchema = z
   .object({
     id: gameIdSchema,
@@ -668,6 +678,7 @@ export const sceneComponentSchema = z.discriminatedUnion('type', [
   inventoryComponentSchema,
   actionBarComponentSchema,
   actionInfoComponentSchema,
+  messageHistoryComponentSchema,
   nearbyComponentSchema,
   statusPanelComponentSchema,
   formComponentSchema,

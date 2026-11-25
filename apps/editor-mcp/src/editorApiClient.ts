@@ -1,7 +1,6 @@
 import {
   commandRequestSchema,
   type EditorCommand,
-  type EditorWriteOutcome,
   projectLocationSchema,
   deletedProjectSchema,
   deletedProjectListSchema,
@@ -34,20 +33,6 @@ import {
 } from './protocol.js'
 
 export { EditorApiError } from './editorApiError.js'
-
-// These editor errors are raised before persistence. Other failures may come from
-// the server's reread after saving, including legacy workspace errors with a 4xx status.
-/**
- * Trust the editor's declared rejection only with a status that cannot follow a write.
- * Request-size and content-type failures are raised before the body is read.
- */
-function writeFailureOutcome(status: number, declared: EditorWriteOutcome | undefined) {
-  if (status === 413 || status === 415) return 'not_applied'
-
-  return declared === 'not_applied' && ((status >= 400 && status < 500) || status === 503)
-    ? 'not_applied'
-    : 'unknown'
-}
 
 interface RequestBody {
   body: string | ArrayBuffer
@@ -136,7 +121,7 @@ export class EditorApiClient implements IEditorApi {
         'Provide a new destination and canonical base64 project ZIP up to 6 MiB',
       )
 
-    if (!(await this.capabilities(signal)).features?.projectImport)
+    if (!(await this.capabilities(signal)).features.projectImport)
       throw new EditorApiError('unsupported_project_import', 'Project import is unavailable')
     const bytes = new Uint8Array(Buffer.from(parsed.data.dataBase64, 'base64'))
 
@@ -158,7 +143,7 @@ export class EditorApiClient implements IEditorApi {
         'Provide the current revision and an optional timeoutMs from 1 to 300000',
       )
 
-    if (!(await this.capabilities(signal)).features?.projectExport)
+    if (!(await this.capabilities(signal)).features.projectExport)
       throw new EditorApiError('unsupported_project_export', 'Project export is unavailable')
 
     return this.request(
@@ -178,7 +163,7 @@ export class EditorApiClient implements IEditorApi {
     feature: 'projectRenaming' | 'projectFolderRenaming' | 'projectDeletion' | 'projectRestoration',
     signal?: AbortSignal,
   ) {
-    if (!(await this.capabilities(signal)).features?.[feature])
+    if (!(await this.capabilities(signal)).features[feature])
       throw new EditorApiError(
         'unsupported_project_management',
         'The connected editor does not advertise this project operation',
@@ -277,7 +262,7 @@ export class EditorApiClient implements IEditorApi {
   async listProjects(signal?: AbortSignal) {
     const available = await this.capabilities(signal)
 
-    if (!available.features?.projectDiscovery)
+    if (!available.features.projectDiscovery)
       throw new EditorApiError(
         'unsupported_discovery',
         'The connected editor does not advertise project discovery support',
@@ -294,7 +279,7 @@ export class EditorApiClient implements IEditorApi {
       throw new EditorApiError('invalid_request', 'Export timeoutMs must be 1 to 300000')
     const available = await this.capabilities(signal)
 
-    if (!available.features?.gameExport)
+    if (!available.features.gameExport)
       throw new EditorApiError(
         'unsupported_export',
         'The connected editor does not advertise game export support',
@@ -323,7 +308,7 @@ export class EditorApiClient implements IEditorApi {
       )
     const available = await this.capabilities(signal)
 
-    if (!available.features?.projectCreation)
+    if (!available.features.projectCreation)
       throw new EditorApiError(
         'unsupported_creation',
         'The connected editor does not advertise project creation support',
@@ -352,7 +337,7 @@ export class EditorApiClient implements IEditorApi {
       )
     const available = await this.capabilities(signal)
 
-    if (!available.features?.projectDuplication)
+    if (!available.features.projectDuplication)
       throw new EditorApiError(
         'unsupported_duplication',
         'The connected editor does not advertise project duplication support',
@@ -417,7 +402,7 @@ export class EditorApiClient implements IEditorApi {
       throw new EditorApiError('invalid_request', 'Provide a revision and an undo/redo direction')
     const available = await this.capabilities(signal)
 
-    if (!available.features?.history)
+    if (!available.features.history)
       throw new EditorApiError(
         'unsupported_history',
         'The connected editor does not advertise undo/redo support',
@@ -472,7 +457,7 @@ export class EditorApiClient implements IEditorApi {
       )
     const available = await this.capabilities(signal)
 
-    if (!available.features?.assetImport)
+    if (!available.features.assetImport)
       throw new EditorApiError(
         'unsupported_import',
         'The connected editor does not advertise asset upload support',
@@ -554,18 +539,15 @@ export class EditorApiClient implements IEditorApi {
             response.status,
           )
 
-        const fallback =
-          response.status === 404
-            ? 'not_found'
-            : response.status === 409
-              ? 'workspace_conflict'
-              : 'editor_error'
+        const rejectionStatus =
+          (response.status >= 400 && response.status < 500) || response.status === 503
 
+        const outcome = rejectionStatus ? error.data.outcome : 'unknown'
         throw new EditorApiError(
-          error.data.code ?? fallback,
+          error.data.code,
           error.data.error,
           error.data.diagnostics,
-          writing ? writeFailureOutcome(response.status, error.data.outcome) : 'not_applied',
+          writing ? outcome : 'not_applied',
           response.status,
         )
       }

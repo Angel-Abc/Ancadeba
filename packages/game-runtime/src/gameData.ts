@@ -108,6 +108,7 @@ export type SceneComponentData =
           | 'save-status'
           | 'save-point'
           | 'action-info'
+          | 'message-history'
           | 'form'
           | 'character-view'
           | 'character-sheet'
@@ -165,8 +166,6 @@ export interface SceneData {
 export interface GameData {
   /** Content fingerprint supplied by the loader, independent of the selected language. */
   readonly saveCompatibility?: string
-  /** Earlier fingerprint that included decorative scene backgrounds. */
-  readonly legacySaveCompatibility?: string
   readonly choices?: ReadonlyMap<string, ChoiceDefinition> | undefined
   readonly forms?: ReadonlyMap<string, FormDefinition> | undefined
   readonly dialogues?: ReadonlyMap<string, DialogueDefinition> | undefined

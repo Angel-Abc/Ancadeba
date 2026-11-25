@@ -73,6 +73,7 @@ function fixture() {
       capabilities: async () => ({
         ...capabilities,
         features: {
+          ...capabilities.features,
           history: true,
           assetImport: true,
           projectDiscovery: true,

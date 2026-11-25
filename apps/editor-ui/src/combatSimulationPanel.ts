@@ -778,8 +778,8 @@ export function bindCombatSimulationPanel(
     root,
     'combat-scenario',
     z.object({
-      mode: z.enum(['interactive', 'scenarios']).optional(),
-      entries: z.record(z.string(), z.number()).optional(),
+      mode: z.enum(['interactive', 'scenarios']),
+      entries: z.record(z.string(), z.number()),
       encounter: z.string(),
       selected: z.string(),
       draft: combatSimulationScenarioSchema.optional(),
@@ -799,9 +799,8 @@ export function bindCombatSimulationPanel(
           }
         : undefined,
     (saved) => {
-      mode = saved.mode ?? 'scenarios'
+      mode = saved.mode
       Object.assign(scenarioState, saved, {
-        entries: saved.entries ?? {},
         dirty: true,
         results: {},
         error: '',

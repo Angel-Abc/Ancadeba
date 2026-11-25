@@ -753,7 +753,7 @@ export function bindAssetsPanel(
       browsingKind: z.string(),
       appearance: graphicAppearanceSchema,
       dirty: z.array(z.string()),
-      imageView: z.enum(['colors', 'file']).optional(),
+      imageView: z.enum(['colors', 'file']),
     }),
     () =>
       hasDrafts()
@@ -763,7 +763,7 @@ export function bindAssetsPanel(
       selected = saved.selected
       navigationKey = saved.navigationKey
       browsingKind = saved.browsingKind
-      imageView = saved.imageView ?? 'colors'
+      imageView = saved.imageView
       appearance = saved.appearance
       dirty.clear()
 
@@ -776,35 +776,14 @@ export function bindAssetsPanel(
   registerEditorDraft(
     find('asset-palettes'),
     'asset-palettes',
-    z.union([
-      z.object({ target: z.string(), entries: z.array(z.tuple([z.string(), paletteDraftSchema])) }),
-      z.array(z.object({ value: z.string(), checked: z.boolean() })),
-    ]),
+    z.object({ target: z.string(), entries: z.array(z.tuple([z.string(), paletteDraftSchema])) }),
     () => (drafts.size ? { target, entries: [...drafts] } : undefined),
     (saved) => {
       drafts.clear()
       paletteOwner = selected
+      target = saved.target
 
-      if (Array.isArray(saved)) {
-        // Older forms stored the picker, slot colors and preset name in display order.
-        target = saved[0]?.value ?? ''
-        const name = saved.at(-1)?.value ?? target
-
-        if (!target && name) target = '@1'
-        drafts.set(target, {
-          name,
-          colors: Object.fromEntries(
-            Object.keys(paletteAsset()?.colors ?? {}).map((slot, i) => [
-              slot,
-              saved[i + 1]?.value ?? '',
-            ]),
-          ),
-        })
-      } else {
-        target = saved.target
-
-        for (const [key, draft] of saved.entries) drafts.set(key, draft)
-      }
+      for (const [key, draft] of saved.entries) drafts.set(key, draft)
 
       syncPaletteDirty()
       renderColors()

@@ -107,82 +107,82 @@ export const operationsSchema = z.object({
   }),
 })
 
-export function mcpOperations(features?: z.infer<typeof editorFeaturesSchema>) {
+export function mcpOperations(features: z.infer<typeof editorFeaturesSchema>) {
   return {
     projectImport: {
       tool: 'ancadeba_import_project' as const,
-      supported: features?.projectImport === true,
+      supported: features.projectImport,
       requestSchema: z.toJSONSchema(importProjectInputSchema),
       maxArchiveBytes: maxExportBytes,
     },
     projectExport: {
       tool: 'ancadeba_export_project' as const,
-      supported: features?.projectExport === true,
+      supported: features.projectExport,
       requestSchema: z.toJSONSchema(exportProjectInputSchema, { io: 'input' }),
       maxArchiveBytes: maxExportBytes,
     },
     projectRenaming: {
       tool: 'ancadeba_rename_project' as const,
-      supported: features?.projectRenaming === true,
+      supported: features.projectRenaming,
       requestSchema: z.toJSONSchema(renameProjectInputSchema),
     },
     projectDeletion: {
       tool: 'ancadeba_delete_project' as const,
-      supported: features?.projectDeletion === true,
+      supported: features.projectDeletion,
       requestSchema: z.toJSONSchema(deleteProjectInputSchema),
     },
     deletedProjects: {
       tool: 'ancadeba_list_deleted_projects' as const,
-      supported: features?.projectRestoration === true,
+      supported: features.projectRestoration,
       requestSchema: z.toJSONSchema(listProjectsInputSchema),
     },
     projectRestoration: {
       tool: 'ancadeba_restore_project' as const,
-      supported: features?.projectRestoration === true,
+      supported: features.projectRestoration,
       requestSchema: z.toJSONSchema(restoreProjectInputSchema),
     },
     gameExport: {
       tool: 'ancadeba_export_game' as const,
-      supported: features?.gameExport === true,
+      supported: features.gameExport,
       requestSchema: z.toJSONSchema(exportGameInputSchema, { io: 'input' }),
       maxArchiveBytes: maxExportBytes,
       defaultTimeoutMs: defaultExportTimeoutMs,
     },
     projectSwitching: {
       tool: 'ancadeba_switch_project' as const,
-      supported: features?.projectDiscovery === true,
+      supported: features.projectDiscovery,
       requestSchema: z.toJSONSchema(switchProjectInputSchema),
     },
     projectDiscovery: {
       tool: 'ancadeba_list_projects' as const,
-      supported: features?.projectDiscovery === true,
+      supported: features.projectDiscovery,
       requestSchema: z.toJSONSchema(listProjectsInputSchema),
     },
     projectCreation: {
       tool: 'ancadeba_create_project' as const,
-      supported: features?.projectCreation === true,
+      supported: features.projectCreation,
       requestSchema: z.toJSONSchema(createProjectInputSchema),
     },
     projectDuplication: {
       tool: 'ancadeba_duplicate_project' as const,
-      supported: features?.projectDuplication === true,
+      supported: features.projectDuplication,
       requestSchema: z.toJSONSchema(duplicateProjectInputSchema),
       maxProjectBytes: maxDuplicateProjectBytes,
       maxFiles: maxDuplicateProjectFiles,
     },
     undo: {
       tool: 'ancadeba_undo' as const,
-      supported: features?.history === true,
+      supported: features.history,
       requestSchema: z.toJSONSchema(historyInputSchema),
     },
     redo: {
       tool: 'ancadeba_redo' as const,
-      supported: features?.history === true,
+      supported: features.history,
       requestSchema: z.toJSONSchema(historyInputSchema),
     },
     assetUpload: {
       tool: 'ancadeba_upload_asset' as const,
-      supported: features?.assetImport === true,
+      supported: features.assetImport,
       requestSchema: z.toJSONSchema(assetUploadInputSchema),
       maxMultipartBytes: maxUploadBytes,
     },

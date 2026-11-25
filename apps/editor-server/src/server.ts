@@ -111,7 +111,18 @@ export function createEditorServer(
 
       // Clients only see a generic message, so the cause must reach the operator.
       if (failure.status >= 500) reportError(`${request.method} ${request.url}`, error)
-      json(response, failure.status, { error: failure.message })
+      const { status } = failure
+
+      const code =
+        status === 404 ? 'not_found' : status === 409 ? 'workspace_conflict' : 'workspace_error'
+
+      json(response, status, {
+        error: failure.message,
+        code,
+        diagnostics: [],
+        outcome:
+          request.method === 'GET' || status === 413 || status === 415 ? 'not_applied' : 'unknown',
+      })
     })
   })
 
@@ -142,18 +153,8 @@ export function createEditorServer(
         json(response, 200, {
           ...capabilities,
           features: {
-            ...(projects?.features ?? {
-              history: false,
-              assetImport: false,
-              projectCreation: false,
-              projectDuplication: false,
-              projectImport: false,
-              projectExport: false,
-              projectRenaming: false,
-              projectFolderRenaming: false,
-              projectDeletion: false,
-              projectRestoration: false,
-            }),
+            ...capabilities.features,
+            ...projects?.features,
             projectDiscovery: true,
             gameExport: exports !== undefined,
           },
@@ -451,6 +452,6 @@ export function createEditorServer(
       return
     }
 
-    json(response, 404, { error: 'Not found' })
+    throw new EditorError(404, 'not_found', 'Not found')
   }
 }

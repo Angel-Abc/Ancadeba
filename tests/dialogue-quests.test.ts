@@ -169,6 +169,7 @@ const scene = (id: string) =>
     screen: { type: 'grid', grid: { rows: 5, columns: 5 } },
     components: [
       { id: 'text', type: 'text', text: 'The village.', placement: { row: 1, column: 1 } },
+      { id: 'history', type: 'message-history', placement: { row: 4, column: 1 } },
       {
         id: 'nearby',
         type: 'nearby',
@@ -357,6 +358,30 @@ async function setup(
 }
 
 describe('branching dialogue and quest transactions', () => {
+  it('bounds the shared history independently of the current conversation and retains repeated lines', async () => {
+    const source = dialogueSchema.parse({
+      ...dialogue,
+      transcriptCapacity: 1,
+      nodes: {
+        greeting: {
+          lines: Array.from({ length: 100 }, (_, index) => ({ text: 'Line ' + index })),
+          choices: [{ id: 'again', label: 'Again', next: 'greeting' }],
+        },
+      },
+    })
+
+    const { game, command, select } = await setup({ dialogue: source })
+    select()
+    command('start')
+    command('choose')
+    command('choose')
+    const entries = game().messageHistory!
+    expect(entries).toHaveLength(200)
+    expect(entries[0]?.text).toBe('Line 1')
+    expect(entries.filter(({ text }) => text === 'Line 99')).toHaveLength(2)
+    expect(entries.at(-101)).toEqual({ kind: 'choice', text: 'You: Again' })
+  })
+
   it('accepts a quest, hands over a nested exact instance, and commits rewards, levels, log, state and dialogue together once', async () => {
     const { game, active, flush, select, command, value } = await setup()
     select()
@@ -392,6 +417,14 @@ describe('branching dialogue and quest transactions', () => {
     expect(value('level')).toMatchObject({ value: 2 })
     expect(value('hp')).toMatchObject({ value: 14 })
     expect(value('log')).toMatchObject({ value: 'Delivery completed' })
+    expect(game().messageHistory).toEqual([
+      { kind: 'dialogue', text: 'Giver: Hello <Traveller>.' },
+      { kind: 'choice', text: 'You: Accept' },
+      { kind: 'dialogue', text: 'The delivery awaits.' },
+      { kind: 'choice', text: 'You: Here is the letter' },
+      { kind: 'narration', text: 'Delivery completed' },
+      { kind: 'dialogue', text: 'Thank you, Hero. Level 2.' },
+    ])
     expect(observations).toEqual([
       [
         { status: 'resolved', value: 5 },
@@ -447,7 +480,9 @@ describe('branching dialogue and quest transactions', () => {
 
       if (mode === 'overflow') set('gold', Number.MAX_SAFE_INTEGER)
       const before = game().inventory!.snapshot
+      const history = game().messageHistory
       command('choose')
+      expect(game().messageHistory).toBe(history)
       expect(game().inventory!.snapshot).toEqual(before)
       expect(value('xp')).toMatchObject({ value: 0 })
       expect(value('done')).toMatchObject({ value: false })

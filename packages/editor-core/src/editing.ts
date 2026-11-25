@@ -176,10 +176,8 @@ export function applyCommand(project: ProjectSnapshot, input: EditorCommand): Co
       ...(command.characterProfile !== undefined && {
         characterProfile: command.characterProfile ?? undefined,
       }),
-      ...(command.titleKey !== undefined ? { titleKey: command.titleKey ?? undefined } : {}),
-      ...(command.descriptionKey !== undefined
-        ? { descriptionKey: command.descriptionKey ?? undefined }
-        : {}),
+      titleKey: command.titleKey ?? undefined,
+      descriptionKey: command.descriptionKey ?? undefined,
     }
     changedFiles.push('game.json')
   } else if (command.type === 'scene.create') {
@@ -208,10 +206,8 @@ export function applyCommand(project: ProjectSnapshot, input: EditorCommand): Co
         ...source,
         title: command.title,
         description: command.description,
-        ...(command.titleKey !== undefined ? { titleKey: command.titleKey ?? undefined } : {}),
-        ...(command.descriptionKey !== undefined
-          ? { descriptionKey: command.descriptionKey ?? undefined }
-          : {}),
+        titleKey: command.titleKey ?? undefined,
+        descriptionKey: command.descriptionKey ?? undefined,
       }
     } else {
       const screen = object(source.screen)

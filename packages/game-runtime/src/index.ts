@@ -137,8 +137,6 @@ export * from './equipment.js'
 
 export * from './itemDetails.js'
 
-export * from './tradeState.js'
-
 export * from './trading.js'
 
 export * from './combat.js'

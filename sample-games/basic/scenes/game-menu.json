@@ -27,6 +27,12 @@
       }
     },
     {
+      "id": "message-history",
+      "type": "message-history",
+      "labelKey": "menu.messageHistory",
+      "placement": { "row": 3, "column": 10, "rowSpan": 9, "columnSpan": 3 }
+    },
+    {
       "id": "main-menu",
       "type": "button",
       "labelKey": "menu.mainMenu",

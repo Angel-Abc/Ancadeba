@@ -4,7 +4,6 @@ import {
   combatDefinitionSchema,
   combatStatusSchema,
   combatLibrarySchema,
-  savedCombatSchema,
   type CombatDefinition,
 } from '@ancadeba/schemas'
 import {
@@ -108,7 +107,7 @@ function simulate(
       move,
       target: encounter.moves[move]!.type === 'attack' ? 'enemy' : 'player',
     })),
-    enemies: { enemy: { moves: [], cursor: 0 } },
+    enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
     escape: false,
     statuses,
     ...options,
@@ -528,26 +527,14 @@ describe('rich status runtime integration', () => {
     restored.command('end-turn')
     expect(restored.snapshot().statuses.diver?.[0]?.remaining).toBe(2)
     const saved = JSON.parse(app.store.read('combat-mechanics')!)
-    saved.combat['shared-water'].statuses.diver[0].stacks = 4
-    app.store.write('combat-mechanics', JSON.stringify(saved))
     const before = restored.game()
-    expect(restored.engine.saves!.load()).toBe(false)
-    expect(restored.game()).toBe(before)
 
-    const legacy = savedCombatSchema.parse({
-      round: 1,
-      seed: 1,
-      started: false,
-      guard: {},
-      plan: [],
-      enemies: {},
-      statuses: { player: [{ id: 'focus', source: 'player', remaining: 1 }] },
-      cooldowns: {},
-      escape: false,
-      log: [],
-    })
-
-    expect(legacy.statuses.player?.[0]).toEqual({ id: 'focus', source: 'player', remaining: 1 })
+    for (const stacks of [undefined, 4]) {
+      saved.combat['shared-water'].statuses.diver[0].stacks = stacks
+      app.store.write('combat-mechanics', JSON.stringify(saved))
+      expect(restored.engine.saves!.load()).toBe(false)
+      expect(restored.game()).toBe(before)
+    }
   })
 
   it.each(['water', 'rough-water'])(

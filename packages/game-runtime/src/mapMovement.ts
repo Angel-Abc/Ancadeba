@@ -53,12 +53,6 @@ export class GameMapMovement implements IGameMapMovement {
   private readonly unsubscribeState: (() => void) | undefined
   private disposed = false
 
-  save(allowPending = false): Record<string, MapPosition> {
-    const positions = this.savePositions(allowPending)
-
-    return (this.scene && positions[this.scene.data.id]) || {}
-  }
-
   /** Paused menus may capture committed tiles without changing the unfinished live step. */
   savePositions(allowPending = false): SavedMapPositions {
     if (
@@ -105,18 +99,6 @@ export class GameMapMovement implements IGameMapMovement {
     this.maps.clear()
 
     for (const [scene, maps] of restored) this.maps.set(scene, maps)
-  }
-
-  restore(scene: SceneInstance, positions: Readonly<Record<string, MapPosition>>): void {
-    for (const [id, position] of Object.entries(positions)) {
-      const resolved = this.resolve(scene, id)
-
-      if (!resolved || this.getTileCost(resolved.component.map, position) === undefined)
-        throw new Error('Invalid saved map position')
-      resolved.state.position = Object.freeze({ ...position })
-    }
-
-    this.notify()
   }
 
   constructor(

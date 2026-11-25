@@ -48,18 +48,10 @@ export function editCombat(
         'Include simulationScenarios explicitly when saving an encounter that contains them',
       )
 
-    if (previous.ruleset && definition.ruleset === undefined && definition.rulesets === undefined)
-      throw new EditorError(
-        422,
-        'ruleset_reference_required',
-        'Include ruleset explicitly when saving a linked encounter; use null to detach',
-      )
-
     if (
       Array.isArray(previous.rulesets) &&
       previous.rulesets.length &&
-      definition.rulesets === undefined &&
-      definition.ruleset === undefined
+      definition.rulesets === undefined
     )
       throw new EditorError(
         422,
@@ -69,7 +61,7 @@ export function editCombat(
 
     if (
       Object.keys(object(previous.mechanicsOverrides)).length &&
-      (definition.ruleset || definition.rulesets?.length) &&
+      definition.rulesets?.length &&
       definition.mechanicsOverrides === undefined
     )
       throw new EditorError(
@@ -175,19 +167,8 @@ export function editCombat(
         definition.simulationScenarios,
       ),
       mechanics: mergeCombatMechanics(previous.mechanics, definition.mechanics),
-      ruleset: definition.ruleset
-        ? {
-            ...object(previous.ruleset),
-            ...definition.ruleset,
-            actors: definition.ruleset.actors ? { ...definition.ruleset.actors } : undefined,
-          }
-        : undefined,
       rulesets: definition.rulesets?.map((reference) => ({
         ...oldReferences('rulesets', reference.library, reference.id),
-        ...(object(previous.ruleset).library === reference.library &&
-        object(previous.ruleset).id === reference.id
-          ? object(previous.ruleset)
-          : {}),
         ...reference,
         actors: reference.actors ? { ...reference.actors } : undefined,
         collision: reference.collision,

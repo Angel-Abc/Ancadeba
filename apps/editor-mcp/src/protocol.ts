@@ -39,7 +39,7 @@ export const capabilitiesSchema = z.object({
   version: z.number().int(),
   requestSchema: z.record(z.string(), z.unknown()),
   commands: z.array(z.object({ type: z.string(), example: z.record(z.string(), z.unknown()) })),
-  features: editorFeaturesSchema.optional(),
+  features: editorFeaturesSchema,
 })
 
 export const mcpCapabilitiesSchema = capabilitiesSchema.extend({

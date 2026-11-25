@@ -37,7 +37,7 @@ const map = mapDefinitionSchema.parse({
 })
 
 describe('map tilesets', () => {
-  it('accepts legacy colors, image tiles and overlays, and computes crops including image origin, margins and spacing', () => {
+  it('accepts solid colors, image tiles and overlays, and computes crops including image origin, margins and spacing', () => {
     expect(mapVisualIssues(map, assets)).toEqual([])
     expect(mapTilesetSize(map.tilesets!.nature!, assets.images.sheet!)).toEqual({
       columns: 2,

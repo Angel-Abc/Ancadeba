@@ -95,7 +95,7 @@ describe('MCP editor HTTP client', () => {
       expect(calls).toBe(1)
     }
   })
-  it('preserves conflict diagnostics and normalizes legacy workspace errors', async () => {
+  it('preserves conflict diagnostics', async () => {
     const diagnostics = [
       { code: 'invalid_document', file: 'game.json', path: ['title'], message: 'Required' },
     ]
@@ -114,16 +114,6 @@ describe('MCP editor HTTP client', () => {
       status: 409,
       diagnostics,
       outcome: 'not_applied',
-    })
-
-    const legacy = new EditorApiClient(config, async () =>
-      json({ error: 'Resource not found' }, 404),
-    )
-
-    await expect(legacy.inspectGame()).rejects.toMatchObject({
-      code: 'not_found',
-      status: 404,
-      diagnostics: [],
     })
   })
   it('reports malformed success and error responses instead of treating them as saved changes', async () => {
@@ -260,7 +250,12 @@ describe('MCP editor HTTP client', () => {
       requestUrl(url).endsWith('capabilities')
         ? json(capabilities)
         : json(
-            { error: 'Reload before retrying', code: 'scene_cleanup_failed', diagnostics: [] },
+            {
+              error: 'Reload before retrying',
+              code: 'scene_cleanup_failed',
+              diagnostics: [],
+              outcome: 'unknown',
+            },
             500,
           ),
     )
@@ -272,31 +267,6 @@ describe('MCP editor HTTP client', () => {
     })
   })
 
-  it.each([403, 404, 409, 422])(
-    'reports a legacy workspace HTTP %i write error as uncertain',
-    async (status) => {
-      let posts = 0
-
-      const client = new EditorApiClient(config, async (url) => {
-        if (requestUrl(url).endsWith('capabilities')) return json(capabilities)
-        posts++
-
-        return json({ error: 'Workspace reread failed' }, status)
-      })
-
-      const result = await toolResult(() => client.apply('old', metadata))
-      expect(result.structuredContent).toMatchObject({
-        ok: false,
-        error: {
-          status,
-          outcome: 'unknown',
-          recovery: expect.stringContaining('Do not retry automatically'),
-        },
-      })
-      expect(posts).toBe(1)
-    },
-  )
-
   it.each([
     ['invalid_request', 400],
     ['invalid_project', 422],
@@ -306,15 +276,15 @@ describe('MCP editor HTTP client', () => {
     ['combat_not_found', 404],
     ['component_id_in_use', 422],
     ['unsupported_history', 503],
-    [undefined, 413],
-    [undefined, 415],
+    ['workspace_error', 413],
+    ['workspace_error', 415],
   ] as const)(
     'recognizes a declared rejection %s with HTTP %i before persistence',
     async (code, status) => {
       const client = new EditorApiClient(config, async (url) =>
         requestUrl(url).endsWith('capabilities')
           ? json(capabilities)
-          : json({ error: 'Rejected', ...(code ? { code, outcome: 'not_applied' } : {}) }, status),
+          : json({ error: 'Rejected', code, diagnostics: [], outcome: 'not_applied' }, status),
       )
 
       await expect(client.apply('old', metadata)).rejects.toMatchObject({
@@ -329,33 +299,18 @@ describe('MCP editor HTTP client', () => {
       requestUrl(url).endsWith('capabilities')
         ? json(capabilities)
         : json(
-            { error: 'Unexpected failure', code: 'revision_conflict', outcome: 'not_applied' },
+            {
+              error: 'Unexpected failure',
+              code: 'revision_conflict',
+              diagnostics: [],
+              outcome: 'not_applied',
+            },
             500,
           ),
     )
 
     await expect(client.apply('old', metadata)).rejects.toMatchObject({ outcome: 'unknown' })
   })
-
-  it.each([
-    ['revision_conflict', undefined],
-    ['map_exists', 'unknown'],
-  ] as const)(
-    'treats a %s rejection without a declared not-applied outcome as uncertain',
-    async (code, outcome) => {
-      const client = new EditorApiClient(config, async (url) =>
-        requestUrl(url).endsWith('capabilities')
-          ? json(capabilities)
-          : json({ error: 'Rejected', code, ...(outcome ? { outcome } : {}) }, 409),
-      )
-
-      await expect(client.apply('old', metadata)).rejects.toMatchObject({
-        code,
-        status: 409,
-        outcome: 'unknown',
-      })
-    },
-  )
 
   it('reports local invalid revisions and commands as not applied without any HTTP requests', async () => {
     let calls = 0

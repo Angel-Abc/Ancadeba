@@ -16,6 +16,7 @@ type Scene = ProjectView['scenes'][number]
 
 export const componentGroups = {
   text: 'visuals',
+  'message-history': 'visuals',
   graphic: 'visuals',
   'background-image': 'visuals',
   'map-view': 'visuals',

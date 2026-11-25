@@ -60,6 +60,48 @@
   background: var(--ge-scene-text-background);
 }
 
+.ancadeba-message-history {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: var(--ge-scene-text-padding);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: var(--ge-scene-line-height);
+  color: var(--ge-scene-text-color);
+  background: var(--ge-scene-text-background);
+}
+
+.ancadeba-message-history h2 {
+  margin: 0 0 0.4em;
+  font-size: 1em;
+}
+
+.ancadeba-message-history [role='log'] {
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+}
+
+.ancadeba-message-history [role='log'] > div {
+  flex: none;
+  min-height: 100%;
+}
+
+.ancadeba-message-history p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ancadeba-message-history p + p {
+  margin-block-start: 0.35em;
+}
+
+.ancadeba-message-history-choice {
+  font-weight: 600;
+}
+
 .ancadeba-graphic {
   position: relative;
   overflow: hidden;

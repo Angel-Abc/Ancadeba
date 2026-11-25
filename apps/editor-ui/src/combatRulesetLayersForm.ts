@@ -132,7 +132,7 @@ export function combatRulesetLayersForm(
           draft.mechanicsOverrides = {}
         }
 
-        ;(draft.rulesets ??= []).push(reference(addition))
+        draft.rulesets = [...layers, reference(addition)]
       }),
       !addition || layers.length >= 16,
     ),

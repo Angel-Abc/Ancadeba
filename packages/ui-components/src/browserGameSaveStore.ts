@@ -26,8 +26,6 @@ export class BrowserGameSaveStore implements GameSaveStore {
   }
 
   private key(gameId: string, slot: GameSaveLocation): string {
-    const base = `ancadeba.save.${encodeURIComponent(this.namespace)}.${encodeURIComponent(gameId)}`
-
-    return slot === '1' ? base : `${base}.slot.${slot}`
+    return `ancadeba.save.${encodeURIComponent(this.namespace)}.${encodeURIComponent(gameId)}.slot.${slot}`
   }
 }

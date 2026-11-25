@@ -313,6 +313,7 @@
   "inventory.owner.opponent": "Gevorderde tegenstander",
   "inventory.owner.displayCase": "Vitrine",
   "menu.title": "Spelmenu",
+  "menu.messageHistory": "Berichtgeschiedenis",
   "menu.mainMenu": "Hoofdmenu",
   "menu.saveGame": "Spel opslaan",
   "menu.loadGame": "Spel laden",

@@ -1,4 +1,3 @@
-import type { RecoveredComponent } from './recoveredSceneComponents.js'
 import { z } from 'zod'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import {
@@ -388,9 +387,9 @@ export function bindComponentEditor(
       newType: z.enum(inspectorTypes),
       preset: z.string().optional(),
       bindingPending: z.object({ alias: z.string(), value: z.string() }),
-      selection: inspectorSelectionSchema.optional(),
-      panels: z.array(inventoryComponentSchema).optional(),
-      hiddenPreviews: inventoryComponentSchema.shape.characterPreviews.optional(),
+      selection: inspectorSelectionSchema,
+      panels: z.array(inventoryComponentSchema),
+      hiddenPreviews: inventoryComponentSchema.shape.characterPreviews,
     }),
     () =>
       dirty
@@ -414,9 +413,9 @@ export function bindComponentEditor(
       creating = saved.creating
       preset = saved.preset
       newType = saved.newType
-      panels = saved.panels ?? []
-      hiddenPreviews = saved.hiddenPreviews ?? {}
-      selection = saved.selection ?? inspectorSelectionSchema.parse({})
+      panels = saved.panels
+      hiddenPreviews = saved.hiddenPreviews
+      selection = saved.selection
       Object.assign(bindingPending, saved.bindingPending)
       dirty = true
       render()
@@ -434,18 +433,6 @@ export function bindComponentEditor(
     ],
     canNavigate: (id?: string, component?: string, add = false) =>
       same(id, component, add) || !dirty,
-    resumeDraft(entry: RecoveredComponent) {
-      newType = entry.component.type
-      draft = structuredClone(entry.component)
-      panels = structuredClone(entry.panels ?? [])
-      hiddenPreviews = structuredClone(entry.hiddenPreviews ?? {})
-      selection = inspectorSelectionSchema.parse({ slot: entry.slot })
-
-      if (draft.type === 'nearby')
-        Object.assign(selection, entry.nearby ?? { selected: Object.keys(draft.entries)[0] ?? '' })
-      dirty = true
-      render()
-    },
     startCreation(type: ComponentType, reference?: string) {
       if (!creating || dirty) return
       preset = reference

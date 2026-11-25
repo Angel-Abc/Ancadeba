@@ -11,7 +11,7 @@ import {
 import {
   Engine,
   GameLifecycle,
-  MapTradeState,
+  MapStateTransactions,
   assembleGameData,
   type EngineMessages,
 } from '@ancadeba/game-runtime'
@@ -177,9 +177,9 @@ async function setup(options: { unlimited?: boolean; adapter?: boolean; free?: b
             new Map<string, unknown>(rules.state.map((field) => [field.path[0]!, field.value])),
           createSceneState: () => undefined,
         }),
-      createTradeState: (game) =>
+      createStateTransactions: (game) =>
         game.state instanceof Map && options.adapter !== false
-          ? new MapTradeState(
+          ? new MapStateTransactions(
               game.state,
               rules.state.map((field) => field.path),
             )
@@ -446,7 +446,7 @@ describe('shop authoring and localization', () => {
   it('stages only declared numeric Map fields, detects stale preparation, and snapshots write requests', () => {
     const child = new Map<string, unknown>([['gold', 10]])
     const root = new Map<string, unknown>([['player', child]])
-    const adapter = new MapTradeState(root, [['player', 'gold']])
+    const adapter = new MapStateTransactions(root, [['player', 'gold']])
     expect(adapter.prepare([{ path: ['missing'], expected: 0, value: 1 }])).toBeUndefined()
     expect(adapter.prepare([{ path: ['player', 'gold'], expected: 9, value: 1 }])).toBeUndefined()
     expect(adapter.prepare([{ path: ['player', 'gold'], expected: 10, value: -1 }])).toBeUndefined()

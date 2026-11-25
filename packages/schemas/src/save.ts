@@ -109,7 +109,7 @@ export const savedCombatSchema = z.strictObject({
     z.strictObject({
       moves: z.array(plannedMove).max(1000),
       cursor: counter,
-      startCursor: counter.optional(),
+      startCursor: counter,
     }),
   ),
   statuses: record(
@@ -157,6 +157,15 @@ export const savedDialogueSchema = z.strictObject({
     .max(1000),
 })
 
+export const messageHistoryCapacity = 200
+
+const messageHistoryEntrySchema = z.strictObject({
+  kind: z.enum(['narration', 'dialogue', 'choice']),
+  text: z.string(),
+})
+
+export type MessageHistoryEntry = Readonly<z.infer<typeof messageHistoryEntrySchema>>
+
 export const gameSaveSchema = z.strictObject({
   'save-version': z.literal(1),
   slotName: z.string().trim().max(80).optional(),
@@ -168,6 +177,7 @@ export const gameSaveSchema = z.strictObject({
   inputContext: id.optional(),
   state: z.array(z.strictObject({ path: z.array(id).min(1), value: scalar })),
   log: z.array(z.string()),
+  messageHistory: z.array(messageHistoryEntrySchema).max(messageHistoryCapacity),
   inventory: inventorySchema.shape.items,
   progression: z.strictObject({ turn: counter, worldTimeMs: z.number().finite().nonnegative() }),
   combat: record(savedCombatSchema),
@@ -184,10 +194,8 @@ export const gameSaveSchema = z.strictObject({
     tracked: id.optional(),
   }),
   dialogue: z.record(z.string(), savedDialogueSchema),
-  /** Active-scene positions retained for compatibility with earlier save slots. */
-  maps: record(mapPositionSchema),
   /** Per-playthrough positions keyed by scene ID, then map-view component ID. */
-  mapPositions: record(record(mapPositionSchema)).optional(),
+  mapPositions: record(record(mapPositionSchema)),
   nearby: record(id),
   inventorySelection: record(id),
   activeDialogue: id.optional(),
@@ -195,7 +203,7 @@ export const gameSaveSchema = z.strictObject({
 
 export type GameSave = z.infer<typeof gameSaveSchema>
 
-export type SavedMapPositions = NonNullable<GameSave['mapPositions']>
+export type SavedMapPositions = GameSave['mapPositions']
 
 export type SavedCombat = z.infer<typeof savedCombatSchema>
 

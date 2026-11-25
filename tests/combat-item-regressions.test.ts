@@ -114,7 +114,7 @@ function resolve(
     seed: 1024,
     escape: false,
     plan,
-    enemies: { enemy: { moves: [], cursor: 0 } },
+    enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
   }
 
   const before = cloneCombatRules({ definition, current })

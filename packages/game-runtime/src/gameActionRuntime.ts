@@ -1,5 +1,6 @@
 import { GameQuests } from './quests.js'
 import { GameDialogue } from './dialogue.js'
+import type { GameMessageHistory } from './messageHistory.js'
 import type { IStoryStateTransactions } from './storyState.js'
 import { GameItemUse } from './itemUse.js'
 import { GameLeveling } from './leveling.js'
@@ -16,7 +17,6 @@ import { GameNearbyContext } from './nearbyContext.js'
 import { GameInventoryContext } from './inventoryContext.js'
 import { GameEquipment } from './equipment.js'
 import { GameTrading } from './trading.js'
-import type { ITradeState } from './tradeState.js'
 import type { IStateTransactions } from './stateTransactions.js'
 import { GameCombat } from './combat.js'
 import { GameBindings } from './gameBindings.js'
@@ -50,6 +50,10 @@ export class GameActionRuntime implements IGameRuntime {
   private paused = false
   private readonly timing: GameTiming
 
+  get messageHistory() {
+    return this.history?.entries
+  }
+
   setPaused(paused: boolean): void {
     this.paused = paused
     this.timing.setPaused(paused)
@@ -58,14 +62,14 @@ export class GameActionRuntime implements IGameRuntime {
 
   save(): Pick<
     GameSave,
-    'combat' | 'rewards' | 'quests' | 'dialogue' | 'maps' | 'mapPositions' | 'leveling'
+    'combat' | 'rewards' | 'quests' | 'dialogue' | 'mapPositions' | 'leveling' | 'messageHistory'
   > {
     return {
       combat: this.combat?.save() ?? {},
       rewards: this.combatRewards?.save() ?? {},
       quests: this.quests?.save() ?? { records: {} },
       dialogue: this.dialogue?.save() ?? {},
-      maps: this.mapMovement?.save(this.paused) ?? {},
+      messageHistory: this.history?.entries.slice() ?? [],
       mapPositions: this.mapMovement?.savePositions(this.paused) ?? {},
       leveling: this.leveling.save(),
     }
@@ -85,10 +89,7 @@ export class GameActionRuntime implements IGameRuntime {
       if (!this.leveling.snapshot(id)?.available)
         throw new Error('Invalid saved character progression')
 
-    this.mapMovement?.restorePositions(game.data, {
-      ...save.mapPositions,
-      [save.scene]: { ...save.maps, ...save.mapPositions?.[save.scene] },
-    })
+    this.mapMovement?.restorePositions(game.data, save.mapPositions)
 
     if (
       (!this.quests && (Object.keys(save.quests.records).length || save.quests.tracked)) ||
@@ -99,6 +100,7 @@ export class GameActionRuntime implements IGameRuntime {
     this.leveling.restore(save.leveling)
     this.quests?.restore(save.quests)
     this.dialogue?.restore(save.dialogue)
+    this.history?.restore(save.messageHistory)
     this.combatRewards?.restore(save.rewards)
     this.combat?.restore(save.combat, game.data)
   }
@@ -115,10 +117,10 @@ export class GameActionRuntime implements IGameRuntime {
     allocateTimerId: () => TimerId,
     private readonly onDispose: () => void,
     lifecycle?: IGameLifecycle,
-    tradeState?: ITradeState,
-    stateTransactions: IStateTransactions | undefined = tradeState,
+    stateTransactions?: IStateTransactions,
     updateAuthoredClock?: (worldTimeMs: number) => void,
     storyState?: IStoryStateTransactions,
+    private readonly history?: GameMessageHistory,
   ) {
     this.timing = new GameTiming(scheduler, clock)
     scheduler = this.timing
@@ -242,11 +244,7 @@ export class GameActionRuntime implements IGameRuntime {
             this.inventorySelection,
             game.inventory,
             this.bindings,
-            game.data.leveling?.size
-              ? this.leveling
-              : tradeState
-                ? { prepare: (writes) => this.combatStats.prepareState(writes, tradeState) }
-                : undefined,
+            numericState,
             () => this.bindings.invalidate(),
           )
         : undefined
@@ -284,7 +282,15 @@ export class GameActionRuntime implements IGameRuntime {
         : undefined
     this.dialogue =
       lifecycle && this.nearby && this.quests
-        ? new GameDialogue(game, lifecycle, this.nearby, this.bindings, this.quests, messages)
+        ? new GameDialogue(
+            game,
+            lifecycle,
+            this.nearby,
+            this.bindings,
+            this.quests,
+            messages,
+            history,
+          )
         : undefined
     this.actionBar = lifecycle
       ? new GameActionBar(

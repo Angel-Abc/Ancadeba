@@ -337,7 +337,7 @@ export function bindSceneControls(
       duplicateTitle: z.string(),
       duplicateComponentId: z.string(),
       replacement: z.string(),
-      operation: z.enum(operations).optional(),
+      operation: z.enum(operations),
     }),
     () =>
       dirty
@@ -359,7 +359,7 @@ export function bindSceneControls(
       duplicateId = saved.duplicateId
       duplicateTitle = saved.duplicateTitle
       duplicateComponentId = saved.duplicateComponentId
-      operation = saved.operation ?? (saved.replacement ? 'delete' : 'rename')
+      operation = saved.operation
       replacement = saved.replacement
       dirty = true
       render()

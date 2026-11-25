@@ -1,6 +1,5 @@
 import { levelingFile } from '@ancadeba/schemas'
 import { linkedTranslationFields } from './inspectorTranslations.js'
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -634,8 +633,8 @@ export function bindLevelingEditor(
     root,
     'leveling',
     z.object({
-      definitionOnly: z.boolean().optional(),
-      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
+      definitionOnly: z.boolean(),
+      entries: z.record(z.string(), z.number().int().nonnegative()),
       sceneId: z.string(),
       profileId: z.string(),
       componentId: z.string(),
@@ -647,8 +646,8 @@ export function bindLevelingEditor(
         ? { definitionOnly, entries, sceneId, profileId, componentId, draft, component }
         : undefined,
     (saved) => {
-      entries = saved.entries ?? {}
-      definitionOnly = saved.definitionOnly ?? false
+      entries = saved.entries
+      definitionOnly = saved.definitionOnly
       sceneId = saved.sceneId
       profileId = saved.profileId
       componentId = saved.componentId
@@ -661,14 +660,6 @@ export function bindLevelingEditor(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (definitionOnly || !openComponent) return []
-      const drafts = dirty && component ? [recoveredComponent(view, sceneId, component)] : []
-      definitionOnly = true
-      render()
-
-      return drafts
-    },
     rememberSelection() {
       const scene = sceneId
       const profile = profileId

@@ -7,6 +7,7 @@ const config = { editorServerUrl: 'http://127.0.0.1:3100', game: 'My Games/bound
 const available = {
   ...capabilities,
   features: {
+    ...capabilities.features,
     projectDiscovery: true,
     projectCreation: true,
     projectDuplication: true,
@@ -256,21 +257,15 @@ describe('MCP project discovery and creation HTTP operations', () => {
     await client.listProjects()
     await client.createProject(input)
 
-    for (const unavailable of [
-      undefined,
-      {},
-      { projectDiscovery: false, projectCreation: false },
-    ]) {
-      flags = unavailable
-      await expect(client.listProjects()).rejects.toMatchObject({
-        code: 'unsupported_discovery',
-        outcome: 'not_applied',
-      })
-      await expect(client.createProject(input)).rejects.toMatchObject({
-        code: 'unsupported_creation',
-        outcome: 'not_applied',
-      })
-    }
+    flags = capabilities.features
+    await expect(client.listProjects()).rejects.toMatchObject({
+      code: 'unsupported_discovery',
+      outcome: 'not_applied',
+    })
+    await expect(client.createProject(input)).rejects.toMatchObject({
+      code: 'unsupported_creation',
+      outcome: 'not_applied',
+    })
 
     expect(requests).toBe(2)
   })
@@ -281,7 +276,7 @@ describe('MCP project discovery and creation HTTP operations', () => {
       [503, 'unsupported_creation', 'not_applied', 'not_applied'],
       [500, 'project_creation_uncertain', 'unknown', 'unknown'],
       [500, 'project_cleanup_failed', 'not_applied', 'unknown'],
-      [404, 'not_found', undefined, 'unknown'],
+      [404, 'not_found', 'unknown', 'unknown'],
     ] as const) {
       let posts = 0
 
@@ -289,10 +284,7 @@ describe('MCP project discovery and creation HTTP operations', () => {
         if (requestUrl(url).endsWith('capabilities')) return json(available)
         posts++
 
-        return json(
-          { error: 'Creation failed', code, ...(declared ? { outcome: declared } : {}) },
-          status,
-        )
+        return json({ error: 'Creation failed', code, diagnostics: [], outcome: declared }, status)
       })
 
       await expect(client.createProject(input)).rejects.toMatchObject({ status, code, outcome })

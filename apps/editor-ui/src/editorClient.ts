@@ -99,7 +99,7 @@ export class HttpEditorClient implements IEditorClient {
     if (!response.ok) {
       const failure = apiErrorSchema.safeParse(await response.json())
       throw new EditorClientError(
-        failure.success ? (failure.data.code ?? 'request_failed') : 'request_failed',
+        failure.success ? failure.data.code : 'request_failed',
         failure.success ? failure.data.error : 'Project export failed',
         failure.success ? failure.data.diagnostics : [],
       )
@@ -283,7 +283,7 @@ export class HttpEditorClient implements IEditorClient {
     if (!response.ok) {
       const parsed = apiErrorSchema.safeParse(value)
       throw new EditorClientError(
-        parsed.success ? (parsed.data.code ?? 'request_failed') : 'request_failed',
+        parsed.success ? parsed.data.code : 'request_failed',
         parsed.success ? parsed.data.error : 'Editor request failed',
         parsed.success ? parsed.data.diagnostics : [],
       )

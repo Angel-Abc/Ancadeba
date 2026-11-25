@@ -582,7 +582,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     'ancadeba_update_game_metadata',
     {
       description:
-        'Save game metadata, the appearance library and character profile. To edit appearances, supply the complete presets and characters dictionaries in appearances. Supply every literal metadata field and expectedRevision from inspection. Optional titleKey and descriptionKey assign translations; null removes a key, omission preserves it.',
+        'Save game metadata, the appearance library and character profile. To edit appearances, supply the complete presets and characters dictionaries in appearances. Supply every literal metadata field and expectedRevision from inspection. Include titleKey and descriptionKey to keep their translations. Omit a key or send null to clear it.',
       inputSchema: gameMetadata.omit({ type: true }).extend(revision),
       outputSchema: resultSchema(changeSummarySchema),
       annotations: writeAnnotations,
@@ -606,7 +606,7 @@ export function createMcpServer(api: IEditorApi, gamePath: string | null): McpSe
     'ancadeba_update_scene_metadata',
     {
       description:
-        'Save an existing scene title and description. Supply both literal fields, sceneId, and expectedRevision. Optional titleKey and descriptionKey assign translations; null removes a key, omission preserves it.',
+        'Save an existing scene title and description. Supply both literal fields, sceneId, and expectedRevision. Include titleKey and descriptionKey to keep their translations. Omit a key or send null to clear it.',
       inputSchema: sceneMetadata.omit({ type: true }).extend(revision),
       outputSchema: resultSchema(changeSummarySchema),
       annotations: writeAnnotations,

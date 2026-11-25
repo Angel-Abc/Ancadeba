@@ -271,8 +271,8 @@ The pipeline is `JSON files → validated definitions → assembled game data`.
 `description`, `version`, and a `scenes` array of unique IDs. IDs contain only
 letters, digits, underscores, and hyphens. An empty scene list is valid.
 The optional `initial-scene` property selects the startup scene by ID and must
-reference an entry in `scenes`. Older manifests without it open the first listed
-scene in the browser hosts.
+reference an entry in `scenes`. Without an explicit startup scene, the browser opens the first listed
+scene.
 
 `GameLoader` uses an injected `IJsonResourceLoader` to load `game.json`, then
 `scenes/<id>.json` for each reference. The current scene format supports
@@ -595,7 +595,7 @@ that view's remembered location before the destination renders, without running
 tile-entry triggers or waiting for movement. Other map views keep their positions.
 Without `position`, transitions retain their existing resume/spawn behavior.
 For Rules effects with `mapView`, travel charges world time from the entrance
-terrain; legacy effects without coordinates continue to use the spawn's terrain.
+terrain. When coordinates are omitted, the spawn tile supplies the terrain.
 The editor exposes **Place player at destination tile** and **Destination tile X/Y**
 for Rules effects, scene buttons, and action-bar navigation. These positions are
 included in normal playthrough persistence and saved games.
@@ -980,8 +980,7 @@ types produce structured diagnostics instead of throwing or exposing mutable val
 
 Placeholder aliases contain letters, digits, underscores, or hyphens; whitespace
 inside `{{ health }}` is allowed. Complete brace pairs must name a declared alias
-when `bindings` is present. Without `bindings`, all text remains literal for
-compatibility. Scene validation rejects game bindings in stand-alone scenes.
+when `bindings` is present. Without `bindings`, the text is literal. Scene validation rejects game bindings in stand-alone scenes.
 This is an additive extension of the existing scene format version.
 
 Use `game.bindings.read(binding)` to obtain either `{ status: 'resolved', value }`
@@ -1351,7 +1350,7 @@ There are five manual save slots. Choose a **Save slot**, optionally enter a
 **Save name** (up to 80 characters),
 then use **Save progress** or **Load progress**. Saving replaces only the selected
 slot on this browser and device. Reloading preserves all slots and initially selects
-slot 1; existing single-slot saves remain in slot 1. Loading resumes the saved
+slot 1. Loading resumes the saved
 gameplay scene; the Basic Game's main-menu **Load Game** button and authored save/load
 buttons use the selected slot too. Loading while a playthrough is open asks before
 replacing unsaved progress. Starting **New game** leaves all manual slots intact.
@@ -1424,8 +1423,7 @@ an occupied slot. Importing leaves the current playthrough unchanged; use **Load
 progress** to resume the imported game. Files can transfer progress between devices,
 browsers, preview and published games with matching game and gameplay versions.
 Files are limited to 5 MiB of UTF-8 JSON. Invalid or incompatible imports preserve
-both the previous slot and current progress. Files with older full-content
-fingerprints are incompatible and are not upgraded.
+both the previous slot and current progress.
 
 Snapshots include authored state and activity logs, inventory placements and
 consumed/generated items, equipment, gold, XP and level receipts, turn/world-time
@@ -1441,9 +1439,7 @@ current playthrough, keyed by scene ID and component ID. Leaving for another sce
 an inventory screen, or a stand-alone menu and returning resumes that location.
 Leaving during a timed step cancels the step and keeps the last completed tile.
 Unvisited views start at their authored spawn; starting a new game resets positions.
-Other scene-local state follows the normal scene-lifetime rules. Older save slots
-containing only the active scene's map positions still load; unrecorded scenes use
-their authored spawns.
+Other scene-local state follows the normal scene-lifetime rules.
 
 The save format is versioned and validated before replacing the current game.
 Saves must match the game ID, game version, and a fingerprint of the gameplay
@@ -1458,11 +1454,9 @@ their saved values. A removed saved language falls back to the currently selecte
 language or the game's default. Bumping the game version still invalidates saves.
 
 Adding, removing, or editing scene background components preserves the gameplay
-fingerprint. A save written by an earlier engine with a background still loads
-against its original definitions. Saving it again applies the new fingerprint.
+fingerprint.
 
-Saves use a `gameplay-v1:` content fingerprint. Older full-content fingerprints
-are incompatible; there is no upgrade path for those slots.
+Saves use a `gameplay-v1:` content fingerprint.
 Invalid, damaged, incompatible, or oversized saves show an error and preserve the
 current playthrough. Storage failures, including blocked storage and quota errors,
 never report success. Slots are separated by browser origin and game location;
@@ -2251,7 +2245,7 @@ Take on D, using the same configurable input system as other slots.
 ## Combat encounters
 
 List encounter IDs in `game.json`, for example `"combat": ["training"]`.
-Each resolves to `combat/<id>.json`. Existing projects need no combat files or migration.
+Each resolves to `combat/<id>.json`. Combat files are optional.
 The [basic training encounter](sample-games/basic/combat/training.json) includes
 translated names and combat messages; the graphics sample adds catalog portraits.
 Enter the courtyard from the museum with G, or from the graphics wardrobe with R.
@@ -2320,7 +2314,7 @@ Code-hosted games can supply `EngineRuntimeServices.createStateTransactions`, us
 `MapStateTransactions` or implementing `IStateTransactions`. Preparation must be
 pure; prepared commits must be synchronous, infallible, and invoke no observers.
 Without an adapter, inspection works and combat mutations show an unavailable
-reason. The previous `createTradeState` hook remains compatible.
+reason.
 
 The editor's **Combat** section configures encounters, actors, health declarations,
 portraits, moves, rotations, seed, time cost, localized messages, outcome scenes,
@@ -2510,8 +2504,7 @@ Use **Combat** in the editor to add statuses, then ability moves and ordered
 effects. Configure their cooldowns, targets, amounts, translations, and icons.
 Existing action-bar and leveling controls can reference those moves. Saves keep
 revision checks, conflicting drafts, extension properties, and reference
-protection. Definitions load and export through existing combat files without
-migration.
+protection. Definitions load and export through combat files.
 
 Both samples demonstrate abilities in **Advanced training**. Its existing input
 file maps W to Poison Strike, E to Stunning Blow, S to Use item, F to Regenerate,
@@ -2580,8 +2573,8 @@ without assuming a queued buff or cleanse will make future actions cheaper.
 Snapshots expose immutable `ap` and per-actor `moveCosts` alongside `remainingAp`.
 Combat views, queued previews, action availability and combat item details show
 effective costs. Status badges show stacks, intensity and scaled magnitudes.
-Save/load preserves strength and duration, rejects duplicates/out-of-range values,
-and treats older status records without strength fields as one stack/intensity.
+Save/load preserves duration and each configured strength field. Duplicate statuses,
+missing configured strengths and out-of-range values fail validation.
 Rejected round candidates preserve all status/AP-related state and queued items.
 
 The editor's status controls configure stacking policy, intensity and composite
@@ -2635,8 +2628,7 @@ Conditions support `resource` with a resource ID, `health` with an actor ID,
 `status` with actor/status IDs and `measure: "stacks" | "intensity"`, and `phase`
 with a phase ID. Numeric conditions use `eq`, `gte`, `lte`, `gt` or `lt` against
 a nonnegative integer `value`. Status measure defaults to stacks. Missing
-statuses count as zero; active legacy statuses without explicit strength count
-as one. Empty conditions match unconditionally. References are checked against
+statuses count as zero. An active status counts as one for a strength it does not configure. Empty conditions match unconditionally. References are checked against
 the resolved encounter, including shared resources, statuses and phases.
 
 When no matching rule can act, `fallback: "rotation"` (the default) uses the
@@ -2757,7 +2749,7 @@ This heals `4 + 0.1 × stamina − 2 × Exhausted intensity`, before any percent
 healing modifier. Resource terms use the current amount by default, or
 `measure: "percent"` for an exact percentage of the resource maximum. Status
 terms read stacks, intensity (the default), or remaining turns. Missing statuses
-count as zero; legacy active strength is one. `self`/`target` mean the acting
+count as zero. Active statuses count as one for an unconfigured strength. `self`/`target` mean the acting
 combatant and selected action recipient; named encounter actor IDs also work.
 
 Each formula supports 1–20 terms, with coefficients from −10,000 to 10,000 and
@@ -2905,8 +2897,7 @@ Unlike manual repeat, scenario replay never silently drops actions by default.
 Root `expect` runs after all steps. Checks support outcome (`planning`, `victory`,
 `defeat`, `escaped`), phase, health, guard, resource, status strength/duration,
 completed rounds, and whether a named once-only trigger fired. Numeric checks use
-`eq`, `gte`, `lte`, `gt` or `lt`. Absent statuses count as zero; legacy active
-strength defaults to one. At least one checkpoint or final check is required.
+`eq`, `gte`, `lte`, `gt` or `lt`. Absent statuses count as zero. An unconfigured strength on an active status counts as one. At least one checkpoint or final check is required.
 Checks use authoritative state rather than debug frames, so trace truncation
 cannot hide a failure. A run reports **Passed**, **Failed checks** with actual and
 expected values, or **Could not run** for invalid references, setup, unavailable
@@ -3129,7 +3120,7 @@ if a cost itself ends combat, the paid action's item is consumed. Costs and gain
 stay local to the encounter rather than writing numeric world-state fields.
 
 Trigger events are `encounter-start`, `round-start`, `round-end`, `turn-start`,
-`turn-end`, `action-resolved`, `before-action`, `after-action`, `status-applied`,
+`turn-end`, `before-action`, `after-action`, `status-applied`,
 `status-refreshed`, `status-removed`, `status-expired`, `status-changed`,
 `damage-received`, `damage-dealt`, `damage-resolved`, `healing-received`,
 `healing-dealt`, `healing-resolved`, `resource-changed`, and `phase-enter`.
@@ -3174,7 +3165,7 @@ evaluate it against the live state immediately before execution.
 
 Before-action runs before costs and rechecks AP, resources, stun and living
 targets afterward. Blocked actions spend no action costs/RNG and skip after-action;
-successful actions emit action-resolved followed by after-action. Terminal outcomes
+successful actions emit after-action. Terminal outcomes
 stop further hooks. Status mutation emits its specific event followed by
 status-changed; partial stack removal/duration ticks emit status-changed alone.
 No-op changes emit nothing. Queued hooks preserve transaction rollback and
@@ -3211,7 +3202,7 @@ phase's rotation when it falls back before an action.
 
 Turn-start triggers run before periodic status damage/regeneration and stun
 checks. Damage-received fires for positive actual health damage, including
-periodic damage; its actor is the recipient. Action-resolved fires after an
+periodic damage; its actor is the recipient. After-action fires after an
 executed action, including a zero-effect non-item action. Turn-end triggers run
 before status-duration expiry, and round-end runs after all actor turns.
 Terminal outcomes suppress further events/actions. Escape and an already
@@ -3222,8 +3213,7 @@ player-health defeat. Final triggered victory uses the existing reward pipeline.
 
 Meters, active phase, initialization and once-only trigger history belong to the
 playthrough's encounter session. They pause between scenes, survive saves and
-remain visible after completion; New Game resets them. Earlier saves without
-mechanics state initialize it from the encounter definition. Restoration rejects
+remain visible after completion. New Game resets them. Restoration rejects
 unknown resource/phase/trigger references and out-of-range values. The round
 simulator clones all mechanics state, so rejected health/item/progression commits
 also retain previous meters, phases, trigger history, plans and RNG.
@@ -3402,15 +3392,13 @@ exhaustion, damage, reactive healing and three-seal scenarios remain available.
 Combat libraries may also contain a `rulesets` record. Each ruleset defines shared
 `mechanics`, presentation text/translation keys and named `actors` roles. Declare
 the library in `game.json` under `combatLibraries`, as for shared moves/statuses.
-An encounter selects one base ruleset and may supply sparse local overrides:
+An encounter can select a single ruleset in its `rulesets` array and supply local overrides.
 
 ```json
 {
-  "ruleset": {
-    "library": "environments",
-    "id": "underwater",
-    "actors": { "swimmer": "player" }
-  },
+  "rulesets": [
+    { "library": "environments", "id": "underwater", "actors": { "swimmer": "player" } }
+  ],
   "mechanicsOverrides": {
     "resources": { "stamina": { "initial": 60, "maximum": 80 } },
     "triggers": {
@@ -3450,27 +3438,25 @@ Authored local definitions and explicit imports take precedence over these impli
 dependencies. Final validation checks the resulting actors, available moves,
 statuses, resource costs and phase rotations after overrides and exclusions.
 
-An encounter uses either inline `mechanics` or a `ruleset` plus optional
+An encounter uses either inline `mechanics` or a `rulesets` array plus optional
 `mechanicsOverrides`. Combining both is rejected. Each encounter receives its own
 resolved, immutable definition and playthrough state; modifying or completing one
 does not change another's meters, phase or trigger history. Shared source edits
-participate in normal save compatibility checks. There is one base ruleset per
-encounter, without recursive ruleset inheritance.
+participate in normal save compatibility checks.
 
 In the Combat editor, create/edit rulesets inside **Combat libraries → Reusable
 combat rulesets**. Declare actor roles, then use the existing structured mechanics
-controls. In an encounter, choose **Combat ruleset** and bind its roles. The form
+controls. In an encounter, choose **Ruleset to add**, click **Add ruleset layer** and bind its roles. The form
 shows effective mechanics and inherited/local/excluded entries; editing those
 mechanics writes only local differences. Reset an entry or all overrides to follow
 the library again. Changes to inherited fields appear after a shared library save;
-overridden fields retain their local values. Choosing inline mechanics detaches a
-copy and preserves shared move/status dependencies explicitly. Selecting another
-ruleset starts with that ruleset's defaults and clears previous local mechanics.
+overridden fields retain their local values. **Detach composition to inline mechanics** copies the effective mechanics and preserves
+shared move/status dependencies explicitly.
 
 Revision-checked saves retain source references, sparse overrides, and extension
 data rather than flattening inherited definitions into encounter files. Saving a
-previously linked encounter requires its `ruleset` reference explicitly; use
-`ruleset: null` with inline mechanics to detach. Include `mechanicsOverrides`
+linked encounter requires its `rulesets` array. Use `rulesets: []` with inline
+mechanics to detach. Include `mechanicsOverrides`
 explicitly when saving existing overrides; `{}` resets them. Likewise, libraries
 that contain rulesets require the `rulesets` field on update; `{}` removes them
 when unreferenced. Reference checks prevent deleting a used ruleset or publishing
@@ -3478,8 +3464,7 @@ a shared edit that would invalidate a referencing encounter.
 
 ### Composing encounter rulesets
 
-Use an ordered `rulesets` array to combine reusable mechanics. The existing
-single `ruleset` field remains supported; choose one source form. Each layer has
+Use an ordered `rulesets` array to combine reusable mechanics. Each layer has
 its own actor-role bindings. For example, the new
 [underwater boss](sample-games/combat-mechanics/combat/underwater-boss.json)
 combines environmental exhaustion with the three-seal objective:
@@ -3527,10 +3512,9 @@ can deliberately replace them. If an available move has multiple candidate
 libraries and no owning mechanic, import it explicitly. Local overrides adding
 new dependencies can use a unique provider among the selected libraries.
 
-In **Combat**, choose **Compose rulesets**, then **Ruleset to add → Add ruleset
+In **Combat**, choose **Ruleset to add → Add ruleset
 layer**. Each layer has a picker, actor bindings, collision policy and up/down/
-remove controls. Existing single references convert without materializing their
-mechanics. The effective mechanics form edits encounter overrides, with entry and
+remove controls. The effective mechanics form edits encounter overrides, with entry and
 setting resets. **Detach composition to inline mechanics** keeps the resolved
 mechanics and explicit shared dependencies. Removing the last layer also detaches.
 Normal revision checks, source-extension preservation, draft recovery, library
@@ -3615,7 +3599,6 @@ cooldowns, RNG, and outcomes remain independent for every encounter/playthrough.
 
 Both samples use `common` in training and advanced training. **S** in training
 queues the shared Poison Strike; heavy/power strikes stay local variants.
-Automatic extraction and bulk migration of existing encounters are deferred.
 
 ## Usable items and consumables
 
@@ -3693,7 +3676,7 @@ Both samples demonstrate the four item types. Use **Z** in training, **S** in
 advanced training, and **A** in the inventory/wardrobe. The graphics sample includes
 catalog artwork and a dyed potion nested inside the travel pack.
 
-Existing games need no migration. V1 uses individual finite instances and
+V1 uses individual finite instances and
 player-controlled use. Quantities, charges, durability, enemy item use, ally
 targeting, persistent outside-combat statuses and world-time cooldowns are deferred.
 
@@ -3974,8 +3957,7 @@ through its inventory action bar. The graphics wardrobe compares cloaks and
 demonstrates damage, defense, Guard, maximum health, dyes, and paper-doll updates.
 Its training encounter retains the loadout lock when paused back to the wardrobe.
 
-Games without profiles keep their existing combat behavior and require no
-migration. Negative flat stat bonuses, critical
+Negative flat stat bonuses, critical
 hits, durability, set bonuses, and equipment changes
 during unfinished combat are deferred.
 

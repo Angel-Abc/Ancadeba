@@ -455,6 +455,7 @@ describe('project editor controller', () => {
       return new Response(
         JSON.stringify({
           error: 'Invalid project',
+          outcome: 'not_applied',
           code: 'invalid_project',
           diagnostics: [
             { code: 'invalid_document', file: 'game.json', path: ['title'], message: 'Required' },

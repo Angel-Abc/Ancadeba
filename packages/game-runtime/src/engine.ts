@@ -12,10 +12,10 @@ import { InputController, type IGameInput } from './input.js'
 import { TimerService, type ITimerService } from './timers.js'
 import type { GameRulesFactory, IGameActions } from './actions.js'
 import { GameLifecycle, type GameInstance, type IGameLifecycle } from './gameLifecycle.js'
+import { GameMessageHistory } from './messageHistory.js'
 import { GameActionRuntime } from './gameActionRuntime.js'
 import { GameMessageScopes } from './gameMessageScope.js'
 import { AuthoredPlaythrough } from './authoredRules.js'
-import type { ITradeState } from './tradeState.js'
 import type { IStoryStateTransactions } from './storyState.js'
 import type { IStateTransactions } from './stateTransactions.js'
 import type { GameSaves, GameSaveStore, IGameSaves } from './gameSaves.js'
@@ -31,7 +31,6 @@ export interface EngineRuntimeServices {
     game: GameInstance,
   ) => IStoryStateTransactions | undefined
   readonly createStateTransactions?: (game: GameInstance) => IStateTransactions | undefined
-  readonly createTradeState?: (game: GameInstance) => ITradeState | undefined
   readonly createGameRules?: GameRulesFactory
   /** Return a fresh lifecycle for each loaded engine session. */
   readonly createGameLifecycle?: (game: GameData) => IGameLifecycle | undefined
@@ -222,6 +221,12 @@ export class Engine implements IEngine {
 
       const playthroughs = new WeakMap<object, AuthoredPlaythrough>()
 
+      const hasMessageHistory = [...game.scenes.values()].some((scene) =>
+        scene.components.some((component) => component.type === 'message-history'),
+      )
+
+      const createHistory = () => (hasMessageHistory ? new GameMessageHistory() : undefined)
+
       const playthroughFor = (instance: GameInstance) =>
         instance.state instanceof Map ? playthroughs.get(instance.state) : undefined
 
@@ -230,7 +235,7 @@ export class Engine implements IEngine {
         new GameLifecycle(game, {
           createGameState: () => {
             if (!authored) return undefined
-            const playthrough = new AuthoredPlaythrough(authored, game)
+            const playthrough = new AuthoredPlaythrough(authored, game, createHistory())
             playthroughs.set(playthrough.state, playthrough)
 
             return playthrough.state
@@ -260,7 +265,7 @@ export class Engine implements IEngine {
           lifecycle.currentGame === instance
 
         const stateTransactions =
-          playthrough?.tradeState ?? this.runtime.createStateTransactions?.(instance)
+          playthrough?.stateTransactions ?? this.runtime.createStateTransactions?.(instance)
 
         const runtime = new GameActionRuntime(
           instance,
@@ -278,10 +283,10 @@ export class Engine implements IEngine {
           () => ++session.nextTimerId,
           () => session.gameRuntimes.delete(instance),
           gameplay,
-          this.runtime.createTradeState?.(instance) ?? stateTransactions,
           stateTransactions,
           playthrough ? (time) => playthrough.updateClock(time) : undefined,
           playthrough?.storyState ?? this.runtime.createStoryStateTransactions?.(instance),
+          playthrough ? playthrough.history : createHistory(),
         )
 
         session.gameRuntimes.set(instance, runtime)
@@ -293,7 +298,6 @@ export class Engine implements IEngine {
         this.runtime.saveStore &&
         !this.runtime.createGameLifecycle &&
         !this.runtime.createGameRules &&
-        !this.runtime.createTradeState &&
         !this.runtime.createStateTransactions &&
         !this.runtime.createStoryStateTransactions
       ) {

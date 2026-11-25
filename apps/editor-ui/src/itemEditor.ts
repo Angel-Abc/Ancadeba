@@ -1,4 +1,3 @@
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { itemViewFields } from './itemViewFields.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -486,16 +485,6 @@ export function bindItemEditor(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (!dirty || !component || !target.startsWith('view:')) return []
-      const entry = { ...recoveredComponent(view, sceneId, component), hiddenPreviews }
-
-      if (creating) delete entry.existingId
-      target = ''
-      reset()
-
-      return [entry]
-    },
     canNavigate: (nextScene?: string, nextComponent?: string) =>
       !(nextComponent && definitions && (dirty || inventoryEditor.hasDrafts())) &&
       (((!nextScene || nextScene === sceneId) &&

@@ -139,7 +139,7 @@ function resolve(
       guard: {},
       escape: false,
       plan: moves.map((move) => ({ move, target: 'enemy' })),
-      enemies: { enemy: { moves: [], cursor: 0 } },
+      enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
       ...options,
     },
     frames
@@ -428,7 +428,7 @@ describe('damage types and defenses', () => {
     expect(result.health.enemy).toBe(82)
   })
 
-  it('keeps legacy physical damage and previews compatible when no typed defenses apply', () => {
+  it('resolves physical damage and previews its range when no typed defenses apply', () => {
     const definition = fixture()
     expect(combatMoveValues(definition.moves.physical!)).toEqual({ min: 10, max: 10 })
     const result = resolve(definition, ['physical'])

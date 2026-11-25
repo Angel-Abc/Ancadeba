@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vite-plus/test'
 import {
   combatLibrarySchema,
   combatSourceSchema,
-  combatRulesetReferences,
   cloneCombatRules,
   resolveCombatRuleset,
   resolveCombatSource,
@@ -176,11 +175,8 @@ function project(
 }
 
 describe('ordered reusable ruleset composition', () => {
-  it('rejects mixed modes, duplicate/excessive layers and orphan overrides while preserving legacy sources', () => {
+  it('rejects mixed modes, duplicate/excessive layers and orphan overrides', () => {
     const { source } = fixture()
-    expect(combatSourceSchema.safeParse({ ...source, ruleset: source.rulesets![0] }).success).toBe(
-      false,
-    )
     expect(combatSourceSchema.safeParse({ ...source, mechanics: {} }).success).toBe(false)
     expect(
       combatSourceSchema.safeParse({
@@ -200,16 +196,6 @@ describe('ordered reusable ruleset composition', () => {
         })),
       }).success,
     ).toBe(false)
-
-    const legacy = combatSourceSchema.parse({
-      ...source,
-      rulesets: undefined,
-      ruleset: source.rulesets![0],
-    })
-
-    expect(legacy.ruleset).toEqual(source.rulesets![0])
-    expect(legacy.rulesets).toBeUndefined()
-    expect(combatRulesetReferences(legacy)).toEqual([legacy.ruleset])
   })
 
   it('composes bound mechanics across libraries, imports dependencies from their owner and keeps objective victory in either order', () => {
@@ -441,7 +427,6 @@ describe('ordered reusable ruleset composition', () => {
     const saved = applyCommand(original, { type: 'game.upsertCombat', encounter: edited })
     const raw = object(saved.project.documents['combat/drowned.json'])
     expect(raw.mechanics).toBeUndefined()
-    expect(raw.ruleset).toBeUndefined()
     expect(raw.rulesets).toMatchObject([
       { library: 'bosses', extension: 'layer-1' },
       { library: 'ocean', extension: 'layer-0' },
@@ -455,47 +440,6 @@ describe('ordered reusable ruleset composition', () => {
         encounter: { ...edited, mechanicsOverrides: undefined },
       }),
     ).toThrow('Include mechanicsOverrides explicitly')
-  })
-
-  it('keeps the resolved result identical when migrating a legacy single reference to one layer', () => {
-    const { source, water, boss } = fixture()
-
-    const merged = combatLibrarySchema.parse({
-      ...water,
-      moves: { ...water.moves, ...boss.moves },
-      statuses: { ...water.statuses, ...boss.statuses },
-      rulesets: {
-        all: {
-          actors: ['diver', 'guardian'],
-          mechanics: resolveCombatRuleset(
-            source,
-            new Map([
-              ['ocean', water],
-              ['bosses', boss],
-            ]),
-          ).base,
-        },
-      },
-    })
-
-    const libraries = new Map([['ocean', merged]])
-
-    const legacy = combatSourceSchema.parse({
-      ...source,
-      rulesets: undefined,
-      ruleset: { library: 'ocean', id: 'all' },
-    })
-
-    const composed = combatSourceSchema.parse({
-      ...legacy,
-      ruleset: null,
-      rulesets: [legacy.ruleset],
-    })
-
-    expect(resolveCombatSource(legacy, libraries).issues).toEqual([])
-    expect(resolveCombatSource(composed, libraries).definition).toEqual(
-      resolveCombatSource(legacy, libraries).definition,
-    )
   })
 })
 

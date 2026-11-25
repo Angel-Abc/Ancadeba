@@ -38,25 +38,15 @@ export const combatRulesetSchema = z.object({
 
 export type CombatRuleset = z.infer<typeof combatRulesetSchema>
 
-export const combatRulesetReferenceSchema = z.object({
+/** Later layers replace colliding entries only when explicitly requested. */
+export const combatRulesetLayerSchema = z.object({
   library: id,
   id,
   actors: z.record(id, id).optional(),
-})
-
-/** Later layers replace colliding entries only when explicitly requested. */
-export const combatRulesetLayerSchema = combatRulesetReferenceSchema.extend({
   collision: z.enum(['error', 'replace']).optional(),
 })
 
 export type CombatRulesetLayer = z.infer<typeof combatRulesetLayerSchema>
-
-export function combatRulesetReferences(source: {
-  ruleset?: z.infer<typeof combatRulesetReferenceSchema> | null | undefined
-  rulesets?: readonly CombatRulesetLayer[] | undefined
-}): readonly CombatRulesetLayer[] {
-  return source.rulesets ?? (source.ruleset ? [source.ruleset] : [])
-}
 
 const presentationOverride = {
   label: z.string().optional(),

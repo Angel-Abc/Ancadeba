@@ -1593,6 +1593,44 @@ function flush(engine: Engine): void {
 }
 
 describe('scene renderer', () => {
+  it('reads the playthrough history from the pause menu and keeps earlier messages in their original language', async () => {
+    const document = new TestDocument()
+    const target = document.createElement('main')
+
+    const engine = new Engine(
+      loader,
+      new DomEngineHost(target.asElement()),
+      logger,
+      () => new MessageBus<EngineMessages>(),
+      timing,
+    )
+
+    onTestFinished(() => engine.stop())
+    await engine.start()
+    startSampleGame(target)
+    const lifecycle = engine.lifecycle!
+    const scene = lifecycle.activeScene!
+    const game = lifecycle.currentGame!
+    game.nearby!.select(scene, 'nearby', 'curator')
+    game.dialogue!.request(scene, 'nearby', { type: 'start' })
+    flush(engine)
+    game.dialogue!.request(scene, 'nearby', { type: 'choose', position: 1 })
+    flush(engine)
+    lifecycle.openMenu!('game-menu')
+    const log = () => target.find((node) => node.getAttribute('role') === 'log')!
+    expect(log().tabIndex).toBe(0)
+    expect(
+      log()
+        .querySelectorAll('p')
+        .map((p) => p.textContent),
+    ).toEqual(game.messageHistory!.map(({ text }) => text))
+    expect(log().querySelector('.ancadeba-message-history-choice')?.textContent).toBe(
+      'You: I will survey the harbour.',
+    )
+    game.data.localization!.select('nl')
+    expect(log().getAttribute('aria-label')).toBe('Berichtgeschiedenis')
+    expect(log().textContent).toContain('You: I will survey the harbour.')
+  })
   it.each([false, true])(
     'shows action information on hover and focus, including live unavailable reasons in preview=%s',
     async (preview) => {

@@ -152,7 +152,7 @@ function resolve(
       guard: {},
       seed: 1024,
       escape: false,
-      enemies: { enemy: { moves: [], cursor: 0 } },
+      enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
       plan: moves.map((move) => ({
         move,
         target:

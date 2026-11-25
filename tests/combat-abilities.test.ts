@@ -179,7 +179,7 @@ const simulate = (
     guard: {},
     seed: 1024,
     plan: plan(moves),
-    enemies: { enemy: { cursor: 0, moves: [] } },
+    enemies: { enemy: { startCursor: 0, cursor: 0, moves: [] } },
     escape: false,
     ...options,
   })
@@ -404,7 +404,7 @@ describe('ability round simulation', () => {
     expect(simulate(['focus', 'guard']).guard.player).toBe(3)
 
     const weak = simulate(['weaken'], {
-      enemies: { enemy: { cursor: 0, moves: plan(['attack', 'attack'], 'enemy') } },
+      enemies: { enemy: { startCursor: 0, cursor: 0, moves: plan(['attack', 'attack'], 'enemy') } },
     })
 
     expect(weak.health.player).toBe(36)
@@ -433,7 +433,7 @@ describe('ability round simulation', () => {
   it('stuns the upcoming enemy turn, still ticks periodic effects, and does not start skipped cooldowns', () => {
     const result = simulate(['stun'], {
       statuses: { enemy: [active('poison', 2)] },
-      enemies: { enemy: { cursor: 0, moves: plan(['stun'], 'enemy') } },
+      enemies: { enemy: { startCursor: 0, cursor: 0, moves: plan(['stun'], 'enemy') } },
     })
 
     expect(result.health.player).toBe(40)

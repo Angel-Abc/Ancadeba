@@ -1461,6 +1461,19 @@ describe('adding scene components', () => {
     expect(Number(field('Row span').value)).toBeLessThanOrEqual(6)
   })
 
+  it('adds a message history panel to a scene and saves its label', () => {
+    const { edit, submit, persist } = addingComponentPanel()
+    edit('Component type', 'message-history')
+    edit('Label', 'Travel journal')
+    submit('Create component')
+    const view = persist()
+    expect(view.diagnostics).toEqual([])
+    expect(view.scenes[0]!.components.at(-1)).toMatchObject({
+      type: 'message-history',
+      label: 'Travel journal',
+    })
+  })
+
   it('creates a text component, selects it after saving, and edits it without creating a duplicate', () => {
     const { editor, edit, submit, commands, persist, created, root } = addingComponentPanel()
     edit('Component ID', 'greeting')
@@ -5846,18 +5859,21 @@ describe('editor draft workflows', () => {
     expect(ui.read().diagnostics).toEqual([])
 
     ui.click('Add encounter')
-    ui.edit('Combat ruleset', 'common/underwater')
+    ui.edit('Ruleset to add', 'common/underwater')
+    ui.click('Add ruleset layer')
     expect(ui.field('Actor for role player').value).toBe('player')
     expect(ui.field('Actor for role enemy').value).toBe('opponent')
     ui.edit('Maximum value', '30', 'stamina')
     ui.submit('Save combat encounter')
     await ui.flush()
     expect(ui.read().combatSources?.training).toMatchObject({
-      ruleset: {
-        library: 'common',
-        id: 'underwater',
-        actors: { player: 'player', enemy: 'opponent' },
-      },
+      rulesets: [
+        {
+          library: 'common',
+          id: 'underwater',
+          actors: { player: 'player', enemy: 'opponent' },
+        },
+      ],
       mechanicsOverrides: { resources: { stamina: { maximum: 30 } } },
     })
     expect(ui.read().combatSources?.training?.mechanics).toBeUndefined()
@@ -5876,7 +5892,8 @@ describe('editor draft workflows', () => {
     expect(ui.field('Maximum value', 'stamina').value).toBe('30')
 
     ui.click('Add encounter')
-    ui.edit('Combat ruleset', 'common/underwater')
+    ui.edit('Ruleset to add', 'common/underwater')
+    ui.click('Add ruleset layer')
     ui.submit('Save combat encounter')
     await ui.flush()
     expect(ui.read().combat?.['training-1']?.mechanics?.resources.stamina?.maximum).toBe(100)
@@ -5917,17 +5934,16 @@ describe('editor draft workflows', () => {
     expect(ui.read().combatSources?.training?.mechanicsOverrides?.resources?.stamina).toEqual({
       maximum: 70,
     })
-    ui.edit('Combat ruleset', '')
+    ui.click('Detach composition to inline mechanics')
     ui.submit('Save combat encounter')
     await ui.flush()
-    expect(ui.read().combatSources?.training?.ruleset).toBeUndefined()
+    expect(ui.read().combatSources?.training?.rulesets).toEqual([])
     expect(ui.read().combatSources?.training?.mechanics?.resources.stamina?.maximum).toBe(70)
   })
 
   it('composes boss and underwater rules in the editor, reorders layers, inherits edits and detaches without flattening saves', async () => {
     const ui = await connected(bindCombatEditor, await simulationProject())
     ui.edit('Combat encounter', 'boss')
-    ui.click('Compose rulesets')
     ui.edit('Ruleset to add', 'environments/three-seals')
     ui.click('Add ruleset layer')
     ui.edit('Ruleset to add', 'environments/underwater')
@@ -5973,7 +5989,7 @@ describe('editor draft workflows', () => {
     ui.click('Detach composition to inline mechanics')
     ui.submit('Save combat encounter')
     await ui.flush()
-    expect(ui.read().combatSources!.boss!.rulesets).toBeUndefined()
+    expect(ui.read().combatSources!.boss!.rulesets).toEqual([])
     expect(ui.read().combatSources!.boss!.mechanics?.resources).toMatchObject({
       exhaustion: {},
       stamina: {},
@@ -8047,49 +8063,6 @@ describe('scene inspector registry', () => {
       )
     },
   )
-
-  it('recovers old shop and inventory-panel edits into independent inspector drafts', async () => {
-    const ui = panel()
-    const view = inspectProject(await sample('basic'))
-    const scene = view.scenes.find((scene) => scene.id === 'shop')!
-    const original = scene.components.find((component) => component.type === 'shop')!
-    const panels = scene.components.filter((component) => component.type === 'inventory')
-    const shop = bindShopEditor(ui.root.asElement(), vi.fn(), editorLocalization().t, vi.fn())
-    shop.render({ ...ui.initial, view }, true)
-
-    const snapshot = {
-      shop: {
-        model: {
-          sceneId: scene.id,
-          draft: { ...original, label: 'Edited shop' },
-          panels: panels.map((panel, index) =>
-            index ? panel : { ...panel, label: 'Recovered panel' },
-          ),
-        },
-        fields: [],
-      },
-    }
-
-    expect(restoreEditorDrafts(ui.root.asElement(), snapshot)).toEqual([])
-    const recovered = shop.takeRecoveredComponents()
-    expect(recovered.map((entry) => entry.component.type)).toEqual(['shop', 'inventory'])
-    expect(shop.hasDrafts()).toBe(false)
-    const editor = bindComponentEditor(ui.root.asElement(), (command) => ui.commands.push(command))
-    editor.render({ ...ui.initial, view }, true)
-
-    for (const entry of recovered) {
-      editor.navigate(entry.sceneId, entry.existingId)
-      editor.resumeDraft(entry)
-      ui.submit('Save component')
-      ui.click('Discard component draft')
-    }
-
-    expect(ui.commands).toMatchObject([
-      { type: 'scene.upsertShop', component: { label: 'Edited shop' } },
-      { type: 'scene.upsertItemView', component: { label: 'Recovered panel' } },
-    ])
-    expect(ui.commands[0]).not.toHaveProperty('panels')
-  })
 
   it('keeps a rule button preset and its enabled condition through recovery', async () => {
     const ui = panel()

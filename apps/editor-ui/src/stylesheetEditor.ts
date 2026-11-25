@@ -262,13 +262,13 @@ export function bindStylesheetEditor(
     'stylesheet',
     z.object({
       file: z.string(),
-      previousFile: z.string().optional(),
+      previousFile: z.string(),
       css: z.string(),
       creating: z.boolean(),
     }),
     () => (dirty ? { file, previousFile, css, creating } : undefined),
     (saved) => {
-      previousFile = saved.previousFile ?? ''
+      previousFile = saved.previousFile
       file = saved.file
       css = saved.css
       creating = saved.creating

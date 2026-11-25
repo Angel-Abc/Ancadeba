@@ -257,7 +257,7 @@ function resolve(
           ? 'player'
           : 'eel',
     })),
-    enemies: { eel: { moves: [{ move: 'wave', target: 'player' }], cursor: 0 } },
+    enemies: { eel: { moves: [{ move: 'wave', target: 'player' }], startCursor: 0, cursor: 0 } },
     equipment,
     ...options,
   })

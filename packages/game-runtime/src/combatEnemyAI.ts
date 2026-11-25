@@ -300,6 +300,6 @@ export function planEnemyTurn(
   return {
     moves,
     cursor: state.cursor,
-    ...(definition.statuses || actor.ai ? { startCursor: cursor } : {}),
+    startCursor: cursor,
   }
 }

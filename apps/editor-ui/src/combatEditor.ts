@@ -2,7 +2,6 @@ import { combatWordingForm, type WordingSelection } from './combatWordingForm.js
 import { combatFile, combatTextSchema } from '@ancadeba/schemas'
 import { linkedTranslationFields } from './inspectorTranslations.js'
 import { focusIssue } from './specialistEntries.js'
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -562,8 +561,8 @@ export function bindCombatEditor(
     root,
     'combat',
     z.object({
-      definitionOnly: z.boolean().optional(),
-      page: z.enum(['encounter', 'simulation', 'libraries']).optional(),
+      definitionOnly: z.boolean(),
+      page: z.enum(['encounter', 'simulation', 'libraries']),
       sceneId: z.string(),
       encounterId: z.string(),
       draft: combatSourceSchema.optional(),
@@ -571,15 +570,13 @@ export function bindCombatEditor(
       creating: z.boolean(),
       playerHealth: z.string(),
       enemyHealth: z.string(),
-      wording: z
-        .object({
-          code: combatTextSchema.keyof(),
-          query: z.string(),
-          open: z.boolean(),
-          shown: z.boolean().optional(),
-        })
-        .optional(),
-      encounterDirty: z.boolean().default(true),
+      wording: z.object({
+        code: combatTextSchema.keyof(),
+        query: z.string(),
+        open: z.boolean(),
+        shown: z.boolean().optional(),
+      }),
+      encounterDirty: z.boolean(),
     }),
     () =>
       dirty || simulation.hasDrafts() || libraryEditor.hasDrafts()
@@ -598,17 +595,17 @@ export function bindCombatEditor(
           }
         : undefined,
     (saved) => {
-      definitionOnly = saved.definitionOnly ?? false
+      definitionOnly = saved.definitionOnly
       sceneId = saved.sceneId
       encounterId = saved.encounterId
 
-      if (saved.wording) selections.set(encounterId, saved.wording)
+      selections.set(encounterId, saved.wording)
       draft = saved.draft
       component = saved.component
       creating = saved.creating
       playerHealth = saved.playerHealth
       enemyHealth = saved.enemyHealth
-      page = saved.page ?? 'encounter'
+      page = saved.page
       dirty = saved.encounterDirty
       render()
     },
@@ -616,14 +613,6 @@ export function bindCombatEditor(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (definitionOnly || !openComponent) return []
-      const drafts = dirty && component ? [recoveredComponent(view, sceneId, component)] : []
-      definitionOnly = true
-      render()
-
-      return drafts
-    },
     canNavigate: (id?: string, nextEncounter?: string) =>
       ((id === undefined || id === sceneId) &&
         (nextEncounter === undefined || nextEncounter === encounterId)) ||

@@ -127,7 +127,7 @@ function resolve(
       seed: 1024,
       escape: false,
       plan: moves.map((move) => ({ move, target: 'player' })),
-      enemies: { enemy: { moves: [], cursor: 0 } },
+      enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
       ...options,
     },
     trace
@@ -316,7 +316,7 @@ describe('combat lifecycle hooks and conditional effects', () => {
     expect(resolve(d, ['act', 'act'])).toEqual(result)
   })
 
-  it('runs before-action, ability/status hooks, legacy action-resolved, then after-action in order', () => {
+  it('runs before-action, ability/status hooks, then after-action in order', () => {
     const d = definition({
       before: {
         event: 'before-action',
@@ -348,8 +348,7 @@ describe('combat lifecycle hooks and conditional effects', () => {
 
     expect(events.indexOf('before-action')).toBeLessThan(events.indexOf('status-applied'))
     expect(events.indexOf('status-applied')).toBeLessThan(events.indexOf('status-changed'))
-    expect(events.indexOf('status-changed')).toBeLessThan(events.indexOf('action-resolved'))
-    expect(events.indexOf('action-resolved')).toBeLessThan(events.indexOf('after-action'))
+    expect(events.indexOf('status-changed')).toBeLessThan(events.indexOf('after-action'))
     expect(
       trace.find((frame) => frame.mechanicsEvent?.trigger === 'after')?.mechanicsEvent,
     ).toMatchObject({ matched: true, conditions: [{ actual: 30, matched: true }] })
@@ -611,7 +610,7 @@ describe('combat lifecycle hooks and conditional effects', () => {
       ...d,
       mechanics: undefined,
       statuses: undefined,
-      ruleset: { library: 'shared', id: 'water', actors: { swimmer: 'player' } },
+      rulesets: [{ library: 'shared', id: 'water', actors: { swimmer: 'player' } }],
       enemies: [
         {
           ...d.enemies[0],

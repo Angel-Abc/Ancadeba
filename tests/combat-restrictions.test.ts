@@ -177,7 +177,7 @@ function resolve(
             ? 'player'
             : 'enemy',
       })),
-      enemies: { enemy: { moves: [], cursor: 0 } },
+      enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
       ...options,
     },
     (frame) => {
@@ -431,6 +431,7 @@ describe('status immunities and move category restrictions', () => {
     const { result } = resolve(definition, ['hex'], {
       enemies: {
         enemy: {
+          startCursor: 0,
           cursor: 0,
           moves: [
             { move: 'spell', target: 'player' },

@@ -125,7 +125,7 @@ function resolve(
             ? 'player'
             : 'enemy',
       })),
-      enemies: { enemy: { moves: [], cursor: 0 } },
+      enemies: { enemy: { moves: [], startCursor: 0, cursor: 0 } },
       ...overrides,
     },
     (frame) => {

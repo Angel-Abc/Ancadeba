@@ -184,7 +184,7 @@ async function setup(withBar = true, readOnly = false) {
 }
 
 describe('atomic equipment operations', () => {
-  it('replaces equipment in one commit, preserves nested contents, and leaves legacy moves unchanged', () => {
+  it('replaces equipment in one commit and rejects moving directly into an occupied slot', () => {
     const inventory = new GameInventory(definition)
     inventory.equip('bag', 'player', 'body')
     const observations: unknown[] = []

@@ -343,6 +343,12 @@ export class GameCombat implements IGameCombat {
 
         for (const status of statuses) {
           const data = definition.statuses![status.id]!
+
+          if (
+            Boolean(data.stacking) !== (status.stacks !== undefined) ||
+            Boolean(data.intensity) !== (status.intensity !== undefined)
+          )
+            throw new Error('Saved status strength does not match its definition')
           validateActiveCombatStatus(data, status)
           const parts = combatStatusParts(data)
 
@@ -351,6 +357,7 @@ export class GameCombat implements IGameCombat {
         }
       }
 
+      validateCombatMechanicsState(definition, saved.mechanics)
       combatEconomySnapshot(definition, saved.statuses, saved.mechanics?.resources, saved.target, {
         ...this.valueInputs(definition),
         round: saved.round,
@@ -363,14 +370,8 @@ export class GameCombat implements IGameCombat {
       if (saved.target && !definition.enemies.some((enemy) => enemy.id === saved.target))
         throw new Error('Invalid saved target')
 
-      const mechanics = saved.mechanics ?? initialCombatMechanics(definition)
-
-      validateCombatMechanicsState(definition, mechanics)
-
       const session: Session = {
         ...saved,
-
-        mechanics,
 
         captures: new Map(),
 
@@ -958,7 +959,7 @@ export class GameCombat implements IGameCombat {
             Object.freeze({
               cursor: plan.cursor,
 
-              ...(plan.startCursor !== undefined ? { startCursor: plan.startCursor } : {}),
+              startCursor: plan.startCursor,
 
               moves: Object.freeze(plan.moves.map((move) => Object.freeze({ ...move }))),
             }),

@@ -275,6 +275,14 @@ export function basicComponentFields(
     )
   }
 
+  if (draft.type === 'message-history') {
+    const help = create('p')
+    help.className = 'help'
+    help.textContent = t('component.messageHistoryHelp')
+
+    return behavior.push(help)
+  }
+
   if (draft.type === 'language-select' || draft.type === 'save-status') return
 
   if (draft.type === 'save-slots')

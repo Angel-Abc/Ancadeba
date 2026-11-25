@@ -1,5 +1,4 @@
 import { selectedEntries } from './specialistEntries.js'
-import { combatRulesetReferences } from '@ancadeba/schemas'
 import { combatRulesetSchema, type CombatLibrary } from '@ancadeba/schemas'
 import type { ProjectView } from '@ancadeba/editor-core'
 import { combatMechanicsForm } from './combatMechanicsForm.js'
@@ -29,7 +28,7 @@ export function combatRulesetsForm(
       const usage = create('p')
 
       const encounters = Object.values(view.combatSources ?? {}).filter((source) =>
-        combatRulesetReferences(source).some(
+        source.rulesets?.some(
           (reference) => reference.library === library.id && reference.id === id,
         ),
       )

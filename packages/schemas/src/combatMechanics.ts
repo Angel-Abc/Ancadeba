@@ -140,7 +140,6 @@ export const combatTriggerEvents = [
   'round-end',
   'turn-start',
   'turn-end',
-  'action-resolved',
   'before-action',
   'after-action',
   'status-applied',

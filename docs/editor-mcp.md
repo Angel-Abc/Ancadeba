@@ -282,8 +282,7 @@ using the same standalone export pipeline as the visual editor. No editor UI is
 needed. The editor server must have export support enabled and the development
 dependencies described in the [export guide](../README.md#standalone-game-exports).
 Capability discovery reports `features.gameExport` and `operations.gameExport`,
-including support, request schema, archive limit and default build timeout. A
-missing feature flag means unsupported; older servers need an update.
+including support, request schema, archive limit and default build timeout.
 
 The successful result's `structuredContent.data` contains `gamePath`, `fileName`,
 `mimeType`, `size` in bytes and `resourceUri`. The matching `content` entry with
@@ -387,14 +386,12 @@ tool name, `supported` flag and MCP input schema. Upload discovery includes
 `features.projectCreation` and `features.gameExport`. Export availability reflects
 the server's configured export service. Discovery is available through the workspace service;
 creation and other writes depend on the configured project repository.
-Missing flags from older servers mean unsupported; commands still work. Update
-an older server if a required feature flag is absent, and load the updated adapter.
 Writes recheck the API version and their feature flags before posting.
 Switching is implemented within the adapter using discovery and inspection;
 its availability follows `features.projectDiscovery`, without a new HTTP endpoint.
 
-Metadata translation keys accept strings to assign them, `null` to remove them,
-or omission to preserve them. Create translation catalogs first. Creation flags
+Include assigned translation keys when updating metadata. Omitting a key or
+sending `null` clears its assignment. Create translation catalogs first. Creation flags
 such as `createOnly: true` reject existing IDs instead of replacing content.
 
 The asset editing tool accepts `assets.upsertImage`, `assets.upsertPart`,
@@ -635,19 +632,14 @@ already have saved. Such results use `outcome: unknown`. Inspect the game before
 editing again; do not retry automatically. A capability-check failure happens
 before the mutation and is reported as not applied.
 
-Legacy workspace errors can also occur during the server's reread after saving,
-including HTTP 4xx responses. They are reported as uncertain writes. Editor errors
-declare their own `outcome`: the server raises 4xx rejections and 503 unavailable
-features only before writing or after a confirmed rollback, so it declares them
-`not_applied`, and other 5xx failures `unknown`. The adapter trusts a declared
-`not_applied` only with a 4xx or 503 status; any other editor error is uncertain.
-Request-size/content-type rejections and local request-validation failures are
-also reported as not applied.
+The server reports `unknown` when a workspace operation may have failed during
+a reread after saving. A confirmed rejection or rollback reports `not_applied`.
+The adapter accepts this outcome for HTTP 4xx and 503 responses.
+
 Local validation failures include diagnostic property paths and send no HTTP request.
 
 Diagnostics retain server codes, game-relative files, and property paths.
-Malformed server responses are rejected. Legacy workspace errors are normalized
-from their HTTP status and message. Projects with validation errors can be
+Malformed server responses are rejected. Projects with validation errors can be
 inspected. Shared editor repair commands, such as recreating a missing assigned
 stylesheet or removing its assignment, remain available; unrelated diagnostics
 block edits and require repair through an appropriate editor workflow.
@@ -707,6 +699,6 @@ before invoking the associated operation.
 
 ## Named character artwork
 
-Read the active manifest and revision with `ancadeba_inspect_game`. Submit the full `appearances` library with `ancadeba_update_game_metadata` or the shared `game.updateMetadata` command. Include the existing title, description, and version. The dictionaries under `presets` and `characters` are replaced together. Fetch the new revision before the next edit.
+Read the active manifest and revision with `ancadeba_inspect_game`. Submit the full `appearances` library with `ancadeba_update_game_metadata` or the shared `game.updateMetadata` command. Include the existing title, description, version and any assigned translation keys. The dictionaries under `presets` and `characters` are replaced together. Fetch the new revision before the next edit.
 
 Use `scene.upsertComponent` for a `character-view` and the corresponding inventory, status-panel, or combat command for a character portrait. Inspect a scene or reopen the project to read the saved references. The [appearance format and example](asset-workshop.md#named-character-appearances) describe the data shared with the editor.

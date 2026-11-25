@@ -102,55 +102,6 @@ describe('localization authoring commands', () => {
     })
   })
 
-  it('preserves omitted metadata keys for older clients and explicitly clears them with null', () => {
-    let source = applyCommand(project(), command()).project
-
-    const game = {
-      type: 'game.updateMetadata' as const,
-      title: 'Game fallback',
-      description: 'Description',
-      version: '1',
-    }
-
-    const scene = {
-      type: 'scene.updateMetadata' as const,
-      sceneId: 'adventure',
-      title: 'Scene fallback',
-      description: 'Description',
-    }
-
-    source = applyCommand(source, {
-      ...game,
-      titleKey: 'greeting.title',
-      descriptionKey: 'greeting.body',
-    }).project
-    source = applyCommand(source, {
-      ...scene,
-      titleKey: 'greeting.title',
-      descriptionKey: 'greeting.body',
-    }).project
-    source = applyCommand(applyCommand(source, game).project, scene).project
-    expect(source.documents['game.json']).toMatchObject({
-      titleKey: 'greeting.title',
-      descriptionKey: 'greeting.body',
-    })
-    expect(source.documents['scenes/adventure.json']).toMatchObject({
-      titleKey: 'greeting.title',
-      descriptionKey: 'greeting.body',
-    })
-
-    const cleared = applyCommand(
-      applyCommand(source, { ...game, titleKey: null, descriptionKey: null }).project,
-      { ...scene, titleKey: null, descriptionKey: null },
-    ).project
-
-    for (const file of ['game.json', 'scenes/adventure.json']) {
-      const saved: unknown = JSON.parse(JSON.stringify(cleared.documents[file]))
-      expect(saved).not.toHaveProperty('titleKey')
-      expect(saved).not.toHaveProperty('descriptionKey')
-    }
-  })
-
   it('validates metadata keys and rejects clearing the only title without changing source', () => {
     const source = applyCommand(project(), command()).project
 

@@ -3,7 +3,6 @@ import {
   resolveCombatSource,
   diffCombatMechanics,
   cloneCombatRules,
-  combatRulesetReferences,
   previewCombatMechanicsOverrides,
   type CombatSource,
   type CombatMechanicsDefinition,
@@ -20,13 +19,11 @@ export function combatRulesetForm(
   render: () => void,
   statuses = draft.statuses,
 ): HTMLElement {
-  const { group, select, button, create, t } = controls
+  const { group, button, create, t } = controls
   const text = (key: string) => t(`combat.rulesets.${key}`)
   const libraries = new Map(Object.entries(view.combatLibraries ?? {}))
   const resolved = resolveCombatRuleset(draft, libraries)
-  const references = combatRulesetReferences(draft)
-  const reference = draft.ruleset
-  const ruleset = reference && libraries.get(reference.library)?.rulesets?.[reference.id]
+  const references = draft.rulesets ?? []
 
   const choices = [...libraries].flatMap(([library, data]) =>
     Object.entries(data.rulesets ?? {}).map(
@@ -61,65 +58,19 @@ export function combatRulesetForm(
     }
 
     draft.mechanics = resolved.mechanics ? cloneCombatRules(resolved.mechanics) : undefined
-    draft.ruleset = null
-    draft.rulesets = undefined
+    draft.rulesets = []
     draft.mechanicsOverrides = undefined
   }
 
-  const picker = select(
-    text('select'),
-    reference ? `${reference.library}/${reference.id}` : '',
-    [['', text('inline')], ...choices],
-    (value) => {
-      if (!value) {
-        detach()
-      } else {
-        const [library, id] = value.split('/')
-
-        if (!library || !id) return
-        const roles = libraries.get(library)?.rulesets?.[id]?.actors ?? []
-        const actors = [draft.player, ...draft.enemies]
-        draft.ruleset = {
-          library,
-          id,
-          actors: Object.fromEntries(
-            roles.map((role, index) => [
-              role,
-              actors.find((actor) => actor.id === role)?.id ?? actors[index]?.id ?? role,
-            ]),
-          ),
-        }
-        draft.mechanics = undefined
-        draft.mechanicsOverrides = {}
-      }
-
-      render()
-    },
+  const layers = combatRulesetLayersForm(
+    controls,
+    draft,
+    libraries,
+    choices,
+    render,
+    detach,
+    references.length > 0 && Boolean(resolved.mechanics),
   )
-
-  const selectors =
-    draft.rulesets !== undefined
-      ? [
-          combatRulesetLayersForm(
-            controls,
-            draft,
-            libraries,
-            choices,
-            render,
-            detach,
-            Boolean(resolved.mechanics) || !references.length,
-          ),
-        ]
-      : [
-          picker,
-          button(
-            t('combat.composition.enable'),
-            edit(() => {
-              draft.rulesets = reference ? [cloneCombatRules(reference)] : []
-              draft.ruleset = null
-            }),
-          ),
-        ]
 
   const help = create('p')
   help.className = 'help'
@@ -128,22 +79,10 @@ export function combatRulesetForm(
   if (!references.length)
     return group(
       text('encounter'),
-      ...selectors,
+      layers,
       help,
       combatMechanicsForm(controls, view, draft, render, statuses),
     )
-
-  const bindings = (reference ? (ruleset?.actors ?? []) : []).map((role) =>
-    select(
-      t('combat.rulesets.bindActor', { role }),
-      reference?.actors?.[role] ?? role,
-      [draft.player, ...draft.enemies].map((actor) => [actor.id, actor.label || actor.id] as const),
-      (value) => {
-        if (reference) reference.actors = { ...reference.actors, [role]: value }
-        render()
-      },
-    ),
-  )
 
   const alerts = create('p')
   alerts.setAttribute('role', 'alert')
@@ -173,8 +112,7 @@ export function combatRulesetForm(
     }),
   )
 
-  if (!resolved.base)
-    return group(text('encounter'), ...selectors, help, ...bindings, alerts, reset)
+  if (!resolved.base) return group(text('encounter'), layers, help, alerts, reset)
   const base = resolved.base
 
   const mechanicsDraft = {
@@ -264,9 +202,8 @@ export function combatRulesetForm(
 
   return group(
     text('encounter'),
-    ...selectors,
+    layers,
     help,
-    ...bindings,
     alerts,
     conflicts,
     preview,

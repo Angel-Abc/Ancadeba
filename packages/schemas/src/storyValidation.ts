@@ -210,7 +210,7 @@ export function storyIssues(sources: StorySources) {
             value.type === 'enter-scene',
         )
       )
-        add('game.json', 'Quest transactions cannot include legacy movement effects')
+        add('game.json', 'Quest transactions cannot include movement effects')
     }
 
   const inspect = (value: unknown, file: string) => {

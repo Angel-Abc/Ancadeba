@@ -15,11 +15,12 @@ import type { IGameInventorySelection } from './inventoryContext.js'
 import type { IGameEquipment } from './equipment.js'
 import type { IGameTrading } from './trading.js'
 import type { IGameCombat } from './combat.js'
-import type { SceneEntrance, SceneTransition } from '@ancadeba/schemas'
+import type { MessageHistoryEntry, SceneEntrance, SceneTransition } from '@ancadeba/schemas'
 import { canEnterScene } from './sceneNavigation.js'
 import { runtimeText } from './runtimeText.js'
 
 export interface IGameRuntime {
+  readonly messageHistory?: readonly MessageHistoryEntry[] | undefined
   setPaused?(paused: boolean): void
   readonly mapObjects?: IGameMapObjects | undefined
   readonly quests?: IGameQuests | undefined
@@ -44,6 +45,7 @@ export interface IGameRuntime {
 export type GameRuntimeFactory = (game: GameInstance) => IGameRuntime
 
 export interface GameInstance<TState = unknown> {
+  readonly messageHistory?: readonly MessageHistoryEntry[] | undefined
   readonly mapObjects?: IGameMapObjects | undefined
   readonly quests?: IGameQuests | undefined
   readonly dialogue?: IGameDialogue | undefined
@@ -174,6 +176,10 @@ class OwnedGameInstance<TState> extends OwnedInstance<GameData, TState> {
   }
   get dialogue(): IGameDialogue | undefined {
     return this.runtime?.dialogue
+  }
+
+  get messageHistory(): readonly MessageHistoryEntry[] | undefined {
+    return this.runtime?.messageHistory
   }
 
   get itemUse(): IGameItemUse | undefined {

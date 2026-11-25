@@ -313,6 +313,7 @@
   "inventory.owner.opponent": "Advanced opponent",
   "inventory.owner.displayCase": "Display case",
   "menu.title": "Game menu",
+  "menu.messageHistory": "Message history",
   "menu.mainMenu": "Main menu",
   "menu.saveGame": "Save game",
   "menu.loadGame": "Load game",

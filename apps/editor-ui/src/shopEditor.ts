@@ -1,4 +1,3 @@
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -212,24 +211,6 @@ export function bindShopEditor(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (!dirty || !draft) return []
-      const shop = recoveredComponent(view, sceneId, draft)
-      const entries = [shop]
-
-      if (!shop.existingId) shop.panels = panels
-      else
-        for (const panel of panels) {
-          const saved = scene()?.components.find((entry) => entry.id === panel.id)
-
-          if (JSON.stringify(saved) !== JSON.stringify(panel))
-            entries.push(recoveredComponent(view, sceneId, panel))
-        }
-
-      reset()
-
-      return entries
-    },
     canNavigate: (id?: string) => !id || id === sceneId || !dirty,
     navigate,
     hasDrafts: () => dirty,

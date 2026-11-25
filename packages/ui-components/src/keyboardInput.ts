@@ -27,7 +27,7 @@ function usesNativeKeyboard(element: Element | null, allowButtons = false): bool
 
   return Boolean(
     element &&
-    (element.closest('input, textarea, select, button') ||
+    (element.closest('input, textarea, select, button, [role="log"]') ||
       ('isContentEditable' in element && element.isContentEditable === true)),
   )
 }

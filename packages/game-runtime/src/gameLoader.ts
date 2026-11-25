@@ -193,31 +193,15 @@ export class GameLoader implements IGameLoader {
         styling,
       ]
 
-      const fullScenes = scenes.map(([id, scene]) => [
+      const gameplayScenes = scenes.map(([id, scene]) => [
         id,
-        gameplaySaveDefinition(sceneSchema, scene),
+        gameplaySaveDefinition(sceneSchema, {
+          ...scene,
+          components: scene.components.filter((component) => component.type !== 'background-image'),
+        }),
       ])
 
-      const fingerprint = (sceneData: unknown[]) =>
-        `gameplay-v1:${saveCompatibility(JSON.stringify([game, sceneData, ...resources]))}`
-
-      const gameplayScenes = fullScenes.slice()
-      let hasBackground = false
-
-      for (const [index, [id, scene]] of scenes.entries()) {
-        const components = scene.components.filter(
-          (component) => component.type !== 'background-image',
-        )
-
-        if (components.length === scene.components.length) continue
-        hasBackground = true
-        gameplayScenes[index] = [id, gameplaySaveDefinition(sceneSchema, { ...scene, components })]
-      }
-
-      return {
-        saveCompatibility: fingerprint(gameplayScenes),
-        ...(hasBackground ? { legacySaveCompatibility: fingerprint(fullScenes) } : {}),
-      }
+      return `gameplay-v1:${saveCompatibility(JSON.stringify([game, gameplayScenes, ...resources]))}`
     }
 
     if (!definition.languages) {
@@ -241,7 +225,7 @@ export class GameLoader implements IGameLoader {
 
       return {
         ...data,
-        ...gameplayCompatibility(data.combat),
+        saveCompatibility: gameplayCompatibility(data.combat),
         ...styling,
       }
     }
@@ -306,7 +290,7 @@ export class GameLoader implements IGameLoader {
 
     return {
       ...variants.get(language)!,
-      ...gameplayCompatibility(variants.get(language)!.combat),
+      saveCompatibility: gameplayCompatibility(variants.get(language)!.combat),
       localization,
       get language() {
         return localization.current.language

@@ -131,13 +131,15 @@
       }
     }
   },
-  "ruleset": {
-    "library": "environments",
-    "id": "underwater",
-    "actors": {
-      "swimmer": "diver"
+  "rulesets": [
+    {
+      "library": "environments",
+      "id": "underwater",
+      "actors": {
+        "swimmer": "diver"
+      }
     }
-  },
+  ],
   "simulationScenarios": {
     "shared-pressure": {
       "label": "Verify shared AI and local pressure",

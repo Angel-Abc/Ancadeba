@@ -8,7 +8,6 @@ import {
 } from './specialistEntries.js'
 import { saveStatus } from './formSaveStatus.js'
 import { combatPassivesForm } from './combatPassiveForms.js'
-import { combatRulesetReferences } from '@ancadeba/schemas'
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
 import type { Translate } from '@ancadeba/utilities'
@@ -204,7 +203,7 @@ export function bindCombatLibraryEditor(
     const encounters = Object.values(view.combatSources ?? {}).filter(
       (source) =>
         Object.hasOwn(view?.combat?.[source.id]?.passiveDefinitions ?? {}, libraryId) ||
-        combatRulesetReferences(source).some((reference) => reference.library === libraryId) ||
+        source.rulesets?.some((reference) => reference.library === libraryId) ||
         source.enemies.some((enemy) => enemy.aiProfile?.library === libraryId) ||
         [...(source.sharedMoves ?? []), ...(source.sharedStatuses ?? [])].some(
           (ref) => ref.library === libraryId,
@@ -250,7 +249,7 @@ export function bindCombatLibraryEditor(
             .map((source) => source.id)
         case 'rulesets':
           return encounters
-            .filter((source) => combatRulesetReferences(source).some(matches))
+            .filter((source) => source.rulesets?.some(matches))
             .map((source) => source.id)
         case 'passives':
           return [
@@ -404,15 +403,15 @@ export function bindCombatLibraryEditor(
       libraryId: z.string(),
       draft: combatLibrarySchema.optional(),
       creating: z.boolean(),
-      category: z.enum(categories).optional(),
-      selected: z.record(z.string(), z.number()).optional(),
+      category: z.enum(categories),
+      selected: z.record(z.string(), z.number()),
     }),
     () => (dirty ? { libraryId, draft, creating, category, selected } : undefined),
     (saved) => {
       libraryId = saved.libraryId
       draft = saved.draft
-      category = saved.category ?? 'moves'
-      selected = saved.selected ?? {}
+      category = saved.category
+      selected = saved.selected
       creating = saved.creating
       dirty = true
       render()

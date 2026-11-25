@@ -503,7 +503,10 @@ describe('combat item planning', () => {
         guard: {},
         seed: 1024,
         plan: reason === 'victory' ? [{ move: 'attack', target: 'enemy' }, queued] : [queued],
-        enemies: { enemy: { cursor: 0, moves: [] }, second: { cursor: 0, moves: [] } },
+        enemies: {
+          enemy: { startCursor: 0, cursor: 0, moves: [] },
+          second: { startCursor: 0, cursor: 0, moves: [] },
+        },
         escape: false,
         statuses:
           reason === 'stun' || reason === 'poison'

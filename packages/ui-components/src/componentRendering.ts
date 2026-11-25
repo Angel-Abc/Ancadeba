@@ -10,6 +10,7 @@ import type {
   IGameInventory,
   IGameSaves,
   GameData,
+  GameInstance,
   GameSaveFile,
   SceneInstance,
   SubmitForm,
@@ -54,6 +55,7 @@ export interface ComponentRendererOptions {
 }
 
 export interface ComponentRenderContext extends ComponentRendererOptions {
+  readonly suspendedGame?: GameInstance | undefined
   readonly formDrafts?: Map<string, FormDraft> | undefined
   readonly suspendedInventory?: IGameInventory | undefined
   readonly suspendedBindings?: IGameBindings | undefined

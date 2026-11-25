@@ -145,13 +145,15 @@
       }
     }
   },
-  "ruleset": {
-    "library": "environments",
-    "id": "underwater",
-    "actors": {
-      "swimmer": "swimmer"
+  "rulesets": [
+    {
+      "library": "environments",
+      "id": "underwater",
+      "actors": {
+        "swimmer": "swimmer"
+      }
     }
-  },
+  ],
   "mechanicsOverrides": {
     "resources": {
       "stamina": {

@@ -6,6 +6,7 @@ export const creatableComponentTypes = [
   'save-status',
   'save-point',
   'text',
+  'message-history',
   'button',
   'action-info',
   'map-view',
@@ -66,6 +67,14 @@ export function createComponentDraft(
     }
 
   if (type === 'button') return { id, type, label: 'Button', placement }
+
+  if (type === 'message-history')
+    return {
+      id,
+      type,
+      label: 'Message history',
+      placement: { ...placement, rowSpan: Math.min(5, scene.screen.grid.rows) },
+    }
 
   if (type === 'action-info')
     return {

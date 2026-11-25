@@ -4,7 +4,11 @@ import { EditorApiClient } from '../apps/editor-mcp/src/editorApiClient.js'
 import { maxUploadBytes } from '../apps/editor-mcp/src/operationSupport.js'
 
 const config = { editorServerUrl: 'http://127.0.0.1:3100', game: 'My Games/demo', timeoutMs: 200 }
-const available = { ...capabilities, features: { history: true, assetImport: true } }
+
+const available = {
+  ...capabilities,
+  features: { ...capabilities.features, history: true, assetImport: true },
+}
 
 const view = {
   revision: 'saved',
@@ -179,33 +183,17 @@ describe('MCP history and asset upload HTTP operations', () => {
     await client.restore('old', 'undo')
     await client.uploadAsset(upload)
 
-    for (const unavailable of [
-      capabilities,
-      { ...available, features: { history: false, assetImport: false } },
-    ]) {
-      remote = unavailable
-      await expect(client.restore('old', 'redo')).rejects.toMatchObject({
-        code: 'unsupported_history',
-        outcome: 'not_applied',
-      })
-      await expect(client.uploadAsset(upload)).rejects.toMatchObject({
-        code: 'unsupported_import',
-        outcome: 'not_applied',
-      })
-    }
-
-    expect(posts).toBe(2)
-
-    const partial = new EditorApiClient(config, async () =>
-      json({ ...capabilities, features: { history: true } }),
-    )
-
-    expect((await partial.capabilities()).features).toEqual({ history: true, assetImport: false })
-
-    await expect(partial.uploadAsset(upload)).rejects.toMatchObject({
+    remote = capabilities
+    await expect(client.restore('old', 'redo')).rejects.toMatchObject({
+      code: 'unsupported_history',
+      outcome: 'not_applied',
+    })
+    await expect(client.uploadAsset(upload)).rejects.toMatchObject({
       code: 'unsupported_import',
       outcome: 'not_applied',
     })
+
+    expect(posts).toBe(2)
   })
 
   it('distinguishes definite operation rejections from uncertain storage failures', async () => {
@@ -217,16 +205,12 @@ describe('MCP history and asset upload HTTP operations', () => {
       ['history_restore_failed', 500, 'unknown', 'unknown'],
       ['history_restore_failed', 500, 'not_applied', 'unknown'],
       ['history_restore_uncertain', 409, 'unknown', 'unknown'],
-      ['history_empty', 409, undefined, 'unknown'],
       ['asset_publication_failed', 500, 'unknown', 'unknown'],
     ] as const) {
       const client = new EditorApiClient(config, async (url) =>
         requestUrl(url).endsWith('capabilities')
           ? json(available)
-          : json(
-              { error: 'Operation failed', code, ...(declared ? { outcome: declared } : {}) },
-              status,
-            ),
+          : json({ error: 'Operation failed', code, diagnostics: [], outcome: declared }, status),
       )
 
       await expect(

@@ -12,9 +12,10 @@ import type { GameInstance, IGameLifecycle } from './gameLifecycle.js'
 import type { IGameInventory } from './inventory.js'
 import { matchesConditions } from './storyConditions.js'
 import { MapStoryState } from './storyState.js'
-import { MapTradeState } from './tradeState.js'
+import { MapStateTransactions } from './stateTransactions.js'
 import { prepareInventoryCollection } from './inventoryCollection.js'
 import type { GameSave } from '@ancadeba/schemas'
+import type { GameMessageHistory } from './messageHistory.js'
 
 type Scalar = string | number | boolean
 
@@ -134,8 +135,8 @@ export class AuthoredPlaythrough {
     this.updateClock(save.progression.worldTimeMs)
   }
 
-  get tradeState(): MapTradeState {
-    return new MapTradeState(
+  get stateTransactions(): MapStateTransactions {
+    return new MapStateTransactions(
       this.state,
       this.rules.state
         .filter((field) => typeof field.value === 'number')
@@ -162,17 +163,14 @@ export class AuthoredPlaythrough {
           const before = [...this.entries]
           const clock = this.rules.clock && read(this.state, this.rules.clock.path)
 
-          const next = [...entries]
-            .reverse()
-            .map((text) => (typeof clock === 'string' ? `${clock}  ${text}` : text))
-            .concat(before)
-            .slice(0, log.capacity)
+          const messages = entries.map((text) =>
+            typeof clock === 'string' ? `${clock}  ${text}` : text,
+          )
 
           return {
             isCurrent: () => JSON.stringify(this.entries) === JSON.stringify(before),
             commit: () => {
-              this.entries.splice(0, this.entries.length, ...next)
-              set(this.state, log.path, next.join('\n'))
+              this.appendMessages(messages)
             },
           }
         },
@@ -183,6 +181,7 @@ export class AuthoredPlaythrough {
   constructor(
     private readonly rules: GameRulesDefinition,
     private readonly data: GameData,
+    readonly history?: GameMessageHistory,
   ) {
     for (const { path, value } of rules.state) {
       if (value === undefined) parent(this.state, path)
@@ -237,13 +236,19 @@ export class AuthoredPlaythrough {
   }
 
   private append(texts: string[], worldTimeMs: number): void {
-    const log = this.rules.log!
     const clock = this.rules.clock
     const prefix = clock ? `${clockText(clock.startMinute, worldTimeMs)}  ` : ''
 
-    for (const text of texts) this.entries.unshift(prefix + text)
+    this.appendMessages(texts.map((text) => prefix + text))
+  }
+
+  private appendMessages(messages: readonly string[]): void {
+    const log = this.rules.log!
+
+    for (const text of messages) this.entries.unshift(text)
     this.entries.length = Math.min(log.capacity, this.entries.length)
     set(this.state, log.path, this.entries.join('\n'))
+    this.history?.append('narration', messages)
   }
 
   createRules(
@@ -300,7 +305,7 @@ export class AuthoredPlaythrough {
                     effect.type === 'enter-scene',
                 )
               )
-                return rejected('Quest transactions cannot include legacy movement effects')
+                return rejected('Quest transactions cannot include movement effects')
 
               const effects = branch.effects.filter(
                 (effect) =>

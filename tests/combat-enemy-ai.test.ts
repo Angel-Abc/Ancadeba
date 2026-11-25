@@ -336,7 +336,7 @@ describe('conditional enemy planning', () => {
     expect(encounter).toEqual(copy)
   })
 
-  it('uses reserved resource balances for conditions and respects AP, stun, death, and legacy status strength', () => {
+  it('uses reserved resource balances for conditions and respects AP, stun and death', () => {
     const encounter = ai(
       definition(),
       [
@@ -358,29 +358,6 @@ describe('conditional enemy planning', () => {
       ).toEqual([])
     expect(planEnemies(encounter, { ...health, foe: 0 }, {}).foe!.moves).toEqual([])
     expect(planEnemies(encounter, { ...health, hero: 0 }, {}).foe!.moves).toEqual([])
-    ai(
-      encounter,
-      [
-        {
-          id: 'legacy',
-          move: 'strip',
-          conditions: [
-            {
-              type: 'status',
-              actor: 'hero',
-              status: 'rhythm',
-              measure: 'intensity',
-              operator: 'eq',
-              value: 1,
-            },
-          ],
-        },
-      ],
-      'wait',
-    )
-    expect(
-      moveIds(encounter, { energy: 0 }, { hero: [{ id: 'rhythm', source: 'hero', remaining: 1 }] }),
-    ).toEqual(['strip'])
   })
 })
 

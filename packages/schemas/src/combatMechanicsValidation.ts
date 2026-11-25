@@ -304,11 +304,7 @@ export function combatMechanicsReferenceIssues(combat: CombatMechanicsValidation
     for (const kind of ['actor', 'resource', 'phase', 'move', 'status'] as const)
       check(kind, trigger[kind], path)
 
-    if (
-      trigger.move &&
-      !event &&
-      !['action-resolved', 'before-action', 'after-action'].includes(trigger.event)
-    )
+    if (trigger.move && !event && !['before-action', 'after-action'].includes(trigger.event))
       issues.push({
         path: [...path, 'move'],
         message: 'Move filters require action events',
@@ -325,7 +321,6 @@ export function combatMechanicsReferenceIssues(combat: CombatMechanicsValidation
       ![
         'turn-start',
         'turn-end',
-        'action-resolved',
         'before-action',
         'after-action',
         'status-applied',

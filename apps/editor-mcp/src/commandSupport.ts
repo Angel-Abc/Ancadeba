@@ -95,7 +95,7 @@ export function commandDetail(type: CommandType) {
 export function mcpCapabilities(remote: {
   version: number
   commands: { type: string }[]
-  features?: z.infer<typeof editorFeaturesSchema> | undefined
+  features: z.infer<typeof editorFeaturesSchema>
 }) {
   const supported = new Set(remote.commands.map(({ type }) => type))
 
@@ -107,7 +107,7 @@ export function mcpCapabilities(remote: {
       commandEnvelopeSchema(commandTypes.filter((type) => supported.has(type))),
     ),
     commands: capabilities.commands.filter(({ type }) => supported.has(type)),
-    ...(remote.features ? { features: remote.features } : {}),
+    features: remote.features,
     operations: mcpOperations(remote.features),
   }
 }

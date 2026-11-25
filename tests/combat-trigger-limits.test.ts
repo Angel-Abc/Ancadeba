@@ -130,7 +130,7 @@ describe('trigger priorities and activation limits', () => {
         seed: 1,
         escape: false,
         plan: [],
-        enemies: { eel: { moves: [], cursor: 0 } },
+        enemies: { eel: { moves: [], startCursor: 0, cursor: 0 } },
       })
 
       expect(result.health.eel).toBe(0)
@@ -138,7 +138,7 @@ describe('trigger priorities and activation limits', () => {
     },
   )
 
-  it('validates bounded optional controls without adding defaults to legacy triggers', () => {
+  it('validates optional trigger limits and priority', () => {
     for (const patch of [
       { priority: 10001 },
       { priority: 0.5 },
@@ -415,15 +415,6 @@ describe('trigger priorities and activation limits', () => {
     const before = sim.report()
     expect(() => sim.resolve()).toThrow('overflow')
     expect(sim.report()).toEqual(before)
-  })
-
-  it('retains legacy state and debug shapes when no controls are configured', () => {
-    const definition = fixture()
-    const sim = simulation(definition)
-    sim.resolve()
-    expect(sim.snapshot().mechanics).not.toHaveProperty('activations')
-    expect(sim.snapshot().mechanics).not.toHaveProperty('turn')
-    expect(traces(sim).some((entry) => entry.activation !== undefined)).toBe(false)
   })
 
   it('round-trips controls and explicit removals through inherited overrides and editor merges', () => {

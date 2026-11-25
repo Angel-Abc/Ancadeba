@@ -58,7 +58,13 @@ function api(): IEditorApi {
     createProject: async () => view,
     capabilities: async () => ({
       ...capabilities,
-      features: { history: true, assetImport: true, projectDiscovery: true, projectCreation: true },
+      features: {
+        ...capabilities.features,
+        history: true,
+        assetImport: true,
+        projectDiscovery: true,
+        projectCreation: true,
+      },
     }),
     inspectGame: async () => view,
     inspectScene: async () => ({ revision: view.revision, scene, diagnostics: [] }),

@@ -231,10 +231,7 @@ export class CombatSimulation {
     if (this.current.outcome) return decisions
 
     const cursors = Object.fromEntries(
-      Object.entries(this.current.enemies).map(([id, plan]) => [
-        id,
-        plan.startCursor ?? plan.cursor,
-      ]),
+      Object.entries(this.current.enemies).map(([id, plan]) => [id, plan.startCursor]),
     )
 
     planEnemies(

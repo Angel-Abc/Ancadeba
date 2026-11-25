@@ -9,6 +9,7 @@ import { CharacterSheetRenderer } from './characterProfileRenderer.js'
 import type { SceneComponentData } from '@ancadeba/game-runtime'
 import { ButtonComponentRenderer } from './buttonComponentRenderer.js'
 import { TextComponentRenderer } from './textComponentRenderer.js'
+import { MessageHistoryComponentRenderer } from './messageHistoryComponentRenderer.js'
 import { LanguageSelectComponentRenderer } from './languageSelectComponentRenderer.js'
 import { GraphicComponentRenderer } from './graphicComponentRenderer.js'
 import { MapViewComponentRenderer } from './mapViewComponentRenderer.js'
@@ -38,6 +39,7 @@ export class ComponentRenderer implements IComponentRenderer {
       'save-status': new SaveStatusComponentRenderer(),
       'save-point': new SavePointComponentRenderer(),
       text: new TextComponentRenderer(),
+      'message-history': new MessageHistoryComponentRenderer(),
       graphic: graphics,
       'background-image': graphics,
       button: new ButtonComponentRenderer(),
@@ -101,6 +103,8 @@ export class ComponentRenderer implements IComponentRenderer {
         return this.renderers['background-image'].render(component, context)
       case 'text':
         return this.renderers.text.render(component, context)
+      case 'message-history':
+        return this.renderers['message-history'].render(component, context)
       case 'button':
         return this.renderers.button.render(component, context)
       case 'language-select':

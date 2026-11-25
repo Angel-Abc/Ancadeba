@@ -1,5 +1,4 @@
 import { dataFileDirectory } from './dataFileDirectory.js'
-import { bindRecoveredComponents } from './recoveredSceneComponents.js'
 import type { OpenSceneComponent } from './componentShortcuts.js'
 import { type ProjectSectionDefinition } from './projectSectionRegistry.js'
 import { builtinSectionDefinitions } from './projectBuiltinSections.js'
@@ -498,8 +497,7 @@ export function createProjectSections({
   }
 
   function hasBlockingDraft(retained?: string) {
-    if (!hasDrafts(retained ? ['recovered-components', retained] : ['recovered-components']))
-      return false
+    if (!hasDrafts(retained ? [retained] : undefined)) return false
 
     if (linkStatus) linkStatus.textContent = t('inspector.saveFirst')
 
@@ -592,24 +590,6 @@ export function createProjectSections({
 
     if (!id) componentEditor?.startCreation(type, reference)
   }
-
-  const recoveryRoot = treeElement && root.querySelector<HTMLElement>('#recovered-components')
-
-  const recovered =
-    recoveryRoot &&
-    bindRecoveredComponents(recoveryRoot, t, (draft) => {
-      if (!componentEditor) return false
-
-      const destination = draft.existingId
-        ? 'component:' + draft.sceneId + ':' + draft.existingId
-        : 'component-new:' + draft.sceneId
-
-      if (hasBlockingDraft() || (state.selection.key !== destination && !visit(destination)))
-        return false
-      componentEditor.resumeDraft(draft)
-
-      return true
-    })
 
   returnButton?.addEventListener('click', goBack)
 
@@ -733,38 +713,6 @@ export function createProjectSections({
     ),
     ...registrations.filter((entry) => !entry.tree),
     ...(directory ? [{ create: () => dataFileDirectory(directory, t, visit) }] : []),
-    {
-      create: () => ({
-        id: 'recovered-components',
-        role: 'adjunct',
-        matches: () => false,
-        hasDrafts: () => recovered?.hasDrafts() ?? false,
-        draftLocations: () => [
-          {
-            detail: t('inspector.recoveredComponents'),
-            reveal: () => recoveryRoot?.querySelector('button')?.focus(),
-          },
-        ],
-        afterRestore() {
-          if (recovered)
-            recovered.add(
-              [
-                statusPanel,
-                shopEditor,
-                actionBarPanel,
-                storyEditor,
-                itemEditor,
-                combatEditor,
-                levelingEditor,
-                rulesPanel,
-              ].flatMap((editor) => editor?.takeRecoveredComponents() ?? []),
-            )
-        },
-        render(next, replace) {
-          if (currentPath !== next.path || (replace && !next.preserveDrafts)) recovered?.clear()
-        },
-      }),
-    },
     {
       create: () => ({
         id: 'inspector-return',

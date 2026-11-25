@@ -1,4 +1,4 @@
-// One queue per server also covers legacy file writes.
+// One queue per server also covers file API writes.
 export class EditorCoordinator {
   private tail: Promise<unknown> = Promise.resolve()
 

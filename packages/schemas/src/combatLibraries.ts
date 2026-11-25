@@ -25,8 +25,6 @@ import { combatStatusSchema, combatStatusApplicationIssues } from './combatAbili
 import {
   combatRulesetSchema,
   combatRulesetLayerSchema,
-  combatRulesetReferences,
-  combatRulesetReferenceSchema,
   combatMechanicsOverridesSchema,
 } from './combatRulesets.js'
 import { resolveCombatRuleset, combatRulesetDependencies } from './combatRulesetResolution.js'
@@ -82,7 +80,6 @@ export const combatSourceSchema = combatFieldsSchema
     moves: z.record(entryId, combatMoveSchema).default({}),
     sharedMoves: z.array(combatReferenceSchema).optional(),
     sharedStatuses: z.array(combatReferenceSchema).optional(),
-    ruleset: combatRulesetReferenceSchema.nullable().optional(),
     rulesets: z
       .array(combatRulesetLayerSchema)
       .max(16)
@@ -109,13 +106,7 @@ export const combatSourceSchema = combatFieldsSchema
         message: 'AI profiles are only supported for enemies',
       })
 
-    if (source.ruleset && source.rulesets !== undefined)
-      context.addIssue({
-        code: 'custom',
-        path: ['rulesets'],
-        message: 'Use ruleset or rulesets, not both',
-      })
-    const linked = combatRulesetReferences(source).length > 0
+    const linked = Boolean(source.rulesets?.length)
 
     if (linked && source.mechanics)
       context.addIssue({
@@ -421,11 +412,9 @@ export function resolveCombatSource(
       library: ref.library,
       file: combatLibraryFile(ref.library),
       path: ['statuses', ref.id],
-      ...(path[0] === 'ruleset' && source.ruleset
-        ? { ruleset: source.ruleset.id }
-        : path[0] === 'rulesets' && typeof path[1] === 'number'
-          ? { ruleset: source.rulesets?.[path[1]]?.id }
-          : {}),
+      ...(path[0] === 'rulesets' && typeof path[1] === 'number'
+        ? { ruleset: source.rulesets?.[path[1]]?.id }
+        : {}),
     }
 
     for (const id of status.statusImmunities ?? []) addStatus({ library: ref.library, id }, path)
@@ -469,11 +458,9 @@ export function resolveCombatSource(
       library: ref.library,
       file: combatLibraryFile(ref.library),
       path: ['moves', ref.id],
-      ...(path[0] === 'ruleset' && source.ruleset
-        ? { ruleset: source.ruleset.id }
-        : path[0] === 'rulesets' && typeof path[1] === 'number'
-          ? { ruleset: source.rulesets?.[path[1]]?.id }
-          : {}),
+      ...(path[0] === 'rulesets' && typeof path[1] === 'number'
+        ? { ruleset: source.rulesets?.[path[1]]?.id }
+        : {}),
     }
 
     for (const id of moveStatusIds(move))
@@ -598,7 +585,7 @@ export function resolveCombatSource(
     return { ...enemy, ai: resolved.ai, equipmentMoves: equipmentMoves.get(enemy.id) }
   })
 
-  const references = combatRulesetReferences(source)
+  const references = source.rulesets ?? []
 
   if (references.length && ruleset.mechanics) {
     const requireEntry = (kind: 'moves' | 'statuses', id: string, owner?: CombatOrigin) => {
@@ -616,15 +603,12 @@ export function resolveCombatSource(
       const suppliers = [...new Set(candidates.map((reference) => reference.library))]
 
       const path = owner?.ruleset
-        ? source.rulesets
-          ? [
-              'rulesets',
-              references.findIndex(
-                (reference) =>
-                  reference.library === owner.library && reference.id === owner.ruleset,
-              ),
-            ]
-          : ['ruleset']
+        ? [
+            'rulesets',
+            references.findIndex(
+              (reference) => reference.library === owner.library && reference.id === owner.ruleset,
+            ),
+          ]
         : ['mechanicsOverrides']
 
       if (existing) {
@@ -652,9 +636,7 @@ export function resolveCombatSource(
 
       const reference = preferred ?? candidates[0]!
 
-      const dependencyPath = source.rulesets
-        ? ['rulesets', references.indexOf(reference)]
-        : ['ruleset']
+      const dependencyPath = ['rulesets', references.indexOf(reference)]
 
       if (kind === 'statuses') addStatus({ library: reference.library, id }, dependencyPath)
       else {

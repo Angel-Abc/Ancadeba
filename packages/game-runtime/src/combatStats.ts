@@ -86,8 +86,8 @@ export class GameCombatStats implements CombatStatsService, IGameCombatStats {
     return this.game.data.inventory?.owners[owner]?.combatStats
   }
   /** Validate candidate base values before any state transaction (including level gains) commits. */
-  prepareState(writes: readonly StateWrite[], adapter = this.state) {
-    if (this.disposed || !adapter) return
+  prepareState(writes: readonly StateWrite[]) {
+    if (this.disposed || !this.state) return
 
     const read = (source: number | CombatStatsProfile['health']) =>
       typeof source === 'number'
@@ -127,7 +127,7 @@ export class GameCombatStats implements CombatStatsService, IGameCombatStats {
         return
     }
 
-    return adapter.prepare(writes)
+    return this.state.prepare(writes)
   }
   private read(source: number | CombatStatsProfile['health']): number | undefined {
     const result = typeof source === 'number' ? source : this.bindings.read(source)

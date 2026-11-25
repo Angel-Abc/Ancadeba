@@ -7,7 +7,6 @@ import {
   inventorySchema,
   resolveCombatSource,
   localizeCombat,
-  savedCombatSchema,
   type CombatDefinition,
   type CombatMechanicsState,
 } from '@ancadeba/schemas'
@@ -71,7 +70,7 @@ function resolve(
             : definition.enemies[0]!.id,
       })),
       enemies: Object.fromEntries(
-        definition.enemies.map((enemy) => [enemy.id, { moves: [], cursor: 0 }]),
+        definition.enemies.map((enemy) => [enemy.id, { moves: [], startCursor: 0, cursor: 0 }]),
       ),
       mechanics,
       ...options,
@@ -284,7 +283,7 @@ describe('combat resources, triggers and phases', () => {
             effects: [{ type: 'change-resource', resource: 'seal', amount: 1 }],
           },
           action: {
-            event: 'action-resolved',
+            event: 'after-action',
             actor: 'player',
             move: 'guard',
             conditions: [
@@ -854,20 +853,5 @@ describe('combat mechanics runtime and authoring integration', () => {
         encounter: { ...view.combatSources!.boss!, mechanics: undefined },
       }),
     ).toThrow()
-
-    const legacy = savedCombatSchema.parse({
-      round: 1,
-      seed: 1,
-      started: false,
-      guard: {},
-      plan: [],
-      enemies: {},
-      statuses: {},
-      cooldowns: {},
-      escape: false,
-      log: [],
-    })
-
-    expect(legacy.mechanics).toBeUndefined()
   })
 })

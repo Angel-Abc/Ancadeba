@@ -52,7 +52,7 @@ own eel health; player health is shared with the rest of the game.
 
 Edit the library's underwater ruleset to update inherited settings across both
 fights. Edit Deep water's effective mechanics to change just that fight. Its
-source stores only `ruleset` and the changed `mechanicsOverrides` fields.
+source stores only `rulesets` and the changed `mechanicsOverrides` fields.
 Reset an override to inherit the current shared setting again. Both fights use
 the same Q/W/E/A, R/T and B controls as the original water example. Deep water's
 status replacement is local, so editing it does not change the shared rule or Reef.

@@ -1,4 +1,3 @@
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -235,15 +234,6 @@ export function bindStatusPanelEditor(
   )
 
   return {
-    takeRecoveredComponents() {
-      if (!dirty || !draft) return []
-      const entry = recoveredComponent(view, sceneId, draft)
-
-      if (creating) delete entry.existingId
-      reset()
-
-      return [entry]
-    },
     canNavigate: (nextScene?: string, nextPanel?: string) =>
       ((!nextScene || nextScene === sceneId) && (!nextPanel || nextPanel === componentId)) ||
       !dirty,

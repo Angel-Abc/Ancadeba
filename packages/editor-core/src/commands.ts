@@ -8,6 +8,7 @@ import {
   characterProgressionComponentSchema,
 } from '@ancadeba/schemas'
 import { z } from 'zod'
+import { unavailableEditorFeatures } from './capabilities.js'
 import { componentSourceSchema } from './componentClipboard.js'
 import { sceneSourceSchema } from './sceneSourceSchema.js'
 import {
@@ -27,6 +28,7 @@ import {
   buttonComponentSchema,
   requestActionSchema,
   actionBarComponentSchema,
+  messageHistoryComponentSchema,
   actionInfoComponentSchema,
   inputSchema,
   inventoryItemActionSchema,
@@ -74,6 +76,7 @@ export const basicComponentSchema = z.discriminatedUnion('type', [
   buttonComponentSchema,
   languageSelectComponentSchema,
   actionInfoComponentSchema,
+  messageHistoryComponentSchema,
   backgroundImageComponentSchema,
   mapViewComponentSchema,
   formComponentSchema,
@@ -85,7 +88,6 @@ const metadata = {
   // A blank title is valid when the document has a titleKey; project validation enforces one of them.
   title: z.string().trim(),
   description: z.string(),
-  // Omitted keys preserve existing metadata; null explicitly restores literal text.
   titleKey: translationKeySchema.nullable().optional(),
   descriptionKey: translationKeySchema.nullable().optional(),
 }
@@ -423,6 +425,7 @@ const scene = {
 }
 
 export const capabilities = {
+  features: unavailableEditorFeatures,
   version: 1,
   requestSchema: z.toJSONSchema(commandRequestSchema),
   commands: [

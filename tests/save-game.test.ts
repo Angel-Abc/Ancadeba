@@ -535,7 +535,7 @@ describe('persistent player progress', () => {
     advance(500)
     advance(500)
     const saved = gameSaveSchema.parse(JSON.parse(store.read(engine.game!.id, 'autosave')!))
-    expect(saved.maps[map.id]).toEqual(movement.getPosition(scene, map.id))
+    expect(saved.mapPositions[scene.data.id]?.[map.id]).toEqual(movement.getPosition(scene, map.id))
     expect(store.read(engine.game!.id)).toBeUndefined()
   })
 
@@ -876,17 +876,6 @@ describe('persistent player progress', () => {
     expect(
       restored.type === 'game' && restored.game.mapMovement!.getPosition(restored, map.id),
     ).toEqual(position)
-    const legacy = gameSaveSchema.parse(JSON.parse(store.read(engine.game!.id)!))
-    delete legacy.mapPositions
-    store.write(engine.game!.id, JSON.stringify(legacy))
-    engine.lifecycle!.startGame()
-    engine.lifecycle!.enterScene('coast')
-    expect(engine.saves!.load()).toBe(true)
-    const legacyScene = engine.lifecycle!.activeScene!
-    expect(engine.lifecycle!.currentGame!.actions!.progression).toEqual(progression)
-    expect(engine.lifecycle!.currentGame!.mapMovement!.getPosition(legacyScene, map.id)).toEqual(
-      position,
-    )
   })
 
   it('rejects a step whose turn would overflow without publishing a new position', async () => {
@@ -930,16 +919,26 @@ describe('persistent player progress', () => {
     advance()
     expect(game.quests!.snapshot('harbour-survey')!.status).toBe('active')
     const text = game.dialogue!.text(scene, 'nearby')
+    const history = game.messageHistory
+    expect(history?.map((entry) => entry.kind)).toEqual([
+      'narration',
+      'dialogue',
+      'choice',
+      'dialogue',
+    ])
     expect(engine.saves!.save()).toBe(true)
     engine.lifecycle!.startGame()
+    expect(engine.lifecycle!.currentGame!.messageHistory).toHaveLength(1)
     expect(engine.saves!.load()).toBe(true)
     advance()
     const restored = engine.lifecycle!.currentGame!
     expect(restored.quests!.snapshot('harbour-survey')!.status).toBe('active')
     expect(restored.dialogue!.text(engine.lifecycle!.activeScene!, 'nearby')).toBe(text)
+    expect(restored.messageHistory).toEqual(history)
     engine.lifecycle!.enterScene('old-harbour')
     advance()
     expect(restored.quests!.snapshot('harbour-survey')!.stage).toBe('report')
+    expect(restored.messageHistory).toEqual(history)
     engine.lifecycle!.enterScene('standard')
     advance()
     restored.quests!.request(engine.lifecycle!.activeScene!, 'harbour-survey', 'turn-in')
@@ -988,6 +987,24 @@ describe('persistent player progress', () => {
     second.advance()
     expect(restored.combat!.snapshot(restoredScene, component.id)).toEqual(expected)
     expect(restored.actions!.progression).toEqual(expectedProgression)
+  })
+
+  it('rejects an encounter save missing required mechanics without replacing the playthrough', async () => {
+    const store = new MemorySaves()
+    const { engine, start } = await launch(store, {}, 'combat-mechanics')
+    const game = start('boss')
+    const saves = engine.saves!
+    expect(saves.save()).toBe(true)
+    const original = store.read(game.data.id)!
+    const save = gameSaveSchema.parse(JSON.parse(original))
+    expect(save.combat.boss!.mechanics).toBeDefined()
+    delete save.combat.boss!.mechanics
+    const damaged = JSON.stringify(save)
+    expect(saves.importFile(damaged)).toBe(false)
+    expect(store.read(game.data.id)).toBe(original)
+    store.write(game.data.id, damaged)
+    expect(saves.load()).toBe(false)
+    expect(engine.lifecycle!.currentGame).toBe(game)
   })
 
   it('retains queued consumable reservations and consumes the restored item only once', async () => {
@@ -1346,7 +1363,7 @@ describe('persistent player progress', () => {
     if (failure === 'bad-quest')
       save.quests.records['harbour-survey'] = { index: 999, completed: false }
 
-    if (failure === 'bad-map') save.maps['missing'] = { x: 0, y: 0 }
+    if (failure === 'bad-map') save.mapPositions[save.scene] = { missing: { x: 0, y: 0 } }
 
     if (failure === 'bad-map-scene') save.mapPositions = { missing: { map: { x: 0, y: 0 } } }
 
@@ -1482,7 +1499,7 @@ describe('persistent player progress', () => {
     expect(engine.lifecycle!.currentGame!.leveling!.snapshot('player')?.available).toBe(true)
   })
 
-  it('loads legacy background saves and keeps new saves through decorative edits', async () => {
+  it('loads saves after decorative background edits and rejects gameplay changes', async () => {
     const store = new MemorySaves()
 
     const background = {
@@ -1523,15 +1540,6 @@ describe('persistent player progress', () => {
     const first = await launch(store, docs)
     first.start('play')
     expect(first.engine.saves!.save()).toBe(true)
-    const saved = gameSaveSchema.parse(JSON.parse(store.read('background-test')!))
-    // Captured from the original gameplay-v1 loader for the fixture above.
-    const legacy = 'gameplay-v1:f9cd75e27aa918cc'
-    expect(saved.contentVersion).not.toBe(legacy)
-    store.write('background-test', JSON.stringify({ ...saved, contentVersion: legacy }))
-    const upgraded = await launch(store, docs)
-    expect(upgraded.engine.saves!.load()).toBe(true)
-    expect(upgraded.engine.saves!.save()).toBe(true)
-    expect(JSON.parse(store.read('background-test')!).contentVersion).toBe(saved.contentVersion)
 
     for (const components of [
       [{ ...background, fit: 'contain' }],
@@ -1554,8 +1562,6 @@ describe('persistent player progress', () => {
       },
     })
 
-    expect(gameplayEdit.engine.saves!.load()).toBe(false)
-    store.write('background-test', JSON.stringify({ ...saved, contentVersion: legacy }))
     expect(gameplayEdit.engine.saves!.load()).toBe(false)
   })
 
@@ -1645,20 +1651,6 @@ describe('persistent player progress', () => {
     expect(second.engine.lifecycle!.activeScene!.data.id).toBe('standard')
   })
 
-  it('rejects obsolete full-content fingerprints without replacing current progress', async () => {
-    const store = new MemorySaves()
-    const { engine, start } = await launch(store)
-    const current = start()
-    expect(engine.saves!.save()).toBe(true)
-    const save = gameSaveSchema.parse(JSON.parse(store.read('basic-game')!))
-    save.contentVersion = '0123456789abcdef'
-    store.write('basic-game', JSON.stringify(save))
-    expect(engine.saves!.load()).toBe(false)
-    expect(engine.saves!.error).toBe('incompatible-save')
-    expect(engine.lifecycle!.currentGame).toBe(current)
-    expect(current.disposed).toBe(false)
-  })
-
   it('reports blocked storage and keeps separate games and preview namespaces isolated', async () => {
     const slots = new Map<string, string>()
 
@@ -1683,7 +1675,6 @@ describe('persistent player progress', () => {
     expect(second.read('game', 'autosave')).toBeUndefined()
     expect(second.read('game', '2')).toBeUndefined()
     expect(first.read('game', '3')).toBeUndefined()
-    expect(slots.get('ancadeba.save.first.game')).toBe('progress')
     expect(second.read('game')).toBeUndefined()
     expect(first.read('other')).toBeUndefined()
     second.write('game', 'other namespace', '2')

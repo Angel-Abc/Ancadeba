@@ -151,6 +151,7 @@ export class SceneRenderer {
       document,
       scene,
       formDrafts: drafts,
+      suspendedGame: suspended?.type === 'game' ? suspended.game : undefined,
       suspendedInventory: suspended?.type === 'game' ? suspended.game.inventory : undefined,
       suspendedBindings: suspended?.type === 'game' ? suspended.game.bindings : undefined,
       actionInfo: data.components.some((component) => component.type === 'action-info')

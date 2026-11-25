@@ -10,6 +10,7 @@ import { resolveText } from './textBindings.js'
 import { matchesConditions, notifyStory } from './storyConditions.js'
 import type { GameSave } from '@ancadeba/schemas'
 import { runtimeText } from './runtimeText.js'
+import type { GameMessageHistory } from './messageHistory.js'
 
 interface TranscriptEntry {
   readonly node: string
@@ -141,6 +142,7 @@ export class GameDialogue implements IGameDialogue {
     private readonly bindings: IGameBindings,
     private readonly quests: IGameQuests,
     private readonly messages: IMessageBus<EngineMessages>,
+    private readonly history?: GameMessageHistory,
   ) {
     this.cleanups.push(
       nearby.subscribeChanges(() => this.prune()),
@@ -335,17 +337,20 @@ export class GameDialogue implements IGameDialogue {
         const definition = entry?.dialogue && this.game.data.dialogues?.get(entry.dialogue)
 
         if (!definition) return
+        const lines = this.capturedLines(definition, definition.entry)
         conversation = {
           dialogue: definition.id,
           node: definition.entry,
           page: 0,
           version: (conversation?.version ?? 0) + 1,
           finished: definition.nodes[definition.entry]?.terminal ?? false,
-          transcript: this.capturedLines(definition, definition.entry).slice(
-            -definition.transcriptCapacity,
-          ),
+          transcript: lines.slice(-definition.transcriptCapacity),
         }
         this.conversations.set(participant.key, conversation)
+        this.history?.append(
+          'dialogue',
+          lines.map((line) => this.entryText(definition, line)),
+        )
       }
 
       this.active = participant
@@ -391,27 +396,31 @@ export class GameDialogue implements IGameDialogue {
 
     if (!effects?.isCurrent()) return
 
-    const transcript = [
-      ...conversation.transcript,
-      Object.freeze({
-        node: conversation.node,
-        choice: choice.id,
-        values: new Map<string, BindingValue>(),
-      }),
-    ].slice(-definition.transcriptCapacity)
+    const reply = Object.freeze({
+      node: conversation.node,
+      choice: choice.id,
+      values: new Map<string, BindingValue>(),
+    })
 
     const destination = choice.scene && this.game.data.scenes.get(choice.scene)
 
     if (choice.scene && (!destination || destination.type !== 'game')) return
-    effects.commit()
+
+    if (this.history)
+      this.history.recordChoice(this.entryText(definition, reply), () => effects.commit())
+    else effects.commit()
     conversation.node = choice.next ?? conversation.node
     conversation.page = 0
     conversation.finished =
       choice.end || Boolean(choice.next && definition.nodes[choice.next]?.terminal)
-    conversation.transcript = [
-      ...transcript,
-      ...(choice.next ? this.capturedLines(definition, choice.next) : []),
-    ].slice(-definition.transcriptCapacity)
+    const lines = choice.next ? this.capturedLines(definition, choice.next) : []
+    conversation.transcript = [...conversation.transcript, reply, ...lines].slice(
+      -definition.transcriptCapacity,
+    )
+    this.history?.append(
+      'dialogue',
+      lines.map((line) => this.entryText(definition, line)),
+    )
     conversation.version++
     notifyStory([
       () => effects.notify(),
@@ -442,45 +451,46 @@ export class GameDialogue implements IGameDialogue {
 
     return [
       definition.label,
-      ...conversation.transcript.map((entry) => {
-        const node = definition.nodes[entry.node]
-
-        if (entry.choice) {
-          const choice = node?.choices.find((choice) => choice.id === entry.choice)
-
-          return choice ? `${definition.messages.player}: ${choice.label}` : ''
-        }
-
-        const line = entry.line !== undefined && node?.lines[entry.line]
-
-        if (!line) return ''
-
-        const resolution = resolveText(
-          { text: this.resolve(line.text), ...(line.bindings && { bindings: line.bindings }) },
-          {
-            read: (binding) => {
-              const value = entry.values.get(this.bindingKey(binding))
-
-              return value !== undefined
-                ? { status: 'resolved', value }
-                : {
-                    status: 'unresolved',
-                    diagnostic: {
-                      source: binding.source,
-                      path: binding.path,
-                      reason: 'missing-path',
-                    },
-                  }
-            },
-            subscribeChanges: () => () => {},
-          },
-        )
-
-        return `${line.speaker ? `${this.resolve(line.speaker)}: ` : ''}${resolution.text}${resolution.diagnostics.length ? ` (${definition.messages.missingBinding})` : ''}`
-      }),
+      ...conversation.transcript.map((entry) => this.entryText(definition, entry)),
     ]
       .filter(Boolean)
       .join('\n\n')
+  }
+  private entryText(definition: DialogueDefinition, entry: TranscriptEntry): string {
+    const node = definition.nodes[entry.node]
+
+    if (entry.choice) {
+      const choice = node?.choices.find((choice) => choice.id === entry.choice)
+
+      return choice ? `${definition.messages.player}: ${choice.label}` : ''
+    }
+
+    const line = entry.line !== undefined && node?.lines[entry.line]
+
+    if (!line) return ''
+
+    const resolution = resolveText(
+      { text: this.resolve(line.text), ...(line.bindings && { bindings: line.bindings }) },
+      {
+        read: (binding) => {
+          const value = entry.values.get(this.bindingKey(binding))
+
+          return value !== undefined
+            ? { status: 'resolved', value }
+            : {
+                status: 'unresolved',
+                diagnostic: {
+                  source: binding.source,
+                  path: binding.path,
+                  reason: 'missing-path',
+                },
+              }
+        },
+        subscribeChanges: () => () => {},
+      },
+    )
+
+    return `${line.speaker ? `${this.resolve(line.speaker)}: ` : ''}${resolution.text}${resolution.diagnostics.length ? ` (${definition.messages.missingBinding})` : ''}`
   }
   private prune(): void {
     const active = this.active

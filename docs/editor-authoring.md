@@ -15,7 +15,7 @@ Zod. It does not import the engine runtime, browser APIs, or Node APIs.
 - `apps/editor-server/src/editorProjectRepository.ts`: reads source JSON,
   computes content revisions, and persists changed documents.
 - `apps/editor-server/src/editorCoordinator.ts`: serializes commands and
-  legacy file-API reads/writes within one server instance.
+  file-API reads/writes within one server instance.
 - `apps/editor-ui/src/projectController.ts`: UI workflow with an injected client.
 - `apps/editor-ui/src/editorClient.ts`: HTTP adapter.
 - `apps/editor-ui/src/projectPanel.ts`: DOM bindings and local form drafts.
@@ -54,8 +54,8 @@ the complete command list, schemas, and examples, including gameplay authoring.
 | `scene.removeStatusPanel`  | `sceneId`, status `componentId`                                                                                    |
 
 Scene creation updates both the scene document and the manifest reference.
-Metadata commands accept translation-key strings to assign them, or `null` to
-remove them. Omitting either key preserves its existing value for older clients.
+Metadata commands replace the title, description and their translation keys.
+Include each key to keep its assignment. Omit it or send `null` to use the literal text.
 Referenced keys must exist in the default-language catalog; title translations
 must be nonempty. Clearing a title key requires a nonempty literal title.
 Game IDs cannot be changed. Scene IDs support revision-checked rename commands.
@@ -148,9 +148,8 @@ Invoke-RestMethod 'http://127.0.0.1:3100/api/editor/commands' `
   -Method Post -ContentType 'application/json' -Body $body
 ```
 
-Command errors return `error`, `code`, and `diagnostics`. Each diagnostic has
-`code`, game-relative `file`, property `path`, and `message`. Workspace transport
-errors retain the existing file API's status and error-message conventions.
+API errors return `error`, `code`, `diagnostics` and the write `outcome`. Each diagnostic has
+`code`, game-relative `file`, property `path`, and `message`.
 
 | Status | Meaning                                           |
 | ------ | ------------------------------------------------- |
@@ -1093,7 +1092,7 @@ Lifecycle events include **Before action**, **After action**, **Status applied**
 Before-action runs for each attempted selected/queued action before paying costs;
 AP, resource availability, target health and stun are checked again afterward.
 A blocked action spends no action costs or RNG and does not emit after-action.
-Successful actions emit the existing action-resolved event before after-action.
+Successful actions emit after-action.
 A terminal outcome stops further hooks. Status events run after mutation: an
 actual application/refresh/removal/expiry emits its specific event followed by
 status-changed; partial stack removal and duration ticks emit only status-changed.
@@ -1265,10 +1264,9 @@ drafts before switching encounters. Scenario references that no longer resolve
 are reported during replay, allowing gameplay changes without blocking the game.
 Changes to test data do not affect gameplay save compatibility.
 
-For layered encounter mechanics, choose **Compose rulesets**. Select **Ruleset
+For shared encounter mechanics, select **Ruleset
 to add** and choose **Add ruleset layer**. Add, reorder, replace or remove layers,
-with independent actor-role bindings in each. Existing single references convert
-without copying shared mechanics into the encounter. Library and ruleset usage
+with independent actor-role bindings in each. Library and ruleset usage
 lists include every selected layer.
 
 Duplicate resource/trigger/phase IDs show both providers and prevent saving.
@@ -1297,14 +1295,13 @@ Use **Apply actor roles to controls** after editing the role list. Roles used fo
 phase rotations must bind to enemy actors in an encounter. Shared rulesets can
 reference moves and statuses from their own library.
 
-In the encounter form, choose **Combat ruleset** and bind its roles to actual
+In the encounter form, use **Add ruleset layer** and bind its roles to actual
 actors. The displayed mechanics combine the shared ruleset with local overrides.
 Editing an inherited value saves only that change for the selected fight; untouched
 fields continue to follow library updates. The entry list identifies inherited,
 overridden and excluded definitions. Reset individual entries, settings, or all
 overrides to inherit again. Excluding an entry still requires fixing references to
-it. Choosing inline mechanics detaches a copy with explicit shared dependencies.
-Selecting a different ruleset resets previous local mechanics to the new defaults.
+it. **Detach composition to inline mechanics** copies the effective mechanics with explicit shared dependencies.
 
 The sample's Reef and Deep water fights share `environments/underwater`, bind the
 swimmer role to different actor IDs, and demonstrate inherited versus overridden
@@ -1485,9 +1482,7 @@ the last completed checkpoint remains available. Gameplay-definition or styleshe
 saves incompatible; loading reports this before replacing the current playthrough.
 Translation catalogs, key assignments and displayed text can change while keeping
 saves compatible. Available/default language changes also preserve saves; a saved
-language that was removed falls back to the current/default language. Older
-full-content fingerprints are incompatible and have no upgrade path. See the README
-for the compatibility boundary.
+language that was removed falls back to the current/default language.
 The component editor offers `save-game`, `load-game`, `load-autosave`, `delete-save`,
 `import-save`, and `export-save` button actions without a scene target.
 Choose a stand-alone **Game menu scene** in game properties. `open-menu` pauses
@@ -1888,8 +1883,8 @@ shop with unlimited merchant funds, E/R commands, dyed stock, and larger artwork
 `game.trading` exposes selection snapshots, quotes, eligibility checks, trades,
 feedback, and change subscriptions. Authored rule games automatically receive a
 transaction adapter for their declared numeric Map fields. Bindings remain
-read-only. A custom host supplies `EngineRuntimeServices.createTradeState(game)`
-returning `ITradeState`; `MapTradeState` is available for Map-backed hosts. The
+read-only. A custom host supplies `EngineRuntimeServices.createStateTransactions(game)`
+returning `IStateTransactions`; `MapStateTransactions` is available for Map-backed hosts. The
 shop's numeric fields must still be declared in its rule data for validation.
 
 Adapter `prepare(writes)` must validate the whole batch without mutation or
@@ -1906,7 +1901,7 @@ formulas, haggling, currency conversion, buyback history, and trade time costs.
 ## Dialogue and quests
 
 Open **Dialogue & quests** in the editor to create branching conversations and
-linear quests. These are optional resources; existing games need no migration.
+linear quests. Both resources are optional.
 Add their IDs to `game.json`:
 
 ```json
@@ -1988,6 +1983,27 @@ line enters the transcript; changing language re-renders definition references
 with those captured values and does not repeat effects. Without a `bindings`
 map, braces remain literal. Missing values use the binding fallback and a
 localized diagnostic. `transcriptCapacity` bounds retained lines and replies.
+
+### Scrolling message history
+
+In the scene editor, choose **Add component** and select **Message history** under
+**Text and visuals**. Size its grid area for the number of lines you want visible.
+You can place it in a gameplay scene or a pause menu. The Basic Game includes it
+in the menu opened with Escape.
+
+The panel shows the latest 200 entries from the playthrough in chronological
+order. Dialogue contributes each spoken line and each reply the player selects.
+For other narrative events, add an `append-log` effect to a rule or choice that
+uses the game's activity log.
+
+```json
+{ "type": "append-log", "text": "The curator unlocks the archive." }
+```
+
+Recording continues across scenes, including while the panel is closed. Entries
+keep the language and substituted values the player saw. New entries appear at
+the bottom. Scroll up to read earlier messages and return to the bottom to follow
+new ones. Loading a saved game restores its message history.
 
 ### Quest stages, hand-ins, and rewards
 

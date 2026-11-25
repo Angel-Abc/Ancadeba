@@ -978,11 +978,11 @@ export function bindMapEditor(
       terrainState: z.object({ selected: z.string(), newId: z.string() }),
       activeTab: z.enum(mapEditorTabIds),
       placementTool: z.enum(['object', 'trigger']),
-      placementDetails: z.boolean().optional(),
-      overrides: z.record(z.string(), z.number()).optional(),
-      entrySelection: z.number().int().min(-1).optional(),
-      objectSelection: z.number().int().min(-1).optional(),
-      mapTool: z.enum(['paint', 'select', 'paste']).optional(),
+      placementDetails: z.boolean(),
+      overrides: z.record(z.string(), z.number()),
+      entrySelection: z.number().int().min(-1),
+      objectSelection: z.number().int().min(-1),
+      mapTool: z.enum(['paint', 'select', 'paste']),
       layerState: z.object({ selected: z.string(), newId: z.string(), erasing: z.boolean() }),
       tilesetState: z.object({
         selected: z.string(),
@@ -1024,13 +1024,13 @@ export function bindMapEditor(
       terrainState = saved.terrainState
       activeTab = saved.activeTab
       placementTool = saved.placementTool
-      placementDetails = saved.placementDetails ?? false
-      objectState.overrides = saved.overrides ?? {}
-      entryState.selected = saved.entrySelection ?? -1
+      placementDetails = saved.placementDetails
+      objectState.overrides = saved.overrides
+      entryState.selected = saved.entrySelection
 
-      objectState.selected = saved.objectSelection ?? -1
+      objectState.selected = saved.objectSelection
 
-      if (saved.mapTool) selection.setTool(saved.mapTool === 'paste' ? 'select' : saved.mapTool)
+      selection.setTool(saved.mapTool === 'paste' ? 'select' : saved.mapTool)
       layerState = saved.layerState
       tilesetState = saved.tilesetState
       history.reset({ map: view?.maps?.[selected] ?? new MapDraft().data, id: selected })

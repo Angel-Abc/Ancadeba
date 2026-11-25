@@ -38,10 +38,10 @@ function layeredMap() {
 }
 
 describe('map layers', () => {
-  it('accepts legacy ground maps and validates layer dimensions, empty cells, IDs, and terrain references', () => {
+  it('accepts ground-only maps and validates layer dimensions, empty cells, IDs, and terrain references', () => {
     const map = layeredMap()
-    const legacy = { ...map, layers: undefined }
-    expect(mapDefinitionSchema.parse(legacy).layers).toBeUndefined()
+    const groundOnly = { ...map, layers: undefined }
+    expect(mapDefinitionSchema.parse(groundOnly).layers).toBeUndefined()
     const invalid = structuredClone(map)
     invalid.layers!.push({ ...invalid.layers![0]! })
     expect(mapDefinitionSchema.safeParse(invalid).success).toBe(false)

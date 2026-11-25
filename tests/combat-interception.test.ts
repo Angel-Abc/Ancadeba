@@ -185,8 +185,8 @@ function resolve(
       escape: false,
       plan: moves.map((move) => ({ move, target: move === 'hit' ? 'enemy' : 'player' })),
       enemies: {
-        enemy: { moves: [{ move: 'wave', target: 'player' }], cursor: 0 },
-        protector: { moves: [], cursor: 0 },
+        enemy: { moves: [{ move: 'wave', target: 'player' }], startCursor: 0, cursor: 0 },
+        protector: { moves: [], startCursor: 0, cursor: 0 },
       },
       ...options,
     },
@@ -467,7 +467,10 @@ describe('damage and healing interception', () => {
     const result = resolve(definition, [], {
       statuses: { player: [status('shield'), status('venom')] },
       guard: { player: 20 },
-      enemies: { enemy: { moves: [], cursor: 0 }, protector: { moves: [], cursor: 0 } },
+      enemies: {
+        enemy: { moves: [], startCursor: 0, cursor: 0 },
+        protector: { moves: [], startCursor: 0, cursor: 0 },
+      },
     }).result
 
     expect(result.health.player).toBe(78)
@@ -489,7 +492,10 @@ describe('damage and healing interception', () => {
 
     const { result, frames } = resolve(definition, ['hit'], {
       statuses: { player: [status('shield')] },
-      enemies: { enemy: { moves: [], cursor: 0 }, protector: { moves: [], cursor: 0 } },
+      enemies: {
+        enemy: { moves: [], startCursor: 0, cursor: 0 },
+        protector: { moves: [], startCursor: 0, cursor: 0 },
+      },
     })
 
     expect(result.health.player).toBe(76)

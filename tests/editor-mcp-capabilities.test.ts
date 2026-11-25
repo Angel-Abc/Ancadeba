@@ -14,7 +14,11 @@ describe('MCP folder rename capability', () => {
         if (address.endsWith('capabilities'))
           return Response.json({
             ...capabilities,
-            features: { projectRenaming: true, projectFolderRenaming: false },
+            features: {
+              ...capabilities.features,
+              projectRenaming: true,
+              projectFolderRenaming: false,
+            },
           })
 
         if (init?.method === 'POST' && typeof init.body === 'string') requests.push(init.body)

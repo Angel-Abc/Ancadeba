@@ -511,7 +511,9 @@ describe('combat equipment stats', () => {
       guard: {},
       seed: 1024,
       plan: [{ move: 'guard', target: 'player' }],
-      enemies: { enemy: { cursor: 0, moves: [{ move: 'attack', target: 'player' }] } },
+      enemies: {
+        enemy: { startCursor: 0, cursor: 0, moves: [{ move: 'attack', target: 'player' }] },
+      },
       escape: false,
     }
 

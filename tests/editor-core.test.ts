@@ -211,6 +211,7 @@ describe('editor core', () => {
 
     const game = applyCommand(translated, {
       type: 'game.updateMetadata',
+      titleKey: 'game.title',
       title: '  ',
       description: '',
       version: '1',
@@ -220,6 +221,7 @@ describe('editor core', () => {
     expect(
       applyCommand(translated, {
         type: 'scene.updateMetadata',
+        titleKey: 'scenes.start.title',
         sceneId: 'start',
         title: '',
         description: '',

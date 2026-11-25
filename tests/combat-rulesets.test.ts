@@ -114,7 +114,7 @@ function fixture() {
         effects: [{ id: 'charge', type: 'change-resource', resource: 'gauge', amount: 25 }],
       },
     },
-    ruleset: { library: 'common', id: 'tides', actors: { hero: 'knight', boss: 'crab' } },
+    rulesets: [{ library: 'common', id: 'tides', actors: { hero: 'knight', boss: 'crab' } }],
   })
 
   return { library, source, libraries: new Map([['common', library]]) }
@@ -200,15 +200,17 @@ describe('reusable combat rulesets', () => {
         .success,
     ).toBe(false)
     expect(
-      combatSourceSchema.safeParse({ ...source, ruleset: undefined, mechanicsOverrides: {} })
+      combatSourceSchema.safeParse({ ...source, rulesets: undefined, mechanicsOverrides: {} })
         .success,
     ).toBe(false)
     expect(resolveCombatSource(source, new Map()).issues[0]?.message).toContain(
       'Missing combat ruleset',
     )
     expect(
-      resolveCombatSource({ ...source, ruleset: { library: 'common', id: 'missing' } }, libraries)
-        .definition,
+      resolveCombatSource(
+        { ...source, rulesets: [{ library: 'common', id: 'missing' }] },
+        libraries,
+      ).definition,
     ).toBeUndefined()
   })
 
@@ -327,7 +329,7 @@ describe('reusable combat rulesets', () => {
       resolveCombatSource(
         {
           ...source,
-          ruleset: { library: 'common', id: 'tides', actors: { hero: 'missing', boss: 'crab' } },
+          rulesets: [{ library: 'common', id: 'tides', actors: { hero: 'missing', boss: 'crab' } }],
         },
         libraries,
       ).issues.some((issue) => issue.message.includes('Bind actor role')),
@@ -336,7 +338,9 @@ describe('reusable combat rulesets', () => {
       resolveCombatSource(
         {
           ...source,
-          ruleset: { library: 'common', id: 'tides', actors: { hero: 'knight', boss: 'knight' } },
+          rulesets: [
+            { library: 'common', id: 'tides', actors: { hero: 'knight', boss: 'knight' } },
+          ],
         },
         libraries,
       ).issues.some((issue) => issue.message.includes('distinct actors')),
@@ -345,10 +349,12 @@ describe('reusable combat rulesets', () => {
       resolveCombatSource(
         {
           ...source,
-          ruleset: {
-            ...source.ruleset!,
-            actors: { hero: 'knight', boss: 'crab', missing: 'crab' },
-          },
+          rulesets: [
+            {
+              ...source.rulesets![0]!,
+              actors: { hero: 'knight', boss: 'crab', missing: 'crab' },
+            },
+          ],
         },
         libraries,
       ).issues.some((issue) => issue.message.includes('Unknown ruleset actor role')),
@@ -414,7 +420,9 @@ describe('reusable combat rulesets', () => {
           moves: ['guard'],
         },
       ],
-      ruleset: { ...source.ruleset, actors: { hero: 'knight', boss: 'crab', helper: 'minion' } },
+      rulesets: [
+        { ...source.rulesets![0]!, actors: { hero: 'knight', boss: 'crab', helper: 'minion' } },
+      ],
       moves: {
         ...source.moves,
         attack: { type: 'attack', label: 'Local attack', apCost: 1, damage: { min: 9, max: 9 } },
@@ -473,7 +481,7 @@ describe('ruleset authoring persistence', () => {
 
     const rawSource = {
       ...source,
-      ruleset: { ...source.ruleset, extension: 'reference' },
+      rulesets: [{ ...source.rulesets![0]!, extension: 'reference' }],
       mechanicsOverrides: {
         extension: 'root',
         resources: { stamina: { maximum: 30, extension: 'patch' } },
@@ -510,12 +518,14 @@ describe('ruleset authoring persistence', () => {
 
     const next = object(saved.project.documents['combat/first.json'])
     expect(next.mechanics).toBeUndefined()
-    expect(next.ruleset).toMatchObject({
-      library: 'common',
-      id: 'tides',
-      actors: { hero: 'knight', boss: 'crab' },
-      extension: 'reference',
-    })
+    expect(next.rulesets).toMatchObject([
+      {
+        library: 'common',
+        id: 'tides',
+        actors: { hero: 'knight', boss: 'crab' },
+        extension: 'reference',
+      },
+    ])
     expect(next.mechanicsOverrides).toEqual(rawSource.mechanicsOverrides)
 
     const librarySave = applyCommand(saved.project, {
@@ -549,7 +559,7 @@ describe('ruleset authoring persistence', () => {
     const view = inspectProject(project)
     expect(() =>
       applyCommand(project, { type: 'game.upsertCombat', encounter: view.combat!.first! }),
-    ).toThrow('Include ruleset explicitly')
+    ).toThrow('Include rulesets explicitly')
     expect(() =>
       applyCommand(project, {
         type: 'game.upsertCombatLibrary',
@@ -576,7 +586,7 @@ describe('ruleset authoring persistence', () => {
       type: 'game.upsertCombat',
       encounter: {
         ...source,
-        ruleset: null,
+        rulesets: [],
         mechanics,
         sharedMoves: [
           { library: 'common', id: 'guard' },
@@ -586,7 +596,7 @@ describe('ruleset authoring persistence', () => {
       },
     })
 
-    expect(object(detached.project.documents['combat/first.json']).ruleset).toBeUndefined()
+    expect(object(detached.project.documents['combat/first.json']).rulesets).toEqual([])
     expect(inspectProject(detached.project).combat!.first!.mechanics).toEqual(mechanics)
   })
 })

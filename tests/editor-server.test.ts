@@ -57,7 +57,12 @@ describe('editor server', () => {
     const response = await fetch(`${baseUrl}${path}`, { method })
 
     expect(response.status).toBe(404)
-    await expect(response.json()).resolves.toEqual({ error: 'Not found' })
+    await expect(response.json()).resolves.toEqual({
+      error: 'Not found',
+      code: 'not_found',
+      diagnostics: [],
+      outcome: 'not_applied',
+    })
   })
 
   it('lists the root and nested directories without exposing host paths', async () => {
@@ -383,7 +388,12 @@ describe('editor server', () => {
       const base = `http://127.0.0.1:${address.port}`
       const response = await fetch(`${base}/api/workspace`)
       expect(response.status).toBe(500)
-      await expect(response.json()).resolves.toEqual({ error: 'Workspace operation failed' })
+      await expect(response.json()).resolves.toEqual({
+        error: 'Workspace operation failed',
+        code: 'workspace_error',
+        diagnostics: [],
+        outcome: 'not_applied',
+      })
       expect(reportError).toHaveBeenCalledExactlyOnceWith('GET /api/workspace', cause)
       expect((await fetch(`${base}/api/files?path=missing.txt`)).status).toBe(404)
       expect(reportError).toHaveBeenCalledTimes(1)

@@ -1,6 +1,7 @@
 import { createProjectPanelDependencies } from '../apps/editor-ui/src/projectPanelDependencies.js'
 import { describe, expect, it, vi } from 'vite-plus/test'
 import {
+  unavailableEditorFeatures,
   commandRequestSchema,
   createProjectRequestSchema,
   createStarterProject,
@@ -106,6 +107,8 @@ function panel(
   ],
   recoveryStorage?: EditorDraftStorage,
   features: EditorFeatures = {
+    projectRepair: true,
+    gameExport: true,
     history: true,
     assetImport: true,
     projectDiscovery: true,
@@ -425,7 +428,15 @@ describe('project panel form reconciliation', () => {
       expect(ui.imports).toEqual([])
       ui.confirmDiscardDrafts.mockReturnValue(true)
       ui.setTransferResponse(async () =>
-        Response.json({ error: 'Folder exists', code: 'project_exists' }, { status: 409 }),
+        Response.json(
+          {
+            error: 'Folder exists',
+            code: 'project_exists',
+            diagnostics: [],
+            outcome: 'not_applied',
+          },
+          { status: 409 },
+        ),
       )
       ui.control('project-import-controls').fire('submit')
       await vi.waitFor(() =>
@@ -537,7 +548,15 @@ describe('project panel form reconciliation', () => {
       ui.control('project-rename-toggle').fire('click')
       ui.control('project-rename-folder').value = 'occupied'
       ui.setManagementResponse(async () =>
-        Response.json({ error: 'Folder occupied', diagnostics: [] }, { status: 409 }),
+        Response.json(
+          {
+            error: 'Folder occupied',
+            code: 'workspace_conflict',
+            diagnostics: [],
+            outcome: 'unknown',
+          },
+          { status: 409 },
+        ),
       )
       ui.control('project-rename-controls').fire('submit')
       await vi.waitFor(() =>
@@ -609,7 +628,15 @@ describe('project panel form reconciliation', () => {
       expect(ui.duplications).toEqual([])
       ui.confirmDiscardDrafts.mockReturnValue(true)
       ui.setDuplicateResponse(async () =>
-        Response.json({ code: 'project_exists', error: 'Folder exists' }, { status: 409 }),
+        Response.json(
+          {
+            code: 'project_exists',
+            error: 'Folder exists',
+            diagnostics: [],
+            outcome: 'not_applied',
+          },
+          { status: 409 },
+        ),
       )
       ui.control('project-duplicate-controls').fire('submit')
       await vi.waitFor(() =>
@@ -942,7 +969,10 @@ describe('project panel form reconciliation', () => {
       ui.control('editor-title-key').value = 'game.title'
       ui.control('editor-title-key').fire('input')
       ui.setApplyResponse(async () =>
-        Response.json({ code: 'revision_conflict', error: 'Conflict' }, { status: 409 }),
+        Response.json(
+          { code: 'revision_conflict', error: 'Conflict', diagnostics: [], outcome: 'not_applied' },
+          { status: 409 },
+        ),
       )
       ui.control('editor-metadata').fire('submit')
       await vi.waitFor(() => expect(ui.control('editor-error').textContent).toBe('Conflict'))
@@ -1172,7 +1202,15 @@ describe('project panel form reconciliation', () => {
       expect(creations).toEqual([])
       confirmDiscardDrafts.mockReturnValue(true)
       setCreateResponse(async () =>
-        Response.json({ error: 'Folder exists', code: 'project_exists' }, { status: 409 }),
+        Response.json(
+          {
+            error: 'Folder exists',
+            code: 'project_exists',
+            diagnostics: [],
+            outcome: 'not_applied',
+          },
+          { status: 409 },
+        ),
       )
       control('project-create-controls').fire('submit')
       await vi.waitFor(() =>
@@ -1410,8 +1448,7 @@ describe('project panel form reconciliation', () => {
 
 it('keeps title renaming enabled and gates unsupported management controls', async () => {
   const ui = panel(undefined, undefined, {
-    history: false,
-    assetImport: false,
+    ...unavailableEditorFeatures,
     projectRenaming: true,
     projectFolderRenaming: false,
     projectDeletion: false,

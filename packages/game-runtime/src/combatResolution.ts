@@ -138,7 +138,7 @@ export interface CombatLogEntry {
 export interface EnemyPlan {
   readonly moves: readonly PlannedMove[]
   readonly cursor: number
-  readonly startCursor?: number | undefined
+  readonly startCursor: number
 }
 
 export function planEnemies(
@@ -238,7 +238,7 @@ export function resolveCombatRound(
   const refreshedThisTurn = new Set<string>()
 
   const cursors = Object.fromEntries(
-    Object.entries(current.enemies).map(([id, plan]) => [id, plan.startCursor ?? plan.cursor]),
+    Object.entries(current.enemies).map(([id, plan]) => [id, plan.startCursor]),
   )
 
   let seed = current.seed
@@ -1199,12 +1199,6 @@ export function resolveCombatRound(
 
           if (move.cooldown)
             (cooldowns[actor.id] ??= {})[queued.move] = safe(round + move.cooldown + 1)
-          mechanics.emit({
-            type: 'action-resolved',
-            actor: actor.id,
-            target: queued.target,
-            move: queued.move,
-          })
           mechanics.lifecycle({
             type: 'after-action',
             actor: actor.id,

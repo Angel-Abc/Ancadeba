@@ -8,7 +8,7 @@ import type { IGameLifecycle, SceneInstance } from './gameLifecycle.js'
 import type { IGameBindings } from './gameBindings.js'
 import type { IGameInventory, InventoryItemSnapshot } from './inventory.js'
 import type { IGameInventorySelection, InventorySelectionSnapshot } from './inventoryContext.js'
-import type { ITradeState, TradeStateWrite } from './tradeState.js'
+import type { IStateTransactions, StateWrite } from './stateTransactions.js'
 
 export type TradeOperation = 'buy' | 'sell'
 
@@ -78,7 +78,7 @@ export class GameTrading implements IGameTrading {
     private readonly selection: IGameInventorySelection,
     private readonly inventory: IGameInventory | undefined,
     private readonly bindings: IGameBindings,
-    private readonly state: ITradeState | undefined,
+    private readonly state: IStateTransactions | undefined,
     private readonly invalidate: () => void,
   ) {
     const changed = () => {
@@ -140,7 +140,7 @@ export class GameTrading implements IGameTrading {
     player: number,
     merchant: number | 'unlimited',
     amount: number,
-  ): TradeStateWrite[] {
+  ): StateWrite[] {
     return [
       {
         path: shop.playerBalance.path,

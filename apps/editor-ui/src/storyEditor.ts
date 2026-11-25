@@ -1,4 +1,3 @@
-import { recoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerEditorDraft } from './editorDraftState.js'
@@ -445,7 +444,7 @@ export function bindStoryEditor(
         ])
         .optional(),
       selection: z.string(),
-      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
+      entries: z.record(z.string(), z.number().int().nonnegative()),
       dirty: z.boolean(),
       journalDirty: z.boolean(),
       journalScene: z.string(),
@@ -459,7 +458,7 @@ export function bindStoryEditor(
     (saved) => {
       draft = saved.draft
       selection = saved.selection
-      entries = saved.entries ?? {}
+      entries = saved.entries
       dirty = saved.dirty
       journalDirty = saved.journalDirty
       journalScene = saved.journalScene
@@ -486,14 +485,6 @@ export function bindStoryEditor(
           : []),
         ...(journalDirty ? [{ key: 'story', detail: t('story.journalPlacement') }] : []),
       ]
-    },
-    takeRecoveredComponents() {
-      if (!journalDirty || !journal) return []
-      const entry = recoveredComponent(view, journalScene, journal)
-      resetJournal()
-      render()
-
-      return [entry]
     },
     canOpenDefinition: (key: string) => selection === key || !dirty,
     openDefinition(key: string) {

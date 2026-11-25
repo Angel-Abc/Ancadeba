@@ -1,4 +1,3 @@
-import { recoveredComponent, type RecoveredComponent } from './recoveredSceneComponents.js'
 import { saveStatus } from './formSaveStatus.js'
 import { registerFormDraft } from './editorDraftState.js'
 import type { EditorCommand, ProjectView } from '@ancadeba/editor-core'
@@ -51,7 +50,6 @@ function buttonTriggers(
   owner: RuleFormControls,
   view: ProjectView,
   save: (command: EditorCommand) => void,
-  onRecovery?: (read: () => RecoveredComponent) => void,
   onDiscard?: () => void,
 ): HTMLElement {
   const { t } = owner
@@ -197,10 +195,6 @@ function buttonTriggers(
           : {}),
       })
 
-      onRecovery?.(() => ({
-        ...recoveredComponent(view, scene.id, readButton()),
-        existingId: current?.id,
-      }))
       submit(
         form,
         t('rules.saveButton'),
@@ -363,7 +357,6 @@ export function ruleTriggerForms(
   save: (command: EditorCommand) => void,
   options: {
     controls?: (section: RuleTriggerSection) => RuleFormControls
-    recovery?: (section: RuleTriggerSection, read: () => RecoveredComponent) => void
     shortcut?: (section: RuleTriggerSection) => HTMLElement | undefined
     retained?: ReadonlyMap<RuleTriggerSection, HTMLElement>
     discarded?: (section: RuleTriggerSection) => void
@@ -379,13 +372,7 @@ export function ruleTriggerForms(
 
     switch (section) {
       case 'buttons':
-        return buttonTriggers(
-          scoped,
-          view,
-          save,
-          (read) => options.recovery?.(section, read),
-          () => options.discarded?.(section),
-        )
+        return buttonTriggers(scoped, view, save, () => options.discarded?.(section))
       case 'inspection':
         return inspectionTriggers(scoped, view, save, () => options.discarded?.(section))
       case 'actions':
@@ -393,7 +380,6 @@ export function ruleTriggerForms(
       case 'nearby':
         return nearbyForm(scoped, view, save, undefined, {
           onDiscard: () => options.discarded?.(section),
-          recovery: (read) => options.recovery?.(section, read),
         })
     }
   })

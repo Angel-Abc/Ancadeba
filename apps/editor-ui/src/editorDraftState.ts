@@ -151,7 +151,7 @@ export function registerEditorDraft<T extends z.ZodType>(
   })
 }
 
-/** Small legacy forms own their draft in event closures; replay only field edits, never actions. */
+/** Small forms own their draft in event closures; replay only field edits, never actions. */
 export function registerFormDraft(root: HTMLElement, name: string, dirty: () => boolean): void {
   const controls = () =>
     Array.from(

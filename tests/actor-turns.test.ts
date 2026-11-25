@@ -592,7 +592,7 @@ describe('dynamic actor membership', () => {
     expect(retained.progression).toEqual({ turn: 0, worldTimeMs: 0 })
   })
 
-  it('rejects roster changes without turn configuration and omits roster fields in legacy outcomes', async () => {
+  it('rejects roster changes without turn configuration and omits roster fields from ordinary turns', async () => {
     const instance = await start({
       rules: {
         handlers: new Map<string, GameActionHandler>([
@@ -1360,7 +1360,7 @@ describe('turn outcome validation and atomic commits', () => {
     expect(instance.engine.state).toBe('stopped')
   })
 
-  it('keeps legacy numeric turns compatible and rejects phase advances without configuration', async () => {
+  it('advances numeric turns and rejects phase advances without configuration', async () => {
     const handler = vi.fn<GameActionHandler>(() => ({ status: 'applied' }))
 
     const instance = await start({

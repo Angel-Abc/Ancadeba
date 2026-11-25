@@ -10,6 +10,8 @@ export { GameConfirmationDialog, type GameConfirmation } from './gameConfirmatio
 
 export { TextComponentRenderer } from './textComponentRenderer.js'
 
+export { MessageHistoryComponentRenderer } from './messageHistoryComponentRenderer.js'
+
 export { ButtonComponentRenderer } from './buttonComponentRenderer.js'
 
 export { SaveSlotsComponentRenderer } from './saveSlotsComponentRenderer.js'

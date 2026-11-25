@@ -348,7 +348,7 @@ export function bindGraphicDefinitionsEditor(
     'graphic-definitions',
     z.object({
       catalog: assetCatalogSchema,
-      selections: z.record(z.string(), z.record(z.string(), z.number())).optional(),
+      selections: z.record(z.string(), z.record(z.string(), z.number())),
       kind: z.enum(['parts', 'compositions']),
       selected: z.string(),
       newId: z.string(),
@@ -364,7 +364,7 @@ export function bindGraphicDefinitionsEditor(
     }),
     () => (dirty ? { catalog, kind, selected, newId, palette, pending, selections } : undefined),
     (saved) => {
-      selections = saved.selections ?? {}
+      selections = saved.selections
       catalog = saved.catalog
       kind = saved.kind
       selected = saved.selected

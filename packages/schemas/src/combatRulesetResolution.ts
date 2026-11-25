@@ -6,7 +6,6 @@ import type { CombatMechanicsDefinition, CombatTriggerEffect } from './combatMec
 import {
   applyCombatMechanicsOverrides,
   cloneCombatRules,
-  combatRulesetReferences,
   type CombatRuleset,
 } from './combatRulesets.js'
 
@@ -98,7 +97,7 @@ export function resolveCombatRuleset(
   file = `combat/${source.id}.json`,
 ) {
   const issues: { file: string; path: (string | number)[]; message: string }[] = []
-  const references = combatRulesetReferences(source)
+  const references = source.rulesets ?? []
 
   const conflicts: {
     section: string
@@ -131,7 +130,7 @@ export function resolveCombatRuleset(
   let phaseOwner: string | undefined
 
   for (const [index, reference] of references.entries()) {
-    const path = source.rulesets ? ['rulesets', index] : ['ruleset']
+    const path = ['rulesets', index]
     const identity = `${reference.library}/${reference.id}`
     const ruleset = libraries.get(reference.library)?.rulesets?.[reference.id]
 

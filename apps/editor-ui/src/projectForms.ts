@@ -247,9 +247,9 @@ export function bindProjectForms(
       fields: z.record(z.string(), z.string()),
       dirty: z.array(z.string()),
       scene: z.string(),
-      gridVisible: z.boolean().optional(),
+      gridVisible: z.boolean(),
       profile: z.string().optional(),
-      projectTab: z.string().optional(),
+      projectTab: z.string(),
       appearances: appearanceLibrarySchema.optional(),
       profileEntries: z.record(z.string(), z.number()).optional(),
     }),
@@ -273,13 +273,13 @@ export function bindProjectForms(
         if ([metadata.id, sceneMetadata.id, layout.id, create.id].includes(id)) dirtyForms.add(id)
       scenes.value = saved.scene
       sceneViewId = saved.scene
-      gridVisible = saved.gridVisible ?? false
+      gridVisible = saved.gridVisible
       showSceneView()
 
       if (saved.profile) profile?.restore(saved.profile, saved.profileEntries)
 
       if (saved.appearances) appearances?.restore(saved.appearances)
-      showTab(saved.projectTab ?? 'general')
+      showTab(saved.projectTab)
 
       for (const id of formFields) if (Object.hasOwn(saved.fields, id)) set(id, saved.fields[id]!)
       scenes.disabled = dirtyForms.has(sceneMetadata.id) || dirtyForms.has(layout.id)

@@ -438,7 +438,7 @@ export function bindInventoryEditor(
     'inventory',
     z.object({
       selectedFile: z.string(),
-      subentries: z.record(z.string(), z.record(z.string(), z.number())).optional(),
+      subentries: z.record(z.string(), z.record(z.string(), z.number())),
       id: z.string(),
       draft: inventorySchema,
       selected: z.object({ kind: z.enum(['itemTypes', 'owners', 'items']), id: z.string() }),
@@ -447,7 +447,7 @@ export function bindInventoryEditor(
     }),
     () => (dirty ? { selectedFile, id, draft, selected, newId, slot, subentries } : undefined),
     (saved) => {
-      subentries = saved.subentries ?? {}
+      subentries = saved.subentries
       selectedFile = saved.selectedFile
       id = saved.id
       draft = saved.draft

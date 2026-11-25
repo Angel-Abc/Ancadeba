@@ -1,5 +1,4 @@
 import { linkedTranslationFields } from './inspectorTranslations.js'
-import type { RecoveredComponent } from './recoveredSceneComponents.js'
 import { componentShortcuts, type OpenSceneComponent } from './componentShortcuts.js'
 import { sceneChoices } from './choiceLabels.js'
 import { saveStatus } from './formSaveStatus.js'
@@ -59,7 +58,6 @@ export function bindRulesPanel(
     actions: 'specialist.itemActions',
   } as const
 
-  const triggerRecovery = new Map<RuleTriggerSection, () => RecoveredComponent>()
   const placementScenes = new Map<RuleTriggerSection, string>()
   let triggerForms = new Map<RuleTriggerSection, HTMLElement>()
   let busy = false
@@ -271,7 +269,6 @@ export function bindRulesPanel(
 
     const forms = ruleTriggerForms(triggerControls, view, submit, {
       retained,
-      recovery: (section, read) => triggerRecovery.set(section, read),
       shortcut(section) {
         if (
           !openComponent ||
@@ -369,9 +366,9 @@ export function bindRulesPanel(
       newRuleId: z.string(),
       selected: z.string(),
       rulesDirty: z.boolean(),
-      ruleView: z.enum(ruleViews).optional(),
-      triggerView: z.enum(ruleTriggerSections).optional(),
-      entries: z.record(z.string(), z.number().int().nonnegative()).optional(),
+      ruleView: z.enum(ruleViews),
+      triggerView: z.enum(ruleTriggerSections),
+      entries: z.record(z.string(), z.number().int().nonnegative()),
       dirtyTriggers: z.array(z.enum(ruleTriggerSections)),
       triggers: z.boolean(),
     }),
@@ -395,9 +392,9 @@ export function bindRulesPanel(
       ruleId = saved.ruleId
       newRuleId = saved.newRuleId
       selected = saved.selected
-      ruleView = saved.ruleView ?? 'actions'
-      triggerView = saved.triggerView ?? 'buttons'
-      entries = saved.entries ?? {}
+      ruleView = saved.ruleView
+      triggerView = saved.triggerView
+      entries = saved.entries
       rulesDirty = saved.rulesDirty
       dirtyTriggers.clear()
 
@@ -507,22 +504,6 @@ export function bindRulesPanel(
         },
       })),
     ],
-    takeRecoveredComponents() {
-      const drafts: RecoveredComponent[] = []
-
-      for (const section of ['buttons', 'nearby'] as const) {
-        const read = triggerRecovery.get(section)
-
-        if (dirtyTriggers.has(section) && read) {
-          drafts.push(read())
-          dirtyTriggers.delete(section)
-        }
-      }
-
-      if (drafts.length) renderTriggers()
-
-      return drafts
-    },
     rememberTab() {
       const triggers = !triggerFields.hidden
 
