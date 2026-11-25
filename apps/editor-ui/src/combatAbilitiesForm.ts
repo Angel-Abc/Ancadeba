@@ -204,27 +204,31 @@ export function combatStatusesForm(
       selectedId !== undefined,
       group(
         t('combat.statusTitle', { id }),
-        input(t('form.name'), status.label, (value) => {
-          status.label = value
-        }),
-        translation(
-          t('form.nameTranslation'),
-          status.labelKey ?? '',
-          translationChoices(view),
-          (value) => {
-            status.labelKey = value || undefined
-          },
+        controls.row(
+          input(t('form.name'), status.label, (value) => {
+            status.label = value
+          }),
+          translation(
+            t('form.nameTranslation'),
+            status.labelKey ?? '',
+            translationChoices(view),
+            (value) => {
+              status.labelKey = value || undefined
+            },
+          ),
         ),
-        input(t('metadata.description'), status.description, (value) => {
-          status.description = value
-        }),
-        translation(
-          t('form.descriptionTranslation'),
-          status.descriptionKey ?? '',
-          translationChoices(view),
-          (value) => {
-            status.descriptionKey = value || undefined
-          },
+        controls.row(
+          input(t('metadata.description'), status.description, (value) => {
+            status.description = value
+          }),
+          translation(
+            t('form.descriptionTranslation'),
+            status.descriptionKey ?? '',
+            translationChoices(view),
+            (value) => {
+              status.descriptionKey = value || undefined
+            },
+          ),
         ),
         select(
           t('combat.statusType'),

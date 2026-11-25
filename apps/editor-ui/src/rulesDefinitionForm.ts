@@ -384,6 +384,7 @@ export function rulesDefinitionForm(
   )
 
   const actions = group(t('rules.actions'))
+  actions.className = 'rule-actions'
   const actionIds = Object.keys(rules.actions)
 
   if (actionIds.length)
@@ -469,6 +470,7 @@ export function rulesDefinitionForm(
       )
 
       const conditions = group(t('rules.whenAll'))
+      conditions.className = 'rule-entries'
       branch.when.forEach((entry, position) => {
         const field = group(
           t('form.conditionNumber', { number: position + 1 }),
@@ -609,6 +611,7 @@ export function rulesDefinitionForm(
       )
 
       const effects = group(t('rules.effects'))
+      effects.className = 'rule-entries'
       branch.effects.forEach((entry, position) => {
         const field = group(
           t('form.effectNumber', { number: position + 1 }),
