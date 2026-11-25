@@ -5,7 +5,7 @@ visual editor, revision-checked editor API, and standalone game exports.
 
 ## Getting started
 
-Requirements: Node.js 24.11+ in the 24.x LTS line (or Node.js 26+) and pnpm 11.5.1.
+Requirements: Node.js 24.11+ in the 24.x LTS line (or Node.js 26+) and pnpm 12.23.0.
 
 ```sh
 pnpm install
