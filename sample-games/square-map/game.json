@@ -2,7 +2,7 @@
   "schema-version": "1.0.0",
   "id": "square-map",
   "title": "Coast Road",
-  "description": "Explore Coast Road and Pine Village, meet three patrolling villagers, open the chest and gather berries.",
+  "description": "Explore Coast Road and Pine Village, meet the trade caravan and its guard, watch the village patrols, open the chest and gather berries.",
   "version": "1.5.0",
   "initial-scene": "exploration",
   "scenes": ["exploration"],

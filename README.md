@@ -689,6 +689,17 @@ starting a new game restores it.
 In the map object's **Patrol** controls, choose a trigger and select adjacent route
 tiles on the grid. The route starts at the object's spawn. **Walk back and forth**
 reverses at each end. **Loop** connects the last tile to the first in one step.
+**One-way crossing** removes the object when it reaches the final tile. Leave
+**Return delay** blank for a single crossing, or enter seconds of active gameplay
+before the object reappears at its spawn. An occupied spawn delays its return.
+
+For a caravan encounter, place a stationary map object with the guard's appearance
+and interaction action. Select it under **Guard to spawn on approach** on the
+caravan, then choose **Approach distance** in tiles. Distance counts horizontal
+and vertical steps. Once per crossing, the caravan stops and the guard appears
+on a free adjacent tile. The guard leaves and the caravan resumes when the player
+is outside that distance and no longer beside the guard. Saves preserve an
+encounter in progress and the time left before movement or return.
 
 - **Gameplay timer** uses seconds of active play. Leaving the map or pausing freezes
   the remaining interval. Saves preserve the tile, route progress, and remaining time.

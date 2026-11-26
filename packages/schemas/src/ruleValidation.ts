@@ -4,6 +4,7 @@ import {
   getMapPotentialMovementCostMs,
   resolveMapObject,
   isBlockingMapObject,
+  isMapEncounterGuard,
   type MapDefinition,
   type MapObject,
 } from './map.js'
@@ -210,8 +211,12 @@ export function validateRuleSources(
       if (
         map &&
         getMapPotentialMovementCostMs(map, component.playerSpawn) !== undefined &&
-        getMapMovementCostMs(map, component.playerSpawn, (object) =>
-          isBlockingMapObject(resolveMapObject(object, initial)),
+        getMapMovementCostMs(
+          map,
+          component.playerSpawn,
+          (object) =>
+            !isMapEncounterGuard(map, object) &&
+            isBlockingMapObject(resolveMapObject(object, initial)),
         ) === undefined
       )
         merged.issues.push({

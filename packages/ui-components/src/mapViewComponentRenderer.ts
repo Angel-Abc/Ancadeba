@@ -1,6 +1,7 @@
 import type { MapViewComponentData, MapDirection } from '@ancadeba/game-runtime'
 import {
   getMapMovementCostMs,
+  isMapEncounterGuard,
   mapDirections,
   type MapDefinition,
   type MapPosition,
@@ -109,7 +110,8 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
       entry.element.setAttribute('aria-label', appearance.label)
       entry.element.style.setProperty('grid-column', `${appearance.x + 1} / span 1`)
       entry.element.style.setProperty('grid-row', `${appearance.y + 1} / span 1`)
-      entry.element.hidden = appearance.visible === false
+      entry.element.hidden =
+        appearance.visible === false || (!objects && isMapEncounterGuard(map, entry.object))
     }
 
     const images = mapTileImages(

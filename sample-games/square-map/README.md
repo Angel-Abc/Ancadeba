@@ -42,6 +42,14 @@ after each completed player step. The blue Watchman walks back and forth after
 each player turn. Choose **Wait** to advance the Watchman while the Ranger stays put.
 Leaving the village or opening the pause menu freezes the Courier’s remaining delay.
 
+## Meet the trade caravan
+
+The brown caravan enters Pine Village at the east edge (11, 4), follows the road
+west, and leaves through the south gate (6, 7). Approach within two tiles to stop
+it. Stand beside the blue-gray guard and press **E** to speak. Walk away from both
+to send the guard back and let the caravan continue. It offers one encounter per
+crossing and returns eight seconds of active village play after it leaves.
+
 ## How the exits are authored
 
 The `exploration` scene has one map view, `world-map`, with `followPlayer: true`.

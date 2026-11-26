@@ -20,6 +20,30 @@
     }
   ],
   "actions": {
+    "inspect-caravan": [
+      {
+        "when": [],
+        "effects": [
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "A canvas-covered wagon follows the road to the south gate."
+          }
+        ]
+      }
+    ],
+    "speak-to-guard": [
+      {
+        "when": [],
+        "effects": [
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "Caravan guard: We carry grain to the coast. Safe travels, friend."
+          }
+        ]
+      }
+    ],
     "wait": [
       {
         "when": [],

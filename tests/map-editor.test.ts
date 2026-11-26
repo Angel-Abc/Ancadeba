@@ -710,6 +710,58 @@ describe('visual map editor', () => {
     }
   })
 
+  it('authors a one-way crossing and guard, and can undo clearing its optional return delay', async () => {
+    const ui = setup(triggerView())
+
+    try {
+      ui.button('Place or edit map objects').dispatchEvent(new Event('click'))
+      ui.tile(2, 1).dispatchEvent(new Event('click'))
+      ui.edit('Object ID', 'guard')
+      ui.tile(1, 1).dispatchEvent(new Event('click'))
+      ui.edit('Movement trigger', 'player-step', 'change')
+      ui.edit('Route behavior', 'one-way', 'change')
+      ui.button('Select route tiles').dispatchEvent(new Event('click'))
+      ui.tile(0, 1).dispatchEvent(new Event('click'))
+      ui.button('Finish route').dispatchEvent(new Event('click'))
+      ui.edit('Guard to spawn on approach', 'guard', 'change')
+      ui.edit('Approach distance (tiles)', '3')
+      const delay = 'Return delay (seconds, leave blank for one crossing)'
+      ui.edit(delay, '2.5')
+      ui.control(delay).dispatchEvent(new Event('blur'))
+      ui.edit(delay, '')
+      ui.editor.restoreDraft('undo')
+      expect(ui.control(delay).value).toBe('2.5')
+      await ui.submit()
+      expect(ui.saved.at(-1)).toMatchObject({
+        map: {
+          objects: [
+            { id: 'guard' },
+            {
+              patrol: {
+                mode: 'one-way',
+                approach: { guard: 'guard', radius: 3 },
+                returnDelayMs: 2500,
+                trigger: { type: 'player-step' },
+                route: [
+                  { x: 1, y: 1 },
+                  { x: 0, y: 1 },
+                ],
+              },
+            },
+          ],
+        },
+      })
+      ui.edit(delay, '')
+      await ui.submit()
+      const command = ui.saved.at(-1)!
+      expect(
+        command.type === 'game.upsertMap' && command.map.objects![1]!.patrol!.returnDelayMs,
+      ).toBeUndefined()
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
   it('authors ordered boolean object states, recovers incomplete state drafts and undoes removal', async () => {
     const view = triggerView()
     view.rules!.state = [{ path: ['opened'], value: false }]

@@ -25,6 +25,7 @@ export interface IGameMapMovement {
   readonly playerMap: string | undefined
   getMap(scene: SceneInstance, mapView: string): MapDefinition | undefined
   objectPosition(object: MapObject): Readonly<MapPosition>
+  objectPresent(object: MapObject): boolean
   prepareObjectStep(
     map: string,
     object: string,
@@ -178,11 +179,12 @@ export class GameMapMovement implements IGameMapMovement {
       scheduler,
       objectState?.read ?? (() => undefined),
       (map, point) => this.playerOccupies(map, point),
+      (map) => this.activePlayers(map),
       () => this.notify(),
     )
     this.unsubscribe = lifecycle.subscribeSceneChanges(({ current }) => {
       if (current === this.scene) {
-        this.refreshMaps()
+        if (this.refreshMaps()) this.notify()
 
         return
       }
@@ -198,15 +200,18 @@ export class GameMapMovement implements IGameMapMovement {
         if (first) this.resolve(current, first.id)
       }
 
-      this.refreshMaps()
+      const objectsChanged = this.refreshMaps()
 
-      if (changed) this.notify()
+      if (changed || objectsChanged) this.notify()
     })
 
     if (
       Array.from(maps.values()).some((map) => map.objects?.some((object) => object.states?.length))
     )
-      this.unsubscribeState = objectState?.subscribe(() => this.notify())
+      this.unsubscribeState = objectState?.subscribe(() => {
+        this.objects.refresh()
+        this.notify()
+      })
   }
 
   getTileCost(
@@ -223,6 +228,10 @@ export class GameMapMovement implements IGameMapMovement {
     })
   }
 
+  objectPresent(object: MapObject): boolean {
+    return this.objects.present(object)
+  }
+
   objectPosition(object: MapObject): Readonly<MapPosition> {
     return this.objects.position(object)
   }
@@ -237,24 +246,31 @@ export class GameMapMovement implements IGameMapMovement {
 
   start(): void {
     this.started = true
-    this.refreshMaps()
+
+    if (this.refreshMaps()) this.notify()
   }
 
   private playerOccupies(map: MapDefinition, point: MapPosition): boolean {
+    return this.activePlayers(map).some(
+      (position) => position.x === point.x && position.y === point.y,
+    )
+  }
+
+  private activePlayers(map: MapDefinition): MapPosition[] {
     const scene = this.lifecycle.activeScene
 
-    if (scene?.type !== 'game' || scene.game !== this.game) return false
+    if (scene?.type !== 'game' || scene.game !== this.game) return []
 
-    return scene.data.components.some((view) => {
-      if (view.type !== 'map-view' || this.getMap(scene, view.id) !== map) return false
-      const player = this.getPosition(scene, view.id)
+    return scene.data.components.flatMap((view) => {
+      if (view.type !== 'map-view' || this.getMap(scene, view.id) !== map) return []
+      const position = this.getPosition(scene, view.id)
 
-      return player?.x === point.x && player.y === point.y
+      return position ? [position] : []
     })
   }
 
-  private refreshMaps(): void {
-    if (!this.started) return
+  private refreshMaps(): boolean {
+    if (!this.started) return false
     const maps = new Set<MapDefinition>()
     const scene = this.lifecycle.activeScene
 
@@ -267,7 +283,7 @@ export class GameMapMovement implements IGameMapMovement {
       }
     }
 
-    this.objects.setActive(maps)
+    return this.objects.setActive(maps, Boolean(this.lifecycle.suspendedScene))
   }
 
   private resolve(scene: SceneInstance, mapView: string) {

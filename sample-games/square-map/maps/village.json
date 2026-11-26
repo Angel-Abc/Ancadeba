@@ -35,6 +35,8 @@
       },
       "walkable": false
     },
+    "caravan": { "color": "#905b27" },
+    "guard": { "color": "#425b79" },
     "courier": { "color": "#a24531" },
     "ranger": { "color": "#24544a" },
     "watchman": { "color": "#354e88" },
@@ -119,7 +121,7 @@
       "road",
       "road",
       "road",
-      "forest"
+      "road"
     ],
     [
       "forest",
@@ -156,7 +158,7 @@
       "forest",
       "forest",
       "forest",
-      "forest",
+      "road",
       "forest",
       "forest",
       "forest",
@@ -173,6 +175,39 @@
     }
   ],
   "objects": [
+    {
+      "id": "caravan",
+      "label": "Trade caravan",
+      "x": 11,
+      "y": 4,
+      "terrain": "caravan",
+      "action": "inspect-caravan",
+      "patrol": {
+        "mode": "one-way",
+        "route": [
+          { "x": 11, "y": 4 },
+          { "x": 10, "y": 4 },
+          { "x": 9, "y": 4 },
+          { "x": 8, "y": 4 },
+          { "x": 7, "y": 4 },
+          { "x": 6, "y": 4 },
+          { "x": 6, "y": 5 },
+          { "x": 6, "y": 6 },
+          { "x": 6, "y": 7 }
+        ],
+        "trigger": { "type": "timer", "intervalMs": 1500 },
+        "returnDelayMs": 8000,
+        "approach": { "radius": 2, "guard": "caravan-guard" }
+      }
+    },
+    {
+      "id": "caravan-guard",
+      "label": "Caravan guard",
+      "x": 10,
+      "y": 6,
+      "terrain": "guard",
+      "action": "speak-to-guard"
+    },
     {
       "id": "courier",
       "label": "Courier",

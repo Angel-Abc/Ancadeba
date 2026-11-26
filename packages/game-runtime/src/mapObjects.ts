@@ -34,6 +34,9 @@ export class GameMapObjects implements IGameMapObjects {
     const appearance = resolveMapObject(entry, this.readState)
     const position = this.movement.objectPosition(entry)
 
+    if (!this.movement.objectPresent(entry))
+      return { ...appearance, x: position.x, y: position.y, visible: false }
+
     return position.x === entry.x && position.y === entry.y
       ? appearance
       : { ...appearance, x: position.x, y: position.y }
@@ -57,6 +60,7 @@ export class GameMapObjects implements IGameMapObjects {
 
         return (
           (!object || entry.id === object) &&
+          this.movement.objectPresent(entry) &&
           resolveMapObject(entry, this.readState).visible !== false &&
           Math.abs(tile.x - position.x) + Math.abs(tile.y - position.y) === 1
         )

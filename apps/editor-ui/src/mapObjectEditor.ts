@@ -33,6 +33,12 @@ export function mapObjectEditor(
         const previous = object.id
         object.id = value.trim()
 
+        for (const entry of objects) {
+          const approach = entry.patrol?.approach
+
+          if (approach?.guard === previous) approach.guard = object.id
+        }
+
         if (previous !== object.id && Object.hasOwn(state.overrides, previous)) {
           state.overrides[object.id] = state.overrides[previous]!
           delete state.overrides[previous]
@@ -96,6 +102,10 @@ export function mapObjectEditor(
       ),
       controls.button(t('maps.removeObject'), () =>
         change(() => {
+          for (const entry of objects) {
+            if (entry.patrol?.approach?.guard === object.id) delete entry.patrol.approach
+          }
+
           draft.data.objects = objects.filter((entry) => entry !== object)
           state.selected = Math.min(state.selected, objects.length - 2)
         }),
@@ -154,12 +164,71 @@ export function mapObjectEditor(
           [
             ['loop', t('maps.loopPatrol')],
             ['reverse', t('maps.reversePatrol')],
+            ['one-way', t('maps.oneWayPatrol')],
           ],
-          (mode) => {
-            patrol.mode = mode
-          },
+          (mode) =>
+            change(() => {
+              patrol.mode = mode
+
+              if (mode !== 'one-way') {
+                delete patrol.approach
+                delete patrol.returnDelayMs
+              }
+            }),
         ),
       )
+
+      if (patrol.mode === 'one-way') {
+        const guards = objects.filter(
+          (entry) =>
+            entry !== object &&
+            !entry.patrol &&
+            !objects.some(
+              (other) => other !== object && other.patrol?.approach?.guard === entry.id,
+            ),
+        )
+
+        movement.append(
+          controls.input(
+            t('maps.returnDelay'),
+            patrol.returnDelayMs === undefined ? '' : String(patrol.returnDelayMs / 1000),
+            (value) => {
+              if (value === '') delete patrol.returnDelayMs
+              else patrol.returnDelayMs = Math.round(Number(value) * 1000)
+            },
+            'number',
+          ),
+          controls.select(
+            t('maps.approachGuard'),
+            patrol.approach?.guard ?? '',
+            [
+              ['', t('maps.noGuard')] as const,
+              ...guards.map((entry) => [entry.id, entry.label] as const),
+            ],
+            (id) =>
+              change(() => {
+                if (id) patrol.approach = { guard: id, radius: patrol.approach?.radius ?? 2 }
+                else delete patrol.approach
+              }),
+          ),
+        )
+        const approach = patrol.approach
+
+        if (approach) {
+          const radius = controls.input(
+            t('maps.approachRadius'),
+            String(approach.radius),
+            (value) => {
+              approach.radius = Number(value)
+            },
+            'number',
+          )
+
+          radius.querySelector('input')!.min = '1'
+          radius.querySelector('input')!.step = '1'
+          movement.append(radius)
+        }
+      }
 
       if (trigger?.type === 'timer') {
         const interval = controls.input(
@@ -198,6 +267,7 @@ export function mapObjectEditor(
 
     for (const field of row.querySelectorAll('input'))
       if (field.type === 'number') {
+        if (field.min === '1') continue
         field.min = movement.contains(field) ? '0.001' : '0'
         field.step = movement.contains(field) ? '0.001' : '1'
       }

@@ -1,6 +1,7 @@
 import {
   getMapMovementCostMs,
   isBlockingMapObject,
+  isMapEncounterGuard,
   mapPositionSchema,
   resolveMapObject,
   type SceneTransition,
@@ -52,7 +53,11 @@ export function sceneEntranceCost(
 
   return movement
     ? movement.getTileCost(map, position, proposedState)
-    : getMapMovementCostMs(map, position, (object) =>
-        isBlockingMapObject(resolveMapObject(object, proposedState ?? readInitialState)),
+    : getMapMovementCostMs(
+        map,
+        position,
+        (object) =>
+          !isMapEncounterGuard(map, object) &&
+          isBlockingMapObject(resolveMapObject(object, proposedState ?? readInitialState)),
       )
 }

@@ -15,7 +15,14 @@ import type { MapDirection } from './mapMovement.js'
 
 type SavedObjects = NonNullable<GameSave['mapObjectPositions']>
 
-type ObjectState = SavedObjects[string][string] & { due?: number | undefined }
+type ObjectState = SavedObjects[string][string] & {
+  due?: number | undefined
+  engaged?: boolean
+}
+
+function distance(a: MapPosition, b: MapPosition): number {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+}
 
 function sameTile(a: MapPosition, b: MapPosition): boolean {
   return a.x === b.x && a.y === b.y
@@ -25,6 +32,9 @@ function sameTile(a: MapPosition, b: MapPosition): boolean {
 export class MapObjectMovement {
   private readonly states = new Map<MapObject, ObjectState>()
   private active = new Set<MapDefinition>()
+  private lastGameplayMaps = this.active
+  private readonly guardOwners = new Map<MapObject, MapObject>()
+  private alarmDue: number | undefined
   private cancel: (() => void) | undefined
   private disposed = false
 
@@ -33,18 +43,45 @@ export class MapObjectMovement {
     private readonly timing: IMonotonicClock & ITaskScheduler,
     private readonly read: MapObjectStateReader,
     private readonly playerOccupies: (map: MapDefinition, point: MapPosition) => boolean,
+    private readonly playersOn: (map: MapDefinition) => readonly MapPosition[],
     private readonly notify: () => void,
-  ) {}
+  ) {
+    for (const map of maps.values()) {
+      for (const owner of map.objects ?? []) {
+        const approach = owner.patrol?.approach
+
+        if (!approach) continue
+        const guard = map.objects?.find((object) => object.id === approach.guard)
+
+        if (guard) this.guardOwners.set(guard, owner)
+      }
+    }
+  }
+
+  present(object: MapObject): boolean {
+    const owner = this.guardOwners.get(object)
+
+    return owner
+      ? Boolean(this.states.get(owner)?.guardPosition)
+      : !this.states.get(object)?.departed
+  }
 
   position(object: MapObject): MapPosition {
-    return this.states.get(object)?.position ?? object
+    const owner = this.guardOwners.get(object)
+
+    return (
+      (owner ? this.states.get(owner)?.guardPosition : this.states.get(object)?.position) ?? object
+    )
   }
 
   tileCost(map: MapDefinition, point: MapPosition, read = this.read, moving?: MapObject) {
     return getMapMovementCostMs(
       map,
       point,
-      (object) => object !== moving && isBlockingMapObject(resolveMapObject(object, read)),
+      (object) =>
+        object !== moving &&
+        this.present(object) &&
+        isBlockingMapObject(resolveMapObject(object, read)),
       (object) => this.position(object),
     )
   }
@@ -77,6 +114,9 @@ export class MapObjectMovement {
 
     const isCurrent = () =>
       !this.disposed &&
+      this.present(object) &&
+      !this.guardOwners.has(object) &&
+      !this.states.get(object)?.engaged &&
       sameTile(this.position(object), from) &&
       this.tileCost(map, to, this.read, object) !== undefined &&
       !this.playerOccupies(map, to)
@@ -91,7 +131,8 @@ export class MapObjectMovement {
         if (!isCurrent()) throw new Error('Map object step is no longer available')
         state.position = Object.freeze(to)
         state.routeIndex = object.patrol?.route.findIndex((point) => sameTile(point, to)) ?? -1
-        this.syncTimers()
+        this.finishRoute(object, state)
+        this.refresh()
       },
       notify: this.notify,
     }
@@ -103,7 +144,7 @@ export class MapObjectMovement {
     if (!patrol) return false
     const state = this.state(object)
 
-    if (state.routeIndex < 0) return false
+    if (state.routeIndex < 0 || state.departed || state.engaged) return false
     let direction = state.direction
 
     if (patrol.mode === 'reverse') {
@@ -119,6 +160,94 @@ export class MapObjectMovement {
     state.position = Object.freeze({ ...to })
     state.routeIndex = next
     state.direction = direction
+    this.finishRoute(object, state)
+    this.updateEncounter(map, object, state)
+
+    return true
+  }
+
+  private finishRoute(object: MapObject, state: ObjectState): void {
+    const patrol = object.patrol
+
+    if (patrol?.mode !== 'one-way' || state.routeIndex !== patrol.route.length - 1) return
+    state.departed = true
+    state.due = undefined
+    state.remainingMs = patrol.returnDelayMs
+    delete state.guardPosition
+    delete state.encounterComplete
+    delete state.engaged
+  }
+
+  private openTile(map: MapDefinition, point: MapPosition): boolean {
+    return (
+      getMapTerrainCostMs(map, point) !== undefined &&
+      !this.playerOccupies(map, point) &&
+      !map.objects?.some(
+        (object) =>
+          this.present(object) &&
+          sameTile(this.position(object), point) &&
+          resolveMapObject(object, this.read).visible !== false,
+      )
+    )
+  }
+
+  private dismissGuard(state: ObjectState): boolean {
+    delete state.engaged
+
+    if (!state.guardPosition) return false
+    delete state.guardPosition
+    state.encounterComplete = true
+
+    return true
+  }
+
+  private updateEncounter(map: MapDefinition, object: MapObject, state: ObjectState): boolean {
+    const approach = object.patrol?.approach
+
+    if (!approach || state.encounterComplete || state.departed) return false
+    const players = this.playersOn(map)
+
+    const near = players.some(
+      (player) =>
+        distance(player, state.position) <= approach.radius ||
+        (state.guardPosition && distance(player, state.guardPosition) <= 1),
+    )
+
+    const guard = map.objects?.find((entry) => entry.id === approach.guard)
+
+    if (
+      !near ||
+      !guard ||
+      resolveMapObject(guard, this.read).visible === false ||
+      resolveMapObject(object, this.read).visible === false
+    )
+      return this.dismissGuard(state)
+    state.engaged = true
+
+    if (state.guardPosition) return false
+
+    const nearest = (tile: MapPosition) =>
+      Math.min(...players.map((player) => distance(tile, player)))
+
+    const tiles = Object.values(mapDirections)
+      .map((offset) => ({
+        x: state.position.x + offset.x,
+        y: state.position.y + offset.y,
+      }))
+      .filter((tile) => this.openTile(map, tile))
+
+    tiles.sort((a, b) => nearest(a) - nearest(b))
+
+    if (!tiles[0]) return false
+    state.guardPosition = Object.freeze(tiles[0])
+
+    return true
+  }
+
+  private returnToStart(map: MapDefinition, object: MapObject, state: ObjectState): boolean {
+    if (!state.departed || state.remainingMs !== 0 || !this.openTile(map, object)) return false
+    this.states.delete(object)
+    this.updateEncounter(map, object, this.state(object))
 
     return true
   }
@@ -130,6 +259,8 @@ export class MapObjectMovement {
       if (stepMap && map !== stepMap) continue
 
       for (const object of map.objects ?? []) {
+        if (object.patrol?.approach)
+          changed = this.updateEncounter(map, object, this.state(object)) || changed
         const trigger = object.patrol?.trigger.type
 
         if ((trigger === 'player-step' && stepMap) || (trigger === 'player-turn' && spendsTurn))
@@ -137,29 +268,69 @@ export class MapObjectMovement {
       }
     }
 
+    return this.refresh() || changed
+  }
+
+  setActive(maps: Set<MapDefinition>, menuOpen: boolean): boolean {
+    if (this.disposed) return false
+    let changed = false
+
+    if (!menuOpen) {
+      // A menu can lead directly to another map instead of resuming the suspended one.
+      for (const map of this.lastGameplayMaps) {
+        if (maps.has(map)) continue
+
+        for (const object of map.objects ?? []) {
+          const state = this.states.get(object)
+
+          if (state?.engaged || state?.guardPosition) changed = this.dismissGuard(state) || changed
+        }
+      }
+
+      this.lastGameplayMaps = maps
+    }
+
+    this.active = maps
+
+    return this.refresh() || changed
+  }
+
+  refresh(): boolean {
+    let changed = false
+
+    for (const map of this.active) {
+      for (const object of map.objects ?? []) {
+        if (object.patrol?.mode !== 'one-way') continue
+        const state = this.state(object)
+        changed = this.returnToStart(map, object, state) || changed
+        changed = this.updateEncounter(map, object, this.state(object)) || changed
+      }
+    }
+
+    this.syncTimers()
+
     return changed
   }
 
-  setActive(maps: Set<MapDefinition>): void {
-    if (this.disposed) return
-    this.active = maps
-    this.syncTimers()
-  }
-
   private syncTimers(): void {
-    this.cancel?.()
-    this.cancel = undefined
     const now = this.timing.now()
     let earliest = Infinity
 
     for (const map of this.maps.values()) {
       for (const object of map.objects ?? []) {
-        if (object.patrol?.trigger.type !== 'timer') continue
+        const patrol = object.patrol
+
+        if (!patrol || (patrol.trigger.type !== 'timer' && patrol.returnDelayMs === undefined))
+          continue
 
         if (!this.active.has(map) && !this.states.has(object)) continue
         const state = this.state(object)
 
-        if (this.active.has(map) && state.routeIndex >= 0) {
+        const running = state.departed
+          ? state.remainingMs !== undefined && state.remainingMs > 0
+          : patrol.trigger.type === 'timer' && state.routeIndex >= 0 && !state.engaged
+
+        if (this.active.has(map) && running) {
           state.due ??= now + state.remainingMs!
           earliest = Math.min(earliest, state.due)
         } else if (state.due !== undefined) {
@@ -169,28 +340,41 @@ export class MapObjectMovement {
       }
     }
 
-    if (Number.isFinite(earliest))
-      this.cancel = this.timing.schedule(() => this.tick(), Math.max(0, earliest - now))
+    const next = Number.isFinite(earliest) ? earliest : undefined
+
+    if (next === this.alarmDue) return
+    this.cancel?.()
+    this.alarmDue = next
+    this.cancel =
+      next === undefined
+        ? undefined
+        : this.timing.schedule(() => this.tick(), Math.max(0, next - now))
   }
 
   private tick(): void {
+    this.alarmDue = undefined
+    this.cancel = undefined
     const now = this.timing.now()
     let changed = false
 
     for (const map of this.active) {
       for (const object of map.objects ?? []) {
         const state = this.states.get(object)
-        const trigger = object.patrol?.trigger
 
-        if (state?.due === undefined || state.due > now || trigger?.type !== 'timer') continue
-        state.due = now + trigger.intervalMs
-        changed = this.advance(map, object) || changed
+        if (state?.due === undefined || state.due > now) continue
+        state.due = undefined
+
+        if (state.departed) {
+          state.remainingMs = 0
+          changed = this.returnToStart(map, object, state) || changed
+        } else if (object.patrol?.trigger.type === 'timer') {
+          state.remainingMs = object.patrol.trigger.intervalMs
+          changed = this.advance(map, object) || changed
+        }
       }
     }
 
-    this.syncTimers()
-
-    if (changed) this.notify()
+    if (this.refresh() || changed) this.notify()
   }
 
   save(): SavedObjects {
@@ -208,6 +392,9 @@ export class MapObjectMovement {
           position: { ...position },
           routeIndex,
           direction,
+          ...(state.departed && { departed: true }),
+          ...(state.encounterComplete && { encounterComplete: true }),
+          ...(state.guardPosition && { guardPosition: { ...state.guardPosition } }),
           ...(remainingMs !== undefined && {
             remainingMs: due === undefined ? remainingMs : Math.max(0, due - this.timing.now()),
           }),
@@ -234,6 +421,12 @@ export class MapObjectMovement {
         const tile = patrol?.route[state.routeIndex]
         const trigger = patrol?.trigger
 
+        const maxRemaining = state.departed
+          ? patrol?.returnDelayMs
+          : trigger?.type === 'timer'
+            ? trigger.intervalMs
+            : undefined
+
         if (
           !object ||
           getMapTerrainCostMs(map, state.position) === undefined ||
@@ -241,9 +434,18 @@ export class MapObjectMovement {
             ? patrol?.route.some((point) => sameTile(point, state.position))
             : !tile || !sameTile(tile, state.position)) ||
           (state.direction === -1 && patrol?.mode !== 'reverse') ||
-          (trigger?.type === 'timer'
-            ? state.remainingMs === undefined || state.remainingMs > trigger.intervalMs
-            : state.remainingMs !== undefined)
+          this.guardOwners.has(object) ||
+          Boolean(state.departed) !==
+            (patrol?.mode === 'one-way' && state.routeIndex === patrol.route.length - 1) ||
+          ((state.encounterComplete || state.guardPosition) &&
+            (!patrol?.approach || state.departed)) ||
+          (state.guardPosition &&
+            (state.encounterComplete ||
+              distance(state.guardPosition, state.position) !== 1 ||
+              getMapTerrainCostMs(map, state.guardPosition) === undefined)) ||
+          (maxRemaining === undefined
+            ? state.remainingMs !== undefined
+            : state.remainingMs === undefined || state.remainingMs > maxRemaining)
         )
           throw new Error('Invalid saved map object movement')
         restored.set(object, { ...state, position: Object.freeze({ ...state.position }) })

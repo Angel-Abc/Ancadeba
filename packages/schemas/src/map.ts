@@ -82,7 +82,11 @@ export const mapDirections = {
 
 const patrolSchema = z.object({
   route: z.array(mapPositionSchema).min(2),
-  mode: z.enum(['loop', 'reverse']),
+  mode: z.enum(['loop', 'reverse', 'one-way']),
+  returnDelayMs: z.number().int().positive().max(2_147_483_647).optional(),
+  approach: z
+    .object({ radius: z.number().int().positive().safe(), guard: gameIdSchema })
+    .optional(),
   trigger: z.discriminatedUnion('type', [
     z.object({
       type: z.literal('timer'),
@@ -181,6 +185,8 @@ export const mapDefinitionSchema = z
     checkTiles(map.tiles, ['tiles'])
     const objectIds = new Set<string>()
     const objectTiles = new Set<string>()
+    const guards = new Set<string>()
+    const objectsById = new Map(map.objects?.map((object) => [object.id, object]))
     map.objects?.forEach((object, index) => {
       const path = ['objects', index]
 
@@ -209,6 +215,26 @@ export const mapDefinitionSchema = z
       const patrol = object.patrol
 
       if (patrol) {
+        if (patrol.mode !== 'one-way' && (patrol.returnDelayMs !== undefined || patrol.approach))
+          context.addIssue({
+            code: 'custom',
+            path: [...path, 'patrol'],
+            message: 'Choose a one-way route for a return delay or approach encounter',
+          })
+
+        if (patrol.approach) {
+          const guard = objectsById.get(patrol.approach.guard)
+
+          if (!guard || guard.patrol || guards.has(guard.id))
+            context.addIssue({
+              code: 'custom',
+              path: [...path, 'patrol', 'approach', 'guard'],
+              message:
+                'Choose a separate map object without a patrol, assigned to only one encounter',
+            })
+          guards.add(patrol.approach.guard)
+        }
+
         patrol.route.forEach((point, step) => {
           const previous = patrol.route[step - 1]
           const last = patrol.route.at(-1)!
@@ -417,11 +443,17 @@ export type MapViewport = z.infer<typeof mapViewportSchema>
 
 export type MapPosition = z.infer<typeof mapPositionSchema>
 
+/** Encounter characters enter at runtime beside their caravan. */
+export function isMapEncounterGuard(map: MapDefinition, object: MapObject): boolean {
+  return map.objects?.some((entry) => entry.patrol?.approach?.guard === object.id) ?? false
+}
+
 /** Time to enter a tile, or undefined if the tile cannot be entered. */
 export function getMapMovementCostMs(
   map: MapDefinition,
   position: MapPosition,
-  isBlocking: (object: MapObject) => boolean = isBlockingMapObject,
+  isBlocking: (object: MapObject) => boolean = (object) =>
+    !isMapEncounterGuard(map, object) && isBlockingMapObject(object),
   positionOf: (object: MapObject) => Readonly<MapPosition> = (object) => object,
 ): number | undefined {
   if (
@@ -478,6 +510,7 @@ export function getMapPotentialMovementCostMs(
     map,
     position,
     (object) =>
+      !isMapEncounterGuard(map, object) &&
       !options?.scriptedObjects?.has(object) &&
       !object.patrol &&
       isBlockingMapObject(object) &&

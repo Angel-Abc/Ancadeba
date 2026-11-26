@@ -109,10 +109,15 @@ scenes.set(
   }),
 )
 
-async function setup(rules?: GameRules, now: () => number = () => 0, terrain = map) {
+async function setup(
+  rules?: GameRules,
+  now: () => number = () => 0,
+  terrain = map,
+  gameScenes = scenes,
+) {
   const game = assembleGameData(
     { ...manifest, rules: ['map-actions'] },
-    scenes,
+    gameScenes,
     input,
     undefined,
     new Map([['terrain', terrain]]),
@@ -222,6 +227,72 @@ describe('map movement actions', () => {
 
     for (const id of ['map', 'other-map'])
       expect(objects.getAppearance(scene, id, 'scout')).toMatchObject({ x: 2, y: 1 })
+  })
+
+  it('retains an active encounter across a pause and freezes the return delay for a step-driven crossing', async () => {
+    let now = 0
+
+    const terrain = mapDefinitionSchema.parse({
+      ...map,
+      objects: [
+        {
+          id: 'wagon',
+          label: 'Wagon',
+          x: 2,
+          y: 0,
+          terrain: 'ground',
+          action: 'talk',
+          patrol: {
+            mode: 'one-way',
+            trigger: { type: 'player-step' },
+            route: [
+              { x: 2, y: 0 },
+              { x: 2, y: 1 },
+            ],
+            returnDelayMs: 500,
+            approach: { guard: 'guard', radius: 2 },
+          },
+        },
+        { id: 'guard', label: 'Guard', x: 0, y: 1, terrain: 'ground', action: 'talk' },
+      ],
+    })
+
+    const gameScenes = new Map(scenes)
+    gameScenes.set('second', { ...gameScenes.get('second')!, components: [] })
+
+    const { lifecycle, scene, tasks, movement } = await setup(
+      undefined,
+      () => now,
+      terrain,
+      gameScenes,
+    )
+
+    const objects = lifecycle.currentGame!.mapObjects!
+    const guard = () => objects.getTarget(scene, 'map', 'guard')
+    expect(guard()).toMatchObject({ x: 2, y: 1 })
+    lifecycle.openMenu!('menu')
+    now += 5000
+    lifecycle.resumeGame!()
+    expect(guard()).toMatchObject({ x: 2, y: 1 })
+    expect(movement.move(scene, 'map', 'west')).toBe(true)
+    expect(objects.getAppearance(scene, 'map', 'wagon')?.visible).toBe(false)
+    now += 200
+    lifecycle.openMenu!('menu')
+    now += 5000
+    lifecycle.resumeGame!()
+    const pending = tasks.filter((task) => !task.cancelled)
+    expect(pending.map((task) => task.delay)).toEqual([300])
+    now += 300
+    pending[0]!.callback()
+    expect(objects.getAppearance(scene, 'map', 'wagon')).toMatchObject({ x: 2, y: 0 })
+    expect(objects.getAppearance(scene, 'map', 'wagon')?.visible).not.toBe(false)
+
+    movement.place(scene, 'map', { x: 1, y: 1 })
+    expect(guard()).toMatchObject({ x: 2, y: 1 })
+    lifecycle.openMenu!('menu')
+    lifecycle.enterScene('second')
+    const returned = lifecycle.enterScene('first')
+    expect(objects.getAppearance(returned, 'map', 'guard')?.visible).toBe(false)
   })
 
   it('charges one turn and terrain time only on completed steps across input and map views', async () => {

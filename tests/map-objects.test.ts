@@ -8,6 +8,7 @@ import {
   getMapMovementCostMs,
   resolveMapObject,
   type MapDefinition,
+  type MapObject,
   type GameRulesDefinition,
 } from '@ancadeba/schemas'
 import {
@@ -537,6 +538,66 @@ describe('map object patrol validation', () => {
       },
     ])
       expect(mapDefinitionSchema.safeParse(invalid).success).toBe(false)
+  })
+
+  it('validates crossing options and exclusive guard references', () => {
+    const owner = map.objects![0]!
+    const guard = map.objects![1]!
+
+    const crossing: NonNullable<MapObject['patrol']> = {
+      mode: 'one-way',
+      route: [spawn, east],
+      trigger: { type: 'player-step' },
+      approach: { guard: guard.id, radius: 2 },
+    }
+
+    const parse = (options: NonNullable<MapObject['patrol']>, others: MapObject[] = [guard]) =>
+      mapDefinitionSchema.safeParse({ ...map, objects: [{ ...owner, patrol: options }, ...others] })
+        .success
+
+    expect(parse(crossing)).toBe(true)
+    expect(parse({ ...crossing, returnDelayMs: 100 })).toBe(true)
+
+    for (const options of [
+      { ...crossing, mode: 'loop' },
+      { ...crossing, approach: undefined, mode: 'reverse', returnDelayMs: 10 },
+      { ...crossing, returnDelayMs: 0 },
+      { ...crossing, approach: { guard: guard.id, radius: 0 } },
+      { ...crossing, approach: { guard: 'missing', radius: 2 } },
+      { ...crossing, approach: { guard: owner.id, radius: 2 } },
+    ] satisfies NonNullable<MapObject['patrol']>[])
+      expect(parse(options)).toBe(false)
+    expect(
+      parse(crossing, [
+        guard,
+        {
+          ...map.objects![2]!,
+          patrol: {
+            ...crossing,
+            route: [
+              { x: 1, y: 3 },
+              { x: 2, y: 3 },
+            ],
+          },
+        },
+      ]),
+    ).toBe(false)
+  })
+
+  it('keeps a one-way object off the map after a single crossing without a return delay', async () => {
+    const candidate = structuredClone(map)
+    candidate.objects![0]!.patrol = {
+      mode: 'one-way',
+      route: [spawn, east],
+      trigger: { type: 'player-step' },
+    }
+    const { scene, movement, objects } = await setup(candidate)
+    expect(movement.move(scene, 'map', 'north')).toBe(true)
+    expect(objects.getAppearance(scene, 'map', 'sign')).toMatchObject({ ...east, visible: false })
+    expect(movement.move(scene, 'map', 'south')).toBe(true)
+    expect(movement.prepareObjectStep('world', 'sign', 'west')).toBeUndefined()
+    movement.place(scene, 'map', east)
+    expect(objects.getAppearance(scene, 'map', 'sign')?.visible).toBe(false)
   })
 
   it('resolves competing patrols in map-object order and spends a turn only for a committed rule', async () => {

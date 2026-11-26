@@ -121,6 +121,97 @@ async function launch(store: GameSaveStore = new SampleSaves(), customRules?: Ga
   return { engine, advance, press, walk, read, visitVillage, applied, appearance, place }
 }
 
+describe('Pine Village trade caravan', () => {
+  it('stops for a guard encounter, restores it on load, and resumes on the step out of range', async () => {
+    const store = new SampleSaves()
+    const first = await launch(store)
+    first.visitVillage()
+    expect(first.appearance('caravan-guard')?.visible).toBe(false)
+    first.advance(600)
+    first.place('village', 10, 5)
+    expect(first.appearance('caravan-guard')).toMatchObject({ x: 10, y: 4 })
+    first.press('KeyE')
+    expect(first.read('interactionMessage')).toMatchObject({
+      value: 'Caravan guard: We carry grain to the coast. Safe travels, friend.',
+    })
+    first.advance(6000)
+    expect(first.appearance('caravan')).toMatchObject({ x: 11, y: 4 })
+    expect(first.engine.saves!.save()).toBe(true)
+    first.engine.stop()
+
+    const next = await launch(store)
+    expect(next.engine.saves!.load()).toBe(true)
+    const lifecycle = next.engine.lifecycle!
+    const game = lifecycle.currentGame!
+    const scene = lifecycle.activeScene!
+    expect(game.mapObjects!.getTarget(scene, 'world-map', 'caravan-guard')).toMatchObject({
+      x: 10,
+      y: 4,
+    })
+    expect(game.mapMovement!.canMove(scene, 'world-map', 'north')).toBe(false)
+    next.press('KeyA')
+    next.advance(199)
+    expect(next.appearance('caravan-guard')?.visible).not.toBe(false)
+    next.advance(1)
+    expect(next.appearance('caravan-guard')?.visible).toBe(false)
+    next.advance(899)
+    expect(next.appearance('caravan')).toMatchObject({ x: 11, y: 4 })
+    next.advance(1)
+    expect(next.appearance('caravan')).toMatchObject({ x: 10, y: 4 })
+    next.place('village', 10, 5)
+    expect(next.appearance('caravan-guard')?.visible).toBe(false)
+    expect(game.mapObjects!.getTarget(scene, 'world-map', 'caravan-guard')).toBeUndefined()
+  })
+
+  it('leaves at the south gate, saves the return delay off-map, and waits for a clear entrance', async () => {
+    const store = new SampleSaves()
+    const first = await launch(store)
+    first.visitVillage()
+
+    for (let step = 0; step < 7; step++) first.advance(1500)
+    expect(first.appearance('caravan')).toMatchObject({ x: 6, y: 6 })
+    first.advance(1500)
+    expect(first.appearance('caravan')).toMatchObject({ x: 6, y: 7, visible: false })
+    first.place('village', 6, 7)
+    first.advance(3000)
+    first.place('coast', 8, 3)
+    first.advance(25000)
+    expect(first.engine.saves!.save()).toBe(true)
+    first.engine.stop()
+
+    const next = await launch(store)
+    expect(next.engine.saves!.load()).toBe(true)
+    next.place('village', 1, 4)
+    next.advance(4999)
+    expect(next.appearance('caravan')?.visible).toBe(false)
+    next.place('village', 11, 4)
+    next.advance(1)
+    expect(next.appearance('caravan')?.visible).toBe(false)
+    next.walk('KeyA')
+    expect(next.appearance('caravan')).toMatchObject({ x: 11, y: 4 })
+    expect(next.appearance('caravan')?.visible).not.toBe(false)
+    // The player occupies the wagon's only open neighboring tile.
+    expect(next.appearance('caravan-guard')?.visible).toBe(false)
+    next.press('KeyS')
+    next.advance(200)
+    expect(next.appearance('caravan-guard')).toMatchObject({ x: 10, y: 4 })
+    expect(next.appearance('caravan-guard')?.visible).not.toBe(false)
+  })
+
+  it('stops when its timed route brings the caravan within range of a stationary player', async () => {
+    const sample = await launch()
+    sample.place('village', 8, 5)
+    sample.advance(1500)
+    expect(sample.appearance('caravan')).toMatchObject({ x: 10, y: 4 })
+    expect(sample.appearance('caravan-guard')?.visible).toBe(false)
+    sample.advance(1500)
+    expect(sample.appearance('caravan')).toMatchObject({ x: 9, y: 4 })
+    expect(sample.appearance('caravan-guard')?.visible).not.toBe(false)
+    sample.advance(5000)
+    expect(sample.appearance('caravan')).toMatchObject({ x: 9, y: 4 })
+  })
+})
+
 describe('village patrols', () => {
   it('advances the step and turn patrols on arrival, and only the turn patrol on Wait', async () => {
     const { engine, advance, press, appearance, visitVillage } = await launch()
