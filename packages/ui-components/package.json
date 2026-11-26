@@ -4,15 +4,15 @@
   "private": true,
   "files": [
     "dist",
-    "src/scene.css",
-    "src/game.css",
-    "src/map.css",
-    "src/variables.css"
+    "src"
   ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": {
+        "development": "./src/index.ts"
+      },
       "import": "./dist/index.js"
     },
     "./scene.css": "./src/scene.css",

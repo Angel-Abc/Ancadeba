@@ -4,7 +4,45 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { createServer, normalizePath } from 'vite-plus'
 import { expect, it } from 'vite-plus/test'
+
+it('serves the save slots renderer from source during browser development', async () => {
+  const root = fileURLToPath(new URL('../apps/engine/', import.meta.url))
+  const source = fileURLToPath(new URL('../packages/ui-components/src/', import.meta.url))
+  const cacheDir = await mkdtemp(join(tmpdir(), 'ancadeba-ui-dev-'))
+
+  const server = await createServer({
+    root,
+    configFile: false,
+    cacheDir,
+    server: { middlewareMode: true, watch: null, hmr: false },
+    optimizeDeps: { noDiscovery: true, include: [] },
+  })
+
+  try {
+    const client = server.environments.client
+
+    const entry = await client.pluginContainer.resolveId(
+      '@ancadeba/ui-components',
+      join(root, 'src/main.ts'),
+    )
+
+    expect(entry?.id).toBe(normalizePath(join(source, 'index.ts')))
+
+    const renderer = await client.pluginContainer.resolveId(
+      './saveSlotsComponentRenderer.js',
+      entry!.id,
+    )
+
+    expect(renderer?.id).toBe(normalizePath(join(source, 'saveSlotsComponentRenderer.ts')))
+    const transformed = await client.transformRequest('/@fs/' + renderer!.id)
+    expect(transformed?.code).toContain('export class SaveSlotsComponentRenderer')
+  } finally {
+    await server.close()
+    await rm(cacheDir, { recursive: true, force: true })
+  }
+})
 
 it('loads the built UI package and resolves its public type dependencies in isolation', async () => {
   const source = fileURLToPath(new URL('../packages/ui-components/', import.meta.url))
