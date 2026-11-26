@@ -129,7 +129,7 @@ describe('map authoring persistence', () => {
           action: 'talk',
           patrol: {
             mode: 'one-way' as const,
-            trigger: { type: 'player-step' as const },
+            trigger: { type: 'player-turn' as const, intervalTurns: 2 },
             route: [
               { x: 0, y: 0 },
               { x: 1, y: 0 },
@@ -158,6 +158,10 @@ describe('map authoring persistence', () => {
     await expect(warn('garden', 'guard')).rejects.toThrow()
     await warn('garden', 'wagon')
     const view = await service.inspect('game')
+    expect(view.maps!.garden!.objects![0]!.patrol!.trigger).toEqual({
+      type: 'player-turn',
+      intervalTurns: 2,
+    })
     expect(view.maps!.garden!.objects![0]!.patrol!.approach!.onWarnedApproach).toBe('capture')
     expect(view.rules!.actions.talk![0]!.effects).toEqual([
       { type: 'warn-patrol', map: 'garden', patrol: 'wagon' },

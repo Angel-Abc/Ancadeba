@@ -717,8 +717,10 @@ warning. Leaving the encounter clears it. Saving preserves either state.
   the remaining interval. Saves preserve the tile, route progress, and remaining time.
 - **After player step** advances on arrival, once terrain delay has elapsed.
 - **After player turn** also advances for a successful rule branch with **Spends a
-  player turn** checked. For custom actor rosters, set `turns.playerActorId` to the
-  actor whose completed turns advance these patrols.
+  player turn** checked. **Player turns per tile** defaults to one. Set it to two
+  to advance on every second completed player turn. Saves preserve turns already
+  counted toward the next tile. For custom actor rosters, set `turns.playerActorId`
+  to the actor whose completed turns advance these patrols.
 
 A blocked patrol waits for its next trigger and retries the same tile. Rules can
 move an object one tile with a directional effect, for example

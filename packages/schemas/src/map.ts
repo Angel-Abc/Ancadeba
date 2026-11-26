@@ -97,7 +97,10 @@ const patrolSchema = z.object({
       intervalMs: z.number().int().positive().max(2_147_483_647),
     }),
     z.object({ type: z.literal('player-step') }),
-    z.object({ type: z.literal('player-turn') }),
+    z.object({
+      type: z.literal('player-turn'),
+      intervalTurns: z.number().int().positive().safe().optional(),
+    }),
   ]),
 })
 

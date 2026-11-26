@@ -185,6 +185,20 @@ export class MapObjectMovement {
     const state = this.state(object)
 
     if (state.routeIndex < 0 || state.departed || state.engaged) return false
+    const interval = patrol.trigger.type === 'player-turn' ? (patrol.trigger.intervalTurns ?? 1) : 1
+
+    if (interval > 1) {
+      const elapsed = (state.turnsElapsed ?? 0) + 1
+
+      if (elapsed < interval) {
+        state.turnsElapsed = elapsed
+
+        return true
+      }
+
+      delete state.turnsElapsed
+    }
+
     let direction = state.direction
 
     if (patrol.mode === 'reverse') {
@@ -196,7 +210,7 @@ export class MapObjectMovement {
     const to = patrol.route[next]!
 
     if (this.playerOccupies(map, to) || this.tileCost(map, to, this.read, object) === undefined)
-      return false
+      return interval > 1
     state.position = Object.freeze({ ...to })
     state.routeIndex = next
     state.direction = direction
@@ -215,6 +229,7 @@ export class MapObjectMovement {
     state.remainingMs = patrol.returnDelayMs
     delete state.guardPosition
     delete state.encounterComplete
+    delete state.turnsElapsed
     delete state.warning
     delete state.engaged
   }
@@ -437,6 +452,7 @@ export class MapObjectMovement {
           ...(state.departed && { departed: true }),
           ...(state.encounterComplete && { encounterComplete: true }),
           ...(state.warning && { warning: state.warning }),
+          ...(state.turnsElapsed !== undefined && { turnsElapsed: state.turnsElapsed }),
           ...(state.guardPosition && { guardPosition: { ...state.guardPosition } }),
           ...(remainingMs !== undefined && {
             remainingMs: due === undefined ? remainingMs : Math.max(0, due - this.timing.now()),
@@ -477,6 +493,10 @@ export class MapObjectMovement {
             ? patrol?.route.some((point) => sameTile(point, state.position))
             : !tile || !sameTile(tile, state.position)) ||
           (state.direction === -1 && patrol?.mode !== 'reverse') ||
+          (state.turnsElapsed !== undefined &&
+            (state.departed ||
+              trigger?.type !== 'player-turn' ||
+              state.turnsElapsed >= (trigger.intervalTurns ?? 1))) ||
           this.guardOwners.has(object) ||
           Boolean(state.departed) !==
             (patrol?.mode === 'one-way' && state.routeIndex === patrol.route.length - 1) ||

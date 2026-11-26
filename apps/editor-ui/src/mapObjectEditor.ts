@@ -252,6 +252,21 @@ export function mapObjectEditor(
         )
 
         movement.append(interval)
+      } else if (trigger?.type === 'player-turn') {
+        const interval = controls.input(
+          t('maps.patrolTurns'),
+          String(trigger.intervalTurns ?? 1),
+          (value) => {
+            if (Number(value) === 1) delete trigger.intervalTurns
+            else trigger.intervalTurns = Number(value)
+          },
+          'number',
+        )
+
+        const field = interval.querySelector('input')!
+        field.min = '1'
+        field.step = '1'
+        movement.append(interval)
       }
 
       const route = controls.create('p')

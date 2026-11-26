@@ -1621,6 +1621,7 @@
   "rules.warnPatrol": "Speler als gewaarschuwd door patrouille markeren",
   "maps.reversePatrol": "Heen en weer lopen",
   "maps.patrolSeconds": "Interval (seconden)",
+  "maps.patrolTurns": "Spelerbeurten per tegel",
   "maps.drawRoute": "Routetegels kiezen",
   "maps.undoTile": "Laatste tegel verwijderen",
   "maps.patrolAdjacent": "Kies een aangrenzende begaanbare tegel om de route te verlengen.",

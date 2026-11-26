@@ -204,6 +204,7 @@ export const gameSaveSchema = z.strictObject({
         departed: z.literal(true).optional(),
         encounterComplete: z.literal(true).optional(),
         warning: z.enum(['armed', 'fired']).optional(),
+        turnsElapsed: counter.positive().optional(),
         guardPosition: mapPositionSchema.optional(),
         direction: z.union([z.literal(1), z.literal(-1)]),
         remainingMs: z.number().finite().nonnegative().optional(),

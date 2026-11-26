@@ -1621,6 +1621,7 @@
   "rules.warnPatrol": "Mark player as warned by patrol",
   "maps.reversePatrol": "Walk back and forth",
   "maps.patrolSeconds": "Interval (seconds)",
+  "maps.patrolTurns": "Player turns per tile",
   "maps.drawRoute": "Select route tiles",
   "maps.undoTile": "Remove last tile",
   "maps.patrolAdjacent": "Select an adjacent walkable tile to extend the route.",

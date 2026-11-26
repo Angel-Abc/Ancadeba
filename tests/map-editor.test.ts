@@ -718,7 +718,8 @@ describe('visual map editor', () => {
       ui.tile(2, 1).dispatchEvent(new Event('click'))
       ui.edit('Object ID', 'guard')
       ui.tile(1, 1).dispatchEvent(new Event('click'))
-      ui.edit('Movement trigger', 'player-step', 'change')
+      ui.edit('Movement trigger', 'player-turn', 'change')
+      ui.edit('Player turns per tile', '2')
       ui.edit('Route behavior', 'one-way', 'change')
       ui.button('Select route tiles').dispatchEvent(new Event('click'))
       ui.tile(0, 1).dispatchEvent(new Event('click'))
@@ -742,7 +743,7 @@ describe('visual map editor', () => {
                 mode: 'one-way',
                 approach: { guard: 'guard', radius: 3, onWarnedApproach: 'inspect' },
                 returnDelayMs: 2500,
-                trigger: { type: 'player-step' },
+                trigger: { type: 'player-turn', intervalTurns: 2 },
                 route: [
                   { x: 1, y: 1 },
                   { x: 0, y: 1 },

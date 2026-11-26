@@ -648,6 +648,8 @@ describe('map object patrol validation', () => {
       { ...crossing, mode: 'loop' },
       { ...crossing, approach: undefined, mode: 'reverse', returnDelayMs: 10 },
       { ...crossing, returnDelayMs: 0 },
+      { ...crossing, trigger: { type: 'player-turn', intervalTurns: 0 } },
+      { ...crossing, trigger: { type: 'player-turn', intervalTurns: 1.5 } },
       { ...crossing, approach: { guard: guard.id, radius: 0 } },
       { ...crossing, approach: { guard: 'missing', radius: 2 } },
       { ...crossing, approach: { guard: owner.id, radius: 2 } },
@@ -684,6 +686,45 @@ describe('map object patrol validation', () => {
     expect(movement.prepareObjectStep('world', 'sign', 'west')).toBeUndefined()
     movement.place(scene, 'map', east)
     expect(objects.getAppearance(scene, 'map', 'sign')?.visible).toBe(false)
+  })
+
+  it('advances every second player turn and resumes a partially counted interval after loading', async () => {
+    const candidate = structuredClone(map)
+    candidate.objects![0]!.patrol = {
+      mode: 'reverse',
+      route: [spawn, east],
+      trigger: { type: 'player-turn', intervalTurns: 2 },
+    }
+    let saved: string | undefined
+
+    const { engine, lifecycle, scene, movement, flush } = await setup(
+      candidate,
+      {
+        ...rules,
+        actions: { ...rules.actions, wait: [{ when: [], effects: [], spendsPlayerTurn: true }] },
+      },
+      {
+        read: () => saved,
+        write: (_id, text) => {
+          saved = text
+        },
+      },
+    )
+
+    const position = () =>
+      lifecycle.currentGame!.mapObjects!.getAppearance(lifecycle.activeScene!, 'map', 'sign')
+
+    expect(movement.move(scene, 'map', 'east')).toBe(false)
+    expect(movement.move(scene, 'map', 'north')).toBe(true)
+    expect(position()).toMatchObject(spawn)
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+
+    for (const expected of [east, east, spawn]) {
+      lifecycle.currentGame!.actions!.request('wait')
+      flush()
+      expect(position()).toMatchObject(expected)
+    }
   })
 
   it('resolves competing patrols in map-object order and spends a turn only for a committed rule', async () => {
