@@ -502,6 +502,130 @@ describe('placeable map objects', () => {
   })
 })
 
+describe('map object patrol validation', () => {
+  const spawn = { x: 2, y: 1 }
+  const east = { x: 3, y: 1 }
+
+  const routeMap = (route: { x: number; y: number }[], mode = 'reverse', intervalMs = 100) => ({
+    ...map,
+    objects: [
+      { ...map.objects![0], patrol: { route, mode, trigger: { type: 'timer', intervalMs } } },
+    ],
+  })
+
+  it('requires walkable adjacent tiles, a matching spawn, a closed loop, and a positive interval', () => {
+    expect(mapDefinitionSchema.safeParse(routeMap([spawn, east])).success).toBe(true)
+    expect(mapDefinitionSchema.safeParse(routeMap([spawn, east], 'loop')).success).toBe(true)
+
+    for (const invalid of [
+      routeMap([east, spawn]),
+      routeMap([spawn]),
+      routeMap([spawn, { x: 4, y: 1 }]),
+      routeMap([spawn, east, { x: 4, y: 1 }], 'loop'),
+      routeMap([spawn, east], 'reverse', 0),
+      routeMap([spawn, east, { x: 4, y: 1 }, { x: 5, y: 1 }]),
+      {
+        ...routeMap([spawn, east]),
+        layers: [
+          {
+            id: 'rocks',
+            tiles: map.tiles.map((row, y) =>
+              row.map((_, x) => (x === east.x && y === east.y ? 'wall' : null)),
+            ),
+          },
+        ],
+      },
+    ])
+      expect(mapDefinitionSchema.safeParse(invalid).success).toBe(false)
+  })
+
+  it('resolves competing patrols in map-object order and spends a turn only for a committed rule', async () => {
+    const candidate = structuredClone(map)
+    const [first, second] = candidate.objects!
+
+    for (const object of [first!, second!]) {
+      object.x = object === first ? 2 : 4
+      object.y = 2
+      object.patrol = {
+        mode: 'reverse',
+        route: [
+          { x: object.x, y: 2 },
+          { x: 3, y: 2 },
+        ],
+        trigger: { type: 'player-turn' },
+      }
+    }
+
+    const { game, scene, objects, flush } = await setup(candidate, {
+      ...rules,
+      actions: {
+        ...rules.actions,
+        wait: [{ when: [], effects: [], spendsPlayerTurn: true }],
+        blocked: [
+          {
+            when: [],
+            spendsPlayerTurn: true,
+            effects: [
+              { type: 'set-state', path: ['read'], value: true },
+              { type: 'move-map-object', map: 'world', object: 'chest', direction: 'east' },
+            ],
+          },
+        ],
+      },
+    })
+
+    game.actions!.request('blocked')
+    flush()
+    expect(game.actions!.progression.turn).toBe(0)
+    expect(game.bindings!.read({ source: 'game.state', path: ['read'] })).toMatchObject({
+      value: false,
+    })
+    game.actions!.request('wait')
+    flush()
+    expect(objects.getAppearance(scene, 'map', 'sign')).toMatchObject({ x: 3, y: 2 })
+    expect(objects.getAppearance(scene, 'map', 'chest')).toMatchObject({ x: 4, y: 2 })
+    game.actions!.request('wait')
+    flush()
+    expect(objects.getAppearance(scene, 'map', 'sign')).toMatchObject({ x: 2, y: 2 })
+    expect(objects.getAppearance(scene, 'map', 'chest')).toMatchObject({ x: 3, y: 2 })
+  })
+
+  it('revalidates a queued interaction and uses one live position for both views and entrances', async () => {
+    const entrance = { type: 'enter-scene' as const, scene: 'second', mapView: 'map' }
+
+    const { game, scene, objects, movement, applied, flush, data, lifecycle } = await setup(map, {
+      ...rules,
+      actions: {
+        ...rules.actions,
+        shift: [
+          {
+            when: [],
+            effects: [{ type: 'move-map-object', map: 'world', object: 'sign', direction: 'east' }],
+          },
+        ],
+        enter: [{ when: [], effects: [{ ...entrance, position: { x: 2, y: 1 } }] }],
+      },
+    })
+
+    game.actions!.request('enter')
+    flush()
+    expect(lifecycle.activeScene).toBe(scene)
+    game.actions!.request('shift')
+    expect(objects.interact(scene, 'map', 'sign')).toBe(true)
+    flush()
+    expect(applied).not.toContain('read')
+
+    for (const view of ['map', 'other-map'])
+      expect(objects.getAppearance(scene, view, 'sign')).toMatchObject({ x: 3, y: 1 })
+    expect(canEnterScene(data, { ...entrance, position: { x: 2, y: 1 } }, movement)).toBe(true)
+    expect(canEnterScene(data, { ...entrance, position: { x: 3, y: 1 } }, movement)).toBe(false)
+    expect(game.actions!.progression.turn).toBe(0)
+    game.actions!.request('enter')
+    flush()
+    expect(movement.getPosition(lifecycle.activeScene!, 'map')).toEqual({ x: 2, y: 1 })
+  })
+})
+
 describe('map object validation', () => {
   it.each([['missing'], ['count']])(
     'rejects missing or nonboolean state fields in loading and editor diagnostics: %s',

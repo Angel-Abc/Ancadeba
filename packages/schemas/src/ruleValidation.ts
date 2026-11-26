@@ -5,6 +5,7 @@ import {
   resolveMapObject,
   isBlockingMapObject,
   type MapDefinition,
+  type MapObject,
 } from './map.js'
 import type { InventoryDefinition } from './inventory.js'
 import type { SceneDefinition } from './scene.js'
@@ -91,12 +92,33 @@ export function mergeRuleSources(sources: readonly RuleSource[]): MergedRules {
   return { rules: { state, actions: Object.fromEntries(actions), clock, log }, issues }
 }
 
+/** A scripted object can vacate an authored entrance or tile-entry trigger. */
+export function scriptedMapObjects(
+  sources: readonly RuleSource[],
+  maps: ReadonlyMap<string, MapDefinition>,
+) {
+  const moving = new Set<MapObject>()
+
+  for (const { rules } of sources)
+    for (const branches of Object.values(rules.actions))
+      for (const branch of branches)
+        for (const effect of branch.effects) {
+          if (effect.type !== 'move-map-object') continue
+          const object = maps.get(effect.map)?.objects?.find((entry) => entry.id === effect.object)
+
+          if (object) moving.add(object)
+        }
+
+  return moving
+}
+
 export function validateRuleSources(
   sources: readonly RuleSource[],
   scenes: ReadonlyMap<string, SceneDefinition>,
   maps: ReadonlyMap<string, MapDefinition>,
   inventory: InventoryDefinition | undefined,
   translations: LanguageCatalog | undefined,
+  scriptedObjects = scriptedMapObjects(sources, maps),
 ): MergedRules {
   const merged = mergeRuleSources(sources)
 
@@ -153,7 +175,7 @@ export function validateRuleSources(
           message: `Unknown tile-entry action: ${trigger.action}`,
         })
 
-      if (getMapPotentialMovementCostMs(map, trigger) === undefined)
+      if (getMapPotentialMovementCostMs(map, trigger, { scriptedObjects }) === undefined)
         merged.issues.push({
           file: `maps/${id}.json`,
           path: ['entryTriggers', index],
@@ -269,6 +291,10 @@ export function validateRuleSources(
               checkField(effect.path, effect.value, source)
               checkText(effect.value, [...source, 'value'])
               break
+            case 'move-map-object':
+              if (!maps.get(effect.map)?.objects?.some((object) => object.id === effect.object))
+                report([...source, 'object'], 'Unknown map object')
+              break
             case 'move-item':
               if (!inventory || !Object.hasOwn(inventory.items, effect.item))
                 report([...source, 'item'], 'Unknown inventory item')
@@ -291,7 +317,7 @@ export function validateRuleSources(
               if (scene?.type !== 'game')
                 report([...source, 'scene'], 'Expected an existing game scene')
 
-              for (const issue of sceneTransitionIssues(effect, scenes, maps))
+              for (const issue of sceneTransitionIssues(effect, scenes, maps, scriptedObjects))
                 report([...source, ...issue.path], issue.message)
 
               break

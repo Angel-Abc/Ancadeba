@@ -12,7 +12,7 @@ import {
 import type { EquipmentSelection, IGameEquipment } from './equipment.js'
 import type { IGameMapMovement } from './mapMovement.js'
 import type { IGameMapObjects } from './mapObjects.js'
-import type { MapDefinition, MapObject } from '@ancadeba/schemas'
+import type { MapDefinition } from '@ancadeba/schemas'
 import type { IGameNearby, NearbySelection } from './nearbyContext.js'
 import type { IGameTrading, TradeSelection } from './trading.js'
 import type { IGameCombat, CombatCapture } from './combat.js'
@@ -30,7 +30,7 @@ export interface IGameActionBar {
 
 interface CapturedSlot {
   readonly mapCapture?: MapDefinition | undefined
-  readonly objectCapture?: MapObject | undefined
+  readonly objectCapture?: string | undefined
   readonly storyCapture?: StoryCapture | undefined
   readonly itemCapture?: ItemUseCapture | undefined
   readonly combatCapture?: CombatCapture | undefined
@@ -123,7 +123,7 @@ export class GameActionBar implements IGameActionBar {
     | {
         definition: ActionBarSlotDefinition
         mapCapture?: MapDefinition | undefined
-        objectCapture?: MapObject | undefined
+        objectCapture?: string | undefined
         storyCapture?: StoryCapture | undefined
         itemCapture?: ItemUseCapture | undefined
         combatCapture?: CombatCapture | undefined
@@ -145,11 +145,12 @@ export class GameActionBar implements IGameActionBar {
     if (definition.action.type === 'interact-map')
       return {
         definition,
+        mapCapture: this.mapMovement?.getMap(scene, definition.action.mapView),
         objectCapture: this.mapObjects?.getTarget(
           scene,
           definition.action.mapView,
           definition.action.object,
-        ),
+        )?.id,
       }
 
     if (definition.action.type === 'dialogue-action') {
@@ -350,7 +351,7 @@ export class GameActionBar implements IGameActionBar {
 
     if (action.type === 'interact-map') {
       if (target.objectCapture && target.objectCapture === resolved.objectCapture)
-        this.mapObjects?.interact(scene, action.mapView, target.objectCapture.id)
+        this.mapObjects?.interact(scene, action.mapView, target.objectCapture)
 
       return
     }

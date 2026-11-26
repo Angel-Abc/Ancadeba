@@ -1,6 +1,11 @@
 import { registerEditorDraft } from './editorDraftState.js'
 import { z } from 'zod'
-import { mapDefinitionSchema, mapObjectSchema, mapObjectStateSchema } from '@ancadeba/schemas'
+import {
+  getMapTerrainCostMs,
+  mapDefinitionSchema,
+  mapObjectSchema,
+  mapObjectStateSchema,
+} from '@ancadeba/schemas'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
 import { MapDraft, MapDraftError, type TilePoint } from './mapDraft.js'
@@ -31,6 +36,12 @@ const mapDraftSchema = z
       .array(
         z.object({
           ...mapObjectSchema.shape,
+          patrol: mapObjectSchema.shape.patrol
+            .unwrap()
+            .extend({
+              route: z.array(z.object({ x: z.number(), y: z.number() })),
+            })
+            .optional(),
           id: z.string(),
           label: z.string(),
           action: z.string(),
@@ -97,6 +108,7 @@ export function bindMapEditor(
   let terrainState: MapTerrainEditorState = { selected: 'ground', newId: '' }
   let activeTab: MapEditorTab = 'paint'
   let placementTool: MapPlacementTool = 'object'
+  let editingRoute = false
   let tabs: ReturnType<typeof mapEditorTabs> | undefined
   let refreshActions = () => {}
   let dirty = false
@@ -614,6 +626,26 @@ export function bindMapEditor(
 
     const openObject = (point: TilePoint) => {
       if (gridDisabled()) return
+      const patrol = draft.data.objects?.[objectState.selected]?.patrol
+
+      if (editingRoute && patrol) {
+        const last = patrol.route.at(-1)!
+
+        if (
+          Math.abs(last.x - point.x) + Math.abs(last.y - point.y) !== 1 ||
+          getMapTerrainCostMs(draft.data, point) === undefined
+        ) {
+          error.textContent = t('maps.patrolAdjacent')
+
+          return
+        }
+
+        change(() => patrol.route.push({ ...point }))
+        board?.focus(point)
+
+        return
+      }
+
       finishStroke()
       history.breakGroup()
 
@@ -673,12 +705,20 @@ export function bindMapEditor(
         if (busy || confirming) return
         finishStroke()
         placementDetails = false
+        editingRoute = false
         placementTool = tool
         switchTab('objects')
         board?.focus()
       },
       activate: placementTool === 'object' ? openObject : openTrigger,
       selected: ({ x, y }) => {
+        if (editingRoute && placementTool === 'object')
+          return (
+            draft.data.objects?.[objectState.selected]?.patrol?.route.some(
+              (tile) => tile.x === x && tile.y === y,
+            ) ?? false
+          )
+
         const selected =
           placementTool === 'object'
             ? draft.data.objects?.[objectState.selected]
@@ -829,6 +869,12 @@ export function bindMapEditor(
       () => board?.refresh(false),
       spawns,
       view.rules?.state ?? [],
+      () => {
+        editingRoute = true
+        placementDetails = false
+        render()
+        board?.focus(draft.data.objects?.[objectState.selected]?.patrol?.route.at(-1))
+      },
     )
 
     const fill = controls.button(
@@ -883,6 +929,7 @@ export function bindMapEditor(
       String(current.selected),
       entries.map((entry, index) => [String(index), caption(entry)] as const),
       (value) => {
+        editingRoute = false
         current.selected = Number(value)
         placementDetails = true
         render()
@@ -914,6 +961,19 @@ export function bindMapEditor(
     const tools = document.createElement('div')
     tools.className = 'map-placement-header'
     tools.append(placement.element, entryPicker, placementDetails ? back : detailsButton)
+
+    if (editingRoute && editingObjects && draft.data.objects?.[objectState.selected]?.patrol) {
+      tools.append(
+        t('maps.patrolAdjacent'),
+        controls.button(t('maps.finishRoute'), () => {
+          editingRoute = false
+          placementDetails = true
+          render()
+          objectEditor?.focusSelected()
+        }),
+      )
+    }
+
     placementWorkspace.append(tools)
 
     if (activeTab === 'objects') placementCanvas.append(board.element)
@@ -1108,6 +1168,7 @@ export function bindMapEditor(
           brush = ''
           terrainState = { selected: '', newId: '' }
           activeTab = 'paint'
+          editingRoute = false
           placementTool = 'object'
           placementDetails = false
           entryState.selected = objectState.selected = -1

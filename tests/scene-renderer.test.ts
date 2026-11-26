@@ -4343,7 +4343,17 @@ describe('scene renderer', () => {
       ).load()
 
       const { target } = setup(game)
-      const tasks: (() => void)[] = []
+      let now = 0
+      const pending = new Map<() => void, number>()
+
+      const finishRoadStep = () => {
+        now += 150
+
+        for (const [run, due] of [...pending]) {
+          if (due > now || !pending.delete(run)) continue
+          run()
+        }
+      }
 
       const engine = new Engine(
         { load: async () => game },
@@ -4353,12 +4363,14 @@ describe('scene renderer', () => {
         logger,
         () => new MessageBus<EngineMessages>(),
         {
-          clock: timing.clock,
+          clock: { now: () => now },
           scheduler: {
             schedule(callback, delay) {
-              if (delay) tasks.push(callback)
+              if (delay > 0) pending.set(callback, now + delay)
 
-              return () => {}
+              return () => {
+                pending.delete(callback)
+              }
             },
           },
         },
@@ -4379,7 +4391,7 @@ describe('scene renderer', () => {
 
       const walk = (code: string) => {
         press(code)
-        tasks.shift()!()
+        finishRoadStep()
         flush(engine)
       }
 
@@ -4397,7 +4409,10 @@ describe('scene renderer', () => {
       expect(
         target.find((element) => element.dataset.mapObject === 'village-chest')!.disabled,
       ).toBe(true)
+      const ranger = target.find((element) => element.dataset.mapObject === 'ranger')!
+      expect(ranger.style.getPropertyValue('grid-column')).toBe('8 / span 1')
       walk('KeyD')
+      expect(ranger.style.getPropertyValue('grid-column')).toBe('9 / span 1')
       expect(interact().unavailable).toBe(false)
       expect(
         target

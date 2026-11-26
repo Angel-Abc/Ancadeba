@@ -1,5 +1,10 @@
 import type { MapViewComponentData, MapDirection } from '@ancadeba/game-runtime'
-import { getMapMovementCostMs, type MapDefinition, type MapPosition } from '@ancadeba/schemas'
+import {
+  getMapMovementCostMs,
+  mapDirections,
+  type MapDefinition,
+  type MapPosition,
+} from '@ancadeba/schemas'
 import { createBrowserTiming } from './browserTiming.js'
 import { mapTileImages } from './mapTileAppearance.js'
 import { applyMapCellAppearance } from './mapCellAppearance.js'
@@ -10,13 +15,6 @@ import type {
   IComponentRenderer,
   RenderedComponent,
 } from './componentRendering.js'
-
-const offsets = {
-  north: { x: 0, y: -1 },
-  south: { x: 0, y: 1 },
-  west: { x: -1, y: 0 },
-  east: { x: 1, y: 0 },
-}
 
 function clampCoordinate(value: number, maximum: number): number {
   return Math.min(maximum, Math.max(0, value))
@@ -109,6 +107,8 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
         : appearance.label.slice(0, 1)
       entry.element.title = appearance.label
       entry.element.setAttribute('aria-label', appearance.label)
+      entry.element.style.setProperty('grid-column', `${appearance.x + 1} / span 1`)
+      entry.element.style.setProperty('grid-row', `${appearance.y + 1} / span 1`)
       entry.element.hidden = appearance.visible === false
     }
 
@@ -148,8 +148,6 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
       element.textContent = object.label.slice(0, 1)
       element.title = object.label
       element.setAttribute('aria-label', object.label)
-      element.style.setProperty('grid-column', `${object.x + 1} / span 1`)
-      element.style.setProperty('grid-row', `${object.y + 1} / span 1`)
       applyMapTileAppearance(element, map, object.terrain, assets, images.url)
 
       const activate = () => {
@@ -233,7 +231,7 @@ export class MapViewComponentRenderer implements IComponentRenderer<MapViewCompo
         return
       }
 
-      const direction = offsets[heading]
+      const direction = mapDirections[heading]
 
       if (playerPosition) {
         if (cancelStep) return

@@ -109,8 +109,18 @@ scenes.set(
   }),
 )
 
-async function setup(rules?: GameRules, now: () => number = () => 0) {
-  const game = assembleGameData(manifest, scenes, input, undefined, new Map([['terrain', map]]))
+async function setup(rules?: GameRules, now: () => number = () => 0, terrain = map) {
+  const game = assembleGameData(
+    { ...manifest, rules: ['map-actions'] },
+    scenes,
+    input,
+    undefined,
+    new Map([['terrain', terrain]]),
+    undefined,
+    undefined,
+    new Map([['map-actions', { state: [], actions: { talk: [{ when: [], effects: [] }] } }]]),
+  )
+
   const tasks: { callback: () => void; delay: number; cancelled: boolean }[] = []
   const fallback = vi.fn(() => ({ status: 'applied' as const }))
 
@@ -169,6 +179,51 @@ async function setup(rules?: GameRules, now: () => number = () => 0) {
 }
 
 describe('map movement actions', () => {
+  it('shares one patrol alarm across views and freezes the remaining time in a menu', async () => {
+    let now = 0
+
+    const terrain = mapDefinitionSchema.parse({
+      ...map,
+      objects: [
+        {
+          id: 'scout',
+          label: 'Scout',
+          x: 2,
+          y: 0,
+          terrain: 'ground',
+          action: 'talk',
+          patrol: {
+            mode: 'reverse',
+            route: [
+              { x: 2, y: 0 },
+              { x: 2, y: 1 },
+            ],
+            trigger: { type: 'timer', intervalMs: 500 },
+          },
+        },
+      ],
+    })
+
+    const { lifecycle, scene, tasks } = await setup(undefined, () => now, terrain)
+    const objects = lifecycle.currentGame!.mapObjects!
+    const pending = () => tasks.filter((task) => !task.cancelled)
+    expect(pending().map((task) => task.delay)).toEqual([500])
+    const stale = pending()[0]!
+    now = 200
+    lifecycle.openMenu!('menu')
+    now += 5000
+    stale.callback()
+    expect(pending()).toHaveLength(0)
+    lifecycle.resumeGame!()
+    expect(pending().map((task) => task.delay)).toEqual([300])
+    expect(objects.getAppearance(scene, 'map', 'scout')).toMatchObject({ x: 2, y: 0 })
+    now += 300
+    pending()[0]!.callback()
+
+    for (const id of ['map', 'other-map'])
+      expect(objects.getAppearance(scene, id, 'scout')).toMatchObject({ x: 2, y: 1 })
+  })
+
   it('charges one turn and terrain time only on completed steps across input and map views', async () => {
     const { engine, scene, movement, bar, tasks, press } = await setup()
     const actions = engine.lifecycle!.currentGame!.actions!

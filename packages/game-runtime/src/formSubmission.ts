@@ -137,8 +137,17 @@ function prepareSubmission(
 
   if (move && !transfer?.isCurrent()) throw new Error(text('form.items'))
 
+  const moveObject = effects.find((effect) => effect.type === 'move-map-object')
+
+  const step =
+    moveObject &&
+    game.mapMovement?.prepareObjectStep(moveObject.map, moveObject.object, moveObject.direction)
+
+  if (moveObject && !step?.isCurrent()) throw new Error(text('form.destination'))
+
   const storyEffects = effects.filter(
     (effect) =>
+      effect.type !== 'move-map-object' &&
       effect.type !== 'move-item' &&
       effect.type !== 'collect-items' &&
       effect.type !== 'enter-scene',
@@ -180,7 +189,7 @@ function prepareSubmission(
   if (cost === undefined) throw new Error(text('form.destination'))
 
   const action = component.action
-    ? runtime.actions.prepareFormAction(component.action, cost)
+    ? runtime.actions.prepareFormAction(component.action, cost, branch?.spendsPlayerTurn)
     : undefined
 
   const time = action?.progression.worldTimeMs ?? runtime.actions.progression.worldTimeMs
@@ -190,11 +199,13 @@ function prepareSubmission(
     commit() {
       if (
         !current() ||
+        (step && !step.isCurrent()) ||
         (transfer && !transfer.isCurrent()) ||
         (quest && !quest.isCurrent()) ||
         (action && !action.isCurrent())
       )
         throw new Error(text('form.changed'))
+      step?.commit()
       quest?.commit()
       transfer?.commit()
       batch.commit(time)
@@ -207,6 +218,7 @@ function prepareSubmission(
         () => action?.notify(),
         () => quest?.notify(),
         () => transfer?.notify(),
+        () => step?.notify(),
         () => runtime.bindings.invalidate(),
       ])
     },

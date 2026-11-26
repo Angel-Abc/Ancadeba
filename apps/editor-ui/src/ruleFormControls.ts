@@ -232,6 +232,7 @@ export function ruleFormControls(
 
   return {
     create,
+    label,
     input,
     select,
     translation,

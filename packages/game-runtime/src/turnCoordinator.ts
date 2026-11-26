@@ -54,6 +54,9 @@ export class TurnCoordinator {
 
   constructor(rules: TurnRules, actionIds: Iterable<string>) {
     this.actors = copyIds(rules.actors, 'Turn actors')
+
+    if (rules.playerActorId !== undefined && !this.actors.includes(rules.playerActorId))
+      throw new Error('Player actor must belong to the initial turn roster')
     this.roster = new ActorRoster(this.actors)
     this.participants = this.roster.current.actors
     this.phases = copyIds(rules.phases, 'Turn phases')

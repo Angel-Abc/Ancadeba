@@ -35,6 +35,12 @@ export const ruleEffectSchema = z.discriminatedUnion('type', [
       .refine((items) => new Set(items).size === items.length, 'Choose each pickup item only once'),
     owner: id,
   }),
+  z.strictObject({
+    type: z.literal('move-map-object'),
+    map: id,
+    object: id,
+    direction: z.enum(['north', 'east', 'south', 'west']),
+  }),
   sceneTransitionSchema,
   z.strictObject({ type: z.literal('append-log'), text: ruleTextSchema }),
   z.strictObject({ type: z.literal('start-quest'), quest: id }),
@@ -44,18 +50,24 @@ export const ruleEffectSchema = z.discriminatedUnion('type', [
 const branchSchema = z
   .strictObject({
     when: z.array(ruleConditionSchema),
+    spendsPlayerTurn: z.boolean().optional(),
     effects: z.array(ruleEffectSchema),
   })
   .superRefine((branch, context) => {
     if (
       branch.effects.filter(
-        ({ type }) => type === 'move-item' || type === 'collect-items' || type === 'enter-scene',
+        ({ type }) =>
+          type === 'move-map-object' ||
+          type === 'move-item' ||
+          type === 'collect-items' ||
+          type === 'enter-scene',
       ).length > 1
     )
       context.addIssue({
         code: 'custom',
         path: ['effects'],
-        message: 'Use at most one inventory operation or scene transition per branch',
+        message:
+          'Use at most one map movement, inventory operation, or scene transition per branch',
       })
   })
 

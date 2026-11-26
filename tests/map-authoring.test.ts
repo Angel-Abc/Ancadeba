@@ -192,11 +192,29 @@ describe('map authoring persistence', () => {
     )
 
     await workspace.write('game/maps/garden.json', before)
-    map.objects[0]!.label = 'Changed sign'
-    await apply({ type: 'game.upsertMap', mapId: 'garden', map })
+
+    const moving = {
+      ...map,
+      objects: [
+        {
+          ...map.objects[0]!,
+          label: 'Changed sign',
+          patrol: {
+            mode: 'reverse' as const,
+            trigger: { type: 'player-turn' as const },
+            route: [
+              { x: 1, y: 0 },
+              { x: 0, y: 0 },
+            ],
+          },
+        },
+      ],
+    }
+
+    await apply({ type: 'game.upsertMap', mapId: 'garden', map: moving })
     const after = await workspace.read('game/maps/garden.json')
     expect(JSON.parse(Buffer.from(after).toString()).objects).toEqual([
-      { ...map.objects[0], extension: { keep: true } },
+      { ...moving.objects[0], extension: { keep: true } },
     ])
     await restore('undo')
     expect(await workspace.read('game/maps/garden.json')).toEqual(before)

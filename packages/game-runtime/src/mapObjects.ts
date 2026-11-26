@@ -30,7 +30,13 @@ export class GameMapObjects implements IGameMapObjects {
       return
     const entry = this.movement.getMap(scene, mapView)?.objects?.find(({ id }) => id === object)
 
-    return entry && resolveMapObject(entry, this.readState)
+    if (!entry) return
+    const appearance = resolveMapObject(entry, this.readState)
+    const position = this.movement.objectPosition(entry)
+
+    return position.x === entry.x && position.y === entry.y
+      ? appearance
+      : { ...appearance, x: position.x, y: position.y }
   }
 
   getTarget(scene: SceneInstance, mapView: string, object?: string): MapObject | undefined {
@@ -46,26 +52,34 @@ export class GameMapObjects implements IGameMapObjects {
     if (!position || this.movement.isMoving(scene, mapView)) return
 
     const targets =
-      this.movement
-        .getMap(scene, mapView)
-        ?.objects?.filter(
-          (entry) =>
-            (!object || entry.id === object) &&
-            resolveMapObject(entry, this.readState).visible !== false &&
-            Math.abs(entry.x - position.x) + Math.abs(entry.y - position.y) === 1,
-        ) ?? []
+      this.movement.getMap(scene, mapView)?.objects?.filter((entry) => {
+        const tile = this.movement.objectPosition(entry)
 
-    return targets.length === 1 ? targets[0] : undefined
+        return (
+          (!object || entry.id === object) &&
+          resolveMapObject(entry, this.readState).visible !== false &&
+          Math.abs(tile.x - position.x) + Math.abs(tile.y - position.y) === 1
+        )
+      }) ?? []
+
+    if (targets.length !== 1) return
+    const target = targets[0]!
+    const tile = this.movement.objectPosition(target)
+
+    return target.x === tile.x && target.y === tile.y ? target : { ...target, x: tile.x, y: tile.y }
   }
 
   interact(scene: SceneInstance, mapView: string, object?: string): boolean {
     const target = this.getTarget(scene, mapView, object)
 
     if (!target) return false
+    const map = this.movement.getMap(scene, mapView)
     this.request(
       target.action,
       target.id,
-      () => this.getTarget(scene, mapView, target.id) === target,
+      () =>
+        this.movement.getMap(scene, mapView) === map &&
+        this.getTarget(scene, mapView, target.id)?.id === target.id,
     )
 
     return true

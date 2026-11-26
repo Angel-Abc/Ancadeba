@@ -50,8 +50,8 @@ export function sceneEntranceCost(
   if (!map || (action.map && !action.position)) return
   const position = action.position ?? view.playerSpawn
 
-  return movement && !proposedState
-    ? movement.getTileCost(map, position)
+  return movement
+    ? movement.getTileCost(map, position, proposedState)
     : getMapMovementCostMs(map, position, (object) =>
         isBlockingMapObject(resolveMapObject(object, proposedState ?? readInitialState)),
       )

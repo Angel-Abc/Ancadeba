@@ -68,6 +68,31 @@ export type MapObjectState = z.infer<typeof mapObjectStateSchema>
 
 export type MapObjectStateReader = (path: readonly string[]) => unknown
 
+export const mapPositionSchema = z.object({
+  x: z.number().int().nonnegative(),
+  y: z.number().int().nonnegative(),
+})
+
+export const mapDirections = {
+  north: { x: 0, y: -1 },
+  east: { x: 1, y: 0 },
+  south: { x: 0, y: 1 },
+  west: { x: -1, y: 0 },
+} as const
+
+const patrolSchema = z.object({
+  route: z.array(mapPositionSchema).min(2),
+  mode: z.enum(['loop', 'reverse']),
+  trigger: z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('timer'),
+      intervalMs: z.number().int().positive().max(2_147_483_647),
+    }),
+    z.object({ type: z.literal('player-step') }),
+    z.object({ type: z.literal('player-turn') }),
+  ]),
+})
+
 export const mapObjectSchema = z.object({
   id: gameIdSchema,
   label: z.string().trim().min(1).max(100),
@@ -78,6 +103,7 @@ export const mapObjectSchema = z.object({
   blocking: z.boolean().optional(),
   visible: z.boolean().optional(),
   states: z.array(mapObjectStateSchema).optional(),
+  patrol: patrolSchema.optional(),
 })
 
 export type MapObject = z.infer<typeof mapObjectSchema>
@@ -180,6 +206,32 @@ export const mapDefinitionSchema = z
           path: [...path, 'terrain'],
           message: 'Unknown object appearance terrain',
         })
+      const patrol = object.patrol
+
+      if (patrol) {
+        patrol.route.forEach((point, step) => {
+          const previous = patrol.route[step - 1]
+          const last = patrol.route.at(-1)!
+
+          const adjacent = (other: MapPosition) =>
+            Math.abs(other.x - point.x) + Math.abs(other.y - point.y) === 1
+
+          if (
+            point.x >= map.width ||
+            point.y >= map.height ||
+            getMapTerrainCostMs(map, point) === undefined ||
+            (previous ? !adjacent(previous) : point.x !== object.x || point.y !== object.y) ||
+            (step === 0 && patrol.mode === 'loop' && !adjacent(last))
+          )
+            context.addIssue({
+              code: 'custom',
+              path: [...path, 'patrol', 'route', step],
+              message:
+                'Patrol tiles must be walkable and adjacent, start at the object, and close a loop',
+            })
+        })
+      }
+
       const stateIds = new Set<string>()
       object.states?.forEach((state, stateIndex) => {
         const statePath = [...path, 'states', stateIndex]
@@ -245,11 +297,6 @@ export const mapViewportSchema = z.object({
   rows: z.number().int().positive(),
   x: z.number().int().nonnegative().default(0),
   y: z.number().int().nonnegative().default(0),
-})
-
-export const mapPositionSchema = z.object({
-  x: z.number().int().nonnegative(),
-  y: z.number().int().nonnegative(),
 })
 
 export type MapDefinition = z.infer<typeof mapDefinitionSchema>
@@ -375,18 +422,29 @@ export function getMapMovementCostMs(
   map: MapDefinition,
   position: MapPosition,
   isBlocking: (object: MapObject) => boolean = isBlockingMapObject,
+  positionOf: (object: MapObject) => Readonly<MapPosition> = (object) => object,
+): number | undefined {
+  if (
+    map.objects?.some((object) => {
+      const tile = positionOf(object)
+
+      return tile.x === position.x && tile.y === position.y && isBlocking(object)
+    })
+  )
+    return undefined
+
+  return getMapTerrainCostMs(map, position)
+}
+
+export function getMapTerrainCostMs(
+  map: { tiles: string[][]; terrain: Record<string, MapTerrain>; layers?: MapLayer[] | undefined },
+  position: MapPosition,
 ): number | undefined {
   const id = map.tiles[position.y]?.[position.x]
   const terrain = id === undefined ? undefined : map.terrain[id]
 
   if (!terrain || terrain.walkable === false) return undefined
 
-  if (
-    map.objects?.some(
-      (object) => object.x === position.x && object.y === position.y && isBlocking(object),
-    )
-  )
-    return undefined
   let cost = terrain.movementCostMs ?? 0
 
   for (const layer of map.layers ?? []) {
@@ -411,13 +469,20 @@ export function isWalkableMapTile(map: MapDefinition, position: MapPosition): bo
 export function getMapPotentialMovementCostMs(
   map: MapDefinition,
   position: MapPosition,
+  options?: {
+    positionOf?: (object: MapObject) => Readonly<MapPosition>
+    scriptedObjects?: ReadonlySet<MapObject> | undefined
+  },
 ): number | undefined {
   return getMapMovementCostMs(
     map,
     position,
     (object) =>
+      !options?.scriptedObjects?.has(object) &&
+      !object.patrol &&
       isBlockingMapObject(object) &&
       !object.states?.some((state) => state.blocking === false || state.visible === false),
+    options?.positionOf,
   )
 }
 

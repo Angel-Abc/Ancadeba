@@ -33,6 +33,15 @@ Coordinates start at zero. Arriving at an entrance does not activate a tile-entr
 trigger. The exits run only when the player finishes a step onto their tiles, so
 each return trip begins with another step.
 
+## Watch the village patrols
+
+The red Courier walks between (5, 2) and (6, 2) every 1.2 gameplay seconds.
+Speak to the Courier from the side to request a step south. Speak again to send
+the Courier north and resume the route. The green Ranger follows a four-tile loop
+after each completed player step. The blue Watchman walks back and forth after
+each player turn. Choose **Wait** to advance the Watchman while the Ranger stays put.
+Leaving the village or opening the pause menu freezes the Courier’s remaining delay.
+
 ## How the exits are authored
 
 The `exploration` scene has one map view, `world-map`, with `followPlayer: true`.

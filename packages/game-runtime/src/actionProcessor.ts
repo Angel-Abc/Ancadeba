@@ -62,13 +62,19 @@ function validateOutcome(value: unknown): ActionOutcome {
   const advancePhase =
     'advancePhase' in value && value.advancePhase !== undefined ? value.advancePhase : false
 
+  const spendsPlayerTurn =
+    'spendsPlayerTurn' in value && value.spendsPlayerTurn !== undefined
+      ? value.spendsPlayerTurn
+      : false
+
   const cost =
     'worldTimeCostMs' in value && value.worldTimeCostMs !== undefined ? value.worldTimeCostMs : 0
 
   if (
     typeof advanceTurn !== 'boolean' ||
     typeof advancePhase !== 'boolean' ||
-    (advanceTurn && advancePhase) ||
+    typeof spendsPlayerTurn !== 'boolean' ||
+    ((advanceTurn || spendsPlayerTurn) && advancePhase) ||
     typeof cost !== 'number' ||
     !Number.isFinite(cost) ||
     cost < 0
@@ -80,7 +86,8 @@ function validateOutcome(value: unknown): ActionOutcome {
 
   return Object.freeze({
     status: 'applied',
-    advanceTurn,
+    advanceTurn: advanceTurn || spendsPlayerTurn,
+    ...(spendsPlayerTurn && { spendsPlayerTurn }),
     worldTimeCostMs: cost,
     ...(advancePhase ? { advancePhase: true } : {}),
     ...('rosterChanges' in value && value.rosterChanges !== undefined
@@ -103,6 +110,7 @@ export class ActionProcessor implements IGameActions {
   >()
   private readonly progressionState: GameProgression
   private readonly worldSchedules: WorldActionScheduler<ActorAttribution>
+  private readonly playerActorId: string | undefined
   private readonly turns: TurnCoordinator | undefined
   private readonly subscriptions: Unsubscribe[]
   private nextRequestId = 0
@@ -120,7 +128,9 @@ export class ActionProcessor implements IGameActions {
       event: VirtualInput,
       request: (action: string, payload?: unknown) => void,
     ) => boolean,
+    private readonly onPlayerTurn?: () => void,
   ) {
+    this.playerActorId = rules.turns?.playerActorId
     this.handlers = new Map(rules.handlers)
 
     for (const [id, handler] of this.handlers) {
@@ -159,20 +169,25 @@ export class ActionProcessor implements IGameActions {
   }
 
   /** Publish a staged form action once its effects and destination have committed. */
-  prepareFormAction(action: string, cost: number) {
+  prepareFormAction(action: string, cost: number, spendsPlayerTurn = false) {
     this.progressionState.synchronize()
-    const prepared = this.progressionState.prepare(false, cost)
+    const prepared = this.progressionState.prepare(spendsPlayerTurn, cost)
     const request: ActionRequest = { id: ++this.nextRequestId, action, origin: { type: 'direct' } }
 
     return {
       ...prepared,
       notify: () => {
+        if (spendsPlayerTurn && !this.turns) this.onPlayerTurn?.()
         prepared.notify()
         this.messages.publish(
           'action.applied',
           Object.freeze({
             request,
-            outcome: { status: 'applied' as const, worldTimeCostMs: cost },
+            outcome: {
+              status: 'applied' as const,
+              worldTimeCostMs: cost,
+              ...(spendsPlayerTurn && { advanceTurn: true, spendsPlayerTurn: true }),
+            },
             progression: prepared.progression,
             ...this.turnFields,
           }),
@@ -506,6 +521,15 @@ export class ActionProcessor implements IGameActions {
         this.turns!.commit(transition)
         this.publishTransition(transition)
       }
+
+      if (
+        this.turns
+          ? transition?.advanceTurn &&
+            transition.previous?.actorId === this.playerActorId &&
+            this.playerActorId !== undefined
+          : outcome.spendsPlayerTurn
+      )
+        this.onPlayerTurn?.()
 
       this.messages.publish(
         'action.applied',

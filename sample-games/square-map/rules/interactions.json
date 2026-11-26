@@ -1,5 +1,6 @@
 {
   "state": [
+    { "path": ["courierAside"], "value": false },
     { "path": ["berriesCollected"], "value": false },
     {
       "path": ["signRead"],
@@ -19,6 +20,75 @@
     }
   ],
   "actions": {
+    "wait": [
+      {
+        "when": [],
+        "spendsPlayerTurn": true,
+        "effects": [
+          { "type": "set-state", "path": ["interactionMessage"], "value": "You wait one turn." }
+        ]
+      }
+    ],
+    "greet-ranger": [
+      {
+        "when": [],
+        "effects": [
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "Ranger: I walk when you walk."
+          }
+        ]
+      }
+    ],
+    "greet-watchman": [
+      {
+        "when": [],
+        "effects": [
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "Watchman: I keep watch while you wait."
+          }
+        ]
+      }
+    ],
+    "step-aside": [
+      {
+        "when": [{ "type": "state-is", "path": ["courierAside"], "value": false }],
+        "effects": [
+          {
+            "type": "move-map-object",
+            "map": "village",
+            "object": "courier",
+            "direction": "south"
+          },
+          { "type": "set-state", "path": ["courierAside"], "value": true },
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "The courier steps aside. Speak again to resume the route."
+          }
+        ]
+      },
+      {
+        "when": [{ "type": "state-is", "path": ["courierAside"], "value": true }],
+        "effects": [
+          {
+            "type": "move-map-object",
+            "map": "village",
+            "object": "courier",
+            "direction": "north"
+          },
+          { "type": "set-state", "path": ["courierAside"], "value": false },
+          {
+            "type": "set-state",
+            "path": ["interactionMessage"],
+            "value": "The courier resumes the route."
+          }
+        ]
+      }
+    ],
     "collect-berries": [
       {
         "when": [

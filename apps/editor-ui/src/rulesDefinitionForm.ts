@@ -60,6 +60,9 @@ export function rulesDefinitionForm(
     ]),
   ]
 
+  const objectMaps = Object.keys(view.maps ?? {}).filter((id) => view.maps?.[id]?.objects?.length)
+  const objectsIn = (map: string) => view.maps?.[map]?.objects?.map(({ id }) => id) ?? []
+
   const availableFields = [...rules.state, ...otherFields]
   const fields = availableFields.map(({ path }) => statePath(path))
   const firstPath = () => availableFields[0]?.path.slice() ?? ['']
@@ -119,6 +122,12 @@ export function rulesDefinitionForm(
         return { type, path: firstPath(), value: firstValue() }
       case 'move-item':
         return { type, item: items[0] ?? '', owner: owners[0] ?? '' }
+      case 'move-map-object': {
+        const map = objectMaps[0] ?? ''
+
+        return { type, map, object: objectsIn(map)[0] ?? '', direction: 'north' }
+      }
+
       case 'collect-items':
         return { type, items: items.length ? [items[0]!] : [], owner: owners[0] ?? '' }
       case 'enter-scene':
@@ -622,6 +631,7 @@ export function rulesDefinitionForm(
               [
                 'set-state',
                 'move-item',
+                'move-map-object',
                 'collect-items',
                 'enter-scene',
                 'append-log',
@@ -645,6 +655,28 @@ export function rulesDefinitionForm(
             select(t('form.quest'), entry.quest, questChoices(view), (value) => {
               entry.quest = value
             }),
+          )
+
+        if (entry.type === 'move-map-object')
+          field.append(
+            select(t('maps.map'), entry.map, objectMaps, (map) => {
+              entry.map = map
+              entry.object = objectsIn(map)[0] ?? ''
+              rerender()
+            }),
+            select(t('maps.objectPicker'), entry.object, objectsIn(entry.map), (id) => {
+              entry.object = id
+            }),
+            select(
+              t('form.direction'),
+              entry.direction,
+              (['north', 'east', 'south', 'west'] as const).map(
+                (direction) => [direction, t(`component.${direction}`)] as const,
+              ),
+              (direction) => {
+                entry.direction = direction
+              },
+            ),
           )
 
         if (entry.type === 'move-item')
@@ -730,7 +762,15 @@ export function rulesDefinitionForm(
           }),
         ),
       )
-      row.append(conditions, effects)
+      const spendsTurn = create('input')
+      spendsTurn.type = 'checkbox'
+      spendsTurn.checked = branch.spendsPlayerTurn === true
+      spendsTurn.addEventListener('change', () =>
+        change(() => {
+          branch.spendsPlayerTurn = spendsTurn.checked
+        }),
+      )
+      row.append(controls.label(t('rules.spendsPlayerTurn'), spendsTurn), conditions, effects)
 
       return fieldPath(row, 'actions', selected, index)
     }

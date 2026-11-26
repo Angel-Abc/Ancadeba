@@ -684,6 +684,26 @@ Pine Village's berry basket at `(4, 5)` demonstrates this: stand at `(4, 4)` and
 press **E** to collect three berries. It stays gone across visits and save/load;
 starting a new game restores it.
 
+### Moving map objects
+
+In the map object's **Patrol** controls, choose a trigger and select adjacent route
+tiles on the grid. The route starts at the object's spawn. **Walk back and forth**
+reverses at each end. **Loop** connects the last tile to the first in one step.
+
+- **Gameplay timer** uses seconds of active play. Leaving the map or pausing freezes
+  the remaining interval. Saves preserve the tile, route progress, and remaining time.
+- **After player step** advances on arrival, once terrain delay has elapsed.
+- **After player turn** also advances for a successful rule branch with **Spends a
+  player turn** checked. For custom actor rosters, set `turns.playerActorId` to the
+  actor whose completed turns advance these patrols.
+
+A blocked patrol waits for its next trigger and retries the same tile. Rules can
+move an object one tile with a directional effect, for example
+`{ "type": "move-map-object", "map": "village", "object": "courier", "direction": "south" }`.
+A blocked step rejects the branch before state or log changes commit. Stepping
+off the route suspends a patrol until another scripted step returns it to the route.
+The Square Map village demonstrates all three triggers and a scripted detour.
+
 Pickups can transfer real items into the player's inventory with an authored
 `collect-items` effect:
 

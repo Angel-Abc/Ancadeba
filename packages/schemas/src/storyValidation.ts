@@ -205,6 +205,7 @@ export function storyIssues(sources: StorySources) {
         ) &&
         branch.effects.some(
           (value) =>
+            value.type === 'move-map-object' ||
             value.type === 'move-item' ||
             value.type === 'collect-items' ||
             value.type === 'enter-scene',

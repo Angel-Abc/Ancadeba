@@ -66,6 +66,7 @@ export class GameActionRuntime implements IGameRuntime {
     | 'rewards'
     | 'quests'
     | 'dialogue'
+    | 'mapObjectPositions'
     | 'mapPositions'
     | 'playerLocation'
     | 'leveling'
@@ -150,16 +151,6 @@ export class GameActionRuntime implements IGameRuntime {
       return result.status === 'resolved' ? result.value : undefined
     }
 
-    const maps =
-      game.data.maps?.values() ??
-      Array.from(game.data.scenes.values()).flatMap((scene) =>
-        scene.components.flatMap((view) => (view.type === 'map-view' ? [view.map] : [])),
-      )
-
-    const dynamicObjects = Array.from(maps).some((map) =>
-      map.objects?.some((object) => object.states?.length),
-    )
-
     const prepareProgression = (cost: number): PreparedProgression => {
       const prepared = this.actions.prepareProgression(cost)
 
@@ -176,7 +167,9 @@ export class GameActionRuntime implements IGameRuntime {
     this.mapMovement = lifecycle
       ? new GameMapMovement(
           lifecycle,
-          scheduler,
+          this.timing,
+          game,
+          rules.turns !== undefined,
           (scene, mapView, trigger) => {
             const sourceMap = this.mapMovement?.getMap(scene, mapView)
             this.actions.requestScoped(
@@ -194,12 +187,10 @@ export class GameActionRuntime implements IGameRuntime {
                 this.mapMovement?.getMap(scene, mapView) === sourceMap,
             )
           },
-          dynamicObjects
-            ? {
-                read: readObjectState,
-                subscribe: (listener) => this.bindings.subscribeChanges(listener),
-              }
-            : undefined,
+          {
+            read: readObjectState,
+            subscribe: (listener) => this.bindings.subscribeChanges(listener),
+          },
           (cost) => {
             if (!this.isRunning()) return
 
@@ -332,6 +323,13 @@ export class GameActionRuntime implements IGameRuntime {
         logger,
         isRunning,
         (event, request) => this.actionBar?.handleInput(event, request) ?? false,
+        () => {
+          try {
+            this.mapMovement?.playerTurn()
+          } catch (error) {
+            logger.error('MapMovement', 'Player-turn patrol notification failed', error)
+          }
+        },
       )
       this.combat = lifecycle
         ? new GameCombat(
@@ -375,6 +373,7 @@ export class GameActionRuntime implements IGameRuntime {
     this.onStart()
     this.quests?.start()
     this.itemUse?.start()
+    this.mapMovement?.start()
     this.actions.start()
   }
 

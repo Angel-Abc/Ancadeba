@@ -56,6 +56,7 @@ export function editMap(
           : undefined,
       ),
       ...entry,
+      patrol: entry.patrol,
       blocking: entry.blocking,
       visible: entry.visible,
       states: entry.states?.map((state) => {

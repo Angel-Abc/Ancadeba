@@ -50,6 +50,7 @@ export interface ActionRequest {
 export interface AppliedActionOutcome {
   readonly rosterChanges?: RosterChanges
   readonly status: 'applied'
+  readonly spendsPlayerTurn?: boolean
   readonly advanceTurn?: boolean
   readonly advancePhase?: boolean
   readonly worldTimeCostMs?: number

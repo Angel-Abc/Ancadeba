@@ -6,6 +6,7 @@ import {
   localizeCombat,
   gameSchema,
   gameRulesSchema,
+  mapDefinitionSchema,
   sceneSchema,
   inputSchema,
 } from '@ancadeba/schemas'
@@ -134,6 +135,7 @@ const input = inputSchema.parse({
 
 async function setup(
   options: {
+    patrol?: boolean
     single?: boolean
     adapter?: boolean
     outerTurns?: boolean
@@ -155,20 +157,71 @@ async function setup(
     },
   })
 
+  const patrolMap = mapDefinitionSchema.parse({
+    'schema-version': '1.0.0',
+    type: 'square-grid',
+    width: 3,
+    height: 1,
+    terrain: { floor: { color: '#ffffff' } },
+    tiles: [['floor', 'floor', 'floor']],
+    objects: [
+      {
+        id: 'guide',
+        label: 'Guide',
+        x: 1,
+        y: 0,
+        terrain: 'floor',
+        action: 'talk',
+        patrol: {
+          mode: 'reverse',
+          route: [
+            { x: 1, y: 0 },
+            { x: 2, y: 0 },
+          ],
+          trigger: { type: 'player-turn' },
+        },
+      },
+    ],
+  })
+
   const scenes = new Map([
-    ['fight', scene],
+    [
+      'fight',
+      options.patrol
+        ? sceneSchema.parse({
+            ...scene,
+            components: [
+              ...scene.components,
+              {
+                id: 'room',
+                type: 'map-view',
+                map: 'room',
+                label: 'Room',
+                placement: { row: 1, column: 2 },
+                viewport: { columns: 3, rows: 1 },
+                playerSpawn: { x: 0, y: 0 },
+              },
+            ],
+          })
+        : scene,
+    ],
     ['other', sceneSchema.parse({ ...scene, id: 'other', components: [] })],
   ])
 
   const data = assembleGameData(
-    manifest,
+    options.patrol ? { ...manifest, maps: ['room'] } : manifest,
     scenes,
     input,
     undefined,
-    new Map(),
+    options.patrol ? new Map([['room', patrolMap]]) : new Map(),
     new Map(),
     undefined,
-    new Map([['values', rules]]),
+    new Map([
+      [
+        'values',
+        options.patrol ? { ...rules, actions: { talk: [{ when: [], effects: [] }] } } : rules,
+      ],
+    ]),
     new Map([['training', definition]]),
   )
 
@@ -273,7 +326,7 @@ describe('AP combat planning and resolution', () => {
   })
 
   it('preserves rapid move input ordering before End Turn and advances game progression once', async () => {
-    const { engine, select, flush, snapshot, game } = await setup()
+    const { engine, select, flush, snapshot, game, active } = await setup({ patrol: true })
     select()
 
     for (const key of ['KeyQ', 'KeyW', 'KeyC']) {
@@ -285,6 +338,10 @@ describe('AP combat planning and resolution', () => {
     expect(snapshot().round).toBe(2)
     expect(snapshot().log.filter((entry) => entry.actor === 'player')).toHaveLength(2)
     expect(game().actions!.progression).toEqual({ turn: 1, worldTimeMs: 250 })
+    expect(game().mapObjects!.getAppearance(active(), 'room', 'guide')).toMatchObject({
+      x: 1,
+      y: 0,
+    })
     expect(snapshot().remainingAp).toBe(3)
   })
 

@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test'
-import { Engine, GameLoader, type EngineMessages, type GameSaveStore } from '@ancadeba/game-runtime'
+import {
+  Engine,
+  GameLoader,
+  type EngineMessages,
+  type GameSaveStore,
+  type GameRules,
+} from '@ancadeba/game-runtime'
 import { JsonResourceLoader, MessageBus } from '@ancadeba/utilities'
 
 class SampleSaves implements GameSaveStore {
@@ -21,7 +27,7 @@ const playerBerries = (engine: Engine) =>
       item.placement.owner === 'player',
   )
 
-async function launch(store: GameSaveStore = new SampleSaves()) {
+async function launch(store: GameSaveStore = new SampleSaves(), customRules?: GameRules) {
   let time = 0
   const tasks = new Set<{ due: number; callback: () => void }>()
   const logger = { debug: () => '', info: () => '', warn: () => '', error: () => '' }
@@ -50,6 +56,7 @@ async function launch(store: GameSaveStore = new SampleSaves()) {
     () => messages,
     {
       saveStore: store,
+      ...(customRules && { createGameRules: () => customRules }),
       clock: { now: () => time },
       scheduler: {
         schedule(callback, delay) {
@@ -101,8 +108,135 @@ async function launch(store: GameSaveStore = new SampleSaves()) {
     for (const code of ['KeyA', 'KeyW', 'KeyW']) walk(code)
   }
 
-  return { engine, advance, press, walk, read, visitVillage, applied }
+  const appearance = (id: string) =>
+    engine.lifecycle!.currentGame!.mapObjects!.getAppearance(
+      engine.lifecycle!.activeScene!,
+      'world-map',
+      id,
+    )
+
+  const place = (map: string, x: number, y: number) =>
+    engine.lifecycle!.enterScene('exploration', { mapView: 'world-map', map, position: { x, y } })
+
+  return { engine, advance, press, walk, read, visitVillage, applied, appearance, place }
 }
+
+describe('village patrols', () => {
+  it('advances the step and turn patrols on arrival, and only the turn patrol on Wait', async () => {
+    const { engine, advance, press, appearance, visitVillage } = await launch()
+    visitVillage()
+    expect(appearance('ranger')).toMatchObject({ x: 7, y: 5 })
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 3 })
+    press('KeyD')
+    advance(149)
+    expect(appearance('ranger')).toMatchObject({ x: 7, y: 5 })
+    advance(1)
+    expect(appearance('ranger')).toMatchObject({ x: 8, y: 5 })
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 2 })
+    const game = engine.lifecycle!.currentGame!
+    const turn = game.actions!.progression.turn
+    game.actionBar!.activate(engine.lifecycle!.activeScene!, 'movement-bar', '10')
+    advance()
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 1 })
+    expect(appearance('ranger')).toMatchObject({ x: 8, y: 5 })
+    expect(game.actions!.progression.turn).toBe(turn + 1)
+    game.actions!.request('wait')
+    advance()
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 2 })
+  })
+
+  it('freezes the timer away from the map and restores its remaining delay in a fresh engine', async () => {
+    const store = new SampleSaves()
+    const first = await launch(store)
+    first.visitVillage()
+    first.advance(1200)
+    first.walk('KeyD')
+    first.advance(350)
+    const game = first.engine.lifecycle!.currentGame!
+
+    for (let index = 0; index < 2; index++) {
+      game.actions!.request('wait')
+      first.advance()
+    }
+
+    expect(first.appearance('watchman')).toMatchObject({ x: 9, y: 2 })
+    expect(first.appearance('courier')).toMatchObject({ x: 6, y: 2 })
+    first.place('coast', 8, 3)
+    first.advance(9000)
+    expect(first.engine.saves!.save()).toBe(true)
+    first.engine.stop()
+    const next = await launch(store)
+    expect(next.engine.saves!.load()).toBe(true)
+    next.place('village', 1, 4)
+    next.advance(699)
+    expect(next.appearance('courier')).toMatchObject({ x: 6, y: 2 })
+    next.advance(1)
+    expect(next.appearance('courier')).toMatchObject({ x: 5, y: 2 })
+    expect(next.appearance('ranger')).toMatchObject({ x: 8, y: 5 })
+    next.walk('KeyD')
+    expect(next.appearance('watchman')).toMatchObject({ x: 9, y: 3 })
+    expect(next.appearance('ranger')).toMatchObject({ x: 8, y: 6 })
+    next.walk('KeyD')
+    next.walk('KeyA')
+    expect(next.appearance('ranger')).toMatchObject({ x: 7, y: 5 })
+  })
+
+  it('retries a blocked patrol, rejects a blocked script atomically, and resumes a scripted detour', async () => {
+    const { engine, visitVillage, place, appearance, advance, press, read } = await launch()
+    visitVillage()
+    place('village', 6, 2)
+    advance(1200)
+    expect(appearance('courier')).toMatchObject({ x: 5, y: 2 })
+    place('village', 5, 3)
+    press('KeyE')
+    expect(read('courierAside')).toMatchObject({ value: false })
+    expect(appearance('courier')).toMatchObject({ x: 5, y: 2 })
+    advance(1200)
+    expect(appearance('courier')).toMatchObject({ x: 6, y: 2 })
+    place('village', 6, 1)
+    press('KeyE')
+    expect(read('courierAside')).toMatchObject({ value: true })
+    advance(5000)
+    expect(appearance('courier')).toMatchObject({ x: 6, y: 3 })
+    const game = engine.lifecycle!.currentGame!
+    const scene = engine.lifecycle!.activeScene!
+    expect(game.mapObjects!.getTarget(scene, 'world-map', 'courier')).toBeUndefined()
+    place('village', 5, 3)
+    expect(game.mapObjects!.getTarget(scene, 'world-map', 'courier')).toMatchObject({ x: 6, y: 3 })
+    press('KeyE')
+    expect(appearance('courier')).toMatchObject({ x: 6, y: 2 })
+    advance(1200)
+    expect(appearance('courier')).toMatchObject({ x: 5, y: 2 })
+  })
+
+  it('counts only the designated actor completing a turn in roster games', async () => {
+    const { engine, place, appearance, advance, walk } = await launch(undefined, {
+      handlers: new Map([['end', () => ({ status: 'applied', advanceTurn: true })]]),
+      turns: {
+        actors: ['guide', 'hero'],
+        playerActorId: 'hero',
+        phases: ['play'],
+        actionPolicies: new Map([['end', { scope: 'actor' }]]),
+      },
+    })
+
+    place('village', 1, 4)
+    walk('KeyD')
+    expect(appearance('ranger')).toMatchObject({ x: 8, y: 5 })
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 3 })
+    const actions = engine.lifecycle!.currentGame!.actions!
+
+    for (const actorId of ['hero', 'guide']) {
+      actions.request('end', undefined, { actorId })
+      advance()
+      expect(appearance('watchman')).toMatchObject({ x: 9, y: 3 })
+    }
+
+    actions.request('end', undefined, { actorId: 'hero' })
+    advance()
+    expect(appearance('watchman')).toMatchObject({ x: 9, y: 2 })
+  })
+})
 
 describe('Coast Road and Pine Village interactions', () => {
   it('checks entrances on the destination map and cancels an unfinished step when switching', async () => {

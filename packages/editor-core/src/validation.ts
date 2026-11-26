@@ -51,6 +51,7 @@ import {
   validateInventorySources,
   inventoryPanelIssues,
   validateRuleSources,
+  scriptedMapObjects,
   statusPanelIssues,
   characterProfileIssues,
   appearanceIssues,
@@ -202,6 +203,9 @@ export function validateProject(
     if (map.success) maps.set(id, map.data)
   }
 
+  const sources = projectRuleSources(game.data.rules, (file) => check(file, gameRulesSchema).data)
+  const scriptedObjects = scriptedMapObjects(sources, maps)
+
   const assets = game.data.assets
     ? check(assetCatalogFile(game.data.assets), assetCatalogSchema)
     : undefined
@@ -288,7 +292,7 @@ export function validateProject(
           })
 
       if (component.type === 'action-bar')
-        for (const issue of actionBarIssues(component, input, scenes, scene, maps))
+        for (const issue of actionBarIssues(component, input, scenes, scene, maps, scriptedObjects))
           diagnostics.push({
             code: 'invalid_action_bar',
             file: `scenes/${id}.json`,
@@ -318,7 +322,12 @@ export function validateProject(
         const target = scenes.get(component.action.scene)
 
         if (component.action.type === 'enter-scene')
-          for (const issue of sceneTransitionIssues(component.action, scenes, maps))
+          for (const issue of sceneTransitionIssues(
+            component.action,
+            scenes,
+            maps,
+            scriptedObjects,
+          ))
             diagnostics.push({
               code: 'invalid_button_target',
               file: `scenes/${id}.json`,
@@ -420,9 +429,15 @@ export function validateProject(
     ))
       diagnostics.push({ code: 'invalid_combat_library', ...issue })
 
-  const sources = projectRuleSources(game.data.rules, (file) => check(file, gameRulesSchema).data)
+  const validatedRules = validateRuleSources(
+    sources,
+    scenes,
+    maps,
+    inventory,
+    defaultMessages,
+    scriptedObjects,
+  )
 
-  const validatedRules = validateRuleSources(sources, scenes, maps, inventory, defaultMessages)
   const mergedRules = validatedRules.rules
 
   for (const issue of choiceIssues(game.data.choices ?? [], choices, mergedRules))

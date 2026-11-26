@@ -301,6 +301,7 @@ export class AuthoredPlaythrough {
                 !origin ||
                 branch.effects.some(
                   (effect) =>
+                    effect.type === 'move-map-object' ||
                     effect.type === 'move-item' ||
                     effect.type === 'collect-items' ||
                     effect.type === 'enter-scene',
@@ -310,6 +311,7 @@ export class AuthoredPlaythrough {
 
               const effects = branch.effects.filter(
                 (effect) =>
+                  effect.type !== 'move-map-object' &&
                   effect.type !== 'move-item' &&
                   effect.type !== 'collect-items' &&
                   effect.type !== 'enter-scene',
@@ -325,17 +327,34 @@ export class AuthoredPlaythrough {
                 logger,
               )
 
-              return { status: 'applied', worldTimeCostMs: 0 }
+              return {
+                status: 'applied',
+                worldTimeCostMs: 0,
+                spendsPlayerTurn: branch.spendsPlayerTurn === true,
+              }
             }
 
             let cost = 0
 
             const external = branch.effects.find(
               (effect) =>
+                effect.type === 'move-map-object' ||
                 effect.type === 'move-item' ||
                 effect.type === 'collect-items' ||
                 effect.type === 'enter-scene',
             )
+
+            const step =
+              external?.type === 'move-map-object'
+                ? game.mapMovement?.prepareObjectStep(
+                    external.map,
+                    external.object,
+                    external.direction,
+                  )
+                : undefined
+
+            if (external?.type === 'move-map-object' && !step?.isCurrent())
+              return rejected('Map object cannot enter that tile')
 
             if (external?.type === 'enter-scene') {
               const destination = data.scenes.get(external.scene)
@@ -404,6 +423,7 @@ export class AuthoredPlaythrough {
 
             if (external?.type === 'collect-items' && !collection?.isCurrent())
               return rejected('Inventory pickup is unavailable')
+            step?.commit()
             collection?.commit()
 
             for (const { path, value } of writes) set(this.state, path, value)
@@ -412,6 +432,13 @@ export class AuthoredPlaythrough {
 
             this.updateClock(nextTime)
 
+            if (step)
+              completeCommittedEffect(
+                () => step.notify(),
+                () => true,
+                logger,
+              )
+
             if (collection)
               completeCommittedEffect(
                 () => collection.notify(),
@@ -419,7 +446,11 @@ export class AuthoredPlaythrough {
                 logger,
               )
 
-            return { status: 'applied', worldTimeCostMs: cost }
+            return {
+              status: 'applied',
+              worldTimeCostMs: cost,
+              spendsPlayerTurn: branch.spendsPlayerTurn === true,
+            }
           },
         ]),
       ),

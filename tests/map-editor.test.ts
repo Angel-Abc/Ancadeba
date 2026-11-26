@@ -672,6 +672,44 @@ describe('visual map editor', () => {
     }
   })
 
+  it('draws a patrol from adjacent tiles, edits seconds, and supports undo and redo', async () => {
+    const ui = setup(triggerView())
+
+    try {
+      ui.button('Place or edit map objects').dispatchEvent(new Event('click'))
+      ui.tile(1, 1).dispatchEvent(new Event('click'))
+      ui.edit('Movement trigger', 'timer', 'change')
+      ui.edit('Interval (seconds)', '1.25')
+      ui.button('Select route tiles').dispatchEvent(new Event('click'))
+      ui.tile(0, 0).dispatchEvent(new Event('click'))
+      ui.tile(0, 1).dispatchEvent(new Event('click'))
+      ui.button('Finish route').dispatchEvent(new Event('click'))
+      ui.button('Remove last tile').dispatchEvent(new Event('click'))
+      ui.editor.restoreDraft('undo')
+      ui.editor.restoreDraft('redo')
+      ui.editor.restoreDraft('undo')
+      await ui.submit()
+      expect(ui.saved[0]).toMatchObject({
+        map: {
+          objects: [
+            {
+              patrol: {
+                mode: 'reverse',
+                trigger: { type: 'timer', intervalMs: 1250 },
+                route: [
+                  { x: 1, y: 1 },
+                  { x: 0, y: 1 },
+                ],
+              },
+            },
+          ],
+        },
+      })
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
   it('authors ordered boolean object states, recovers incomplete state drafts and undoes removal', async () => {
     const view = triggerView()
     view.rules!.state = [{ path: ['opened'], value: false }]

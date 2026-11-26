@@ -35,6 +35,9 @@
       },
       "walkable": false
     },
+    "courier": { "color": "#a24531" },
+    "ranger": { "color": "#24544a" },
+    "watchman": { "color": "#354e88" },
     "berries": {
       "color": "#97437b"
     },
@@ -170,6 +173,57 @@
     }
   ],
   "objects": [
+    {
+      "id": "courier",
+      "label": "Courier",
+      "x": 5,
+      "y": 2,
+      "terrain": "courier",
+      "action": "step-aside",
+      "patrol": {
+        "mode": "reverse",
+        "route": [
+          { "x": 5, "y": 2 },
+          { "x": 6, "y": 2 }
+        ],
+        "trigger": { "type": "timer", "intervalMs": 1200 }
+      }
+    },
+    {
+      "id": "ranger",
+      "label": "Ranger",
+      "x": 7,
+      "y": 5,
+      "terrain": "ranger",
+      "action": "greet-ranger",
+      "patrol": {
+        "mode": "loop",
+        "route": [
+          { "x": 7, "y": 5 },
+          { "x": 8, "y": 5 },
+          { "x": 8, "y": 6 },
+          { "x": 7, "y": 6 }
+        ],
+        "trigger": { "type": "player-step" }
+      }
+    },
+    {
+      "id": "watchman",
+      "label": "Watchman",
+      "x": 9,
+      "y": 3,
+      "terrain": "watchman",
+      "action": "greet-watchman",
+      "patrol": {
+        "mode": "reverse",
+        "route": [
+          { "x": 9, "y": 3 },
+          { "x": 9, "y": 2 },
+          { "x": 9, "y": 1 }
+        ],
+        "trigger": { "type": "player-turn" }
+      }
+    },
     {
       "id": "village-berries",
       "label": "Berry basket",

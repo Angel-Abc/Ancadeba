@@ -4,6 +4,7 @@ import {
   getMapPotentialMovementCostMs,
   mapPositionSchema,
   type MapDefinition,
+  type MapObject,
   type MapPosition,
 } from './map.js'
 import type { SceneDefinition } from './scene.js'
@@ -44,6 +45,7 @@ export function sceneTransitionIssues(
   action: SceneTransition,
   scenes: ReadonlyMap<string, SceneDefinition>,
   maps: ReadonlyMap<string, MapDefinition>,
+  scriptedObjects?: ReadonlySet<MapObject>,
 ): { path: (string | number)[]; message: string }[] {
   if (action.mapView === undefined) return []
   const scene = scenes.get(action.scene)
@@ -68,7 +70,10 @@ export function sceneTransitionIssues(
       },
     ]
 
-  if (getMapPotentialMovementCostMs(map, action.position ?? view.playerSpawn) === undefined)
+  if (
+    getMapPotentialMovementCostMs(map, action.position ?? view.playerSpawn, { scriptedObjects }) ===
+    undefined
+  )
     return [
       {
         path: [action.position ? 'position' : 'mapView'],

@@ -12,6 +12,7 @@ export type ActionTurnPolicy =
   | { readonly scope: 'actor'; readonly allowedPhases?: readonly string[] }
 
 export interface TurnRules {
+  readonly playerActorId?: string
   readonly actors: readonly string[]
   readonly phases: readonly string[]
   readonly actionPolicies: ReadonlyMap<string, ActionTurnPolicy>

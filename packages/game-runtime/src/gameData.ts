@@ -60,6 +60,7 @@ import {
   inventoryFile,
   ruleFile,
   validateRuleSources,
+  scriptedMapObjects,
   resolveMapView,
   mapVisualIssues,
   actionBarIssues,
@@ -247,12 +248,15 @@ export function assembleGameData(
     return { file, rules }
   })
 
+  const scriptedObjects = scriptedMapObjects(sources, maps)
+
   const validation = validateRuleSources(
     sources,
     sceneDefinitions,
     maps,
     inventory,
     ruleTranslation?.fallback,
+    scriptedObjects,
   )
 
   const validated = sources.length || definition.forms?.length ? validation : undefined
@@ -706,6 +710,7 @@ export function assembleGameData(
           sceneDefinitions,
           sceneDefinitions.get(scene.id),
           maps,
+          scriptedObjects,
         )[0]
 
         if (issue) throw new Error(`Scene ${scene.id}, bar ${component.id}: ${issue.message}`)
@@ -739,7 +744,12 @@ export function assembleGameData(
       const target = scenes.get(component.action.scene)
 
       if (component.action.type === 'enter-scene') {
-        const issue = sceneTransitionIssues(component.action, sceneDefinitions, maps)[0]
+        const issue = sceneTransitionIssues(
+          component.action,
+          sceneDefinitions,
+          maps,
+          scriptedObjects,
+        )[0]
 
         if (issue) throw new Error(`Button ${component.id}: ${issue.message}`)
       }

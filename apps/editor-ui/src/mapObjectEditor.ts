@@ -19,6 +19,7 @@ export function mapObjectEditor(
   repaint: () => void,
   spawns: ReadonlySet<string>,
   fields: GameRulesDefinition['state'],
+  editRoute: () => void,
 ) {
   const element = controls.group(t('maps.objects'))
   const objects = draft.data.objects ?? []
@@ -49,6 +50,8 @@ export function mapObjectEditor(
           String(object[key]),
           (value) => {
             object[key] = Number(value)
+
+            if (object.patrol) object.patrol.route[0]![key] = object[key]
             repaint()
           },
           'number',
@@ -108,13 +111,95 @@ export function mapObjectEditor(
       ),
     )
 
+    const patrol = object.patrol
+    const trigger = patrol?.trigger
+
+    const movement = controls.group(
+      t('maps.patrol'),
+      controls.select(
+        t('maps.patrolTrigger'),
+        trigger?.type ?? 'none',
+        [
+          ['none', t('maps.noPatrol')],
+          ['timer', t('maps.timerPatrol')],
+          ['player-step', t('maps.stepPatrol')],
+          ['player-turn', t('maps.turnPatrol')],
+        ] as const,
+        (type) =>
+          change(() => {
+            if (type === 'none') {
+              delete object.patrol
+
+              return
+            }
+
+            const next = type === 'timer' ? { type, intervalMs: 1000 } : { type }
+
+            if (patrol) patrol.trigger = next
+            else
+              object.patrol = {
+                trigger: next,
+                mode: 'reverse',
+                route: [{ x: object.x, y: object.y }],
+              }
+          }),
+      ),
+    )
+
+    if (patrol) {
+      movement.append(
+        controls.select(
+          t('maps.patrolMode'),
+          patrol.mode,
+          [
+            ['loop', t('maps.loopPatrol')],
+            ['reverse', t('maps.reversePatrol')],
+          ],
+          (mode) => {
+            patrol.mode = mode
+          },
+        ),
+      )
+
+      if (trigger?.type === 'timer') {
+        const interval = controls.input(
+          t('maps.patrolSeconds'),
+          String(trigger.intervalMs / 1000),
+          (value) => {
+            trigger.intervalMs = Math.round(Number(value) * 1000)
+          },
+          'number',
+        )
+
+        movement.append(interval)
+      }
+
+      const route = controls.create('p')
+      route.textContent = patrol.route
+        .map((point) => '(' + point.x + ', ' + point.y + ')')
+        .join(' → ')
+      movement.append(
+        route,
+        controls.button(t('maps.drawRoute'), editRoute),
+        controls.button(
+          t('maps.undoTile'),
+          () =>
+            change(() => {
+              patrol.route.pop()
+            }),
+          patrol.route.length <= 1,
+        ),
+      )
+    }
+
+    row.append(movement)
     selectedRow = row
     row.classList.add('map-entry-trigger-row')
 
     for (const field of row.querySelectorAll('input'))
       if (field.type === 'number') {
-        field.min = '0'
-        field.step = '1'
+        field.min = movement.contains(field) ? '0.001' : '0'
+        field.step = movement.contains(field) ? '0.001' : '1'
       }
 
     element.append(row)

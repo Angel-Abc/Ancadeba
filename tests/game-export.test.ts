@@ -515,7 +515,18 @@ describe('standalone game export', () => {
     })
 
     const logger: ILogger = { debug: () => '', info: () => '', warn: () => '', error: () => '' }
-    const steps: (() => void)[] = []
+    let now = 0
+    const pending = new Map<() => void, number>()
+
+    const finishRoadStep = () => {
+      now += 150
+
+      for (const [run, due] of [...pending]) {
+        if (due > now || !pending.delete(run)) continue
+        run()
+      }
+    }
+
     let engine: Engine | undefined
 
     try {
@@ -534,12 +545,14 @@ describe('standalone game export', () => {
         logger,
         () => new MessageBus<EngineMessages>(),
         {
-          clock: { now: () => 0 },
+          clock: { now: () => now },
           scheduler: {
             schedule(callback, delay) {
-              if (delay > 0) steps.push(callback)
+              if (delay > 0) pending.set(callback, now + delay)
 
-              return () => {}
+              return () => {
+                pending.delete(callback)
+              }
             },
           },
         },
@@ -559,8 +572,7 @@ describe('standalone game export', () => {
       engine.input!.releaseKey('KeyD')
 
       for (let batch = 0; batch < 4; batch++) engine.flushMessages()
-      expect(steps).toHaveLength(1)
-      steps.shift()!()
+      finishRoadStep()
       expect(movement.getPosition(scene, 'world-map')).toEqual({ x: 10, y: 4 })
 
       const flush = () => {
@@ -571,8 +583,7 @@ describe('standalone game export', () => {
         engine!.input!.pressKey(code)
         engine!.input!.releaseKey(code)
         flush()
-        expect(steps).toHaveLength(1)
-        steps.shift()!()
+        finishRoadStep()
         flush()
       }
 
