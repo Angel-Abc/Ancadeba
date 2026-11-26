@@ -4,6 +4,7 @@ import type {
   IComponentRenderer,
   RenderedComponent,
 } from './componentRendering.js'
+import { componentRuntimeText } from './runtimeText.js'
 
 export class MessageHistoryComponentRenderer implements IComponentRenderer<MessageHistoryComponentDefinition> {
   render(
@@ -14,15 +15,23 @@ export class MessageHistoryComponentRenderer implements IComponentRenderer<Messa
     const game = scene?.type === 'game' ? scene.game : context.suspendedGame
     const root = document.createElement('section')
     root.className = 'ancadeba-message-history'
-    const heading = document.createElement('h2')
-    heading.textContent = component.label
+
+    if (component.label) {
+      const heading = document.createElement('h2')
+      heading.textContent = component.label
+      root.append(heading)
+    }
+
     const log = document.createElement('div')
     log.setAttribute('role', 'log')
-    log.setAttribute('aria-label', component.label)
+    log.setAttribute(
+      'aria-label',
+      component.label || componentRuntimeText(context)('messageHistory.label'),
+    )
     log.tabIndex = 0
     const content = document.createElement('div')
     log.append(content)
-    root.append(heading, log)
+    root.append(log)
 
     let previous: readonly MessageHistoryEntry[] | undefined
     let scrollRemainder = 0

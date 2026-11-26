@@ -144,7 +144,11 @@ export function localizeDefinitions(
                                 ? { ...component, text: text(component.textKey, component.text) }
                                 : {
                                     ...component,
-                                    label: text(component.labelKey, component.label, true),
+                                    label: text(
+                                      component.labelKey,
+                                      component.label,
+                                      component.type !== 'message-history',
+                                    ),
                                     ...(component.type === 'form' && {
                                       submitLabel: text(
                                         component.submitLabelKey,

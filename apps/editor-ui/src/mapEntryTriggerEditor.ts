@@ -1,4 +1,4 @@
-import { getMapMovementCostMs } from '@ancadeba/schemas'
+import type { MapObject } from '@ancadeba/schemas'
 import type { Translate } from '@ancadeba/utilities'
 import type { RuleFormControls } from './ruleFormControls.js'
 import type { MapDraft } from './mapDraft.js'
@@ -9,6 +9,7 @@ export interface MapEntryTriggerEditorState {
 
 export function mapEntryTriggerEditor(
   draft: MapDraft,
+  scriptedObjects: ReadonlySet<MapObject>,
   actions: readonly string[],
   controls: RuleFormControls,
   t: Translate,
@@ -76,7 +77,7 @@ export function mapEntryTriggerEditor(
 
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
-        if (getMapMovementCostMs(map, { x, y }) !== undefined && !occupied.has(`${x},${y}`))
+        if (!occupied.has(`${x},${y}`) && draft.canPlaceEntryTrigger({ x, y }, scriptedObjects))
           return { x, y }
       }
     }
@@ -92,7 +93,7 @@ export function mapEntryTriggerEditor(
           const available = availableTile()
 
           if (!available || !actions[0]) return
-          state.selected = draft.addEntryTrigger(available, actions[0])
+          state.selected = draft.addEntryTrigger(available, actions[0], scriptedObjects)
         }),
       !availableTile() || actions.length === 0,
     ),

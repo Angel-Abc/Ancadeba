@@ -1847,8 +1847,22 @@ describe('scene renderer', () => {
     const document = new TestDocument()
     const target = document.createElement('main')
 
+    const resources: IResourceSource = {
+      ...source,
+      async readText(path) {
+        const raw = await source.readText(path)
+
+        if (path !== 'languages/nl/messages.json') return raw
+
+        return JSON.stringify({
+          ...languageCatalogSchema.parse(JSON.parse(raw)),
+          'menu.messageHistory': '',
+        })
+      },
+    }
+
     const engine = new Engine(
-      loader,
+      new GameLoader(new JsonResourceLoader(resources, logger)),
       new DomEngineHost(target.asElement()),
       logger,
       () => new MessageBus<EngineMessages>(),
@@ -1868,6 +1882,7 @@ describe('scene renderer', () => {
     flush(engine)
     lifecycle.openMenu!('game-menu')
     const log = () => target.find((node) => node.getAttribute('role') === 'log')!
+    expect(log().parent?.querySelector('h2')?.textContent).toBe('Message history')
     expect(log().tabIndex).toBe(0)
     expect(
       log()
@@ -1878,6 +1893,7 @@ describe('scene renderer', () => {
       'You: I will survey the harbour.',
     )
     game.data.localization!.select('nl')
+    expect(log().parent?.querySelector('h2')).toBeNull()
     expect(log().getAttribute('aria-label')).toBe('Berichtgeschiedenis')
     expect(log().textContent).toContain('You: I will survey the harbour.')
   })

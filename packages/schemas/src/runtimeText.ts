@@ -44,6 +44,7 @@ const en = {
   'inventory.occupiedSlot': 'Equipment slot is occupied: {id}',
   'equipment.healthAdjustmentUnavailable':
     'Equipment health adjustment requires a supported state transaction adapter.',
+  'messageHistory.label': 'Message history',
   'nearby.empty': 'None nearby',
   'nearby.clear': 'Clear nearby selection',
   'navigation.blocked': 'The destination is currently blocked.',
@@ -165,6 +166,7 @@ const nl: Record<RuntimeTextKey, string> = {
   'inventory.occupiedSlot': 'De uitrustingsplek is bezet: {id}',
   'equipment.healthAdjustmentUnavailable':
     'Gezondheid aanpassen door uitrusting vereist ondersteuning voor statustransacties.',
+  'messageHistory.label': 'Berichtgeschiedenis',
   'nearby.empty': 'Niemand of niets in de buurt',
   'nearby.clear': 'Selectie in de buurt wissen',
   'navigation.blocked': 'De bestemming is momenteel geblokkeerd.',

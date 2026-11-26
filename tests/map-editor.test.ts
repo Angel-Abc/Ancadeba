@@ -1072,6 +1072,52 @@ describe('visual map editor', () => {
     }
   })
 
+  it('places triggers under scripted and patrolling objects while skipping permanent blockers', async () => {
+    const project = triggerView()
+    const guard = { id: 'guard', label: 'Guard', terrain: 'ground', action: 'inspect', x: 2, y: 0 }
+    project.maps!.gates!.objects = [
+      guard,
+      { ...guard, id: 'statue', x: 0, y: 1 },
+      {
+        ...guard,
+        id: 'scout',
+        x: 1,
+        y: 1,
+        patrol: {
+          mode: 'reverse',
+          trigger: { type: 'player-step' },
+          route: [
+            { x: 1, y: 1 },
+            { x: 2, y: 1 },
+          ],
+        },
+      },
+    ]
+    project.rules!.actions.shift = [
+      {
+        when: [],
+        effects: [{ type: 'move-map-object', map: 'gates', object: 'guard', direction: 'south' }],
+      },
+    ]
+    const ui = setup(project)
+
+    try {
+      ui.button('Edit tile-entry triggers').dispatchEvent(new Event('click'))
+      ui.tile(0, 1).dispatchEvent(new Event('click'))
+      expect(ui.editor.hasDrafts()).toBe(false)
+      ui.tile(1, 1).dispatchEvent(new Event('click'))
+      ui.button('Add tile-entry trigger').dispatchEvent(new Event('click'))
+      await ui.submit()
+      expect(ui.saved[0]).toMatchObject({
+        map: {
+          entryTriggers: [{ id: 'depart' }, { id: 'return' }, { x: 1, y: 1 }, { x: 2, y: 0 }],
+        },
+      })
+    } finally {
+      ui.editor.dispose()
+    }
+  })
+
   it('rejects new triggers on blocked ground or collision layers and requires Rules while allowing existing triggers to be edited', () => {
     const current = triggerView()
     current.maps!.gates!.layers = [

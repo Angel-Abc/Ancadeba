@@ -5,6 +5,7 @@ import {
   mapDefinitionSchema,
   mapObjectSchema,
   mapObjectStateSchema,
+  scriptedMapObjects,
 } from '@ancadeba/schemas'
 import { commandSchema, type EditorCommand, type ProjectView } from '@ancadeba/editor-core'
 import type { Translate } from '@ancadeba/utilities'
@@ -590,6 +591,11 @@ export function bindMapEditor(
       (activeTab !== 'objects' &&
         draft.data.layers?.find((layer) => layer.id === layerState.selected)?.visible === false)
 
+    const scriptedObjects = scriptedMapObjects(
+      view.rules ? [{ rules: view.rules }] : [],
+      new Map([[id, draft.data]]),
+    )
+
     const openTrigger = (point: TilePoint) => {
       if (gridDisabled()) return
       finishStroke()
@@ -615,7 +621,7 @@ export function bindMapEditor(
         }
 
         change(() => {
-          entryState.selected = draft.addEntryTrigger(point, action)
+          entryState.selected = draft.addEntryTrigger(point, action, scriptedObjects)
           placementDetails = true
           opened = true
         })
@@ -851,6 +857,7 @@ export function bindMapEditor(
 
     entryEditor = mapEntryTriggerEditor(
       draft,
+      scriptedObjects,
       Object.keys(view.rules?.actions ?? {}),
       controls,
       t,

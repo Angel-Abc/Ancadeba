@@ -275,9 +275,36 @@ export class GameMapMovement implements IGameMapMovement {
   }
 
   private playerOccupies(map: MapDefinition, point: MapPosition): boolean {
-    return this.activePlayers(map).some(
-      (position) => position.x === point.x && position.y === point.y,
+    const occupies = (position: MapPosition) => position.x === point.x && position.y === point.y
+
+    if (
+      this.player &&
+      this.game.data.maps?.get(this.player.map) === map &&
+      occupies(this.player.position)
     )
+      return true
+
+    // A view without an explicit entrance resumes on its remembered tile or its initial spawn.
+    for (const scene of this.game.data.scenes.values()) {
+      if (scene.type !== 'game') continue
+
+      for (const view of scene.components) {
+        if (
+          view.type !== 'map-view' ||
+          view.map !== map ||
+          !view.playerSpawn ||
+          view.interactive === false
+        )
+          continue
+
+        if (view.followPlayer && this.player) continue
+        const position = this.maps.get(scene.id)?.get(view.id)?.position ?? view.playerSpawn
+
+        if (occupies(position)) return true
+      }
+    }
+
+    return false
   }
 
   private activePlayers(map: MapDefinition): MapPosition[] {

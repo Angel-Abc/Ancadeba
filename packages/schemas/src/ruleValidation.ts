@@ -95,7 +95,7 @@ export function mergeRuleSources(sources: readonly RuleSource[]): MergedRules {
 
 /** A scripted object can vacate an authored entrance or tile-entry trigger. */
 export function scriptedMapObjects(
-  sources: readonly RuleSource[],
+  sources: readonly Pick<RuleSource, 'rules'>[],
   maps: ReadonlyMap<string, MapDefinition>,
 ) {
   const moving = new Set<MapObject>()

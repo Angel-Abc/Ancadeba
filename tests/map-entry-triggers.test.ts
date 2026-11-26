@@ -307,6 +307,57 @@ describe('map tile-entry actions', () => {
     expect(lifecycle.currentGame!.state).toEqual(new Map([['entered', false]]))
   })
 
+  it('protects a remembered player tile from off-screen scripts across save and load', async () => {
+    let saved: string | undefined
+
+    const store: GameSaveStore = {
+      read: () => saved,
+      write: (_, value) => {
+        saved = value
+      },
+    }
+
+    const terrain = structuredClone(map)
+    terrain.objects = [
+      { id: 'guard', label: 'Guard', terrain: 'ground', action: 'mark', x: 2, y: 2 },
+    ]
+
+    const authored = gameRulesSchema.parse({
+      ...rules,
+      actions: {
+        ...rules.actions,
+        shift: [
+          {
+            when: [],
+            effects: [
+              { type: 'move-map-object', map: 'terrain', object: 'guard', direction: 'west' },
+            ],
+          },
+        ],
+      },
+    })
+
+    const first = await setup(store, authored, terrain)
+    expect(first.movement.move(first.scene, 'map', 'south')).toBe(true)
+    first.flush()
+    first.lifecycle.enterScene('second')
+    first.lifecycle.currentGame!.actions!.request('shift')
+    first.flush()
+    expect(first.applied).not.toContain('shift')
+    expect(first.engine.saves!.save()).toBe(true)
+
+    const next = await setup(store, authored, terrain)
+    expect(next.engine.saves!.load()).toBe(true)
+    const game = next.lifecycle.currentGame!
+    const scene = next.lifecycle.enterScene('first')
+    expect(game.mapMovement!.getPosition(scene, 'map')).toEqual({ x: 1, y: 2 })
+    expect(game.mapMovement!.move(scene, 'map', 'north')).toBe(true)
+    next.lifecycle.enterScene('second')
+    game.actions!.request('shift')
+    next.flush()
+    expect(next.applied).toContain('shift')
+  })
+
   it('does not activate triggers when a save restores a player onto their tile', async () => {
     const slots = new Map<string, string>()
 

@@ -1461,17 +1461,14 @@ describe('adding scene components', () => {
     expect(Number(field('Row span').value)).toBeLessThanOrEqual(6)
   })
 
-  it('adds a message history panel to a scene and saves its label', () => {
+  it.each(['Travel journal', ''])('saves a message history panel with label "%s"', (label) => {
     const { edit, submit, persist } = addingComponentPanel()
     edit('Component type', 'message-history')
-    edit('Label', 'Travel journal')
+    edit('Label', label)
     submit('Create component')
     const view = persist()
     expect(view.diagnostics).toEqual([])
-    expect(view.scenes[0]!.components.at(-1)).toMatchObject({
-      type: 'message-history',
-      label: 'Travel journal',
-    })
+    expect(view.scenes[0]!.components.at(-1)).toMatchObject({ type: 'message-history', label })
   })
 
   it('creates a text component, selects it after saving, and edits it without creating a duplicate', () => {

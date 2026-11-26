@@ -1,4 +1,9 @@
-import { assetIdSchema, getMapMovementCostMs, type MapDefinition } from '@ancadeba/schemas'
+import {
+  assetIdSchema,
+  getMapPotentialMovementCostMs,
+  type MapDefinition,
+  type MapObject,
+} from '@ancadeba/schemas'
 
 export type MapDraftIssue =
   | 'invalidSize'
@@ -58,14 +63,21 @@ export class MapDraft {
         }
   }
 
-  addEntryTrigger(point: TilePoint, action: string): number {
+  canPlaceEntryTrigger(point: TilePoint, scriptedObjects?: ReadonlySet<MapObject>): boolean {
+    return getMapPotentialMovementCostMs(this.data, point, { scriptedObjects }) !== undefined
+  }
+
+  addEntryTrigger(
+    point: TilePoint,
+    action: string,
+    scriptedObjects?: ReadonlySet<MapObject>,
+  ): number {
     const triggers = this.data.entryTriggers ?? []
     const existing = triggers.findIndex(({ x, y }) => x === point.x && y === point.y)
 
     if (existing >= 0) return existing
 
-    if (getMapMovementCostMs(this.data, point) === undefined)
-      throw new MapDraftError('entryBlocked')
+    if (!this.canPlaceEntryTrigger(point, scriptedObjects)) throw new MapDraftError('entryBlocked')
     let id = 'entry'
     let suffix = 2
 
