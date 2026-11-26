@@ -86,6 +86,46 @@ export class MapObjectMovement {
     )
   }
 
+  preparePatrolWarning(mapId: string, patrol: string) {
+    const map = this.maps.get(mapId)
+    const owner = map?.objects?.find((entry) => entry.id === patrol)
+    const state = owner && this.states.get(owner)
+
+    if (!map || !this.active.has(map) || !state?.guardPosition) return
+    const guard = state.guardPosition
+
+    return () => {
+      if (state.guardPosition === guard) state.warning ??= 'armed'
+    }
+  }
+
+  prepareWarnedApproaches(map: MapDefinition, from: MapPosition, to: MapPosition) {
+    return (map.objects ?? []).flatMap((owner) => {
+      const action = owner.patrol?.approach?.onWarnedApproach
+
+      if (!action) return []
+      const state = this.state(owner)
+      const wagonAtDeparture = state.position
+
+      return [
+        {
+          action,
+          patrol: owner.id,
+          consume: () => {
+            if (
+              state.warning !== 'armed' ||
+              distance(to, wagonAtDeparture) >= distance(from, wagonAtDeparture)
+            )
+              return false
+            state.warning = 'fired'
+
+            return true
+          },
+        },
+      ]
+    })
+  }
+
   private state(object: MapObject): ObjectState {
     let state = this.states.get(object)
 
@@ -175,6 +215,7 @@ export class MapObjectMovement {
     state.remainingMs = patrol.returnDelayMs
     delete state.guardPosition
     delete state.encounterComplete
+    delete state.warning
     delete state.engaged
   }
 
@@ -193,6 +234,7 @@ export class MapObjectMovement {
 
   private dismissGuard(state: ObjectState): boolean {
     delete state.engaged
+    delete state.warning
 
     if (!state.guardPosition) return false
     delete state.guardPosition
@@ -394,6 +436,7 @@ export class MapObjectMovement {
           direction,
           ...(state.departed && { departed: true }),
           ...(state.encounterComplete && { encounterComplete: true }),
+          ...(state.warning && { warning: state.warning }),
           ...(state.guardPosition && { guardPosition: { ...state.guardPosition } }),
           ...(remainingMs !== undefined && {
             remainingMs: due === undefined ? remainingMs : Math.max(0, due - this.timing.now()),
@@ -439,6 +482,7 @@ export class MapObjectMovement {
             (patrol?.mode === 'one-way' && state.routeIndex === patrol.route.length - 1) ||
           ((state.encounterComplete || state.guardPosition) &&
             (!patrol?.approach || state.departed)) ||
+          (state.warning && !state.guardPosition) ||
           (state.guardPosition &&
             (state.encounterComplete ||
               distance(state.guardPosition, state.position) !== 1 ||

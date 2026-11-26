@@ -24,6 +24,7 @@ export const ruleConditionSchema = z.discriminatedUnion('type', [
 ])
 
 export const ruleEffectSchema = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('warn-patrol'), map: id, patrol: id }),
   z.strictObject({ type: z.literal('set-state'), path: pathSchema, value: ruleValueSchema }),
   z.strictObject({ type: z.literal('move-item'), item: id, owner: id }),
   z.strictObject({

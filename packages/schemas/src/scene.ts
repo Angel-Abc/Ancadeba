@@ -276,7 +276,7 @@ export const messageHistoryComponentSchema = z.object({
   id: gameIdSchema,
   type: z.literal('message-history'),
   ...componentLayoutFields,
-  label: z.string().trim().min(1).default('Message history'),
+  label: z.string().trim().default('Message history'),
   labelKey: translationKeySchema.optional(),
 })
 

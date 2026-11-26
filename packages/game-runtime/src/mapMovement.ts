@@ -8,6 +8,7 @@ import {
   type ButtonComponentDefinition,
   type GameSave,
   type MapEntryTrigger,
+  type RuleEffect,
 } from '@ancadeba/schemas'
 import type { IMonotonicClock, ITaskScheduler } from '@ancadeba/utilities'
 import type { GameInstance, IGameLifecycle, SceneInstance } from './gameLifecycle.js'
@@ -26,6 +27,7 @@ export interface IGameMapMovement {
   getMap(scene: SceneInstance, mapView: string): MapDefinition | undefined
   objectPosition(object: MapObject): Readonly<MapPosition>
   objectPresent(object: MapObject): boolean
+  preparePatrolWarning(map: string, patrol: string): (() => void) | undefined
   prepareObjectStep(
     map: string,
     object: string,
@@ -54,6 +56,18 @@ interface MapState {
   position: Readonly<MapPosition>
   pending?: object | undefined
   cancel?: (() => void) | undefined
+}
+
+export function preparePatrolWarnings(effects: readonly RuleEffect[], movement?: IGameMapMovement) {
+  const warnings = effects.flatMap((effect) =>
+    effect.type === 'warn-patrol'
+      ? (movement?.preparePatrolWarning(effect.map, effect.patrol) ?? [])
+      : [],
+  )
+
+  return () => {
+    for (const warn of warnings) warn()
+  }
 }
 
 /** Owns each scene's map-view positions for the lifetime of a playthrough. */
@@ -163,6 +177,12 @@ export class GameMapMovement implements IGameMapMovement {
       subscribe(listener: () => void): () => void
     },
     private readonly prepareProgression?: (cost: number) => PreparedProgression | undefined,
+    private readonly onWarnedApproach?: (
+      scene: SceneInstance,
+      mapView: string,
+      action: string,
+      patrol: string,
+    ) => void,
   ) {
     const maps =
       game.data.maps ??
@@ -230,6 +250,10 @@ export class GameMapMovement implements IGameMapMovement {
 
   objectPresent(object: MapObject): boolean {
     return this.objects.present(object)
+  }
+
+  preparePatrolWarning(map: string, patrol: string) {
+    return this.objects.preparePatrolWarning(map, patrol)
   }
 
   objectPosition(object: MapObject): Readonly<MapPosition> {
@@ -411,6 +435,7 @@ export class GameMapMovement implements IGameMapMovement {
 
     if (!destination) return false
     const { state, map, position, duration } = destination
+    const reactions = this.objects.prepareWarnedApproaches(map, state.position, position)
 
     const arrive = () => {
       const progression = this.prepareProgression?.(duration)
@@ -423,6 +448,11 @@ export class GameMapMovement implements IGameMapMovement {
 
       state.position = Object.freeze(position)
       progression?.commit()
+
+      for (const reaction of reactions)
+        if (reaction.consume())
+          this.onWarnedApproach?.(scene, mapView, reaction.action, reaction.patrol)
+
       this.objects.advancePlayer(map, !this.actorTurns)
       const errors: unknown[] = []
 

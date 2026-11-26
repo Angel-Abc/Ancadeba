@@ -207,7 +207,7 @@ export function mapObjectEditor(
             ],
             (id) =>
               change(() => {
-                if (id) patrol.approach = { guard: id, radius: patrol.approach?.radius ?? 2 }
+                if (id) patrol.approach = { radius: 2, ...patrol.approach, guard: id }
                 else delete patrol.approach
               }),
           ),
@@ -226,7 +226,18 @@ export function mapObjectEditor(
 
           radius.querySelector('input')!.min = '1'
           radius.querySelector('input')!.step = '1'
-          movement.append(radius)
+          movement.append(
+            radius,
+            controls.select(
+              t('maps.onWarnedApproach'),
+              approach.onWarnedApproach ?? '',
+              [['', t('rules.noAction')], ...actions.map((id) => [id, id] as const)],
+              (id) => {
+                if (id) approach.onWarnedApproach = id
+                else delete approach.onWarnedApproach
+              },
+            ),
+          )
         }
       }
 

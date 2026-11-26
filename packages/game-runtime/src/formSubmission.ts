@@ -12,6 +12,7 @@ import { prepareInventoryCollection } from './inventoryCollection.js'
 import type { GameActionRuntime } from './gameActionRuntime.js'
 import { sceneEntranceCost } from './sceneNavigation.js'
 import { runtimeText } from './runtimeText.js'
+import { preparePatrolWarnings } from './mapMovement.js'
 import { matchesConditions, notifyStory } from './storyConditions.js'
 
 type Placement = Extract<SceneInstance['data']['components'][number], { type: 'form' }>
@@ -117,6 +118,7 @@ function prepareSubmission(
   }
 
   const effects = branch?.effects ?? []
+  const warnPatrols = preparePatrolWarnings(effects, game.mapMovement)
 
   const destination: SceneTransition | undefined =
     effects.find((effect) => effect.type === 'enter-scene') ??
@@ -148,6 +150,7 @@ function prepareSubmission(
   const storyEffects = effects.filter(
     (effect) =>
       effect.type !== 'move-map-object' &&
+      effect.type !== 'warn-patrol' &&
       effect.type !== 'move-item' &&
       effect.type !== 'collect-items' &&
       effect.type !== 'enter-scene',
@@ -208,6 +211,7 @@ function prepareSubmission(
       step?.commit()
       quest?.commit()
       transfer?.commit()
+      warnPatrols()
       batch.commit(time)
       action?.commit()
 

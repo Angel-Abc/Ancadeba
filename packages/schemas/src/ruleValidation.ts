@@ -131,6 +131,14 @@ export function validateRuleSources(
           path: ['objects', index, 'action'],
           message: `Unknown map object action: ${object.action}`,
         })
+      const action = object.patrol?.approach?.onWarnedApproach
+
+      if (action && !Object.hasOwn(merged.rules.actions, action))
+        merged.issues.push({
+          file: `maps/${id}.json`,
+          path: ['objects', index, 'patrol', 'approach', 'onWarnedApproach'],
+          message: `Unknown warned approach action: ${action}`,
+        })
     })
 
   for (const [id, scene] of scenes)
@@ -292,6 +300,17 @@ export function validateRuleSources(
           const source = [...root, 'effects', effectIndex]
 
           switch (effect.type) {
+            case 'warn-patrol': {
+              const map = maps.get(effect.map)
+
+              if (!map) report([...source, 'map'], 'Unknown map')
+              else if (
+                !map.objects?.some((entry) => entry.id === effect.patrol && entry.patrol?.approach)
+              )
+                report([...source, 'patrol'], 'Choose a patrol with an approach encounter')
+              break
+            }
+
             case 'set-state':
               checkField(effect.path, effect.value, source)
               checkText(effect.value, [...source, 'value'])

@@ -70,10 +70,20 @@ export function bindAuthoredGameSaves({
       lastSelections = sceneSelections(current, runtime)
   }
 
+  const contentVersion = game.saveCompatibility ?? game.version
+
+  const compatibleUpdate = (save: GameSave) =>
+    game.saving?.compatibleUpdates?.find(
+      (update) =>
+        update.from === save.contentVersion &&
+        update.to === contentVersion &&
+        update.from !== update.to,
+    )
+
   const prepare = (save: GameSave, instance: GameInstance) => {
     const playthrough = playthroughFor(instance)
 
-    if (playthrough) playthrough.restore(save)
+    if (playthrough) playthrough.restore(save, compatibleUpdate(save)?.addedState)
     else if (save.state.length || save.log.length) throw new GameSaveError('incompatible-save')
 
     if (instance.inventory instanceof GameInventory) instance.inventory.restore(save.inventory)
@@ -108,7 +118,7 @@ export function bindAuthoredGameSaves({
         'save-version': 1,
         gameId: game.id,
         gameVersion: game.version,
-        contentVersion: game.saveCompatibility ?? game.version,
+        contentVersion,
         scene: lastScene,
         language: game.language,
         inputContext: game.input ? input()?.context : undefined,
@@ -210,7 +220,7 @@ export function bindAuthoredGameSaves({
     (save) =>
       save.gameId === game.id &&
       save.gameVersion === game.version &&
-      save.contentVersion === (game.saveCompatibility ?? game.version) &&
+      (save.contentVersion === contentVersion || Boolean(compatibleUpdate(save))) &&
       game.scenes.get(save.scene)?.type === 'game' &&
       (save.inputContext === undefined ||
         Object.hasOwn(game.input?.contexts ?? {}, save.inputContext)),

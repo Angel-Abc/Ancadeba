@@ -13,6 +13,7 @@ import type { GameInstance, IGameLifecycle } from './gameLifecycle.js'
 import type { IGameInventory } from './inventory.js'
 import { matchesConditions } from './storyConditions.js'
 import { MapStoryState } from './storyState.js'
+import { preparePatrolWarnings } from './mapMovement.js'
 import { MapStateTransactions } from './stateTransactions.js'
 import { prepareInventoryCollection } from './inventoryCollection.js'
 import type { GameSave } from '@ancadeba/schemas'
@@ -103,7 +104,10 @@ export class AuthoredPlaythrough {
     }
   }
 
-  restore(save: Pick<GameSave, 'state' | 'log' | 'progression'>): void {
+  restore(
+    save: Pick<GameSave, 'state' | 'log' | 'progression'>,
+    addedState: string[][] = [],
+  ): void {
     if (
       save.state.length > this.rules.state.length ||
       save.log.length > (this.rules.log?.capacity ?? 0)
@@ -116,6 +120,8 @@ export class AuthoredPlaythrough {
     for (const field of this.rules.state) {
       const key = JSON.stringify(field.path)
       const saved = fields.get(key)
+
+      if (!saved && addedState.some((path) => JSON.stringify(path) === key)) continue
 
       if (!saved && 'type' in field && field.value === undefined) {
         parent(this.state, field.path).delete(field.path.at(-1)!)
@@ -290,6 +296,8 @@ export class AuthoredPlaythrough {
 
             if (!branch) return rejected(`No matching branch for action ${id}`)
 
+            const warnPatrols = preparePatrolWarnings(branch.effects, game.mapMovement)
+
             if (
               branch.effects.some(
                 (effect) => effect.type === 'start-quest' || effect.type === 'complete-quest',
@@ -312,6 +320,7 @@ export class AuthoredPlaythrough {
               const effects = branch.effects.filter(
                 (effect) =>
                   effect.type !== 'move-map-object' &&
+                  effect.type !== 'warn-patrol' &&
                   effect.type !== 'move-item' &&
                   effect.type !== 'collect-items' &&
                   effect.type !== 'enter-scene',
@@ -321,6 +330,7 @@ export class AuthoredPlaythrough {
 
               if (!prepared?.isCurrent()) return rejected('Quest transaction is unavailable')
               prepared.commit()
+              warnPatrols()
               completeCommittedEffect(
                 () => prepared.notify(),
                 () => true,
@@ -425,6 +435,7 @@ export class AuthoredPlaythrough {
               return rejected('Inventory pickup is unavailable')
             step?.commit()
             collection?.commit()
+            warnPatrols()
 
             for (const { path, value } of writes) set(this.state, path, value)
 

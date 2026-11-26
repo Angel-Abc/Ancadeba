@@ -701,6 +701,18 @@ on a free adjacent tile. The guard leaves and the caravan resumes when the playe
 is outside that distance and no longer beside the guard. Saves preserve an
 encounter in progress and the time left before movement or return.
 
+To give the guard a warning, add **Mark player as warned by patrol** to the
+guard's rule branch alongside **Append to activity log**. Select the map and the patrol
+that owns the guard. In the patrol's **Action when a warned player steps closer**
+field, select the rule to run. The corresponding JSON effect is
+`{ "type": "warn-patrol", "map": "west-coast", "patrol": "slavers-caravan" }`.
+The action ID goes in `patrol.approach.onWarnedApproach`.
+
+The first completed step that reduces the player's Manhattan distance to the
+patrol runs the action with the patrol ID as its payload. Both distances use
+the patrol's tile at the start of the step. Speaking again preserves a fired
+warning. Leaving the encounter clears it. Saving preserves either state.
+
 - **Gameplay timer** uses seconds of active play. Leaving the map or pausing freezes
   the remaining interval. Saves preserve the tile, route progress, and remaining time.
 - **After player step** advances on arrival, once terrain delay has elapsed.
@@ -1477,7 +1489,7 @@ Unvisited views start at their authored spawn; starting a new game resets positi
 Other scene-local state follows the normal scene-lifetime rules.
 
 The save format is versioned and validated before replacing the current game.
-Saves must match the game ID, game version, and a fingerprint of the gameplay
+By default, saves must match the game ID, game version, and a fingerprint of the gameplay
 definitions and stylesheet. Changes to IDs, state/bindings, inventory structure,
 rules, maps, combat mechanics, dialogue choices, or quest progression invalidate an
 older slot, including in the preview, even if the manifest version is unchanged.
@@ -1492,6 +1504,14 @@ Adding, removing, or editing scene background components preserves the gameplay
 fingerprint.
 
 Saves use a `gameplay-v1:` content fingerprint.
+For an additive update within the same game version, an author can add an entry
+to `saving.compatibleUpdates` through `game.updateMetadata`. Set `from` and
+`to` to the exact `contentVersion` values from saves made before and after the
+edit. List newly introduced rule state paths in `addedState`, for example
+`[["player", "captured"]]`. These fields take their authored defaults when
+loading the earlier save. The usual validation still applies to saved state and
+map locations.
+
 Invalid, damaged, incompatible, or oversized saves show an error and preserve the
 current playthrough. Storage failures, including blocked storage and quota errors,
 never report success. Slots are separated by browser origin and game location;

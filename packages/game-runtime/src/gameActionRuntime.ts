@@ -9,7 +9,7 @@ import { GameCombatRewards } from './combatRewards.js'
 import type { ILogger, IMonotonicClock, ITaskScheduler } from '@ancadeba/utilities'
 import { ActionProcessor } from './actionProcessor.js'
 import type { GameRules } from './actions.js'
-import type { GameInstance, IGameRuntime, IGameLifecycle } from './gameLifecycle.js'
+import type { GameInstance, IGameRuntime, IGameLifecycle, SceneInstance } from './gameLifecycle.js'
 import { GameActionBar } from './actionBar.js'
 import { GameMapMovement } from './mapMovement.js'
 import { GameMapObjects } from './mapObjects.js'
@@ -164,15 +164,33 @@ export class GameActionRuntime implements IGameRuntime {
       }
     }
 
+    const requestMapAction = (
+      scene: SceneInstance,
+      mapView: string,
+      action: string,
+      payload: unknown,
+    ) => {
+      const map = this.mapMovement?.getMap(scene, mapView)
+      this.actions.requestScoped(
+        action,
+        payload,
+        () =>
+          !scene.disposed &&
+          lifecycle?.activeScene === scene &&
+          this.mapMovement?.getMap(scene, mapView) === map,
+      )
+    }
+
     this.mapMovement = lifecycle
       ? new GameMapMovement(
           lifecycle,
           this.timing,
           game,
           rules.turns !== undefined,
-          (scene, mapView, trigger) => {
-            const sourceMap = this.mapMovement?.getMap(scene, mapView)
-            this.actions.requestScoped(
+          (scene, mapView, trigger) =>
+            requestMapAction(
+              scene,
+              mapView,
               trigger.action,
               Object.freeze({
                 scene: scene.data.id,
@@ -181,12 +199,7 @@ export class GameActionRuntime implements IGameRuntime {
                 x: trigger.x,
                 y: trigger.y,
               }),
-              () =>
-                !scene.disposed &&
-                lifecycle.activeScene === scene &&
-                this.mapMovement?.getMap(scene, mapView) === sourceMap,
-            )
-          },
+            ),
           {
             read: readObjectState,
             subscribe: (listener) => this.bindings.subscribeChanges(listener),
@@ -202,6 +215,7 @@ export class GameActionRuntime implements IGameRuntime {
               return undefined
             }
           },
+          requestMapAction,
         )
       : undefined
     this.mapObjects =

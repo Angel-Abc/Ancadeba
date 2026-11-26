@@ -85,7 +85,11 @@ const patrolSchema = z.object({
   mode: z.enum(['loop', 'reverse', 'one-way']),
   returnDelayMs: z.number().int().positive().max(2_147_483_647).optional(),
   approach: z
-    .object({ radius: z.number().int().positive().safe(), guard: gameIdSchema })
+    .object({
+      radius: z.number().int().positive().safe(),
+      guard: gameIdSchema,
+      onWarnedApproach: gameIdSchema.optional(),
+    })
     .optional(),
   trigger: z.discriminatedUnion('type', [
     z.object({

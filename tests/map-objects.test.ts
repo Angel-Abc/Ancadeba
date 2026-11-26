@@ -16,6 +16,7 @@ import {
   canEnterScene,
   Engine,
   type EngineMessages,
+  type GameSaveStore,
 } from '@ancadeba/game-runtime'
 import { MessageBus } from '@ancadeba/utilities'
 import { inspectProject } from '@ancadeba/editor-core'
@@ -132,7 +133,11 @@ const scenes = new Map(
   ]),
 )
 
-async function setup(candidate: MapDefinition = map, authoredRules: GameRulesDefinition = rules) {
+async function setup(
+  candidate: MapDefinition = map,
+  authoredRules: GameRulesDefinition = rules,
+  saveStore?: GameSaveStore,
+) {
   const data = assembleGameData(
     manifest,
     scenes,
@@ -158,6 +163,7 @@ async function setup(candidate: MapDefinition = map, authoredRules: GameRulesDef
     () => messages,
     {
       clock: { now: () => 0 },
+      ...(saveStore && { saveStore }),
       scheduler: {
         schedule(callback, delay) {
           if (delay) tasks.push(callback)
@@ -504,6 +510,86 @@ describe('placeable map objects', () => {
 })
 
 describe('map object patrol validation', () => {
+  it('uses the wagon tile at departure for a delayed step and retains a fired warning until the guard leaves', async () => {
+    const candidate = structuredClone(map)
+    const [wagon, guard] = candidate.objects!
+    Object.assign(wagon!, { x: 4, y: 0 })
+    wagon!.patrol = {
+      mode: 'one-way',
+      trigger: { type: 'player-step' },
+      route: [
+        { x: 4, y: 0 },
+        { x: 4, y: 1 },
+        { x: 4, y: 2 },
+        { x: 3, y: 2 },
+        { x: 2, y: 2 },
+        { x: 1, y: 2 },
+        { x: 1, y: 3 },
+      ],
+      approach: { guard: guard!.id, radius: 2, onWarnedApproach: 'stop' },
+    }
+    let saved: string | undefined
+
+    const { engine, lifecycle, movement, scene, tasks, applied, flush } = await setup(
+      candidate,
+      {
+        ...rules,
+        actions: {
+          ...rules.actions,
+          warn: [{ when: [], effects: [{ type: 'warn-patrol', map: 'world', patrol: wagon!.id }] }],
+          stop: [{ when: [], effects: [] }],
+        },
+      },
+      {
+        read: () => saved,
+        write: (_id, text) => {
+          saved = text
+        },
+      },
+    )
+
+    expect(movement.move(scene, 'map', 'south')).toBe(true)
+    const arrive = tasks.at(-1)!
+
+    for (const direction of ['south', 'south', 'west', 'west'] as const)
+      movement.prepareObjectStep('world', wagon!.id, direction)!.commit()
+
+    lifecycle.currentGame!.actions!.request('warn')
+    flush()
+    expect(movement.getPosition(scene, 'map')).toEqual({ x: 1, y: 1 })
+    expect(applied).toEqual(['warn'])
+    arrive()
+    flush()
+    expect(movement.getPosition(scene, 'map')).toEqual({ x: 1, y: 2 })
+    expect(applied).toEqual(['warn'])
+
+    // Repeat the same two steps immediately before and after restoring the fired encounter.
+    const approach = () => {
+      const current = lifecycle.currentGame!.mapMovement!
+      expect(current.move(lifecycle.activeScene!, 'map', 'west')).toBe(true)
+      expect(current.move(lifecycle.activeScene!, 'map', 'east')).toBe(true)
+      tasks.at(-1)!()
+      flush()
+    }
+
+    approach()
+    expect(applied).toEqual(['warn', 'stop'])
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    lifecycle.currentGame!.actions!.request('warn')
+    flush()
+    approach()
+    expect(applied).toEqual(['warn', 'stop', 'warn'])
+
+    const current = lifecycle.currentGame!.mapMovement!
+    expect(current.move(lifecycle.activeScene!, 'map', 'west')).toBe(true)
+    expect(current.move(lifecycle.activeScene!, 'map', 'south')).toBe(true)
+    expect(engine.saves!.save()).toBe(true)
+    const state = JSON.parse(saved!).mapObjectPositions.world[wagon!.id]
+    expect(state.encounterComplete).toBe(true)
+    expect(state.warning).toBeUndefined()
+  })
+
   const spawn = { x: 2, y: 1 }
   const east = { x: 3, y: 1 }
 

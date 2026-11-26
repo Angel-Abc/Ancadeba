@@ -108,6 +108,69 @@ describe('map authoring persistence', () => {
     await apply({ type: 'game.updateRules', ruleId: 'travel', rules: { state: [], actions: {} } })
   })
 
+  it('validates the patrol and reaction links in map and rule updates', async () => {
+    const branch = [{ when: [], effects: [] }]
+    const rules = { state: [], actions: { talk: branch, capture: branch } }
+
+    const update = (next: Extract<EditorCommand, { type: 'game.updateRules' }>['rules']) =>
+      apply({ type: 'game.updateRules', ruleId: 'patrol', rules: next })
+
+    await update(rules)
+
+    const map = {
+      ...garden,
+      objects: [
+        {
+          id: 'wagon',
+          x: 0,
+          y: 0,
+          label: 'Wagon',
+          terrain: 'grass',
+          action: 'talk',
+          patrol: {
+            mode: 'one-way' as const,
+            trigger: { type: 'player-step' as const },
+            route: [
+              { x: 0, y: 0 },
+              { x: 1, y: 0 },
+            ],
+            approach: { guard: 'guard', radius: 2, onWarnedApproach: 'capture' },
+          },
+        },
+        { id: 'guard', x: 0, y: 1, label: 'Guard', terrain: 'grass', action: 'talk' },
+      ],
+    }
+
+    const putMap = () => apply({ type: 'game.upsertMap', mapId: 'garden', map })
+    await putMap()
+
+    const warn = (map: string, patrol: string) =>
+      update({
+        ...rules,
+        actions: {
+          ...rules.actions,
+          talk: [{ when: [], effects: [{ type: 'warn-patrol', map, patrol }] }],
+        },
+      })
+
+    await expect(warn('missing', 'wagon')).rejects.toThrow()
+    await expect(warn('garden', 'missing')).rejects.toThrow()
+    await expect(warn('garden', 'guard')).rejects.toThrow()
+    await warn('garden', 'wagon')
+    const view = await service.inspect('game')
+    expect(view.maps!.garden!.objects![0]!.patrol!.approach!.onWarnedApproach).toBe('capture')
+    expect(view.rules!.actions.talk![0]!.effects).toEqual([
+      { type: 'warn-patrol', map: 'garden', patrol: 'wagon' },
+    ])
+    await expect(update({ state: [], actions: { talk: branch } })).rejects.toThrow(
+      'Unlink action "capture"',
+    )
+    map.objects[0]!.patrol!.approach.onWarnedApproach = 'absent'
+    await expect(putMap()).rejects.toThrow()
+    await expect(apply({ type: 'game.upsertMap', mapId: 'garden', map: garden })).rejects.toThrow()
+    expect((await service.inspect('game')).revision).toBe(view.revision)
+  })
+
   it('persists, clears and restores exact scene-entrance coordinates through rule history', async () => {
     await apply({ type: 'game.upsertMap', mapId: 'garden', map: garden })
     await apply({

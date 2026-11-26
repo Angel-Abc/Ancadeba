@@ -96,7 +96,11 @@ export function editRules(
       const objects = object(documents[`maps/${id}.json`]).objects
 
       if (Array.isArray(objects))
-        for (const entry of objects) checkLink(object(entry).action, undefined, false)
+        for (const value of objects) {
+          const entry = object(value)
+          checkLink(entry.action, undefined, false)
+          checkLink(object(object(entry.patrol).approach).onWarnedApproach, undefined, false)
+        }
     }
 
     for (const id of game.scenes) {

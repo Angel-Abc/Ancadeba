@@ -8,6 +8,7 @@ import { createStarterProject } from '@ancadeba/editor-core'
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test'
 import {
   actionInfoComponentSchema,
+  inputSchema,
   buttonComponentSchema,
   sceneSchema,
   gameSchema,
@@ -19,6 +20,7 @@ import {
 } from '@ancadeba/schemas'
 import {
   Engine,
+  assembleGameData,
   GameLifecycle,
   GameLoader,
   type EngineMessages,
@@ -1592,7 +1594,255 @@ function flush(engine: Engine): void {
   for (let batch = 0; batch < 4; batch++) engine.flushMessages()
 }
 
+function roadEncounterGame() {
+  const route = [
+    { x: 1, y: 3 },
+    { x: 1, y: 2 },
+    { x: 2, y: 2 },
+    { x: 2, y: 1 },
+    { x: 2, y: 0 },
+  ]
+
+  const tiles = Array.from({ length: 5 }, () => Array<string>(6).fill('grass'))
+
+  for (const { x, y } of route) tiles[y]![x] = 'road'
+
+  const map = mapDefinitionSchema.parse({
+    'schema-version': '1.0.0',
+    type: 'square-grid',
+    width: 6,
+    height: 5,
+    tiles,
+    terrain: { grass: { color: '#668844' }, road: { color: '#887755' } },
+    objects: [
+      {
+        id: 'wagon',
+        label: 'Wagon',
+        terrain: 'road',
+        action: 'look',
+        ...route[0],
+        patrol: {
+          mode: 'one-way',
+          trigger: { type: 'player-turn' },
+          route,
+          approach: { guard: 'caravan-guard', radius: 3, onWarnedApproach: 'capture-scout' },
+        },
+      },
+      { id: 'caravan-guard', label: 'Guard', terrain: 'grass', action: 'warn', x: 0, y: 0 },
+    ],
+  })
+
+  const rules = gameRulesSchema.parse({
+    state: [{ path: ['player', 'captured'], value: false }],
+    log: { path: ['history'], capacity: 20, initial: [] },
+    actions: {
+      look: [{ when: [], effects: [] }],
+      warn: [
+        {
+          when: [],
+          effects: [
+            { type: 'append-log', text: 'Back from the road' },
+            { type: 'warn-patrol', map: 'west-coast', patrol: 'wagon' },
+          ],
+        },
+      ],
+      'capture-scout': [
+        {
+          when: [],
+          effects: [
+            { type: 'set-state', path: ['player', 'captured'], value: true },
+            { type: 'append-log', text: 'The guard closes the irons.' },
+            { type: 'enter-scene', scene: 'captivity' },
+          ],
+        },
+      ],
+    },
+  })
+
+  const history = {
+    id: 'message-history',
+    type: 'message-history',
+    placement: { row: 1, column: 1 },
+    label: '',
+  }
+
+  const common = {
+    'schema-version': '1.0.0',
+    type: 'game',
+    screen: { type: 'grid', grid: { rows: 3, columns: 1 } },
+  }
+
+  const slots = { '2': 'north', '6': 'west', '7': 'south', '8': 'east' }
+  const directions = Object.values(slots)
+
+  const road = sceneSchema.parse({
+    ...common,
+    id: 'adventure-scene',
+    title: 'Road',
+    components: [
+      history,
+      {
+        id: 'mini-map',
+        type: 'map-view',
+        label: 'Road',
+        placement: { row: 2, column: 1 },
+        map: 'west-coast',
+        viewport: { columns: 6, rows: 5 },
+        playerSpawn: { x: 5, y: 4 },
+        followPlayer: true,
+      },
+      {
+        id: 'action-bar',
+        type: 'action-bar',
+        placement: { row: 3, column: 1 },
+        slots: Object.fromEntries(
+          Object.entries(slots).map(([slot, direction]) => [
+            slot,
+            {
+              label: direction,
+              action: { type: 'move-map', mapView: 'mini-map', direction },
+              inputBinding: { context: 'gameplay', input: direction },
+            },
+          ]),
+        ),
+      },
+    ],
+  })
+
+  const captivity = sceneSchema.parse({
+    ...common,
+    id: 'captivity',
+    title: 'Captivity',
+    components: [history],
+  })
+
+  const input = inputSchema.parse({
+    'schema-version': '1.0.0',
+    'virtual-keys': directions,
+    keyboard: { KeyW: 'north', KeyD: 'east', KeyS: 'south', KeyA: 'west' },
+    contexts: {
+      gameplay: Object.fromEntries(directions.map((direction) => [direction, direction])),
+    },
+    'initial-context': 'gameplay',
+  })
+
+  return assembleGameData(
+    gameSchema.parse({
+      'schema-version': '1.0.0',
+      id: 'patrol',
+      title: 'Patrol',
+      version: '1',
+      scenes: [road.id, captivity.id],
+      maps: ['west-coast'],
+      rules: ['encounter'],
+      input: 'controls',
+      'initial-scene': road.id,
+    }),
+    new Map([
+      [road.id, road],
+      [captivity.id, captivity],
+    ]),
+    input,
+    undefined,
+    new Map([['west-coast', map]]),
+    undefined,
+    undefined,
+    new Map([['encounter', rules]]),
+  )
+}
+
 describe('scene renderer', () => {
+  it.each([
+    ['keyboard', false],
+    ['action bar', false],
+    ['keyboard', true],
+    ['action bar', true],
+  ] as const)(
+    'captures on the first closer step at a road bend via %s (reload=%s)',
+    async (control, reload) => {
+      const slots = { north: '2', east: '8', south: '7', west: '6' } as const
+      const keys = { north: 'KeyW', east: 'KeyD', south: 'KeyS', west: 'KeyA' } as const
+      const game = roadEncounterGame()
+
+      const target = new TestDocument().createElement('main')
+      const storage = new Map<string, string>()
+      const messages = new MessageBus<EngineMessages>()
+      const captures: string[] = []
+      messages.subscribe('action.applied', ({ request }) => {
+        if (request.action === 'capture-scout') captures.push(request.action)
+      })
+
+      const engine = new Engine(
+        { load: async () => game },
+        new DomEngineHost(target.asElement()),
+        logger,
+        () => messages,
+        {
+          ...timing,
+          saveStore: {
+            read: (id) => storage.get(id),
+            write: (id, text) => {
+              storage.set(id, text)
+            },
+          },
+        },
+      )
+
+      onTestFinished(() => engine.stop())
+      await engine.start()
+      const lifecycle = engine.lifecycle!
+      lifecycle.startGame()
+      lifecycle.enterScene('adventure-scene')
+      const current = () => lifecycle.currentGame!
+      const position = () => current().mapMovement!.getPosition(lifecycle.activeScene!, 'mini-map')
+      const surface = target.find((node) => node.className === 'ancadeba-game')!
+      surface.focus()
+
+      const step = (direction: keyof typeof slots) => {
+        if (control === 'keyboard') expect(pressKey(surface, keys[direction])).toBe(true)
+        else target.find((node) => node.dataset.actionBarSlot === slots[direction])!.click()
+        flush(engine)
+      }
+
+      step('west')
+      step('west')
+      step('north')
+      expect(position()).toEqual({ x: 3, y: 3 })
+      expect(captures).toHaveLength(0)
+      target.find((node) => node.dataset.mapObject === 'caravan-guard')!.click()
+      flush(engine)
+
+      const history = () =>
+        target.find((node) => node.dataset.componentId === 'message-history')!.textContent
+
+      expect(history()).toContain('Back from the road')
+
+      if (reload) {
+        expect(engine.saves!.save()).toBe(true)
+        expect(engine.saves!.load()).toBe(true)
+        surface.focus()
+        expect(history()).toContain('Back from the road')
+      }
+
+      const before = current().actions!.progression
+      expect(pressKey(surface, 'KeyZ')).toBe(false)
+      flush(engine)
+      step('north')
+      expect(current().actions!.progression).toEqual(before)
+      expect(position()).toEqual({ x: 3, y: 3 })
+      step('east')
+      expect(position()).toEqual({ x: 4, y: 3 })
+      expect(captures).toHaveLength(0)
+      step('north')
+      expect(lifecycle.activeScene!.data.id).toBe('captivity')
+      expect(
+        current().bindings!.read({ source: 'game.state', path: ['player', 'captured'] }),
+      ).toMatchObject({ value: true })
+      expect(history()).toContain('irons')
+      expect(captures).toHaveLength(1)
+    },
+  )
+
   it('reads the playthrough history from the pause menu and keeps earlier messages in their original language', async () => {
     const document = new TestDocument()
     const target = document.createElement('main')

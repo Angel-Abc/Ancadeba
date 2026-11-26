@@ -725,6 +725,7 @@ describe('visual map editor', () => {
       ui.button('Finish route').dispatchEvent(new Event('click'))
       ui.edit('Guard to spawn on approach', 'guard', 'change')
       ui.edit('Approach distance (tiles)', '3')
+      ui.edit('Action when a warned player steps closer', 'inspect', 'change')
       const delay = 'Return delay (seconds, leave blank for one crossing)'
       ui.edit(delay, '2.5')
       ui.control(delay).dispatchEvent(new Event('blur'))
@@ -739,7 +740,7 @@ describe('visual map editor', () => {
             {
               patrol: {
                 mode: 'one-way',
-                approach: { guard: 'guard', radius: 3 },
+                approach: { guard: 'guard', radius: 3, onWarnedApproach: 'inspect' },
                 returnDelayMs: 2500,
                 trigger: { type: 'player-step' },
                 route: [

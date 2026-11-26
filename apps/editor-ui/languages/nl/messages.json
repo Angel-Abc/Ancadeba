@@ -1617,6 +1617,8 @@
   "maps.approachGuard": "Bewaker die bij nadering verschijnt",
   "maps.noGuard": "Geen bewaker",
   "maps.approachRadius": "Afstand voor ontmoeting (tegels)",
+  "maps.onWarnedApproach": "Actie als een gewaarschuwde speler dichterbij komt",
+  "rules.warnPatrol": "Speler als gewaarschuwd door patrouille markeren",
   "maps.reversePatrol": "Heen en weer lopen",
   "maps.patrolSeconds": "Interval (seconden)",
   "maps.drawRoute": "Routetegels kiezen",

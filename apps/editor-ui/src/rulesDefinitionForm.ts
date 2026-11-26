@@ -63,6 +63,11 @@ export function rulesDefinitionForm(
   const objectMaps = Object.keys(view.maps ?? {}).filter((id) => view.maps?.[id]?.objects?.length)
   const objectsIn = (map: string) => view.maps?.[map]?.objects?.map(({ id }) => id) ?? []
 
+  const patrolsIn = (map: string) =>
+    view.maps?.[map]?.objects?.filter((entry) => entry.patrol?.approach).map(({ id }) => id) ?? []
+
+  const patrolMaps = objectMaps.filter((map) => patrolsIn(map).length)
+
   const availableFields = [...rules.state, ...otherFields]
   const fields = availableFields.map(({ path }) => statePath(path))
   const firstPath = () => availableFields[0]?.path.slice() ?? ['']
@@ -118,6 +123,12 @@ export function rulesDefinitionForm(
 
   function effect(type: EffectType): RuleEffect {
     switch (type) {
+      case 'warn-patrol': {
+        const map = patrolMaps[0] ?? ''
+
+        return { type, map, patrol: patrolsIn(map)[0] ?? '' }
+      }
+
       case 'set-state':
         return { type, path: firstPath(), value: firstValue() }
       case 'move-item':
@@ -632,6 +643,7 @@ export function rulesDefinitionForm(
                 'set-state',
                 'move-item',
                 'move-map-object',
+                'warn-patrol',
                 'collect-items',
                 'enter-scene',
                 'append-log',
@@ -649,6 +661,18 @@ export function rulesDefinitionForm(
         )
 
         if (entry.type === 'set-state') field.append(...stateField(entry))
+
+        if (entry.type === 'warn-patrol')
+          field.append(
+            select(t('maps.map'), entry.map, patrolMaps, (map) => {
+              entry.map = map
+              entry.patrol = patrolsIn(map)[0] ?? ''
+              rerender()
+            }),
+            select(t('maps.patrol'), entry.patrol, patrolsIn(entry.map), (id) => {
+              entry.patrol = id
+            }),
+          )
 
         if (entry.type === 'start-quest' || entry.type === 'complete-quest')
           field.append(

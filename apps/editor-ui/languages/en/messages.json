@@ -1617,6 +1617,8 @@
   "maps.approachGuard": "Guard to spawn on approach",
   "maps.noGuard": "No guard",
   "maps.approachRadius": "Approach distance (tiles)",
+  "maps.onWarnedApproach": "Action when a warned player steps closer",
+  "rules.warnPatrol": "Mark player as warned by patrol",
   "maps.reversePatrol": "Walk back and forth",
   "maps.patrolSeconds": "Interval (seconds)",
   "maps.drawRoute": "Select route tiles",
