@@ -696,7 +696,7 @@ before the object reappears at its spawn. An occupied spawn delays its return.
 For a caravan encounter, place a stationary map object with the guard's appearance
 and interaction action. Select it under **Guard to spawn on approach** on the
 caravan, then choose **Approach distance** in tiles. Distance counts horizontal
-and vertical steps. Once per crossing, the caravan stops and the guard appears
+and vertical steps. By default, the caravan stops once per crossing and the guard appears
 on a free adjacent tile. The guard leaves and the caravan resumes when the player
 is outside that distance and no longer beside the guard. Saves preserve an
 encounter in progress and the time left before movement or return.
@@ -711,7 +711,10 @@ The action ID goes in `patrol.approach.onWarnedApproach`.
 The first completed step that reduces the player's Manhattan distance to the
 patrol runs the action with the patrol ID as its payload. Both distances use
 the patrol's tile at the start of the step. Speaking again preserves a fired
-warning. Leaving the encounter clears it. Saving preserves either state.
+warning. Leaving the encounter clears it. With a warned-approach action configured,
+coming back into range of the same caravan brings the guard out again. The player
+must hear a fresh warning before a closer step can trigger the action again.
+Saving preserves the current encounter and its warning.
 
 - **Gameplay timer** uses seconds of active play. Leaving the map or pausing freezes
   the remaining interval. Saves preserve the tile, route progress, and remaining time.

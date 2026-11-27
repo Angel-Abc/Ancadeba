@@ -261,7 +261,8 @@ export class MapObjectMovement {
   private updateEncounter(map: MapDefinition, object: MapObject, state: ObjectState): boolean {
     const approach = object.patrol?.approach
 
-    if (!approach || state.encounterComplete || state.departed) return false
+    if (!approach || state.departed || (state.encounterComplete && !approach.onWarnedApproach))
+      return false
     const players = this.playersOn(map)
 
     const near = players.some(
@@ -296,6 +297,7 @@ export class MapObjectMovement {
     tiles.sort((a, b) => nearest(a) - nearest(b))
 
     if (!tiles[0]) return false
+    delete state.encounterComplete
     state.guardPosition = Object.freeze(tiles[0])
 
     return true

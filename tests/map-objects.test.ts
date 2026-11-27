@@ -17,6 +17,7 @@ import {
   Engine,
   type EngineMessages,
   type GameSaveStore,
+  type MapDirection,
 } from '@ancadeba/game-runtime'
 import { MessageBus } from '@ancadeba/utilities'
 import { inspectProject } from '@ancadeba/editor-core'
@@ -586,8 +587,81 @@ describe('map object patrol validation', () => {
     expect(current.move(lifecycle.activeScene!, 'map', 'south')).toBe(true)
     expect(engine.saves!.save()).toBe(true)
     const state = JSON.parse(saved!).mapObjectPositions.world[wagon!.id]
-    expect(state.encounterComplete).toBe(true)
+    expect(state.position).toEqual({ x: 1, y: 2 })
     expect(state.warning).toBeUndefined()
+  })
+
+  it('deploys the guard again after retreat and requires a fresh warning on the second visit', async () => {
+    const candidate = structuredClone(map)
+    const wagon = candidate.objects![0]!
+    const guard = candidate.objects![1]!
+    Object.assign(wagon, { x: 4, y: 2 })
+    guard.action = 'warn'
+    wagon.patrol = {
+      mode: 'one-way',
+      trigger: { type: 'player-turn', intervalTurns: 2 },
+      route: [
+        { x: 4, y: 2 },
+        { x: 4, y: 3 },
+        { x: 3, y: 3 },
+      ],
+      approach: { guard: guard.id, radius: 2, onWarnedApproach: 'stop' },
+    }
+    let saved: string | undefined
+
+    const { engine, lifecycle, applied, flush } = await setup(
+      candidate,
+      {
+        ...rules,
+        actions: {
+          ...rules.actions,
+          warn: [{ when: [], effects: [{ type: 'warn-patrol', map: 'world', patrol: wagon.id }] }],
+          stop: [{ when: [], effects: [] }],
+        },
+      },
+      {
+        read: () => saved,
+        write: (_id, text) => {
+          saved = text
+        },
+      },
+    )
+
+    const game = () => lifecycle.currentGame!
+    const scene = () => lifecycle.activeScene!
+    const appearance = (id: string) => game().mapObjects!.getAppearance(scene(), 'map', id)
+
+    const step = (direction: MapDirection) => {
+      expect(game().mapMovement!.move(scene(), 'map', direction)).toBe(true)
+      flush()
+    }
+
+    const talk = () => {
+      expect(game().mapObjects!.interact(scene(), 'map', guard.id)).toBe(true)
+      flush()
+    }
+
+    step('east')
+    step('east')
+    talk()
+    step('west')
+    expect(appearance(guard.id)?.visible).toBe(false)
+    expect(appearance(wagon.id)).toMatchObject({ x: 4, y: 3 })
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    step('east')
+    step('south')
+    expect(game().mapObjects!.getTarget(scene(), 'map', guard.id)).toMatchObject({ x: 4, y: 2 })
+    step('south')
+    step('north')
+    expect(applied).toEqual(['warn'])
+    talk()
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    step('south')
+    step('north')
+    step('south')
+    expect(applied).toEqual(['warn', 'warn', 'stop'])
   })
 
   const spawn = { x: 2, y: 1 }
