@@ -138,6 +138,7 @@ async function setup(
   candidate: MapDefinition = map,
   authoredRules: GameRulesDefinition = rules,
   saveStore?: GameSaveStore,
+  now = () => 0,
 ) {
   const data = assembleGameData(
     manifest,
@@ -163,7 +164,7 @@ async function setup(
     { debug: () => '', info: () => '', warn: () => '', error: () => '' },
     () => messages,
     {
-      clock: { now: () => 0 },
+      clock: { now },
       ...(saveStore && { saveStore }),
       scheduler: {
         schedule(callback, delay) {
@@ -511,6 +512,116 @@ describe('placeable map objects', () => {
 })
 
 describe('map object patrol validation', () => {
+  it('sees a patrol when the player reaches the radius just before the patrol moves away', async () => {
+    const candidate = structuredClone(map)
+    const wagon = candidate.objects![0]!
+    candidate.objects = [wagon]
+    Object.assign(wagon, { x: 4, y: 2 })
+    wagon.patrol = {
+      mode: 'reverse',
+      trigger: { type: 'player-step' },
+      route: [
+        { x: 4, y: 2 },
+        { x: 4, y: 3 },
+      ],
+      firstSighting: { radius: 3, action: 'read' },
+    }
+    const { scene, movement, objects, applied, flush } = await setup(candidate)
+    expect(applied).toEqual([])
+    expect(movement.move(scene, 'map', 'east')).toBe(true)
+    flush()
+    expect(objects.getAppearance(scene, 'map', wagon.id)).toMatchObject({ x: 4, y: 3 })
+    expect(applied).toEqual(['read'])
+  })
+
+  it('remembers the first sighting across reloads, retreats and later crossings independently of the guard', async () => {
+    const candidate = structuredClone(map)
+    candidate.width = 10
+    candidate.tiles = candidate.tiles.map(() => Array<string>(10).fill('ground'))
+    const wagon = candidate.objects![0]!
+    const guard = candidate.objects![1]!
+    wagon.x = 9
+    wagon.patrol = {
+      mode: 'one-way',
+      trigger: { type: 'player-turn', intervalTurns: 2 },
+      route: [9, 8, 7, 6].map((x) => ({ x, y: 1 })),
+      returnDelayMs: 100,
+      firstSighting: { radius: 5, action: 'sight' },
+      approach: { guard: guard.id, radius: 3, onWarnedApproach: 'travel' },
+    }
+    let saved: string | undefined
+    let time = 0
+
+    const { engine, lifecycle, tasks, flush } = await setup(
+      candidate,
+      {
+        ...rules,
+        log: { path: ['history'], capacity: 10, initial: [] },
+        actions: {
+          ...rules.actions,
+          sight: [
+            {
+              when: [{ type: 'payload-is-target', target: wagon.id }],
+              effects: [{ type: 'append-log', text: 'The wagon appears.' }],
+            },
+          ],
+        },
+      },
+      {
+        read: () => saved,
+        write: (_id, value) => {
+          saved = value
+        },
+      },
+      () => time,
+    )
+
+    const game = () => lifecycle.currentGame!
+    const scene = () => lifecycle.activeScene!
+    const log = () => game().bindings!.read({ source: 'game.state', path: ['history'] })
+    const appearance = (id: string) => game().mapObjects!.getAppearance(scene(), 'map', id)!
+
+    const step = (direction: MapDirection) => {
+      expect(game().mapMovement!.move(scene(), 'map', direction)).toBe(true)
+      flush()
+    }
+
+    const reload = () => {
+      expect(engine.saves!.save()).toBe(true)
+      expect(engine.saves!.load()).toBe(true)
+      flush()
+    }
+
+    step('east')
+    reload()
+    expect(log()).toMatchObject({ value: '' })
+    step('east')
+    // The player arrives six tiles away, then the wagon advances into sight.
+    expect(appearance(wagon.id)).toMatchObject({ x: 8, y: 1 })
+    expect(game().mapMovement!.getPosition(scene(), 'map')).toEqual({ x: 3, y: 1 })
+    expect(log()).toMatchObject({ value: 'The wagon appears.' })
+    expect(appearance(guard.id).visible).toBe(false)
+    reload()
+    step('east')
+    expect(appearance(guard.id).visible).toBe(false)
+    step('east')
+    expect(appearance(guard.id).visible).not.toBe(false)
+
+    for (const direction of ['west', 'west', 'west', 'west', 'north', 'south'] as const)
+      step(direction)
+    expect(appearance(wagon.id).visible).toBe(false)
+    expect(appearance(guard.id).visible).toBe(false)
+    reload()
+    time += 100
+    tasks.at(-1)!()
+    expect(appearance(wagon.id)).toMatchObject({ x: 9, y: 1 })
+    expect(appearance(wagon.id).visible).not.toBe(false)
+
+    for (let i = 0; i < 4; i++) step('east')
+    expect(appearance(guard.id).visible).not.toBe(false)
+    expect(log()).toMatchObject({ value: 'The wagon appears.' })
+  })
+
   it('uses the wagon tile at departure for a delayed step and retains a fired warning until the guard leaves', async () => {
     const candidate = structuredClone(map)
     const [wagon, guard] = candidate.objects!

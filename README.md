@@ -693,6 +693,13 @@ reverses at each end. **Loop** connects the last tile to the first in one step.
 **Return delay** blank for a single crossing, or enter seconds of active gameplay
 before the object reappears at its spawn. An occupied spawn delays its return.
 
+To announce a patrol, choose **Action on first sighting** and set **First sighting
+distance** in tiles. The action runs with the patrol ID as its payload the first
+time the player is within that many horizontal and vertical steps of the visible
+patrol. For example, `"firstSighting": { "radius": 5, "action": "sight-caravan" }`
+on the patrol announces it at five tiles. The sighting is saved for the playthrough,
+including later crossings. The guard has its own approach distance.
+
 For a caravan encounter, place a stationary map object with the guard's appearance
 and interaction action. Select it under **Guard to spawn on approach** on the
 caravan, then choose **Approach distance** in tiles. Distance counts horizontal

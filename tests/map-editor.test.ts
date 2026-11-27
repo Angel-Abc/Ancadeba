@@ -726,6 +726,8 @@ describe('visual map editor', () => {
       ui.button('Finish route').dispatchEvent(new Event('click'))
       ui.edit('Guard to spawn on approach', 'guard', 'change')
       ui.edit('Approach distance (tiles)', '3')
+      ui.edit('Action on first sighting', 'inspect', 'change')
+      ui.edit('First sighting distance (tiles)', '6')
       ui.edit('Action when a warned player steps closer', 'inspect', 'change')
       const delay = 'Return delay (seconds, leave blank for one crossing)'
       ui.edit(delay, '2.5')
@@ -742,6 +744,7 @@ describe('visual map editor', () => {
               patrol: {
                 mode: 'one-way',
                 approach: { guard: 'guard', radius: 3, onWarnedApproach: 'inspect' },
+                firstSighting: { radius: 6, action: 'inspect' },
                 returnDelayMs: 2500,
                 trigger: { type: 'player-turn', intervalTurns: 2 },
                 route: [
@@ -754,10 +757,14 @@ describe('visual map editor', () => {
         },
       })
       ui.edit(delay, '')
+      ui.edit('Action on first sighting', '', 'change')
       await ui.submit()
       const command = ui.saved.at(-1)!
       expect(
         command.type === 'game.upsertMap' && command.map.objects![1]!.patrol!.returnDelayMs,
+      ).toBeUndefined()
+      expect(
+        command.type === 'game.upsertMap' && command.map.objects![1]!.patrol!.firstSighting,
       ).toBeUndefined()
     } finally {
       ui.editor.dispose()

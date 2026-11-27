@@ -110,7 +110,7 @@ describe('map authoring persistence', () => {
 
   it('validates the patrol and reaction links in map and rule updates', async () => {
     const branch = [{ when: [], effects: [] }]
-    const rules = { state: [], actions: { talk: branch, capture: branch } }
+    const rules = { state: [], actions: { talk: branch, capture: branch, sight: branch } }
 
     const update = (next: Extract<EditorCommand, { type: 'game.updateRules' }>['rules']) =>
       apply({ type: 'game.updateRules', ruleId: 'patrol', rules: next })
@@ -135,6 +135,7 @@ describe('map authoring persistence', () => {
               { x: 1, y: 0 },
             ],
             approach: { guard: 'guard', radius: 2, onWarnedApproach: 'capture' },
+            firstSighting: { radius: 5, action: 'sight' },
           },
         },
         { id: 'guard', x: 0, y: 1, label: 'Guard', terrain: 'grass', action: 'talk' },
@@ -184,12 +185,26 @@ describe('map authoring persistence', () => {
       intervalTurns: 2,
     })
     expect(view.maps!.garden!.objects![0]!.patrol!.approach!.onWarnedApproach).toBe('capture')
+    expect(view.maps!.garden!.objects![0]!.patrol!.firstSighting).toEqual({
+      radius: 5,
+      action: 'sight',
+    })
     expect(view.rules!.actions.talk![0]!.effects).toEqual([
       { type: 'warn-patrol', map: 'garden', patrol: 'wagon' },
     ])
     await expect(update({ state: [], actions: { talk: branch } })).rejects.toThrow(
       'Unlink action "capture"',
     )
+    await expect(update({ state: [], actions: { talk: branch, capture: branch } })).rejects.toThrow(
+      'Unlink action "sight"',
+    )
+    const sighting = map.objects[0]!.patrol!.firstSighting
+    sighting.radius = 0
+    await expect(putMap()).rejects.toThrow()
+    sighting.radius = 5
+    sighting.action = 'absent'
+    await expect(putMap()).rejects.toThrow()
+    sighting.action = 'sight'
     map.objects[0]!.patrol!.approach.onWarnedApproach = 'absent'
     await expect(putMap()).rejects.toThrow()
     await expect(apply({ type: 'game.upsertMap', mapId: 'garden', map: garden })).rejects.toThrow()

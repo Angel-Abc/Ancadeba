@@ -84,6 +84,9 @@ const patrolSchema = z.object({
   route: z.array(mapPositionSchema).min(2),
   mode: z.enum(['loop', 'reverse', 'one-way']),
   returnDelayMs: z.number().int().positive().max(2_147_483_647).optional(),
+  firstSighting: z
+    .object({ radius: z.number().int().positive().safe(), action: gameIdSchema })
+    .optional(),
   approach: z
     .object({
       radius: z.number().int().positive().safe(),

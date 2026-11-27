@@ -200,6 +200,7 @@ export class GameMapMovement implements IGameMapMovement {
       objectState?.read ?? (() => undefined),
       (map, point) => this.playerOccupies(map, point),
       (map) => this.activePlayers(map),
+      (action, patrol) => game.actions?.request(action, patrol) !== undefined,
       () => this.notify(),
     )
     this.unsubscribe = lifecycle.subscribeSceneChanges(({ current }) => {

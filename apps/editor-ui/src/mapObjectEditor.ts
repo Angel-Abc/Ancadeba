@@ -176,7 +176,36 @@ export function mapObjectEditor(
               }
             }),
         ),
+        controls.select(
+          t('maps.firstSightingAction'),
+          patrol.firstSighting?.action ?? '',
+          [['', t('rules.noAction')], ...actions.map((id) => [id, id] as const)],
+          (action) =>
+            change(() => {
+              if (action)
+                patrol.firstSighting = { radius: patrol.firstSighting?.radius ?? 5, action }
+              else delete patrol.firstSighting
+            }),
+        ),
       )
+
+      const sighting = patrol.firstSighting
+
+      if (sighting) {
+        const radius = controls.input(
+          t('maps.firstSightingRadius'),
+          String(sighting.radius),
+          (value) => {
+            sighting.radius = Number(value)
+          },
+          'number',
+        )
+
+        const field = radius.querySelector('input')!
+        field.min = '1'
+        field.step = '1'
+        movement.append(radius)
+      }
 
       if (patrol.mode === 'one-way') {
         const guards = objects.filter(

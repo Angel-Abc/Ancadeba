@@ -1617,6 +1617,8 @@
   "maps.approachGuard": "Guard to spawn on approach",
   "maps.noGuard": "No guard",
   "maps.approachRadius": "Approach distance (tiles)",
+  "maps.firstSightingAction": "Action on first sighting",
+  "maps.firstSightingRadius": "First sighting distance (tiles)",
   "maps.onWarnedApproach": "Action when a warned player steps closer",
   "rules.warnPatrol": "Mark player as warned by patrol",
   "maps.reversePatrol": "Walk back and forth",

@@ -98,8 +98,10 @@ export function editRules(
       if (Array.isArray(objects))
         for (const value of objects) {
           const entry = object(value)
+          const patrol = object(entry.patrol)
           checkLink(entry.action, undefined, false)
-          checkLink(object(object(entry.patrol).approach).onWarnedApproach, undefined, false)
+          checkLink(object(patrol.approach).onWarnedApproach, undefined, false)
+          checkLink(object(patrol.firstSighting).action, undefined, false)
         }
     }
 

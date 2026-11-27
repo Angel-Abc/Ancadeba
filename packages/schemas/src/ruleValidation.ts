@@ -139,6 +139,14 @@ export function validateRuleSources(
           path: ['objects', index, 'patrol', 'approach', 'onWarnedApproach'],
           message: `Unknown warned approach action: ${action}`,
         })
+      const sighting = object.patrol?.firstSighting
+
+      if (sighting && !Object.hasOwn(merged.rules.actions, sighting.action))
+        merged.issues.push({
+          file: `maps/${id}.json`,
+          path: ['objects', index, 'patrol', 'firstSighting', 'action'],
+          message: `Unknown first sighting action: ${sighting.action}`,
+        })
     })
 
   for (const [id, scene] of scenes)

@@ -44,6 +44,7 @@ export class MapObjectMovement {
     private readonly read: MapObjectStateReader,
     private readonly playerOccupies: (map: MapDefinition, point: MapPosition) => boolean,
     private readonly playersOn: (map: MapDefinition) => readonly MapPosition[],
+    private readonly requestSighting: (action: string, patrol: string) => boolean,
     private readonly notify: () => void,
   ) {
     for (const map of maps.values()) {
@@ -247,6 +248,22 @@ export class MapObjectMovement {
     )
   }
 
+  private checkFirstSighting(map: MapDefinition, object: MapObject): void {
+    const sighting = object.patrol?.firstSighting
+
+    if (!sighting) return
+    const state = this.state(object)
+
+    if (state.sighted || state.departed || resolveMapObject(object, this.read).visible === false)
+      return
+
+    if (
+      this.playersOn(map).some((player) => distance(player, state.position) <= sighting.radius) &&
+      this.requestSighting(sighting.action, object.id)
+    )
+      state.sighted = true
+  }
+
   private dismissGuard(state: ObjectState): boolean {
     delete state.engaged
     delete state.warning
@@ -306,7 +323,10 @@ export class MapObjectMovement {
   private returnToStart(map: MapDefinition, object: MapObject, state: ObjectState): boolean {
     if (!state.departed || state.remainingMs !== 0 || !this.openTile(map, object)) return false
     this.states.delete(object)
-    this.updateEncounter(map, object, this.state(object))
+    const next = this.state(object)
+
+    if (state.sighted) next.sighted = true
+    this.updateEncounter(map, object, next)
 
     return true
   }
@@ -318,6 +338,9 @@ export class MapObjectMovement {
       if (stepMap && map !== stepMap) continue
 
       for (const object of map.objects ?? []) {
+        // The player may reach the radius just before the patrol moves away on this turn.
+        this.checkFirstSighting(map, object)
+
         if (object.patrol?.approach)
           changed = this.updateEncounter(map, object, this.state(object)) || changed
         const trigger = object.patrol?.trigger.type
@@ -359,10 +382,13 @@ export class MapObjectMovement {
 
     for (const map of this.active) {
       for (const object of map.objects ?? []) {
-        if (object.patrol?.mode !== 'one-way') continue
-        const state = this.state(object)
-        changed = this.returnToStart(map, object, state) || changed
-        changed = this.updateEncounter(map, object, this.state(object)) || changed
+        if (object.patrol?.mode === 'one-way') {
+          const state = this.state(object)
+          changed = this.returnToStart(map, object, state) || changed
+          changed = this.updateEncounter(map, object, this.state(object)) || changed
+        }
+
+        this.checkFirstSighting(map, object)
       }
     }
 
@@ -453,6 +479,7 @@ export class MapObjectMovement {
           direction,
           ...(state.departed && { departed: true }),
           ...(state.encounterComplete && { encounterComplete: true }),
+          ...(state.sighted && { sighted: true }),
           ...(state.warning && { warning: state.warning }),
           ...(state.turnsElapsed !== undefined && { turnsElapsed: state.turnsElapsed }),
           ...(state.guardPosition && { guardPosition: { ...state.guardPosition } }),
@@ -500,6 +527,7 @@ export class MapObjectMovement {
               trigger?.type !== 'player-turn' ||
               state.turnsElapsed >= (trigger.intervalTurns ?? 1))) ||
           this.guardOwners.has(object) ||
+          (state.sighted && !patrol?.firstSighting) ||
           Boolean(state.departed) !==
             (patrol?.mode === 'one-way' && state.routeIndex === patrol.route.length - 1) ||
           ((state.encounterComplete || state.guardPosition) &&
