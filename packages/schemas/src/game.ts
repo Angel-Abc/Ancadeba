@@ -3,7 +3,6 @@ import { gameLanguagesSchema, translationKeySchema } from './languages.js'
 import { gameIdSchema } from './gameId.js'
 import { appearanceLibrarySchema } from './characterAppearances.js'
 import { characterProfileSchema } from './characterProfile.js'
-import { storyPathSchema } from './storyConditions.js'
 
 export { gameIdSchema } from './gameId.js'
 
@@ -15,15 +14,6 @@ const uniqueFileIds = (ids: string[]) =>
 export const savingPolicySchema = z.object({
   manual: z.enum(['anywhere', 'save-points', 'disabled']).default('anywhere'),
   autosave: z.enum(['automatic', 'save-points', 'disabled']).default('automatic'),
-  compatibleUpdates: z
-    .array(
-      z.strictObject({
-        from: z.string().min(1),
-        to: z.string().min(1),
-        addedState: z.array(storyPathSchema).optional(),
-      }),
-    )
-    .optional(),
 })
 
 export const gameSchema = z

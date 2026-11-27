@@ -1,4 +1,5 @@
 import {
+  isMapEncounterGuard,
   ruleStateType,
   type GameRulesDefinition,
   type RuleBranch,
@@ -61,7 +62,14 @@ export function rulesDefinitionForm(
   ]
 
   const objectMaps = Object.keys(view.maps ?? {}).filter((id) => view.maps?.[id]?.objects?.length)
-  const objectsIn = (map: string) => view.maps?.[map]?.objects?.map(({ id }) => id) ?? []
+
+  const movableObjectsIn = (id: string) => {
+    const map = view.maps?.[id]
+
+    return (
+      map?.objects?.filter((object) => !isMapEncounterGuard(map, object)).map(({ id }) => id) ?? []
+    )
+  }
 
   const patrolsIn = (map: string) =>
     view.maps?.[map]?.objects?.filter((entry) => entry.patrol?.approach).map(({ id }) => id) ?? []
@@ -136,7 +144,7 @@ export function rulesDefinitionForm(
       case 'move-map-object': {
         const map = objectMaps[0] ?? ''
 
-        return { type, map, object: objectsIn(map)[0] ?? '', direction: 'north' }
+        return { type, map, object: movableObjectsIn(map)[0] ?? '', direction: 'north' }
       }
 
       case 'collect-items':
@@ -681,14 +689,17 @@ export function rulesDefinitionForm(
             }),
           )
 
-        if (entry.type === 'move-map-object')
+        if (entry.type === 'move-map-object') {
+          const choices = movableObjectsIn(entry.map)
+          const selected = choices.includes(entry.object) ? entry.object : ''
+
           field.append(
             select(t('maps.map'), entry.map, objectMaps, (map) => {
               entry.map = map
-              entry.object = objectsIn(map)[0] ?? ''
+              entry.object = movableObjectsIn(map)[0] ?? ''
               rerender()
             }),
-            select(t('maps.objectPicker'), entry.object, objectsIn(entry.map), (id) => {
+            select(t('maps.objectPicker'), selected, choices, (id) => {
               entry.object = id
             }),
             select(
@@ -702,6 +713,7 @@ export function rulesDefinitionForm(
               },
             ),
           )
+        }
 
         if (entry.type === 'move-item')
           field.append(

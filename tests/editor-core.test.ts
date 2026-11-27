@@ -146,6 +146,30 @@ describe('editor core', () => {
     })
   })
 
+  it('updates manual saving and autosave independently', () => {
+    const command = {
+      type: 'game.updateMetadata' as const,
+      title: 'Game',
+      description: '',
+      version: '1',
+    }
+
+    const configured = applyCommand(project(), {
+      ...command,
+      saving: { manual: 'save-points', autosave: 'disabled' },
+    }).project
+
+    const manual = applyCommand(configured, { ...command, saving: { manual: 'disabled' } })
+    expect(manual.project.documents['game.json']).toMatchObject({
+      saving: { manual: 'disabled', autosave: 'disabled' },
+    })
+
+    const auto = applyCommand(configured, { ...command, saving: { autosave: 'save-points' } })
+    expect(auto.project.documents['game.json']).toMatchObject({
+      saving: { manual: 'save-points', autosave: 'save-points' },
+    })
+  })
+
   it('rejects invalid commands and missing targets', () => {
     expect(() =>
       applyCommand(project(), {

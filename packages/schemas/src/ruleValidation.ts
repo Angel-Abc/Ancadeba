@@ -315,10 +315,16 @@ export function validateRuleSources(
               checkField(effect.path, effect.value, source)
               checkText(effect.value, [...source, 'value'])
               break
-            case 'move-map-object':
-              if (!maps.get(effect.map)?.objects?.some((object) => object.id === effect.object))
-                report([...source, 'object'], 'Unknown map object')
+            case 'move-map-object': {
+              const map = maps.get(effect.map)
+              const object = map?.objects?.find((entry) => entry.id === effect.object)
+
+              if (!map || !object) report([...source, 'object'], 'Unknown map object')
+              else if (isMapEncounterGuard(map, object))
+                report([...source, 'object'], 'Encounter guards cannot be moved by rules')
               break
+            }
+
             case 'move-item':
               if (!inventory || !Object.hasOwn(inventory.items, effect.item))
                 report([...source, 'item'], 'Unknown inventory item')

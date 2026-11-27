@@ -1599,51 +1599,6 @@ describe('persistent player progress', () => {
     expect(second.engine.lifecycle!.currentGame).toBeUndefined()
   })
 
-  it('loads a declared predecessor with defaults for only the named new state fields', async () => {
-    const store = new MemorySaves()
-    const original = await launch(store)
-    original.start()
-    expect(original.engine.saves!.save()).toBe(true)
-    const from = original.engine.game!.saveCompatibility!
-    const docs = await savingFixtures('anywhere', 'automatic')
-
-    const rules = JSON.parse(
-      await readFile(new URL('../sample-games/basic/rules/rules.json', import.meta.url), 'utf8'),
-    )
-
-    const changes = {
-      ...docs,
-      'rules/rules.json': {
-        ...rules,
-        state: [...rules.state, { path: ['captured'], value: false }],
-      },
-    }
-
-    const edited = await launch(store, changes)
-    const to = edited.engine.game!.saveCompatibility!
-
-    const compatible = (target: string, addedState: string[][]) =>
-      launch(store, {
-        ...changes,
-        'game.json': {
-          ...docs['game.json'],
-          saving: {
-            ...docs['game.json'].saving,
-            compatibleUpdates: [{ from, to: target, addedState }],
-          },
-        },
-      })
-
-    expect((await compatible(from, [['captured']])).engine.saves!.load()).toBe(false)
-    expect((await compatible(to, [])).engine.saves!.load()).toBe(false)
-    const { engine } = await compatible(to, [['captured']])
-    expect(engine.game!.saveCompatibility).toBe(to)
-    expect(engine.saves!.load()).toBe(true)
-    expect(
-      engine.lifecycle!.currentGame!.bindings!.read({ source: 'game.state', path: ['captured'] }),
-    ).toMatchObject({ value: false })
-  })
-
   it('loads saved progress after catalog and translation-key edits', async () => {
     const store = new MemorySaves()
     const first = await launch(store)

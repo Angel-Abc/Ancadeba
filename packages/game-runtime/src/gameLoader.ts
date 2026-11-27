@@ -162,11 +162,7 @@ export class GameLoader implements IGameLoader {
     )
 
     const gameplayCompatibility = (resolvedCombat: GameData['combat']) => {
-      // An explicit upgrade names the resulting content hash and cannot itself be part of it.
-      const game = gameplaySaveDefinition(gameSchema, {
-        ...definition,
-        saving: definition.saving && { ...definition.saving, compatibleUpdates: undefined },
-      })
+      const game = gameplaySaveDefinition(gameSchema, definition)
 
       const resources = [
         [...maps].map(([id, map]) => [id, gameplaySaveDefinition(mapDefinitionSchema, map)]),

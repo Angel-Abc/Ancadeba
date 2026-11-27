@@ -97,7 +97,12 @@ export const commandSchema = z.discriminatedUnion('type', [
     type: z.literal('game.updateMetadata'),
     ...metadata,
     version: z.string().trim().min(1),
-    saving: savingPolicySchema.optional(),
+    saving: z
+      .object({
+        manual: savingPolicySchema.shape.manual.removeDefault().optional(),
+        autosave: savingPolicySchema.shape.autosave.removeDefault().optional(),
+      })
+      .optional(),
     menuScene: gameIdSchema.nullable().optional(),
     appearances: appearanceLibrarySchema.optional(),
     characterProfile: characterProfileSchema.nullable().optional(),

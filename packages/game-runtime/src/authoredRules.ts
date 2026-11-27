@@ -104,10 +104,7 @@ export class AuthoredPlaythrough {
     }
   }
 
-  restore(
-    save: Pick<GameSave, 'state' | 'log' | 'progression'>,
-    addedState: string[][] = [],
-  ): void {
+  restore(save: Pick<GameSave, 'state' | 'log' | 'progression'>): void {
     if (
       save.state.length > this.rules.state.length ||
       save.log.length > (this.rules.log?.capacity ?? 0)
@@ -120,8 +117,6 @@ export class AuthoredPlaythrough {
     for (const field of this.rules.state) {
       const key = JSON.stringify(field.path)
       const saved = fields.get(key)
-
-      if (!saved && addedState.some((path) => JSON.stringify(path) === key)) continue
 
       if (!saved && 'type' in field && field.value === undefined) {
         parent(this.state, field.path).delete(field.path.at(-1)!)

@@ -2996,6 +2996,44 @@ describe('editor draft workflows', () => {
     }).project
   }
 
+  it('offers the patrol as a movement target and skips its encounter guard', async () => {
+    const source = entranceProject()
+    const guard = { id: 'guard', label: 'Guard', x: 1, y: 0, action: 'travel', terrain: 'ground' }
+    const map = inspectProject(source).maps!.village!
+
+    const updated = applyCommand(source, {
+      type: 'game.upsertMap',
+      mapId: 'village',
+      map: {
+        ...map,
+        objects: [
+          guard,
+          {
+            ...guard,
+            id: 'wagon',
+            label: 'Wagon',
+            y: 1,
+            patrol: {
+              mode: 'one-way',
+              trigger: { type: 'player-step' },
+              route: [
+                { x: 1, y: 1 },
+                { x: 0, y: 1 },
+              ],
+              approach: { guard: guard.id, radius: 1 },
+            },
+          },
+        ],
+      },
+    })
+
+    const ui = await connected(bindRulesPanel, updated.project)
+    ui.edit('Effect', 'move-map-object')
+    const picker = ui.field('Map object')
+    expect(picker.children.map((option) => option.value)).toEqual(['wagon'])
+    expect(picker.value).toBe('wagon')
+  })
+
   it('edits, recovers, saves and clears destination coordinates in Rules', async () => {
     const first = await connected(bindRulesPanel, entranceProject())
     first.edit('Charge time from map view', 'world')

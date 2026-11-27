@@ -144,6 +144,27 @@ describe('map authoring persistence', () => {
     const putMap = () => apply({ type: 'game.upsertMap', mapId: 'garden', map })
     await putMap()
 
+    const move = (object: string) =>
+      update({
+        ...rules,
+        actions: {
+          ...rules.actions,
+          talk: [
+            {
+              when: [],
+              effects: [{ type: 'move-map-object', map: 'garden', object, direction: 'east' }],
+            },
+          ],
+        },
+      })
+
+    await move('wagon')
+    await expect(move('guard')).rejects.toMatchObject({
+      diagnostics: [
+        { code: 'invalid_rules', message: 'Encounter guards cannot be moved by rules' },
+      ],
+    })
+
     const warn = (map: string, patrol: string) =>
       update({
         ...rules,
