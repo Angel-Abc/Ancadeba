@@ -230,18 +230,24 @@ export class Engine implements IEngine {
       const playthroughFor = (instance: GameInstance) =>
         instance.state instanceof Map ? playthroughs.get(instance.state) : undefined
 
+      const settleMessages = () => session.messages.settle()
+
       const lifecycle =
         this.runtime.createGameLifecycle?.(game) ??
-        new GameLifecycle(game, {
-          createGameState: () => {
-            if (!authored) return undefined
-            const playthrough = new AuthoredPlaythrough(authored, game, createHistory())
-            playthroughs.set(playthrough.state, playthrough)
+        new GameLifecycle(
+          game,
+          {
+            createGameState: () => {
+              if (!authored) return undefined
+              const playthrough = new AuthoredPlaythrough(authored, game, createHistory())
+              playthroughs.set(playthrough.state, playthrough)
 
-            return playthrough.state
+              return playthrough.state
+            },
+            createSceneState: () => undefined,
           },
-          createSceneState: () => undefined,
-        })
+          settleMessages,
+        )
 
       if (this.session !== session) {
         lifecycle.dispose()
@@ -307,7 +313,7 @@ export class Engine implements IEngine {
           store: this.runtime.saveStore,
           scheduler: this.runtime.scheduler,
           isRunning: () => this.session === session && session.game !== undefined,
-          settleMessages: () => session.messages.settle(),
+          settleMessages,
           runtimeFor: (instance) => session.gameRuntimes.get(instance),
           playthroughFor,
           input: () => session.input,
@@ -380,13 +386,13 @@ export class Engine implements IEngine {
             submitForm: formSubmission(
               lifecycle,
               playthroughFor,
-              () => session.messages.settle(),
+              settleMessages,
               (instance) => session.gameRuntimes.get(instance),
               (error) => this.logger.error('Form', 'Form notification failed', error),
               game,
             ),
           }),
-        prepareMenu: () => session.messages.settle(),
+        prepareMenu: settleMessages,
         ...(session.saves ? { saves: session.saves } : {}),
         lifecycle,
         get actions() {

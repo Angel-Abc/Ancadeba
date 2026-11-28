@@ -27,7 +27,7 @@ const manifest = gameSchema.parse({
   id: 'objects',
   title: 'Objects',
   version: '1',
-  scenes: ['first', 'second'],
+  scenes: ['first', 'second', 'pause'],
   maps: ['world'],
   rules: ['objects'],
   input: 'keys',
@@ -132,6 +132,18 @@ const scenes = new Map(
       ],
     }),
   ]),
+)
+
+scenes.set(
+  'pause',
+  sceneSchema.parse({
+    'schema-version': '1.0.0',
+    id: 'pause',
+    title: 'Pause',
+    type: 'stand-alone',
+    screen: { type: 'grid', grid: { rows: 1, columns: 1 } },
+    components: [],
+  }),
 )
 
 async function setup(
@@ -512,7 +524,15 @@ describe('placeable map objects', () => {
 })
 
 describe('map object patrol validation', () => {
-  it('sees a patrol when the player reaches the radius just before the patrol moves away', async () => {
+  it('keeps the destination active when a queued action changes scenes before a pause', async () => {
+    const { game, lifecycle } = await setup()
+    game.actions!.request('travel')
+    lifecycle.openMenu!('pause')
+    expect(lifecycle.activeScene?.data.id).toBe('second')
+    expect(lifecycle.suspendedScene).toBeUndefined()
+  })
+
+  it('saves a first sighting exactly once when paused immediately after the patrol moves away', async () => {
     const candidate = structuredClone(map)
     const wagon = candidate.objects![0]!
     candidate.objects = [wagon]
@@ -526,11 +546,34 @@ describe('map object patrol validation', () => {
       ],
       firstSighting: { radius: 3, action: 'read' },
     }
-    const { scene, movement, objects, applied, flush } = await setup(candidate)
+    let saved: string | undefined
+
+    const { scene, movement, objects, applied, flush, lifecycle, engine } = await setup(
+      candidate,
+      rules,
+      {
+        read: () => saved,
+        write: (_id, value) => {
+          saved = value
+        },
+      },
+    )
+
     expect(applied).toEqual([])
     expect(movement.move(scene, 'map', 'east')).toBe(true)
-    flush()
     expect(objects.getAppearance(scene, 'map', wagon.id)).toMatchObject({ x: 4, y: 3 })
+    lifecycle.openMenu!('pause')
+    expect(lifecycle.suspendedScene).toBe(scene)
+    expect(engine.saves!.save()).toBe(true)
+    expect(engine.saves!.load()).toBe(true)
+    flush()
+    expect(
+      lifecycle.currentGame!.bindings!.read({ source: 'game.state', path: ['read'] }),
+    ).toMatchObject({ value: true })
+    expect(lifecycle.currentGame!.mapMovement!.move(lifecycle.activeScene!, 'map', 'east')).toBe(
+      true,
+    )
+    flush()
     expect(applied).toEqual(['read'])
   })
 

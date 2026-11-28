@@ -330,6 +330,14 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
     if (data?.type !== 'stand-alone') throw new Error('Menus require a stand-alone scene')
 
     if (!this.game || (!this.suspended && this.scene?.context.type !== 'game')) return
+
+    if (!this.suspended) {
+      const origin = this.scene
+
+      // Queued actions belong to the gameplay snapshot and may themselves change scenes.
+      if (this.settleBeforePause?.() === false || this.scene !== origin) return
+    }
+
     this.transition(() => {
       if (this.scene?.context.data.id === id) return
 
@@ -385,6 +393,7 @@ export class GameLifecycle<TGameState, TSceneState> implements IGameLifecycle<
   constructor(
     private readonly data: GameData,
     private readonly factories: GameLifecycleFactories<TGameState, TSceneState>,
+    private readonly settleBeforePause?: () => boolean,
   ) {}
 
   get currentGame(): GameInstance<TGameState> | undefined {
